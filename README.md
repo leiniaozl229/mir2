@@ -20,7 +20,7 @@ npm run dev
 
 动作校验页：http://127.0.0.1:5173/actors.html 。可查看基础男女角色、头发、大刀卫士、鸡、鹿、多钩猫、山洞蝙蝠、羊、虎蛇、洞蛆、盔甲虫候选、沃玛战士、沃玛勇士、红野猪、黑野猪、僵尸 1/2/3、毒蜘蛛候选、骷髅、掷斧骷髅、骷髅战士、骷髅战将、祖玛系候选的八方向站立、行走与攻击。导入命令同时处理这些素材；页面只核验动作，尚未连接游戏服务器。
 
-2003 国服 UI 基准页：http://127.0.0.1:5173/ui-calibration.html 。页面固定 800×600 设计坐标，提供登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话场景；当前显示 Crystal 候选帧，截图叠加、16px 网格、坐标尺和设计坐标读数用于接入国服原始 Data 后的逐窗口校准。联机页也会按同一设计坐标整体缩放，不改变游戏内控件位置。素材到位后先运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data`，通过校验再接入对应解码器。
+2003 国服 UI 基准页：http://127.0.0.1:5173/ui-calibration.html 。页面固定 800×600 设计坐标，提供登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话场景；当前显示 Crystal 候选帧，截图叠加、16px 网格、坐标尺和设计坐标读数用于接入国服原始 Data 后的逐窗口校准。联机页也会按同一设计坐标整体缩放，不改变游戏内控件位置。素材到位后先运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data`，通过校验再运行 `python3 tools/import-national-ui.py --data-dir /path/to/Data` 导出隔离的国服 PNG/帧表。
 
 ## 本机开发
 

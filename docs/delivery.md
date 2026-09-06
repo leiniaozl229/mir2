@@ -26,7 +26,7 @@ npm run dev
 
 联机入口：http://127.0.0.1:5173/play.html 。WebSocket 为 `127.0.0.1:18800/ws`。
 
-2003 国服 UI 基准入口：http://127.0.0.1:5173/ui-calibration.html 。当前页面保留 Crystal 候选帧供工具链开发；加载国服参考截图后，可在固定 800×600 画布上切换登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话，使用透明度、网格和坐标尺完成逐窗口校准。导入客户端前运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data`，确认 NewopUI、Prguse、ChrSel、stateitem 等素材族齐全。
+2003 国服 UI 基准入口：http://127.0.0.1:5173/ui-calibration.html 。当前页面保留 Crystal 候选帧供工具链开发；加载国服参考截图后，可在固定 800×600 画布上切换登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话，使用透明度、网格和坐标尺完成逐窗口校准。导入客户端前运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data`，确认 NewopUI、Prguse、ChrSel、stateitem 等素材族齐全；WIL/WIX 或 WZL/WZX 可直接运行 `python3 tools/import-national-ui.py --data-dir /path/to/Data` 导出到隔离的 `assets/web/ui-national`。
 
 ## 存档
 
