@@ -179,4 +179,4 @@ P4 经典界面已建立 2003 国服基准契约。`content/classic-176/national
 
 本轮补齐城堡初始化生命周期：待地图与行会加载完成后再初始化城堡，按 `Castle/List.txt` 去重读取配置目录，并保留真实目录名写回列表；100 系统广播会投影 `castleWar` 状态，行会面板显示攻城开始、结束提醒和占领结果。`tests/CastleRegression` 已覆盖城堡目录去重，网关回归覆盖对应的沙巴克系统消息字段。
 
-本轮继续推进国服 UI 复刻：新增 `national-ui-profile.json` 和 `validate-national-ui.py`，把 2003 原始 1.76 国服 Data 作为视觉基准，将 Crystal 素材降级为候选回退；补齐 F9/F10/F11 窗口快捷键。`/ui-calibration.html` 固定 800×600 设计坐标，提供登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话场景；支持载入国服截图做内存透明叠加、16px 网格、坐标尺和鼠标设计坐标读数。联机页接入同一套 `ClassicStage` 缩放器，窄窗口只缩放完整游戏画面，不重排国服控件。校准台和素材契约通过生产构建与 Python 回归。
+本轮继续推进国服 UI 复刻：新增 `national-ui-profile.json` 和 `validate-national-ui.py`，把 2003 原始 1.76 国服 Data 作为视觉基准，将 Crystal 素材降级为候选回退；补齐 F9/F10/F11 窗口快捷键。`/ui-calibration.html` 固定 800×600 设计坐标，提供登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话场景；支持载入国服截图做内存透明叠加、16px 网格、坐标尺和鼠标设计坐标读数。联机页检测到导入产物后，登录和选角使用 `ChrSel#22`、`Prguse#60`、`Prguse#65`，主 HUD 使用 `Prguse#1`，角色、背包和 NPC 窗口使用 `Prguse#370`、`Prguse#3`、`Prguse#402`。联机页接入同一套 `ClassicStage` 缩放器，窄窗口只缩放完整游戏画面，不重排国服控件。校准台、联机页和素材契约通过生产构建与 Python 回归。

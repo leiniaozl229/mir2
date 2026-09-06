@@ -1,9 +1,10 @@
 import type {CharacterAttributes} from './character-panel';
 import type {MagicSkill} from './skills';
-import {applyUiFrame,loadUiLibrary,uiFrame,uiUrl,type Frame} from './classic-ui';
+import {applyNationalUiFrame,applyUiFrame,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,type Frame} from './classic-ui';
 
 type ResourceState={hp:number;mp:number;maxHp:number;maxMp:number;experience:number;maxExperience:number};
 type UiButton={library:string;index:number;hover:number;pressed:number;x:number;y:number;window:string};
+type NationalLibrary=Awaited<ReturnType<typeof loadNationalUiLibrary>>;
 
 export class ClassicHud {
  private attributes:CharacterAttributes|undefined;
@@ -16,6 +17,8 @@ export class ClassicHud {
  private statusMask=0;
  private hunger=0;
  private libraries=new Map<string,Awaited<ReturnType<typeof loadUiLibrary>>>();
+ private nationalLibraries=new Map<string,NationalLibrary>();
+ private nationalReady=false;
  private readonly job:HTMLElement;
  private readonly name:HTMLElement;
  private readonly coords:HTMLElement;
@@ -82,12 +85,36 @@ export class ClassicHud {
    button.onmousedown=()=>applyUiFrame(button, 'Prguse', uiFrame(prguse, spec.pressed));
    button.onmouseup=()=>applyUiFrame(button, 'Prguse', uiFrame(prguse, spec.hover));
   }
+  try{
+   const nationalPrguse=await loadNationalUiLibrary('prguse');
+   this.nationalLibraries.set('prguse',nationalPrguse);this.nationalReady=true;this.mountNationalHud(root);
+  }catch{
+   this.nationalReady=false;
+  }
   this.applyCursor(document.body);
   this.render();
  }
 
+ private mountNationalHud(root:HTMLElement){
+  const prguse=this.nationalLibraries.get('prguse');
+  if(!prguse)return;
+  root.classList.add('national-ui');
+  const main=root.querySelector<HTMLElement>('[data-hud-main]')!;
+  applyNationalUiFrame(main,'prguse',uiFrame(prguse,1));main.style.left='0';main.style.top='349px';
+  for(const selector of ['[data-hud-minimap-frame]','[data-hud-skillbar]','[data-hud-chatbar]']){
+   const element=root.querySelector<HTMLElement>(selector);if(element)element.style.backgroundImage='none';
+  }
+  const windowButtons=Array.from(root.querySelectorAll<HTMLButtonElement>('.hud-window-buttons button'));
+  const positions=[[686,42],[718,42],[748,3],[684,3],[750,42]];
+  windowButtons.forEach((button,index)=>{
+   const position=positions[index]??positions[0];
+   button.style.backgroundImage='none';button.style.left=`${position[0]}px`;button.style.top=`${position[1]}px`;button.style.width='34px';button.style.height='34px';
+  });
+ }
+
  skinWindow(element:HTMLElement,kind:'character'|'inventory'|'npc'|string){
   const prguse=this.libraries.get('Prguse'),title=this.libraries.get('Title'),prguse2=this.libraries.get('Prguse2');
+  if(this.nationalReady&&this.skinNationalWindow(element,kind))return;
   if(!prguse||!title||!prguse2)return;
   const specs:{library:string;index:number;x:number;y:number;closeX:number;closeY:number}={
    character:{library:'Title',index:504,x:536,y:0,closeX:241,closeY:3},
@@ -118,6 +145,22 @@ export class ClassicHud {
   }
   const close=element.querySelector<HTMLButtonElement>('#classic-window-close, [data-window-close], #close-dialogue');
   if(close){const closeFrame=uiFrame(prguse2, 360);close.style.left=`${specs.closeX}px`;close.style.top=`${specs.closeY}px`;applyUiFrame(close, 'Prguse2', closeFrame);close.textContent='';}
+ }
+
+ private skinNationalWindow(element:HTMLElement,kind:string){
+  const prguse=this.nationalLibraries.get('prguse');
+  const specs:Record<string,{index:number;x:number;y:number;closeX:number;closeY:number}>={
+   character:{index:370,x:284,y:138,closeX:207,closeY:2},
+   inventory:{index:3,x:232,y:165,closeX:308,closeY:155},
+   npc:{index:402,x:192,y:126,closeX:390,closeY:2}
+  };
+  const spec=specs[kind];
+  if(!prguse||!spec)return false;
+  element.classList.add('national-window');element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;element.style.right='auto';element.style.bottom='auto';
+  applyNationalUiFrame(element,'prguse',uiFrame(prguse,spec.index));
+  const close=element.querySelector<HTMLButtonElement>('#classic-window-close, [data-window-close], #close-dialogue');
+  if(close){clearSkin(close);close.style.left=`${spec.closeX}px`;close.style.top=`${spec.closeY}px`;close.style.width='22px';close.style.height='22px';}
+  return true;
  }
 
  applyCursor(root:HTMLElement){
@@ -189,6 +232,7 @@ export class ClassicHud {
   for(let index=0;index<8;index++){
    const skill=this.skills[index],button=document.createElement('button');
    button.type='button';button.className='hud-slot';button.style.left=`${15+index*25}px`;button.style.top='3px';
+   if(this.nationalReady){button.style.left=`${8+index*34}px`;button.style.width='30px';button.style.height='30px';}
    button.title=skill?`${skill.name} · ${skill.level}级`:`F${index+1}`;
    if(index===this.selected)button.classList.add('selected');
    if(skill&&icons){
@@ -206,4 +250,5 @@ export class ClassicHud {
 function orbImage(frame:Frame,offsetX:number){
  const image=new Image();image.src=uiUrl('Prguse', frame);image.alt='';image.style.left=`${offsetX}px`;return image;
 }
+function clearSkin(element:HTMLElement){element.style.backgroundImage='none';element.style.backgroundColor='transparent';}
 function ratio(value:number,max:number){return max>0?Math.max(0,Math.min(1,value/max)):0;}
