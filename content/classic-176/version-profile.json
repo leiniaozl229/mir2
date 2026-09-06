@@ -15,7 +15,7 @@
   "provenance": {
     "maps": "mirbeta/MirServer",
     "rules": "mirbeta/OpenMir2",
-    "clientGraphics": "Crystal patch Data/Map/ShandaMir2 plus selected actor, item and sound libraries; hashes in asset-sources.json; candidate awaiting original-client comparison",
+    "clientGraphics": "Crystal patch Data/Map/ShandaMir2 plus selected actor, item, UI and sound libraries; hashes in asset-sources.json; candidate awaiting original-client comparison",
     "referenceClient": null
   },
   "p0Baseline": {
@@ -682,9 +682,30 @@
     ]
   },
   "skillRulesFile": "skill-rules.json",
+  "skillCombatFile": "skill-combat.json",
+  "worldRules": {
+    "sabuk": {
+      "name": "沙巴克",
+      "castleFile": "Castle/0/SabukW.txt",
+      "maps": ["0150", "0151", "0152", "0153", "0154", "0155", "0156", "3", "D701"],
+      "home": {"map": "3", "x": 644, "y": 290},
+      "placeMap": "0150",
+      "secretMap": "D701",
+      "palaceDoor": {"x": 631, "y": 274}
+    }
+  },
+  "quests": {
+    "mapQuestFile": "MapQuest.txt",
+    "source": "vendor/mirserver-data/Mir200/Envir/MapQuest.txt"
+  },
+  "worldCatalog": {
+    "monGenFile": "vendor/mirserver-data/Mir200/Envir/MonGen.txt",
+    "monItemsDir": "vendor/mirserver-data/Mir200/Envir/MonItems",
+    "knownSqlGaps": ["神鹰", "飞火流星", "骷髅王"]
+  },
   "unresolved": [
     "配套数据库包含后期内容，需逐项筛选",
-    "基础男女角色、头发、六套武器、42 帧 NPC、鸡、鹿、卫士、洞蛆、四类骨系怪物、沃玛系、猪系、两类僵尸、火球/治愈/雷电 208 帧及首批事件音效候选素材已取得；其他装备、怪物、魔法、完整UI与声音仍待补齐",
+    "基础男女角色、头发、六套武器、42 帧 NPC、鸡、鹿、卫士、洞蛆、四类骨系怪物、沃玛系、猪系、两类僵尸、火球/治愈/雷电 208 帧、首批事件音效及 Crystal Prguse/Title/ChrSel/MagIcon 800×600 界面候选已取得；其他装备、怪物、魔法与声音仍待补齐",
     "同版本参考客户端与视觉回放尚未取得",
     "主世界、洞穴、城镇与副本目录已固定为 570 张可解析经典地图；其中 121 张精选路线配置了分层向导与区域刷怪，其中 4 张保留历史尾数据。完整规则、物品和素材视觉校准仍需按版本清单补齐。"
   ]

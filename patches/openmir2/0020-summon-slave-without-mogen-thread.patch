@@ -1,0 +1,32 @@
+diff --git a/src/GameSrv/Word/WorldServer.MonGen.cs b/src/GameSrv/Word/WorldServer.MonGen.cs
+--- a/src/GameSrv/Word/WorldServer.MonGen.cs
++++ b/src/GameSrv/Word/WorldServer.MonGen.cs
+@@ -386,6 +386,18 @@ namespace GameSrv.Word
+             if (baseObject != null)
+             {
+                 int threadId = GetMonsterThreadId(sMonName);
++                // Summons and scripted monsters may have a thread id that was never
++                // given a MonGen list.  Reuse an existing monster thread instead of
++                // dropping the actor.
++                if (threadId < 0 || !MonGenInfoThreadMap.ContainsKey(threadId))
++                {
++                    if (MonGenInfoThreadMap.Count == 0)
++                    {
++                        return null;
++                    }
++                    threadId = MonGenInfoThreadMap.Keys.Min();
++                    MonsterThreadMap[sMonName] = threadId;
++                }
+                 if (threadId >= 0)
+                {
+                    MonGenInfo MonGenInfo = new MonGenInfo();
+@@ -398,5 +398,8 @@ namespace GameSrv.Word
+                     MonGenInfo.Envir = SystemShare.MapMgr.FindMap(MonGenInfo.MapName);
+                     if (MonGenInfo.TryAdd(baseObject))
+                     {
+-                        //MonGenInfo.CertCount++;
++                        // This is a one-off scripted/summoned actor, not an
++                        // empty spawn slot. Without the active count the
++                        // generator recreates one copy every refresh tick.
++                        MonGenInfo.ActiveCount = 1;
+                     }

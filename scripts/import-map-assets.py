@@ -56,10 +56,12 @@ def main():
         for name in dependencies:
             dependencies[name].update(world['dependencies'][name])
     groups = [('map', sources['files']), ('actor', sources.get('actorFiles', [])),
-              ('effect', sources.get('effectFiles', [])), ('item', sources.get('itemFiles', []))]
+              ('effect', sources.get('effectFiles', [])), ('item', sources.get('itemFiles', [])),
+              ('ui', sources.get('uiFiles', []))]
     for kind, source in [(kind, source) for kind, entries in groups for source in entries]:
         raw = ROOT / {'map':'assets/raw/crystal-shanda','actor':'assets/raw/crystal-actors',
-                      'effect':'assets/raw/crystal-effects','item':'assets/raw/crystal-items'}[kind]
+                      'effect':'assets/raw/crystal-effects','item':'assets/raw/crystal-items',
+                      'ui':'assets/raw/crystal-ui'}[kind]
         raw.mkdir(parents=True, exist_ok=True)
         path = raw / source['file']
         def valid(candidate):
@@ -74,10 +76,11 @@ def main():
             temporary.replace(path)
         name = path.stem
         destination = ROOT / {'map':'assets/web/libraries','actor':'assets/web/actors',
-                              'effect':'assets/web/effects','item':'assets/web/items'}[kind] / name
+                              'effect':'assets/web/effects','item':'assets/web/items',
+                              'ui':'assets/web/ui'}[kind] / name
         if kind == 'map':
             indices = sorted(dependencies[name])
-        elif kind == 'effect':
+        elif kind in ('effect', 'ui') and source.get('ranges'):
             indices = sorted({index for start, end in source['ranges'] for index in range(start, end + 1)})
         else:
             indices = range(CrystalLibrary(path.read_bytes()).count)
@@ -103,6 +106,25 @@ def main():
         if not valid_audio(destination):
             destination.write_bytes(path.read_bytes())
         print(source['file'], 'audio:', source['role'], source['bytes'], 'bytes', flush=True)
+    for source in sources.get('cursorFiles', []):
+        raw = ROOT / 'assets/raw/crystal-cursors'
+        raw.mkdir(parents=True, exist_ok=True)
+        path = raw / source['file']
+        def valid_cursor(candidate, expected=source):
+            return (candidate.exists() and candidate.stat().st_size == expected['bytes']
+                    and hashlib.sha256(candidate.read_bytes()).hexdigest() == expected['sha256'])
+        if not valid_cursor(path):
+            temporary = path.with_suffix(path.suffix + '.download')
+            subprocess.run(['curl', '-fLsS', '--retry', '2', '--max-time', '60',
+                            source['url'], '-o', str(temporary)], check=True)
+            if not valid_cursor(temporary):
+                raise ValueError(f"Source hash changed: {source['file']}; review before importing")
+            temporary.replace(path)
+        destination = ROOT / 'assets/web/ui/Cursors' / source['file']
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        if not valid_cursor(destination):
+            destination.write_bytes(path.read_bytes())
+        print(source['file'], 'cursor:', source['bytes'], 'bytes', flush=True)
 
 
 if __name__ == '__main__':

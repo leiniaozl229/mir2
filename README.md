@@ -1,8 +1,8 @@
 # 浏览器传奇复刻工程
 
-实施范围与验收要求见 [PLAN.md](PLAN.md)，阶段记录见 [docs/implementation-status.md](docs/implementation-status.md)。P0 基础闭环、经典主世界与 570 张可解析地图目录（其中 121 张精选路线配置了分层向导和区域刷怪）、浏览器网关和技能导师已可重复运行；完整 1.76 内容、全量素材校准和经典 UI 仍在扩展。动态门协议已接入，阻挡移动收到服务端拒绝后会尝试开门，门的开闭状态实时投影到地图。
+实施范围与验收要求见 [PLAN.md](PLAN.md)，阶段记录见 [docs/implementation-status.md](docs/implementation-status.md)，安装备份见 [docs/delivery.md](docs/delivery.md)。P0 基础闭环、经典主世界与 570 张可解析地图目录（其中 121 张精选路线配置了分层向导和区域刷怪）、浏览器网关和技能导师已可重复运行；完整 1.76 内容、全量素材校准和经典 UI 仍在扩展。动态门协议已接入，阻挡移动收到服务端拒绝后会尝试开门，门的开闭状态实时投影到地图。
 
-联机测试入口：http://127.0.0.1:5173/play.html 。当前已能注册账号、创建战士/法师/道士、进入真实比奇、沃玛森林、毒蛇山谷、盟重省、兽人古墓、沃玛寺庙入口/一层、废矿入口/矿区通道和石墓入口/深处，显示基础角色、鸡鹿、区域怪物和四类骨系怪物，完成点击或键盘走跑、跨图、跨图重连、基础近战、击杀经验、尸体挖肉、死亡回城、五频道聊天、两人组队、玩家交易、攻击模式、行会面板、基础事件声音、NPC 对话、比奇/猎人/药剂/铁匠四条早期任务、商店买卖、仓库存取、背包、穿脱装备、使用药品、物品丢弃、地面显示与自动拾取，以及技能书学习、目标施法、自我施法、魔耗、治疗、伤害和熟练度更新。技能导师按职业提供攻杀/刺杀/半月/烈火、大火球/雷电/抗拒/魔法盾、施毒/灵魂火符/幽灵盾/召唤骷髅测试套，服务端技能状态与对应代表特效会在重连后恢复。洞穴 P0 还提供三级雷电术和测试药品，真实浏览器已击杀骷髅并拾取金币与小量金创药。行会面板现在覆盖打开、成员分组、公告、封号配置、结盟和解除联盟，并提供宣战和攻城申请入口，均由旧协议服务端校验。联机页已加入覆盖在地图上的经典 HUD：HP/MP 球、经验条、地图坐标、职业/等级和 F1–F8 技能快捷栏与键盘选择同步；网关短暂断开时页面会自动有限重连并恢复原角色。需启动服务端、WebSocket 网关和 `npm run dev`；本机独立 UI 测试账号记录在 `.runtime/web-ui-test.json`。技能数值、召唤物行为、全量任务、完整战争计时与占城规则、完整经典 UI 仍在专项接入；比奇试炼和猎人试炼已通过真实浏览器完成交付、奖励领取与重登状态恢复，药剂筹备和铁匠试炼已加入三处出生区并由内容回归覆盖，行会创建已通过比奇国王 NPC 的真实浏览器回归。
+联机测试入口：http://127.0.0.1:5173/play.html 。当前已能注册账号、创建战士/法师/道士、进入真实比奇、沃玛森林、毒蛇山谷、盟重省、兽人古墓、沃玛寺庙入口/一层、废矿入口/矿区通道和石墓入口/深处，显示基础角色、鸡鹿、区域怪物和四类骨系怪物，完成点击或键盘走跑、跨图、跨图重连、基础近战、击杀经验、尸体挖肉、死亡回城、五频道聊天、两人组队、玩家交易、攻击模式、行会面板、基础事件声音、NPC 对话、比奇/猎人/药剂/铁匠四条早期任务、商店买卖、仓库存取、背包、穿脱装备、使用药品、物品丢弃、地面显示与自动拾取，以及技能书学习、目标施法、自我施法、魔耗、治疗、伤害和熟练度更新。技能导师按职业提供攻杀/刺杀/半月/烈火、大火球/雷电/抗拒/魔法盾、施毒/灵魂火符/幽灵盾/召唤骷髅测试套，服务端技能状态与对应代表特效会在重连后恢复。洞穴 P0 还提供三级雷电术和测试药品，真实浏览器已击杀骷髅并拾取金币与小量金创药。行会面板现在覆盖打开、成员分组、公告、封号配置、结盟和解除联盟，并提供宣战和攻城申请入口，均由旧协议服务端校验。联机页已用 Crystal Prguse/Title/ChrSel 原始帧绘制 800×600 经典 HUD 和登录选角：HP/MP 球、经验条、地图坐标、职业/等级、F1–F8 技能栏、聊天条、小地图框、背包/角色窗口底图，以及 ChrSel 登录背景、选角列表和三职业创建窗。原端逐像素校准仍在接入。需启动服务端、WebSocket 网关和 `npm run dev`；本机独立 UI 测试账号记录在 `.runtime/web-ui-test.json`。技能数值、召唤物行为、全量任务、完整战争计时与占城规则、完整经典 UI 仍在专项接入；比奇试炼和猎人试炼已通过真实浏览器完成交付、奖励领取与重登状态恢复，药剂筹备和铁匠试炼已加入三处出生区并由内容回归覆盖，行会创建已通过比奇国王 NPC 的真实浏览器回归。
 
 ## 浏览器地图校验
 
@@ -42,10 +42,12 @@ python3 scripts/wait-ready.py
 ## 检查
 
 ```sh
-bash scripts/compose.sh ps
+python3 scripts/install-check.py
 python3 -m unittest discover -s tests -p 'test_*.py'
 python3 tools/content_audit.py --json .runtime/reports/content-audit.json --markdown .runtime/reports/content-audit.md
+python3 tools/world_catalog_audit.py --json .runtime/reports/world-catalog.json
 python3 tools/skill_visual_audit.py --json .runtime/reports/skill-visual-audit.json
+python3 tools/skill_combat_audit.py --json .runtime/reports/skill-combat-audit.json
 python3 tools/monster_visual_audit.py --json --output .runtime/reports/monster-visual-audit.json
 python3 tools/quest_catalog_audit.py --json .runtime/reports/quest-catalog-audit.json
 node tools/movement_replay.mjs
@@ -55,11 +57,16 @@ node tools/character_creation_probe.mjs
 node tools/pvp_fixture_setup.mjs
 node tools/pvp_probe.mjs
 node tools/trade_probe.mjs
+node tools/skill_combat_probe.mjs
 MIR2_STABILITY_MS=30000 node tools/session_stability_probe.mjs
+node tools/reconnect_probe.mjs
+node tools/frame_budget_probe.mjs
 node tools/power_loss_probe.mjs
 python3 tools/protocol_probe.py
 # 固定 .NET 8 容器回归行会联盟持久化与首次宣战登记
 bash scripts/run-castle-regression.sh
+# 临时双行会实机创建、宣战、双向关系和倒计时回归
+bash scripts/run-guild-war-known-fixture.sh
 # 可选：移动到测试刷怪区，攻击鸡并验证挖肉入包
 python3 tools/protocol_probe.py --combat
 python3 tools/protocol_probe.py --drop-pickup
@@ -69,11 +76,17 @@ python3 tools/protocol_probe.py --drop-pickup
 
 `tools/pvp_fixture_setup.mjs` 会创建两个临时账号和战士角色，并从多个出生点候选中选出同一可见区域的组合，写入 `.runtime/pvp-attacker.json` 与 `.runtime/pvp-victim.json`；创建角色请求包含旧选角服务的节流等待。随后 `tools/pvp_probe.mjs` 验证两个独立 WebSocket 会话的同图发现、相邻攻击、攻击模式和双方 HP 事件。重复运行前重新生成这两个临时凭据，避免上一轮攻击造成角色死亡。
 
-`tools/session_stability_probe.mjs` 在指定时长内重复请求背包和攻击模式快照，检查 WebSocket 序列号与地图世代单调递增，然后主动断线并以同一角色重连；默认运行 30 秒，可通过 `MIR2_STABILITY_MS` 设置 5 秒到 1 小时的窗口。结果写入 `.runtime/reports/session-stability.json`。当前已用 5 分钟窗口完成 100 次周期快照，重连前后均收到 `attributes`、`equipment`、`inventory`、`skills` 四组权威状态。
+`tools/castle_war_probe.mjs` 会从比奇扩展向导进入皇宫，打开比奇国王的攻城申请对话，默认停在资格校验处并将证据写入 `.runtime/reports/castle-war.json`。给临时测试角色准备一根金条后可追加 `MIR2_CASTLE_EXPECT_LIST=1`，继续验证城堡列表；非法城堡编号由 `scripts/run-castle-regression.sh` 覆盖。有效申请使用 `MIR2_GUILD_EXPECT_CASTLE_SUBMISSION=1 bash scripts/run-guild-war-known-fixture.sh`，会在双行会场景中提交第一座城堡、验证服务端许可与祖玛头像扣除，并在停服后恢复沙巴克申请文件。
+
+`scripts/run-guild-war-known-fixture.sh` 会从两个已存在的测试账号克隆临时角色，补齐创建行会所需的金币、沃玛号角、金条、祖玛头像和地图状态，运行 `tools/guild_war_probe.mjs` 验证国王 NPC 创建行会、二级战争对话、双向战争关系及倒计时递减；设置 `MIR2_GUILD_EXPECT_CASTLE_SUBMISSION=1` 时还会提交有效攻城申请并校验物品删除与 `AttackSabukWall.txt` 持久化。脚本结束后精确删除临时角色、行会数据库行和行会文件，恢复沙巴克申请文件、引擎与 Web 网关。报告写入 `.runtime/reports/guild-war.json`。
+
+`tools/session_stability_probe.mjs` 在指定时长内重复请求背包和攻击模式快照，检查 WebSocket 序列号与地图世代单调递增，然后主动断线并以同一角色重连；默认运行 30 秒，可通过 `MIR2_STABILITY_MS` 设置 5 秒到 2 小时的窗口，执行 2 小时验收时使用 `MIR2_STABILITY_MS=7200000`。结果写入 `.runtime/reports/session-stability.json`。当前已用 5 分钟窗口完成 100 次周期快照，重连前后均收到 `attributes`、`equipment`、`inventory`、`skills` 四组权威状态。`tools/reconnect_probe.mjs` 把同一角色断开再进入重复 20 次，写入 `.runtime/reports/reconnect.json`。`tools/frame_budget_probe.mjs` 用无头 Chrome 打开 http://127.0.0.1:5173/perf.html ，记录 800×600 比奇场景的 p95 帧耗时，并另采 `?pressure=100` 的压力样本，写入 `.runtime/reports/frame-budget.json`。
 
 `tools/power_loss_probe.mjs` 会先正常停服保存探针角色，移动到相邻格后在 `SaveHumanRcdTime=60000` 窗口内强制终止引擎，再重启服务并验证恢复到基线坐标；默认故障延迟 1 秒，可用 `MIR2_POWER_LOSS_DELAY_MS` 设置 250–59999ms。结果写入 `.runtime/reports/power-loss.json`，脚本结束时会尝试恢复引擎和 Web 网关。
 
-`tools/content_audit.py` 是只读的版本内容审计器。它会检查版本清单中的 570 张地图、源地图与 Web 分块、Tiles/SmTiles/Objects 依赖、完整目录生成结果，以及已锁定的角色、怪物、物品、特效和音频素材。`tools/monster_visual_audit.py` 另按服务端 `RaceImg:Appr` 二元外观字段核对 P0 的 22 个经典怪物名称；当前 22/22 已有可加载库，其中 4 项标记为候选外观。需要在发布前验证原始文件 SHA-256 时追加 `--verify-hashes`；报告中的“已声明待校准项”仍表示原端视觉和数值需要继续核对。
+`tools/content_audit.py` 是只读的版本内容审计器。它会检查版本清单中的 570 张地图、源地图与 Web 分块、Tiles/SmTiles/Objects 依赖、完整目录生成结果，以及已锁定的角色、怪物、物品、特效和音频素材。`tools/world_catalog_audit.py` 从源 `MonGen.txt` 与锁定地图生成可追踪刷怪清单，核对 SQL 名称、掉落文件和已导出外观；缺掉落/缺外观记入报告，不单独把 570 张地图审计打成失败。`tools/monster_visual_audit.py` 另按服务端 `RaceImg:Appr` 二元外观字段核对 P0 的 22 个经典怪物名称；当前 22/22 已有可加载库，其中 4 项标记为候选外观。需要在发布前验证原始文件 SHA-256 时追加 `--verify-hashes`；报告中的“已声明待校准项”仍表示原端视觉和数值需要继续核对。
+
+`tools/skill_combat_probe.mjs` 会注册三个临时职业账号，走到边界技能导师领取对应技能组，再按 `skill-combat.json` 逐项施法；道士还会装备护身符并检查 `变异骷髅` 召唤物出现与跟随。结果写入 `.runtime/reports/skill-combat.json`。运行前需让引擎加载最新 `content/classic-176/p0/skill-trainer.txt`（`python3 scripts/prepare-runtime.py --refresh-p0` 或 `--refresh-classic-route` 后重启）。
 
 `tools/movement_replay.mjs` 在当前地图执行可回退的走/跑时序回放，记录服务端接受/阻挡、方向、WebSocket 序列号和地图世代；现在还按 600ms 走路、400ms 跑步周期连续往返并记录发送间隔；结果写入 `.runtime/reports/movement-replay.json`。
 
@@ -138,6 +151,7 @@ python3 scripts/backup.py restore .runtime/backups/mir2-save-YYYYMMDD-HHMMSS.tar
 - 浏览器玩家交易面板已走真实旧协议链路。网关把发起、放入/取回物品、设置金币、确认和取消映射到 1025–1030；历史双浏览器已验证金币和蜡烛交换，当前 `tools/trade_probe.mjs` 又用两个独立 WebSocket 会话完成同图相邻交易，确认 `tradeOpened`、物品放入、双方 `tradeSuccess` 和接收方 `itemAdded`，报告写入 `.runtime/reports/trade.json`。
 - 浏览器攻击模式面板已走真实旧协议链路。七档选择映射到 1046，服务端通过 213 回传模式值；`WebCheck` 实测“全体攻击 → 红名攻击 → 全体攻击”，页面下拉框、服务端状态和系统消息保持一致。
 - 浏览器行会面板已接入旧协议的打开行会、成员列表、国王 NPC 创建行会、邀请和移除、公告、封号配置、结盟和解除联盟、宣战与攻城申请入口；附近其他玩家现在可作为 PK/行会战目标，攻击模式、和平规则和行会关系仍由服务端裁决。创建、宣战和攻城请求都带当前国王 NPC 绑定进入 1011，治理操作映射 1035–1045，并投影 750、753、754、756、757–763、768–771。战争关系中的 `+目标行会 剩余毫秒` 会投影为 `warGuildTimers`，浏览器面板按秒显示倒计时，服务端发送行会名与剩余时间以保持旧协议数据稳定。封号配置使用 `编号|封号|成员1,成员2` 行格式，服务端重新校验掌门权限、成员在线状态、目标行会、宣战金币、祖玛头像和城堡日期。联盟关系现在写入行会文件并在重启后恢复，首次宣战会创建双向战争记录；`tests/CastleRegression` 已覆盖联盟持久化、对象字符串污染、首次宣战注册、重复宣战续期、占领保护时间、敌方存活阻挡、皇宫换主和结束战役清场。攻城 NPC 菜单逐项显示城堡名称，非法城堡编号、空城门状态和守卫雇佣下标已做服务端边界校验。空行会运行库的 `WebCheck` 实测收到 754；补充金币与沃玛号角后，通过比奇国王 NPC 创建 `WebGuild`，页面显示掌门人与成员列表，服务端扣除创建费用并移除号角。`tools/pvp_probe.mjs` 已用两个独立 WebSocket 会话验证同图玩家发现、相邻 PK、攻击模式和双方 HP 事件。完整沙巴克联机场景和联盟战斗仍待专项数据回归。
+- 行会战已完成一次双浏览器实机回归：`scripts/run-guild-war-known-fixture.sh` 使用可丢弃的临时角色在比奇国王处创建两个行会，提交二级战争对话后双方均收到对方行会和剩余毫秒，后续读取的倒计时继续减少；同一夹具的可选模式又完成了有效攻城申请、祖玛头像扣除和 `AttackSabukWall.txt` 写入验证，结束后临时角色、行会和文件均已清理。报告见 `.runtime/reports/guild-war.json`。完整沙巴克联机场景、攻城计时和联盟战斗仍待专项数据回归。
 - 比奇试炼已接入比奇老兵 NPC。原生脚本使用角色 `QuestFlag` 的 1001/1002 旗标保存接受与完成状态，`0014-persist-quest-flags.patch` 将三组 128 字节任务数组写入 MySQL `characters_quest` 并在登录时恢复；浏览器从 NPC 对话中的任务标记更新任务日志。真实浏览器完成“接受试炼 → 收集鸡肉 → 交付并领取 1000 经验与 3 个小量金创药”，服务重启后仍显示已完成。
 - 猎人试炼已接入边界猎人 NPC。原生脚本使用 1003/1004 旗标，鹿的 `MonItems` 掉落配置与服务端兜底剥取逻辑保证尸体可产出标准“肉”；真实浏览器完成“击杀鹿 → 连续挖肉 → 交付肉 → 领取 600 经验与 2 个小量金创药”，并验证任务完成、背包消耗与重登恢复。`NpcProjection` 将多个 `QMARK` 标记投影为 `quests` 数组，同时保留旧版单个 `quest` 字段。
 - 药剂筹备与铁匠试炼分别使用 1005/1006、1007/1008 旗标，在比奇、银杏和边界出生区提供可见 NPC；任务覆盖药品/木剑交付、`GIVE` 奖励、经验更新、放弃后重接和 QMARK 状态，内容回归见 `tests/test_p0_quests.py`。

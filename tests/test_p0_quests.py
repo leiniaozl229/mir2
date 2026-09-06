@@ -35,6 +35,19 @@ class P0QuestContentTests(unittest.TestCase):
                 self.assertIn("CHANGEXP", text)
                 self.assertIn("QMARK|", text)
 
+    def test_taoist_skill_kit_includes_summon_reagents(self):
+        text = (CONTENT / "skill-trainer.txt").read_text(encoding="utf-8")
+        self.assertIn("ADDSKILL 召唤骷髅 3", text)
+        self.assertIn("GIVE 护身符 1", text)
+        self.assertIn("GIVE 灰色药粉(少量) 1", text)
+        self.assertIn("CHANGELEVEL = 35", text)
+        self.assertIn("CHANGELEVEL = 31", text)
+        self.assertIn("CHANGELEVEL = 22", text)
+        self.assertIn("ADDSKILL 基本剑术 3", text)
+        self.assertIn("ADDSKILL 火球术 3", text)
+        self.assertIn("ADDSKILL 治愈术 3", text)
+        self.assertIn("MAPMOVE 0 292 623", text)
+
     def test_runtime_preparation_registers_each_task_at_all_spawn_zones(self):
         text = (ROOT / "scripts/prepare-runtime.py").read_text(encoding="utf-8")
         for script, display in [("药剂筹备", "药师学徒"), ("铁匠试炼", "铁匠学徒")]:

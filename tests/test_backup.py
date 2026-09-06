@@ -17,7 +17,17 @@ class BackupTests(unittest.TestCase):
             with self.subTest(name=name), self.assertRaises(ValueError):
                 backup.validate_member_name(name)
 
-    def test_hashes_complete_file(self):
+    def test_install_check_lists_repeatable_delivery_commands(self):
+        spec = importlib.util.spec_from_file_location(
+            "mir2_install_check", Path(__file__).parents[1] / "scripts/install-check.py"
+        )
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        report = module.check()
+        self.assertTrue(report["ok"], report["failures"])
+        self.assertIn("bash scripts/compose.sh up -d", report["commands"]["install"])
+        self.assertIn("python3 scripts/backup.py create", report["commands"]["backup"][0])
+
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "state.bin"
             path.write_bytes(b"mir2-save-state")

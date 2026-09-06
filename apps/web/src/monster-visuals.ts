@@ -10,6 +10,7 @@ export const monsterVisualRules:MonsterVisualRule[]=[
  {raceImg:17,appr:25,library:'Monster006',quality:'exact',names:['多钩猫']},
  {raceImg:19,appr:80,library:'Monster019',quality:'exact',names:['山洞蝙蝠']},
  {raceImg:14,appr:20,library:'Monster022',quality:'exact',names:['骷髅']},
+ {raceImg:23,appr:37,library:'Monster022',quality:'candidate',names:['变异骷髅']},
  {raceImg:15,appr:21,library:'Monster024',quality:'exact',names:['掷斧骷髅']},
  {raceImg:14,appr:22,library:'Monster025',quality:'exact',names:['骷髅战士']},
  {raceImg:14,appr:23,library:'Monster026',quality:'exact',names:['骷髅战将']},
@@ -41,6 +42,7 @@ export function resolveMonsterVisual(feature:number,name:string){
  // authoritative browser packets always take the pair lookup above.
  if(/鸡/.test(name))return 'Monster003';
  if(/鹿/.test(name))return 'Monster004';
+ if(/变异骷髅/.test(name))return 'Monster022';
  if(/骷髅/.test(name))return 'Monster022';
  if(/洞蛆/.test(name))return 'Monster020';
  if(/僵尸/.test(name))return 'Monster070';

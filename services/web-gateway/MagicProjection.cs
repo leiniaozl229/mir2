@@ -53,7 +53,12 @@ public static class MagicProjection
 
     private static object SpellCast(LegacyPacket packet)
     {
-        if (!ushort.TryParse(packet.Text, out ushort magicId)) throw new InvalidDataException("Invalid observed spell identity");
+        // RM_SPELL forwards the magic id with SendSocket(..., string), so this
+        // body is plain ASCII rather than an EDCode/LegacyCodec payload. A
+        // one- or two-digit id would otherwise make LegacyPacket.Text attempt
+        // to decode an invalid-length legacy frame and abort the game reader.
+        string raw = Encoding.ASCII.GetString(packet.EncodedBody).Trim('\0', ' ', '\r', '\n');
+        if (!ushort.TryParse(raw, out ushort magicId)) throw new InvalidDataException("Invalid observed spell identity");
         return new { type = "spellCast", casterId = packet.Recog, x = packet.Param, y = packet.Tag,
             effect = packet.Series, magicId };
     }

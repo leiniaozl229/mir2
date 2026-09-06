@@ -55,6 +55,10 @@ def source_entry_path(sources: dict[str, Any], category: str, entry: dict[str, A
         return ROOT / "assets/raw/crystal-items" / filename
     if category == "audio":
         return ROOT / "assets/raw/crystal-sounds" / filename
+    if category == "ui":
+        return ROOT / "assets/raw/crystal-ui" / filename
+    if category == "cursor":
+        return ROOT / "assets/raw/crystal-cursors" / filename
     raise ValueError(category)
 
 
@@ -65,6 +69,7 @@ def web_library_path(category: str, filename: str) -> Path:
         "actor": ROOT / "assets/web/actors",
         "effect": ROOT / "assets/web/effects",
         "item": ROOT / "assets/web/items",
+        "ui": ROOT / "assets/web/ui",
     }[category]
     return directory / stem / "library.json"
 
@@ -77,6 +82,8 @@ def check_source_locks(sources: dict[str, Any], verify_hashes: bool) -> dict[str
         ("effect", "effectFiles"),
         ("item", "itemFiles"),
         ("audio", "audioFiles"),
+        ("ui", "uiFiles"),
+        ("cursor", "cursorFiles"),
     ):
         entries = []
         for entry in sources.get(key, []):
@@ -230,6 +237,99 @@ def guide_status(map_ids: Iterable[str]) -> dict[str, Any]:
     }
 
 
+def sabuk_status(profile: dict[str, Any], map_ids: Iterable[str]) -> dict[str, Any]:
+    sabuk = profile.get("worldRules", {}).get("sabuk", {})
+    expected_maps = [str(value) for value in sabuk.get("maps", [])]
+    known = {str(value) for value in map_ids}
+    missing_maps = [map_id for map_id in expected_maps if map_id not in known]
+    castle = ROOT / "vendor/mirserver-data/Mir200" / sabuk.get("castleFile", "")
+    runtime = ROOT / ".runtime/server/Mir200" / sabuk.get("castleFile", "")
+    text = ""
+    if castle.is_file():
+        raw = castle.read_bytes()
+        text = raw.decode("gb18030", errors="replace")
+    required = [
+        f"CastleMap={sabuk.get('home', {}).get('map', '3')}",
+        f"CastlePlaceMap={sabuk.get('placeMap', '')}",
+        f"CastleSecretMap={sabuk.get('secretMap', '')}",
+        f"CastleHomeX={sabuk.get('home', {}).get('x', '')}",
+        f"CastleHomeY={sabuk.get('home', {}).get('y', '')}",
+    ]
+    missing_fields = [field for field in required if field not in text]
+    return {
+        "name": sabuk.get("name"),
+        "maps": expected_maps,
+        "missingMaps": missing_maps,
+        "castleFile": sabuk.get("castleFile"),
+        "castleExists": castle.is_file(),
+        "runtimeCastleExists": runtime.is_file(),
+        "missingFields": missing_fields,
+        "ok": not missing_maps and castle.is_file() and not missing_fields,
+    }
+
+
+def quest_status() -> dict[str, Any]:
+    spec = importlib.util.spec_from_file_location("quest_catalog_audit", ROOT / "tools/quest_catalog_audit.py")
+    if spec is None or spec.loader is None:
+        return {"ok": False, "error": "quest catalog missing"}
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    report = module.audit()
+    return {
+        "ok": bool(report.get("ok")),
+        "sourceEntries": report.get("sourceEntries", 0),
+        "runtimeEntries": report.get("runtimeEntries", 0),
+        "missingRuntimeMaps": report.get("missingRuntimeMaps", []),
+        "missingRuntimeScripts": report.get("missingRuntimeScripts", []),
+        "missingRuntimeBindings": report.get("missingRuntimeBindings", []),
+        "missingRuntimeTriggers": report.get("missingRuntimeTriggers", []),
+    }
+
+
+def world_catalog_status() -> dict[str, Any]:
+    spec = importlib.util.spec_from_file_location("world_catalog_audit", ROOT / "tools/world_catalog_audit.py")
+    if spec is None or spec.loader is None:
+        return {"ok": False, "error": "world catalog missing"}
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    report = module.audit()
+    return {
+        "ok": bool(report.get("ok")),
+        "uniqueMonsters": report.get("uniqueMonsters", 0),
+        "spawnRows": report.get("spawnRows", 0),
+        "dropFiles": report.get("dropFiles", 0),
+        "visuals": report.get("visuals", 0),
+        "missingSql": report.get("missingSql", []),
+        "unexpectedSql": report.get("unexpectedSql", []),
+        "knownSqlGaps": report.get("knownSqlGaps", []),
+        "missingDrops": report.get("missingDrops", []),
+        "missingVisuals": report.get("missingVisuals", []),
+        "missingBaseline": report.get("missingBaseline", []),
+    }
+
+
+def catalog_status(profile: dict[str, Any]) -> dict[str, Any]:
+    baseline = profile.get("p0Baseline", {})
+    sql_path = ROOT / ".runtime/sql/02-mir2_data.sql"
+    names: set[str] = set()
+    if sql_path.is_file():
+        for line in sql_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            if "VALUES (" in line and "'" in line:
+                start = line.find("'")
+                end = line.find("'", start + 1)
+                if start >= 0 and end > start:
+                    names.add(line[start + 1:end])
+    monsters = list(baseline.get("monsters", []))
+    items = list(baseline.get("items", []))
+    missing_monsters = [name for name in monsters if name not in names and name.rstrip("0123456789") not in names]
+    missing_items = [name for name in items if name not in names]
+    return {
+        "monsters": {"expected": len(monsters), "missing": missing_monsters},
+        "items": {"expected": len(items), "missing": missing_items},
+        "ok": not missing_monsters and not missing_items,
+    }
+
+
 def audit(*, verify_hashes: bool = False) -> dict[str, Any]:
     profile = read_json(ROOT / "content/classic-176/version-profile.json")
     sources = read_json(ROOT / "content/classic-176/asset-sources.json")
@@ -241,6 +341,7 @@ def audit(*, verify_hashes: bool = False) -> dict[str, Any]:
             ("actor", "actorFiles"),
             ("effect", "effectFiles"),
             ("item", "itemFiles"),
+            ("ui", "uiFiles"),
         )
     }
     source_failures = [
@@ -257,12 +358,20 @@ def audit(*, verify_hashes: bool = False) -> dict[str, Any]:
     ]
     map_report = map_status(maps)
     guide_report = guide_status(maps)
+    sabuk_report = sabuk_status(profile, maps)
+    quest_report = quest_status()
+    catalog_report = catalog_status(profile)
+    world_catalog_report = world_catalog_status()
     failures = {
         "sourceLocks": source_failures,
         "libraries": library_failures,
         "maps": map_report["missingSource"] + map_report["missingExport"] + map_report["malformed"],
         "mapDependencies": map_report["dependencyMissing"],
         "routes": guide_report["missingDestinations"] + guide_report["unknownDestinations"],
+        "sabuk": sabuk_report["missingMaps"] + sabuk_report["missingFields"] + ([] if sabuk_report["castleExists"] else [sabuk_report["castleFile"]]),
+        "quests": [] if quest_report.get("sourceEntries") else ["MapQuest.txt"],
+        "catalog": catalog_report["monsters"]["missing"] + catalog_report["items"]["missing"],
+        "worldCatalog": world_catalog_report.get("unexpectedSql", []) + world_catalog_report.get("missingBaseline", []),
     }
     ok = not any(failures.values())
     return {
@@ -272,6 +381,10 @@ def audit(*, verify_hashes: bool = False) -> dict[str, Any]:
         "ok": ok,
         "maps": map_report,
         "routes": guide_report,
+        "sabuk": sabuk_report,
+        "quests": quest_report,
+        "catalog": catalog_report,
+        "worldCatalog": world_catalog_report,
         "sourceLocks": source_locks,
         "libraries": asset_libraries,
         "declaredUnresolved": profile.get("unresolved", []),
@@ -291,6 +404,10 @@ def markdown(report: dict[str, Any]) -> str:
         f"- 运行模式：{'校验 SHA-256' if report['verifyHashes'] else '校验文件大小与生成清单哈希'}",
         f"- 地图：{maps['exported']}/{maps['expected']} 张已导出；源地图 {maps['source']} 张",
         f"- 路线向导：{routes['destinations']} 个目标，缺失 {len(routes['missingDestinations'])} 个",
+        f"- 沙巴克：{len(report.get('sabuk', {}).get('maps', []))} 张城堡地图，配置文件 {'存在' if report.get('sabuk', {}).get('castleExists') else '缺失'}",
+        f"- 任务：源 MapQuest {report.get('quests', {}).get('sourceEntries', 0)} 条",
+        f"- 清单：怪物 {report.get('catalog', {}).get('monsters', {}).get('expected', 0)}，物品 {report.get('catalog', {}).get('items', {}).get('expected', 0)}",
+        f"- 世界刷怪：{report.get('worldCatalog', {}).get('uniqueMonsters', 0)} 种 / {report.get('worldCatalog', {}).get('spawnRows', 0)} 条，掉落文件 {report.get('worldCatalog', {}).get('dropFiles', 0)}，已映射外观 {report.get('worldCatalog', {}).get('visuals', 0)}，缺 SQL {len(report.get('worldCatalog', {}).get('missingSql', []))}，缺掉落 {len(report.get('worldCatalog', {}).get('missingDrops', []))}，缺外观 {len(report.get('worldCatalog', {}).get('missingVisuals', []))}",
         "",
         "## 素材锁",
         "",
@@ -331,7 +448,7 @@ def main() -> int:
     if args.markdown:
         args.markdown.parent.mkdir(parents=True, exist_ok=True)
         args.markdown.write_text(markdown(report), encoding="utf-8")
-    print(json.dumps({"ok": report["ok"], "maps": report["maps"]["exported"], "expectedMaps": report["maps"]["expected"], "failures": report["failures"]}, ensure_ascii=False))
+    print(json.dumps({"ok": report["ok"], "maps": report["maps"]["exported"], "expectedMaps": report["maps"]["expected"], "worldCatalog": {"unique": report.get("worldCatalog", {}).get("uniqueMonsters"), "drops": report.get("worldCatalog", {}).get("dropFiles"), "visuals": report.get("worldCatalog", {}).get("visuals")}, "failures": report["failures"]}, ensure_ascii=False))
     return 0 if report["ok"] else 1
 
 

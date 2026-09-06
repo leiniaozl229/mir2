@@ -36,6 +36,7 @@ services:
     environment:
       ASPNETCORE_URLS: http://0.0.0.0:8800
       MIR2_ENGINE_HOST: engine
+      MIR2_PROTOCOL_TRACE: ${MIR2_PROTOCOL_TRACE:-0}
     volumes:
       - ./.runtime/web-gateway:/app:ro
     ports:

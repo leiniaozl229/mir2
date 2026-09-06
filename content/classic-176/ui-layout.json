@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "source": "Suprcode/Crystal Client/MirScenes/Dialogs at 0e315fe, 800x600",
+  "canvas": {"width": 800, "height": 600},
+  "libraries": {
+    "Prguse": "Prguse.Lib",
+    "Prguse2": "Prguse2.Lib",
+    "Title": "Title.Lib",
+    "MagIcon": "MagIcon.Lib"
+  },
+  "mainDialog": {
+    "library": "Prguse",
+    "index": 0,
+    "x": 0,
+    "y": 448
+  },
+  "healthOrb": {
+    "library": "Prguse",
+    "index": 4,
+    "x": 0,
+    "y": 478,
+    "width": 104,
+    "height": 80,
+    "hpWidth": 50,
+    "mpX": 51
+  },
+  "experienceBar": {
+    "library": "Prguse",
+    "index": 7,
+    "x": 9,
+    "y": 591
+  },
+  "weightBar": {
+    "library": "Prguse",
+    "index": 76,
+    "x": 695,
+    "y": 551
+  },
+  "buttons": {
+    "character": {"library": "Prguse", "index": 1900, "hover": 1901, "pressed": 1902, "x": 681, "y": 524, "window": "character"},
+    "inventory": {"library": "Prguse", "index": 1903, "hover": 1904, "pressed": 1905, "x": 704, "y": 524, "window": "inventory"},
+    "skills": {"library": "Prguse", "index": 1906, "hover": 1907, "pressed": 1908, "x": 727, "y": 524, "window": "skills"},
+    "quest": {"library": "Prguse", "index": 1909, "hover": 1910, "pressed": 1911, "x": 750, "y": 524, "window": "quest"},
+    "option": {"library": "Prguse", "index": 1912, "hover": 1913, "pressed": 1914, "x": 773, "y": 524, "window": "attack"}
+  },
+  "skillBar": {
+    "library": "Prguse",
+    "index": 2190,
+    "x": 0,
+    "y": 0,
+    "cellX": 15,
+    "cellY": 3,
+    "cellStep": 25
+  },
+  "miniMap": {
+    "library": "Prguse",
+    "index": 2090,
+    "x": 674,
+    "y": 0,
+    "width": 128,
+    "height": 154,
+    "labelX": 46,
+    "labelY": 131,
+    "labelWidth": 56,
+    "labelHeight": 18
+  },
+  "chat": {
+    "library": "Prguse",
+    "index": 2201,
+    "x": 230,
+    "y": 503,
+    "inputX": 231,
+    "inputY": 557,
+    "inputWidth": 403,
+    "inputHeight": 13
+  },
+  "chatBar": {
+    "library": "Prguse",
+    "index": 2035,
+    "x": 230,
+    "y": 488
+  },
+  "windows": {
+    "character": {"library": "Title", "index": 504, "x": 536, "y": 0, "closeLibrary": "Prguse2", "closeIndex": 360, "closeX": 241, "closeY": 3},
+    "inventory": {"library": "Title", "index": 196, "x": 0, "y": 185, "closeLibrary": "Prguse2", "closeIndex": 360, "closeX": 289, "closeY": 3},
+    "npc": {"library": "Prguse", "index": 995, "x": 5, "y": 40, "closeLibrary": "Prguse2", "closeIndex": 360, "closeX": 413, "closeY": 3}
+  },
+  "classIcons": {"warrior": 100, "wizard": 101, "taoist": 102},
+  "inventoryGrid": {
+    "columns": 8,
+    "visible": 40,
+    "cellWidth": 36,
+    "cellHeight": 32,
+    "originX": 9,
+    "originY": 37,
+    "gapX": 1,
+    "gapY": 1
+  },
+  "characterPage": {"library": "Prguse", "index": 340, "x": 8, "y": 90},
+  "paperdollActor": {"x": 70, "y": 150, "direction": 4},
+  "characterTabs": [
+    {"id": "paperdoll", "library": "Title", "index": 500, "x": 8, "y": 70, "width": 64, "height": 20},
+    {"id": "status", "library": "Title", "index": 501, "x": 70, "y": 70, "width": 64, "height": 20},
+    {"id": "state", "library": "Title", "index": 502, "x": 132, "y": 70, "width": 64, "height": 20},
+    {"id": "skills", "library": "Title", "index": 503, "x": 194, "y": 70, "width": 64, "height": 20}
+  ],
+  "equipmentCells": [
+    {"slot": 1, "name": "武器", "x": 123, "y": 7},
+    {"slot": 0, "name": "衣服", "x": 163, "y": 7},
+    {"slot": 4, "name": "头盔", "x": 203, "y": 7},
+    {"slot": 3, "name": "项链", "x": 203, "y": 98},
+    {"slot": 2, "name": "右手", "x": 203, "y": 134},
+    {"slot": 5, "name": "左手镯", "x": 8, "y": 170},
+    {"slot": 6, "name": "右手镯", "x": 203, "y": 170},
+    {"slot": 7, "name": "左戒指", "x": 8, "y": 206},
+    {"slot": 8, "name": "右戒指", "x": 203, "y": 206},
+    {"slot": 9, "name": "护身符", "x": 8, "y": 242},
+    {"slot": 11, "name": "靴子", "x": 48, "y": 242},
+    {"slot": 10, "name": "腰带", "x": 88, "y": 242},
+    {"slot": 12, "name": "宝石", "x": 128, "y": 242}
+  ],
+  "cursors": {
+    "default": "Cursor_Default.CUR",
+    "attack": "Cursor_Normal_Atk.CUR",
+    "attackRed": "Cursor_Compulsion_Atk.CUR",
+    "npc": "Cursor_Npc.CUR",
+    "text": "Cursor_TextPrompt.CUR",
+    "trash": "Cursor_Trash.CUR",
+    "upgrade": "Cursor_Upgrade.CUR"
+  },
+  "requiredFrames": {
+    "Prguse": [0, 4, 7, 44, 65, 73, 76, 100, 101, 102, 340, 995, 1084, 1900, 1903, 1906, 1909, 1912, 2035, 2090, 2190, 2201, 2420, 2426, 2429, 2432],
+    "Prguse2": [360],
+    "Title": [20, 30, 31, 32, 40, 196, 280, 320, 323, 340, 343, 352, 360, 500, 501, 502, 503, 504, 506, 507, 508, 660, 661, 662, 665, 666, 667],
+    "ChrSel": [0, 20, 40, 60, 300, 320, 340],
+    "MagIcon": [1, 2, 3]
+  },
+  "login": {
+    "library": "ChrSel",
+    "index": 0,
+    "dialog": {"library": "Prguse", "index": 1084, "x": 236, "y": 190},
+    "title": {"library": "Title", "index": 30, "x": 113, "y": 12},
+    "accountLabel": {"library": "Title", "index": 31, "x": 52, "y": 83},
+    "passwordLabel": {"library": "Title", "index": 32, "x": 43, "y": 105},
+    "accountInput": {"x": 85, "y": 85, "width": 136, "height": 15},
+    "passwordInput": {"x": 85, "y": 108, "width": 136, "height": 15},
+    "ok": {"library": "Title", "index": 320, "hover": 321, "pressed": 322, "x": 227, "y": 81},
+    "register": {"library": "Title", "index": 323, "hover": 324, "pressed": 325, "x": 60, "y": 163}
+  },
+  "select": {
+    "library": "Prguse",
+    "index": 65,
+    "title": {"library": "Title", "index": 40, "x": 468, "y": 20},
+    "portrait": {"x": 260, "y": 420},
+    "portraits": {"20": [0, 0], "40": [1, 0], "60": [2, 0], "300": [0, 1], "320": [1, 1], "340": [2, 1]},
+    "slot": {"library": "Prguse", "index": 44, "filledLibrary": "Title", "filledIndex": 660, "x": 504, "y": 140, "step": 80, "count": 4},
+    "start": {"library": "Title", "index": 340, "hover": 341, "pressed": 342, "x": 110, "y": 568},
+    "create": {"library": "Title", "index": 343, "hover": 344, "pressed": 345, "x": 230, "y": 568},
+    "exit": {"library": "Title", "index": 352, "hover": 353, "pressed": 354, "x": 590, "y": 568}
+  },
+  "newCharacter": {
+    "library": "Prguse",
+    "index": 73,
+    "x": 106,
+    "y": 70,
+    "title": {"library": "Title", "index": 20, "x": 206, "y": 11},
+    "nameInput": {"x": 325, "y": 268, "width": 240, "height": 20},
+    "ok": {"library": "Title", "index": 360, "hover": 361, "pressed": 362, "x": 160, "y": 425},
+    "cancel": {"library": "Title", "index": 280, "hover": 281, "pressed": 282, "x": 425, "y": 425},
+    "jobs": [
+      {"job": 0, "library": "Prguse", "index": 2426, "active": 2427, "hover": 2427, "pressed": 2428, "x": 323, "y": 296},
+      {"job": 1, "library": "Prguse", "index": 2429, "active": 2430, "hover": 2430, "pressed": 2431, "x": 373, "y": 296},
+      {"job": 2, "library": "Prguse", "index": 2432, "active": 2433, "hover": 2433, "pressed": 2434, "x": 423, "y": 296}
+    ],
+    "sexes": [
+      {"sex": 0, "library": "Prguse", "index": 2420, "active": 2421, "hover": 2421, "pressed": 2422, "x": 323, "y": 343},
+      {"sex": 1, "library": "Prguse", "index": 2423, "active": 2424, "hover": 2424, "pressed": 2425, "x": 373, "y": 343}
+    ],
+    "portrait": {"x": 120, "y": 250}
+  }
+}

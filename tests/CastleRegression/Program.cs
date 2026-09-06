@@ -8,6 +8,7 @@ using SystemModule.Castles;
 using SystemModule.Data;
 using SystemModule.SubSystem;
 using System.Text;
+using M2Server.Castle;
 
 static void Require(bool condition, string message)
 {
@@ -41,6 +42,37 @@ try
     IGuild? loadedBlue = guildManager.FindGuild("BlueGuild");
     Require(loadedRed is not null && loadedBlue is not null && loadedRed.IsAllyGuild(loadedBlue),
         "alliance should reload from persisted guild names");
+
+    string previousCastleDir = SystemShare.Config.CastleDir;
+    string previousCastleFile = SystemShare.Config.CastleFile;
+    string castleListDir = "castle-list-" + Guid.NewGuid().ToString("N");
+    string castleListRoot = Path.Combine(AppContext.BaseDirectory, castleListDir);
+    try
+    {
+        Directory.CreateDirectory(castleListRoot);
+        File.WriteAllLines(Path.Combine(castleListRoot, "List.txt"), ["0", "0", "1"]);
+        SystemShare.Config.CastleDir = castleListDir;
+        SystemShare.Config.CastleFile = Path.Combine(castleListDir, "List.txt");
+
+        CastleManager loadedCastles = new();
+        loadedCastles.LoadCastleList();
+        Require(loadedCastles.CastleList.Count == 2 &&
+                loadedCastles.CastleList[0].ConfigDir == "0" &&
+                loadedCastles.CastleList[1].ConfigDir == "1",
+            "castle list should remove duplicate configured directories");
+
+        CastleManager alreadyInitialized = new();
+        alreadyInitialized.CastleList.Add(new UserCastle("0"));
+        alreadyInitialized.LoadCastleList();
+        Require(alreadyInitialized.CastleList.Count == 1,
+            "castle list loading should not append a second set after initialization");
+    }
+    finally
+    {
+        SystemShare.Config.CastleDir = previousCastleDir;
+        SystemShare.Config.CastleFile = previousCastleFile;
+        try { Directory.Delete(castleListRoot, true); } catch { }
+    }
 
     red.DelAllyGuild(blue);
     WarGuild first = red.AddWarGuild(blue);

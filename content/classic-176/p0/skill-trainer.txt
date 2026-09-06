@@ -9,6 +9,7 @@
 <法师技能测试/@wizardset>\
 <道士技能测试/@taoistset>\
 <调整治愈术测试状态/@healingtest>\
+<进入附近刷怪区/@nearmonsters>\
 <进入兽人古墓/@orcgrave>\
 <测试死亡回城/@death>\
 <离开/@exit>
@@ -63,36 +64,51 @@ GIVE 基本剑术 1
 #IF
 CHECKJOB Warrior
 #ACT
+CHANGELEVEL = 35
+HUMANHP = 999
+HUMANMP = 200
+ADDSKILL 基本剑术 3
 ADDSKILL 攻杀剑术 3
 ADDSKILL 刺杀剑术 3
 ADDSKILL 半月弯刀 3
 ADDSKILL 烈火剑法 3
+GIVE 木剑 1
 #SAY
-战士测试技能已学会：攻杀剑术、刺杀剑术、半月弯刀、烈火剑法。\
+战士已升到三十五级。测试技能已学会：基本剑术、攻杀剑术、刺杀剑术、半月弯刀、烈火剑法。刺杀与半月对自身开关，烈火对自身蓄力后近战触发。\
 <返回/@main>
 
 [@wizardset]
 #IF
 CHECKJOB Wizard
 #ACT
+CHANGELEVEL = 31
+HUMANHP = 200
+HUMANMP = 999
+ADDSKILL 火球术 3
 ADDSKILL 大火球 3
 ADDSKILL 雷电术 3
 ADDSKILL 抗拒火环 3
 ADDSKILL 魔法盾 3
 #SAY
-法师测试技能已学会：大火球、雷电术、抗拒火环、魔法盾。\
+法师已升到三十一级。测试技能已学会：火球术、大火球、雷电术、抗拒火环、魔法盾。抗拒与魔法盾对自己施放。\
 <返回/@main>
 
 [@taoistset]
 #IF
 CHECKJOB Taoist
 #ACT
+CHANGELEVEL = 22
+HUMANHP = 200
+HUMANMP = 999
+ADDSKILL 治愈术 3
 ADDSKILL 施毒术 3
 ADDSKILL 灵魂火符 3
 ADDSKILL 幽灵盾 3
 ADDSKILL 召唤骷髅 3
+GIVE 护身符 1
+GIVE 灰色药粉(少量) 1
 #SAY
-道士测试技能已学会：施毒术、灵魂火符、幽灵盾、召唤骷髅。\
+道士已升到二十二级。测试技能已学会：治愈术、施毒术、灵魂火符、幽灵盾、召唤骷髅。护身符戴在护身符槽，灰色药粉戴在左手镯或护身符槽后才能召唤、火符与施毒。\
 <返回/@main>
 
 [@healingtest]
@@ -102,6 +118,14 @@ HUMANHP = 5
 HUMANMP = 9999
 #SAY
 生命已调整为 5，魔法值已补满。请在技能栏对自己施放治愈术。\
+<返回/@main>
+
+[@nearmonsters]
+#IF
+#ACT
+MAPMOVE 0 292 623
+#SAY
+已送到比奇鸡鹿刷新区。\
 <返回/@main>
 
 [@orcgrave]

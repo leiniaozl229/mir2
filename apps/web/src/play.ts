@@ -3,17 +3,18 @@ import {OnlineActor,type Entity} from './online-actors';
 import './style.css';
 import {EquipmentView,InventoryView,type InventoryItem} from './inventory';
 import {GroundItems,type GroundItem} from './ground-items';
+import {PaperdollView} from './paperdoll';
 import {CharacterPanel} from './character-panel';
 import {ShopView} from './shop';
 import {StorageView} from './storage';
-import {SkillBar,type MagicSkill} from './skills';
+import {SkillBar,skillUseOf,type MagicSkill} from './skills';
 import {GameAudio} from './game-audio';
 import {RepairView} from './repair';
 import {MagicEffects} from './magic-effects';
 import {ClassicHud} from './classic-hud';
+import {ClassicAuth,type SelectCharacter} from './classic-auth';
 const connection=document.querySelector<HTMLElement>('#connection')!;
 const loginForm=document.querySelector<HTMLFormElement>('#login')!;
-const charactersElement=document.querySelector<HTMLElement>('#characters')!;
 const createCharacterForm=document.querySelector<HTMLFormElement>('#create-character')!;
 const combatStatus=document.querySelector<HTMLElement>('#combat-status')!;
 const targetsElement=document.querySelector<HTMLElement>('#nearby-targets')!;
@@ -25,7 +26,11 @@ const tradePanel=document.querySelector<HTMLElement>('#trade-panel')!,tradeStatu
 const revivePanel=document.querySelector<HTMLElement>('#revive-panel')!,returnToTown=document.querySelector<HTMLButtonElement>('#return-to-town')!;
 const questLog=document.querySelector<HTMLElement>('#quest-log')!;
 const audio=new GameAudio(document.querySelector<HTMLButtonElement>('#audio-toggle')!);
-const characterPanel=new CharacterPanel(document.querySelector<HTMLElement>('#character-panel')!);
+const characterPanel=new CharacterPanel(
+ document.querySelector<HTMLElement>('#character-panel')!,
+ document.querySelector<HTMLElement>('#character-state')!,
+ document.querySelector<HTMLElement>('[data-character-name]')!
+);
 const dialogueElement=document.querySelector<HTMLElement>('#npc-dialog')!,dialogueTitle=document.querySelector<HTMLElement>('#npc-title')!,dialogueText=document.querySelector<HTMLElement>('#npc-text')!,dialogueOptions=document.querySelector<HTMLElement>('#npc-options')!;
 const shop=new ShopView(document.querySelector<HTMLElement>('#shop-panel')!,{
  details:(npcId,name,page)=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'shopDetails',npcId,name,page}));},
@@ -43,7 +48,7 @@ const repair=new RepairView(document.querySelector<HTMLElement>('#repair-panel')
 });
 let selectedMagic:MagicSkill|undefined;
 let groupEnabled=false,groupMemberNames:string[]=[],attackMode=0;
-let guildName='',guildRankName='',guildNotice='',guildWarGuildNames:string[]=[],guildWarTimers:{name:string;remainingMs:number}[]=[],guildWarReceivedAt=0,guildAllyGuildNames:string[]=[],guildMemberNames:string[]=[],guildRanks:{rankNo:number;rankName:string;members:string[]}[]=[],dialogueNpcId:number|undefined;
+let guildName='',guildRankName='',guildNotice='',guildWarGuildNames:string[]=[],guildWarTimers:{name:string;remainingMs:number}[]=[],guildWarReceivedAt=0,guildAllyGuildNames:string[]=[],guildMemberNames:string[]=[],guildRanks:{rankNo:number;rankName:string;members:string[]}[]=[],castleWarStatus:{phase:'started'|'warning'|'captured'|'ended';castleName:string;remainingMinutes?:number;guildName?:string}|undefined,dialogueNpcId:number|undefined;
 type QuestState={id:string;status:string;title:string;summary:string;objective:string;detail:string};
 let quests=new Map<string,QuestState>();
 let tradeOpen=false,tradeLocal=new Map<number,InventoryItem>(),tradeRemote=new Map<number,InventoryItem>(),tradeGold=0,tradeRemoteGold=0;
@@ -98,7 +103,8 @@ function renderAttackMode(){
 function formatGuildWarTime(remainingMs:number){const totalSeconds=Math.max(0,Math.ceil(remainingMs/1000));const hours=Math.floor(totalSeconds/3600),minutes=Math.floor(totalSeconds%3600/60),seconds=totalSeconds%60;return hours?`${hours}小时${String(minutes).padStart(2,'0')}分`:minutes?`${minutes}分${String(seconds).padStart(2,'0')}秒`:`${seconds}秒`;}
 function renderGuildRelations(){
  const warText=guildWarGuildNames.length?`交战：${guildWarGuildNames.map(name=>{const timer=guildWarTimers.find(value=>value.name===name);return timer?`${name}（${formatGuildWarTime(timer.remainingMs-(performance.now()-guildWarReceivedAt))}）`:name;}).join('、')}`:'暂无交战';
- guildRelations.textContent=[guildNotice?`公告：${guildNotice}`:'暂无公告',warText,guildAllyGuildNames.length?`联盟：${guildAllyGuildNames.join('、')}`:'暂无联盟'].join(' · ');
+ const castleText=castleWarStatus?castleWarStatus.phase==='started'?`${castleWarStatus.castleName}攻城进行中`:castleWarStatus.phase==='warning'?`${castleWarStatus.castleName}攻城剩余${castleWarStatus.remainingMinutes}分钟`:castleWarStatus.phase==='captured'?`${castleWarStatus.castleName}已被${castleWarStatus.guildName}占领`:`${castleWarStatus.castleName}攻城已结束`:'';
+ guildRelations.textContent=[guildNotice?`公告：${guildNotice}`:'暂无公告',warText,guildAllyGuildNames.length?`联盟：${guildAllyGuildNames.join('、')}`:'暂无联盟',castleText].filter(Boolean).join(' · ');
 }
 function renderGuild(){
  guildStatus.textContent=guildName?(guildRankName?`${guildName} · ${guildRankName}`:guildName):'未加入行会';
@@ -113,7 +119,7 @@ function renderGuild(){
  for(const rank of guildRanks){const row=document.createElement('p');row.textContent=`${rank.rankNo}. ${rank.rankName}：${rank.members.join('、')||'暂无成员'}`;guildRanksElement.append(row);}
  guildRanksInput.value=guildRanks.map(rank=>`${rank.rankNo}|${rank.rankName}|${rank.members.join(',')}`).join('\n');
 }
-window.setInterval(()=>{if(guildWarTimers.length)renderGuildRelations();},1000);
+window.setInterval(()=>{if(guildWarTimers.length||castleWarStatus)renderGuildRelations();},1000);
 function sendGuild(type:'guildOpen'|'guildMembers'|'guildAdd'|'guildRemove'){
  if(socket?.readyState!==WebSocket.OPEN)return;
  if((type==='guildAdd'||type==='guildRemove')&&!guildTarget.value.trim()){connection.textContent='请填写行会对象';guildTarget.focus();return;}
@@ -132,9 +138,10 @@ function renderTrade(){
 function clearTrade(){tradeOpen=false;tradeLocal.clear();tradeRemote.clear();tradeGold=0;tradeRemoteGold=0;tradeTarget.value='';tradeGoldInput.value='0';renderTrade();}
 const skillBar=new SkillBar(document.querySelector<HTMLElement>('#skills')!,{
  select:skill=>{selectedMagic=skill;connection.textContent=skill?`已选择 ${skill.name}，请点击目标`:'已取消技能选择';},
- self:skill=>{if(socket?.readyState===WebSocket.OPEN&&self!==undefined){socket.send(JSON.stringify({type:'castMagic',magicId:skill.magicId,targetId:self}));const actor=entities.get(self);if(actor)update({...actor,action:'spell'});connection.textContent=`正在施放 ${skill.name}…`;}}
+ self:skill=>castSelf(skill)
 });
-const classicHud=new ClassicHud(document.querySelector<HTMLElement>('#classic-hud')!,index=>skillBar.selectSlot(index));
+const classicHud=new ClassicHud(document.querySelector<HTMLElement>('#classic-hud')!,index=>activateSkillSlot(index));
+const classicAuth=new ClassicAuth(document.querySelector<HTMLElement>('#auth-overlay')!);
 const view=await createMapView(document.querySelector<HTMLElement>('#viewport')!,document.querySelector<HTMLOutputElement>('#status')!);
 const magicEffects=new MagicEffects(view.depth,id=>entities.get(id));
 let ignoreCanvasPointerUntil=0;
@@ -147,17 +154,16 @@ const inventory=new InventoryView(document.querySelector<HTMLElement>('#inventor
  trade:makeIndex=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'tradeAdd',makeIndex}));}
 });
 const equipment=new EquipmentView(document.querySelector<HTMLElement>('#equipment-items')!,slot=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'takeOffItem',slot}));});
+const paperdoll=new PaperdollView(document.querySelector<HTMLElement>('#paperdoll-actor')!);
+const characterWindow=document.querySelector<HTMLElement>('#character-window')!;
+const inventoryWindow=document.querySelector<HTMLElement>('#inventory-window')!;
 const classicWindow=document.querySelector<HTMLElement>('#classic-window')!;
 const classicWindowTitle=document.querySelector<HTMLElement>('#classic-window-title')!;
 const classicWindowBody=document.querySelector<HTMLElement>('#classic-window-body')!;
 const classicModalLayer=document.querySelector<HTMLElement>('#classic-modal-layer')!;
-for(const panel of [dialogueElement,document.querySelector<HTMLElement>('#shop-panel')!,document.querySelector<HTMLElement>('#repair-panel')!,document.querySelector<HTMLElement>('#storage-panel')!])classicModalLayer.append(panel);
+for(const panel of [dialogueElement,document.querySelector<HTMLElement>('#shop-panel')!,document.querySelector<HTMLElement>('#repair-panel')!,document.querySelector<HTMLElement>('#storage-panel')!,revivePanel])classicModalLayer.append(panel);
 const classicWindowSources=[
- {id:'character',label:'角色状态',node:document.querySelector<HTMLElement>('#character-panel')!},
  {id:'quest',label:'任务日志',node:document.querySelector<HTMLElement>('#quest-panel')!},
- {id:'skills',label:'技能',node:document.querySelector<HTMLElement>('#skills')!.closest('details') as HTMLElement},
- {id:'equipment',label:'装备',node:document.querySelector<HTMLElement>('#equipment-items')!.closest('details') as HTMLElement},
- {id:'inventory',label:'背包',node:document.querySelector<HTMLElement>('#inventory-items')!.closest('details') as HTMLElement},
  {id:'targets',label:'附近目标与 NPC',node:document.querySelector<HTMLElement>('#nearby-targets')!.parentElement as HTMLElement},
  {id:'ground',label:'地面物品',node:document.querySelector<HTMLElement>('#ground-items')!.parentElement as HTMLElement},
  {id:'chat',label:'聊天',node:document.querySelector<HTMLElement>('.chat-panel')!},
@@ -166,15 +172,40 @@ const classicWindowSources=[
  {id:'guild',label:'行会',node:document.querySelector<HTMLElement>('#guild-panel')!},
  {id:'trade',label:'玩家交易',node:document.querySelector<HTMLElement>('#trade-panel')!},
 ];
-for(const source of classicWindowSources){source.node.hidden=true;classicWindowBody.append(source.node);}
+for(const source of classicWindowSources){source.node.hidden=source.id!=='chat';if(source.id!=='chat')classicWindowBody.append(source.node);}
+document.querySelector<HTMLElement>('[data-hud-chat]')!.append(document.querySelector<HTMLElement>('.chat-panel')!);
+function setCharacterPage(page:'paperdoll'|'status'|'state'|'skills'){
+ characterWindow.hidden=false;classicHud.skinWindow(characterWindow,'character');
+ characterWindow.querySelectorAll<HTMLElement>('[data-character-page]').forEach(node=>node.hidden=node.dataset.characterPage!==page);
+ document.querySelector<HTMLElement>('#equipment-items')!.hidden=page!=='paperdoll';
+ document.querySelector<HTMLElement>('#paperdoll-actor')!.hidden=page!=='paperdoll';
+ characterWindow.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach(button=>button.classList.toggle('active',button.dataset.characterTab===page));
+}
+function toggleClassicWindow(id:string){
+ if(id==='character'||id==='equipment'){
+  if(!characterWindow.hidden&&(id==='character'||id==='equipment')){characterWindow.hidden=true;return;}
+  setCharacterPage('paperdoll');return;
+ }
+ if(id==='skills'){setCharacterPage('skills');return;}
+ if(id==='inventory'){inventoryWindow.hidden=!inventoryWindow.hidden;if(!inventoryWindow.hidden)classicHud.skinWindow(inventoryWindow,'inventory');return;}
+ showClassicWindow(id);
+}
 function showClassicWindow(id:string){
  const source=classicWindowSources.find(value=>value.id===id);if(!source)return;
- for(const value of classicWindowSources)value.node.hidden=value.node!==source.node;
- classicWindowTitle.textContent=source.label;classicWindow.hidden=false;
+ for(const value of classicWindowSources)if(value.id!=='chat')value.node.hidden=value.node!==source.node;
+ classicWindowTitle.textContent=source.label;
+ if(id==='chat'){classicWindow.hidden=true;return;}
+ classicWindow.hidden=false;classicHud.skinWindow(classicWindow,id);
  document.querySelectorAll<HTMLButtonElement>('[data-window-tab]').forEach(button=>button.classList.toggle('active',button.dataset.windowTab===id));
 }
-document.querySelectorAll<HTMLButtonElement>('[data-window-open],[data-window-tab]').forEach(button=>button.addEventListener('click',()=>showClassicWindow(button.dataset.windowOpen??button.dataset.windowTab??'')));
+document.querySelectorAll<HTMLButtonElement>('[data-window-open],[data-window-tab]').forEach(button=>button.addEventListener('click',()=>toggleClassicWindow(button.dataset.windowOpen??button.dataset.windowTab??'')));
+document.querySelectorAll<HTMLButtonElement>('[data-window-close]').forEach(button=>button.addEventListener('click',()=>{
+ const id=button.dataset.windowClose;
+ if(id==='character')characterWindow.hidden=true;
+ else if(id==='inventory')inventoryWindow.hidden=true;
+}));
 document.querySelector<HTMLButtonElement>('#classic-window-close')!.addEventListener('click',()=>{classicWindow.hidden=true;});
+characterWindow.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach(button=>button.addEventListener('click',()=>setCharacterPage((button.dataset.characterTab??'paperdoll') as 'paperdoll'|'status'|'state'|'skills')));
 const groundItems=new GroundItems(view.depth,(item:GroundItem)=>{
  ignoreCanvasPointerUntil=performance.now()+100;
  const entity=self===undefined?undefined:entities.get(self);
@@ -189,13 +220,13 @@ let mapReady:Promise<void>=Promise.resolve();
 type Credentials={account:string;password:string};
 let credentials:Credentials|undefined,selectedCharacter:string|undefined;
 function appendChat(channel:string,text:string){const line=document.createElement('li');line.dataset.channel=channel;const labels:Record<string,string>={local:'附近',group:'组队',shout:'喊话',whisper:'私聊',guild:'行会',system:'系统'};line.textContent=`[${labels[channel]??channel}] ${text}`;chatLog.append(line);while(chatLog.children.length>100)chatLog.firstElementChild?.remove();chatLog.scrollTop=chatLog.scrollHeight;}
-function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;doorRetry=undefined;held=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];dialogueNpcId=undefined;classicWindow.hidden=true;renderGroup();renderAttackMode();renderGuild();clearTrade();if(movementTimer!==undefined)clearTimeout(movementTimer);movementTimer=undefined;if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();equipment.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}dialogueElement.hidden=true;revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();}
-function update(entity:Entity){entities.set(entity.id,entity);let visual=visuals.get(entity.id);if(!visual){visual=new OnlineActor(entity,interact);visuals.set(entity.id,visual);view.depth.addChild(visual.container);}visual.update(entity);renderTargets();}
+function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;doorRetry=undefined;held=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];castleWarStatus=undefined;dialogueNpcId=undefined;classicWindow.hidden=true;characterWindow.hidden=true;inventoryWindow.hidden=true;renderGroup();renderAttackMode();renderGuild();clearTrade();if(movementTimer!==undefined)clearTimeout(movementTimer);movementTimer=undefined;if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();equipment.clear();paperdoll.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}dialogueElement.hidden=true;revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();}
+function update(entity:Entity){entities.set(entity.id,entity);let visual=visuals.get(entity.id);if(!visual){visual=new OnlineActor(entity,interact);visuals.set(entity.id,visual);view.depth.addChild(visual.container);}visual.update(entity);if(entity.self)paperdoll.setFeature(entity.feature);renderTargets();}
 function renderTargets(){
  targetsElement.replaceChildren();const actor=self===undefined?undefined:entities.get(self);if(!actor){targetsElement.textContent='等待附近对象…';return;}
  const targets=[...entities.values()].filter(entity=>{const race=entity.feature&255;return !entity.self&&(race!==0||Boolean(entity.name));}).map(entity=>({entity,distance:Math.max(Math.abs(entity.x-actor.x),Math.abs(entity.y-actor.y))})).filter(value=>value.distance<=8).sort((a,b)=>a.distance-b.distance||a.entity.id-b.entity.id);
  if(!targets.length){targetsElement.textContent='附近没有可交互对象';return;}
- for(const {entity,distance} of targets){const button=document.createElement('button');button.type='button';button.dataset.entityId=String(entity.id);const race=entity.feature&255,npc=race===50,player=race===0,health=entity.hp===undefined?'':` · ${entity.hp}/${entity.maxHp} HP`;button.textContent=`${entity.name||(npc?'NPC':'怪物')} · ${entity.x},${entity.y} · ${distance} 格${health} · ${npc?(distance===1?'对话':'接近'):player?(distance===1?'PK/行会战':'接近'):entity.dead?'挖肉':distance===1?'攻击':'接近'}`;button.onclick=()=>interact(entities.get(entity.id)??entity);targetsElement.append(button);}
+ for(const {entity,distance} of targets){const button=document.createElement('button');button.type='button';button.dataset.entityId=String(entity.id);const race=entity.feature&255,npc=race===50,player=race===0,slave=entity.kind==='slave'||entity.nameColor===254,health=entity.hp===undefined?'':` · ${entity.hp}/${entity.maxHp} HP`;button.textContent=`${slave?'召唤 · ':''}${entity.name||(npc?'NPC':'怪物')} · ${entity.x},${entity.y} · ${distance} 格${health} · ${npc?(distance===1?'对话':'接近'):player?(distance===1?'PK/行会战':'接近'):entity.dead?'挖肉':distance===1?'攻击':'接近'}`;button.onclick=()=>interact(entities.get(entity.id)??entity);targetsElement.append(button);}
 }
 function sendMovement(actor:Entity,dx:number,dy:number,run=false){
  if(actor.dead||pending||socket?.readyState!==WebSocket.OPEN)return false;const direction=directions.findIndex(([x,y])=>x===dx&&y===dy);if(direction<0)return false;
@@ -246,7 +277,7 @@ function interact(target:Entity){
 view.app.ticker.add(()=>{const time=performance.now();for(const visual of visuals.values())visual.tick(time);});
 function scheduleReconnect(){
  if(!reconnectEnabled||reconnectTimer!==undefined||!credentials)return;
- if(reconnectAttempts>=5){reconnectEnabled=false;loginForm.hidden=false;charactersElement.hidden=false;createCharacterForm.hidden=true;connection.textContent='自动重连失败，请重新登录';return;}
+ if(reconnectAttempts>=5){reconnectEnabled=false;document.body.classList.remove('in-world');classicAuth.showLogin();connection.textContent='自动重连失败，请重新登录';return;}
  const attempt=reconnectAttempts++,delay=Math.min(8000,500*2**attempt);
  connection.textContent=`连接已断开，${Math.ceil(delay/1000)} 秒后自动重连 (${attempt+1}/5)…`;
  reconnectTimer=window.setTimeout(()=>{reconnectTimer=undefined;const saved=credentials;connect('login',selectedCharacter,saved,true);},delay);
@@ -268,17 +299,22 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
    else connection.textContent=message.reason===0?'该账号已经存在':`账号创建失败 (${message.reason})`;
   }
   else if(message.type==='characters'){
-   reconnectAttempts=0;const choices=charactersElement;choices.replaceChildren();loginForm.hidden=true;connection.textContent='选择角色';
-   const resumed=resumeCharacter===undefined?undefined:message.characters.find((candidate:{name:string})=>candidate.name===resumeCharacter);
-   if(resumed){selectedCharacter=resumed.name;loadQuest();active.send(JSON.stringify({type:'selectCharacter',name:resumed.name}));choices.replaceChildren();createCharacterForm.hidden=true;connection.textContent='正在返回安全区…';return;}
-   for(const character of message.characters){const button=document.createElement('button');button.textContent=`${character.name} · ${character.level} 级`;button.onclick=()=>{selectedCharacter=character.name;loadQuest();active.send(JSON.stringify({type:'selectCharacter',name:character.name}));choices.replaceChildren();connection.textContent='正在进入比奇…';};choices.append(button);}
-   createCharacterForm.hidden=false;
-   if(!message.characters.length)connection.textContent='当前账号没有角色，请创建战士、法师或道士。';
+   reconnectAttempts=0;
+   const list=message.characters as SelectCharacter[];
+   const enter=(name:string)=>{selectedCharacter=name;loadQuest();active.send(JSON.stringify({type:'selectCharacter',name}));connection.textContent='正在进入比奇…';};
+   const resumed=resumeCharacter===undefined?undefined:list.find(candidate=>candidate.name===resumeCharacter);
+   if(resumed){enter(resumed.name);connection.textContent='正在返回安全区…';return;}
+   classicAuth.showSelect(list,{
+    start:enter,
+    create:()=>classicAuth.showCreate(),
+    exit:()=>{reconnectEnabled=false;active.close();classicAuth.showLogin();connection.textContent='已返回登录';}
+   });
+   connection.textContent=list.length?'选择角色后点击开始游戏':'当前账号没有角色，请创建战士、法师或道士。';
   }
   else if(message.type==='characterCreationResult')connection.textContent=message.accepted?`角色 ${message.name} 创建成功，请选择角色`:`角色创建失败 (${message.reason})`;
   else if(message.type==='map'){
    reconnectAttempts=0;
-   loginForm.hidden=true;charactersElement.hidden=true;createCharacterForm.hidden=true;
+   classicAuth.hide();document.body.classList.add('in-world');
    doorRetry=undefined;currentMap=message.map;
    clearWorld(true);worldReady=false;suppressNpcDialogsUntil=performance.now()+3000;mapGeneration=envelope.mapGeneration;classicHud.position(message.map,0,0);connection.textContent=`正在载入地图 ${message.map}…`;
    mapReady=view.setMap(message.map).then(()=>{worldReady=true;}).catch(error=>{
@@ -289,11 +325,11 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   });
   }
   else if(message.type==='entity'){
-   const prior=entities.get(message.id);const entity={...prior,...message,name:message.name??prior?.name??'',feature:message.feature??prior?.feature??0,self:message.self||prior?.self||false} as Entity;
+   const prior=entities.get(message.id);const entity={...prior,...message,name:message.name??prior?.name??'',feature:message.feature??prior?.feature??0,self:message.self||prior?.self||false,kind:message.kind??prior?.kind} as Entity;
    update(entity);if(entity.self){self=entity.id;classicHud.position(currentMap,entity.x,entity.y);view.setMarker(entity.x,entity.y);void mapReady.then(()=>view.setCenter(entity.x,entity.y));connection.textContent=`已连接 · ${entity.name} · ${entity.x}, ${entity.y}`;}if(message.self&&mapGeneration===1)active.send(JSON.stringify({type:'inventory'}));
   }
-  else if(message.type==='appearance'||message.type==='entityName'||message.type==='entityDied'||message.type==='entityAlive'){
-   const entity=entities.get(message.id);if(entity){const next={...entity,...(message.type==='appearance'?{feature:message.feature}:message.type==='entityName'?{name:message.name}:message.type==='entityAlive'?{dead:false,action:'standing',x:message.x,y:message.y,direction:message.direction}:{dead:true,action:'dying',x:message.x,y:message.y,direction:message.direction,hp:0})};update(next);if(message.type==='entityDied'&&combatTarget===message.id)stopCombat();if(message.type==='entityDied'&&entity.self){held=undefined;pending=undefined;stopCombat();characterPanel.resources({hp:0});revivePanel.hidden=false;connection.textContent='角色已死亡';combatStatus.textContent='等待回城复活';}}
+  else if(message.type==='appearance'||message.type==='entityName'||message.type==='nameColor'||message.type==='entityDied'||message.type==='entityAlive'){
+   const entity=entities.get(message.id);if(entity){const next={...entity,...(message.type==='appearance'?{feature:message.feature}:message.type==='entityName'?{name:message.name,nameColor:message.nameColor??entity.nameColor,kind:message.kind??entity.kind}:message.type==='nameColor'?{nameColor:message.color,kind:message.color===254?'slave':entity.kind}:message.type==='entityAlive'?{dead:false,action:'standing',x:message.x,y:message.y,direction:message.direction}:{dead:true,action:'dying',x:message.x,y:message.y,direction:message.direction,hp:0})};update(next);if(message.type==='entityDied'&&combatTarget===message.id)stopCombat();if(message.type==='entityDied'&&entity.self){held=undefined;pending=undefined;stopCombat();characterPanel.resources({hp:0});revivePanel.hidden=false;connection.textContent='角色已死亡';combatStatus.textContent='等待回城复活';}}
   }
   else if(message.type==='entityAction'){const entity=entities.get(message.id);if(entity){update({...entity,x:message.x,y:message.y,direction:message.direction,action:message.action});if(message.action==='attack'&&!entity.self&&((entity.feature>>>16)&0xffff)===20)audio.play('skeletonAttack');}}
   else if(message.type==='health'){const entity=entities.get(message.id);if(entity){update({...entity,hp:message.hp,maxHp:message.maxHp,action:entity.dead?'dead':'struck'});if(message.damage>0)audio.play('struck');if(entity.self)characterPanel.resources({hp:message.hp,maxHp:message.maxHp});if(combatTarget===message.id&&message.hp<=0)stopCombat();combatStatus.textContent=`${entity.name||'目标'} ${message.hp}/${message.maxHp} HP`;}}
@@ -310,6 +346,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='skillRemoved'){skillBar.remove(message.magicId);classicHud.removeSkill(message.magicId);}
   else if(message.type==='skillProgress'){skillBar.progress(message.magicId,message.level,message.currentTrain);classicHud.progress(message.magicId,message.level,message.currentTrain);}
   else if(message.type==='spellResult'){skillBar.resolve();connection.textContent=message.accepted?`${message.name} 已由服务端接受`:`${message.name} 施放失败`;}
+  else if(message.type==='warriorSkill'){const parts=[message.thrusting===true?'刺杀开启':message.thrusting===false?'刺杀关闭':'',message.halfMoon===true?'半月开启':message.halfMoon===false?'半月关闭':'',message.fireHit?'烈火蓄力':''].filter(Boolean);if(parts.length)combatStatus.textContent=parts.join(' · ');}
   else if(message.type==='magicEffect'){const caster=entities.get(message.casterId);if(caster)update({...caster,action:'spell'});magicEffects.resolve(message);combatStatus.textContent=`魔法效果 ${message.effectType}/${message.effect} · ${message.x},${message.y}`;}
   else if(message.type==='spellCast'){const caster=entities.get(message.casterId);if(caster)update({...caster,x:message.x,y:message.y,action:'spell'});magicEffects.cast(message.casterId,message.magicId);}
   else if(message.type==='magicFailed'){skillBar.resolve();combatStatus.textContent='魔法未产生效果';}
@@ -357,10 +394,10 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='npcDialogue'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){
    if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);
    dialogueNpcId=String(message.npcName).includes('国王')?message.npcId:undefined;renderGuild();
-   shop.clear();storage.clear();repair.clear();dialogueElement.hidden=false;dialogueTitle.textContent=message.npcName;dialogueText.textContent=message.text;dialogueOptions.replaceChildren();
+   shop.clear();storage.clear();repair.clear();dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueTitle.textContent=message.npcName;dialogueText.textContent=message.text;dialogueOptions.replaceChildren();
    for(const option of message.options){if(option.input){const form=document.createElement('form');form.className='dialogue-input';const input=document.createElement('input');input.type='text';input.maxLength=80;input.placeholder=option.text;input.required=true;const button=document.createElement('button');button.type='submit';button.textContent=option.text;form.onsubmit=event=>{event.preventDefault();active.send(JSON.stringify({type:'dialogueSelect',npcId:message.npcId,command:option.command,input:input.value}));};form.append(input,button);dialogueOptions.append(form);}else{const button=document.createElement('button');button.type='button';button.textContent=option.text;button.onclick=()=>active.send(JSON.stringify({type:'dialogueSelect',npcId:message.npcId,command:option.command}));dialogueOptions.append(button);}}
   }
-  else if(message.type==='dialogueMessage'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);dialogueElement.hidden=false;dialogueText.textContent=message.text;}
+  else if(message.type==='dialogueMessage'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueText.textContent=message.text;}
   else if(message.type==='npcDialogueClosed'){dialogueElement.hidden=true;dialogueNpcId=undefined;renderGuild();shop.clear();storage.clear();repair.clear();}
   else if(message.type==='shop'){dialogueElement.hidden=true;storage.clear();repair.clear();shop.open(message.npcId,message.items);connection.textContent=`商店已打开 · ${message.items.length} 种商品`;}
   else if(message.type==='shopSell'){dialogueElement.hidden=true;storage.clear();repair.clear();shop.openSell(message.npcId,message.items);connection.textContent='请选择要出售的背包物品';}
@@ -385,7 +422,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
    const reasons:Record<number,string>={1:'服务端拒绝操作',2:'仓库已满',3:'背包空间或负重不足'};connection.textContent=message.accepted?(message.kind==='store'?`已存入 ${message.item.name}`:`已取回 ${message.item.name}`):`仓库操作失败 · ${reasons[message.reason]??`原因 ${message.reason}`}`;
   }
   else if(message.type==='chat')appendChat(message.channel,message.text);
-  else if(message.type==='systemMessage'){combatStatus.textContent=message.text;appendChat('system',message.text);}
+  else if(message.type==='systemMessage'){combatStatus.textContent=message.text;appendChat('system',message.text);if(message.castleWar){castleWarStatus=message.castleWar;renderGuild();}}
   else if(message.type==='entityRemoved'){if(pursuitTarget===message.id)pursuitTarget=undefined;if(combatTarget===message.id)stopCombat();entities.delete(message.id);visuals.get(message.id)?.destroy();visuals.delete(message.id);renderTargets();}
   else if(message.type==='legacy'&&pending){
    if(message.id===-1&&message.status?.startsWith('+GD/')){const entity=self===undefined?undefined:entities.get(self);if(entity){update({...entity,...pending,action:pending.run?'running':'walking'});classicHud.position(view.map,pending.x,pending.y);view.setMarker(pending.x,pending.y);void view.setCenter(pending.x,pending.y);audio.play('movement',.22);connection.textContent=`已连接 · ${entity.name} · ${pending.x}, ${pending.y}`;}pending=undefined;continueHeld();continuePursuit();continueGroundPursuit();}
@@ -410,7 +447,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='groundItemRemoved'){if(pursuitGroundItem===message.id)pursuitGroundItem=undefined;groundItems.remove(message.id);}
   else if(message.type==='error'){selectedMagic=undefined;skillBar.resolve();connection.textContent=message.message;}
  });
- active.addEventListener('close',()=>{if(socket!==active)return;pending=undefined;doorRetry=undefined;held=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;stopCombat();if(reconnectEnabled&&credentials){scheduleReconnect();}else{loginForm.hidden=false;charactersElement.hidden=false;createCharacterForm.hidden=true;connection.textContent='连接已断开，请重新登录';}});
+ active.addEventListener('close',()=>{if(socket!==active)return;pending=undefined;doorRetry=undefined;held=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;stopCombat();if(reconnectEnabled&&credentials){scheduleReconnect();}else{document.body.classList.remove('in-world');classicAuth.showLogin();connection.textContent='连接已断开，请重新登录';}});
  active.addEventListener('error',()=>{if(socket===active)connection.textContent='无法连接游戏网关';});
 }
 loginForm.addEventListener('submit',event=>{event.preventDefault();connect('login');});
@@ -455,6 +492,21 @@ view.app.canvas.addEventListener('pointerdown',event=>{
  stopCombat();doorRetry=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;sendMovement(entity,dx,dy,event.shiftKey||event.button===2);
 });
 const movementKeys:Record<string,[number,number]>={ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowRight:[1,0],d:[1,0],D:[1,0],ArrowDown:[0,1],s:[0,1],S:[0,1],ArrowLeft:[-1,0],a:[-1,0],A:[-1,0]};
-function selectSkillSlot(index:number){if(skillBar.selectSlot(index))classicHud.selectSlot(index);}
+function selectSkillSlot(index:number){activateSkillSlot(index);}
+function activateSkillSlot(index:number){
+ const skill=skillBar.skillAt(index);if(!skill)return false;
+ const use=skillUseOf(skill.magicId);
+ if(use==='passive'){classicHud.selectSlot(index);connection.textContent=`${skill.name} 为被动技能，随近战生效`;return true;}
+ if(use==='self'||use==='toggle'||use==='charge'){classicHud.selectSlot(index);return skillBar.castSelf(skill);}
+ if(skillBar.selectSlot(index)){classicHud.selectSlot(index);return true;}
+ return false;
+}
+function castSelf(skill:MagicSkill){
+ if(socket?.readyState!==WebSocket.OPEN||self===undefined){skillBar.resolve();return;}
+ socket.send(JSON.stringify({type:'castMagic',magicId:skill.magicId,targetId:self}));
+ const actor=entities.get(self);if(actor)update({...actor,action:'spell'});
+ const use=skillUseOf(skill.magicId);
+ connection.textContent=use==='toggle'?`正在开关 ${skill.name}…`:use==='charge'?`正在蓄力 ${skill.name}…`:`正在施放 ${skill.name}…`;
+}
 window.addEventListener('keydown',event=>{if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea'))return;const functionKey=/^F([1-8])$/.exec(event.key);if(functionKey){event.preventDefault();if(!event.repeat)selectSkillSlot(Number(functionKey[1])-1);return;}const offset=movementKeys[event.key];if(!offset||event.repeat)return;event.preventDefault();stopCombat();doorRetry=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;held={key:event.key,dx:offset[0],dy:offset[1],run:event.shiftKey};const actor=self===undefined?undefined:entities.get(self);if(actor)sendMovement(actor,held.dx,held.dy,held.run);});
 window.addEventListener('keyup',event=>{if(held?.key===event.key)held=undefined;});

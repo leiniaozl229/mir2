@@ -7,6 +7,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
 from skill_catalog_audit import audit
 from skill_visual_audit import audit as audit_visuals
+from skill_combat_audit import audit as audit_combat
 
 
 class SkillCatalogTests(unittest.TestCase):
@@ -37,6 +38,14 @@ class SkillCatalogTests(unittest.TestCase):
         self.assertTrue(report["ok"], report)
         self.assertEqual(report["expected"], 15)
         self.assertEqual(report["passiveMagicIds"], [3, 7, 12, 25, 26])
+
+    def test_core_skill_combat_uses_match_client_and_trainer_levels(self):
+        report = audit_combat()
+        self.assertTrue(report["ok"], report)
+        self.assertEqual(report["expected"], 15)
+        self.assertEqual(report["trainerLevels"], {"warrior": 35, "wizard": 31, "taoist": 22})
+        self.assertEqual(report["summon"]["name"], "变异骷髅")
+        self.assertEqual(report["summon"]["nameColor"], 254)
 
 
 if __name__ == "__main__":

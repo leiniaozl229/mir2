@@ -3,7 +3,7 @@ export type CharacterAttributes={level:number;job:number;gold:number;gameGold:nu
 
 export class CharacterPanel {
  private attributes:CharacterAttributes|undefined;
- constructor(private element:HTMLElement){this.render();}
+ constructor(private element:HTMLElement,private stateElement?:HTMLElement,private nameElement?:HTMLElement){this.render();}
  clear(){this.attributes=undefined;this.render();}
  replace(attributes:CharacterAttributes){this.attributes=attributes;this.render();}
  resources(values:{hp?:number;mp?:number;maxHp?:number;maxMp?:number}){if(!this.attributes)return;this.attributes={...this.attributes,...values};this.render();}
@@ -12,14 +12,24 @@ export class CharacterPanel {
  weights(values:{weight:number;wearWeight:number;handWeight:number}){if(!this.attributes)return;Object.assign(this.attributes,values);this.render();}
  currency(values:{gold?:number;gameGold?:number}){if(!this.attributes)return;Object.assign(this.attributes,values);this.render();}
  private render(){
-  this.element.replaceChildren();const a=this.attributes;if(!a){this.element.textContent='等待角色属性…';return;}
-  const jobs=['战士','法师','道士'];
-  const identity=document.createElement('div');identity.className='character-identity';identity.innerHTML=`<strong>${jobs[a.job]??`职业 ${a.job}`} · ${a.level} 级</strong><span>金币 ${a.gold.toLocaleString('zh-CN')}</span>`;
-  const vitals=document.createElement('div');vitals.className='vitals';vitals.append(this.meter('HP',a.hp,a.maxHp,'hp'),this.meter('MP',a.mp,a.maxMp,'mp'),this.meter('经验',a.experience,a.maxExperience,'exp'));
-  const stats=document.createElement('dl');stats.className='attribute-grid';
-  const values=[['攻击',a.dc],['魔法',a.mc],['道术',a.sc],['防御',a.ac],['魔防',a.mac],['背包',`${a.weight}/${a.maxWeight}`],['穿戴',`${a.wearWeight}/${a.maxWearWeight}`],['腕力',`${a.handWeight}/${a.maxHandWeight}`]] as const;
-  for(const [name,value] of values){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=name;dd.textContent=typeof value==='string'?value:`${value.min}-${value.max}`;stats.append(dt,dd);}
-  this.element.append(identity,vitals,stats);
+  const a=this.attributes;
+  if(this.nameElement)this.nameElement.textContent=a?`${['战士','法师','道士'][a.job]??''} ${a.level}`:'';
+  this.element.replaceChildren();
+  if(this.stateElement)this.stateElement.replaceChildren();
+  if(!a){this.element.textContent='等待角色属性…';return;}
+  this.place(this.element,[['HP',`${a.hp}/${a.maxHp}`,20],['MP',`${a.mp}/${a.maxMp}`,38],['防御',range(a.ac),56],['魔防',range(a.mac),74],['攻击',range(a.dc),92],['魔法',range(a.mc),110],['道术',range(a.sc),128]]);
+  if(this.stateElement){
+   const exp=a.maxExperience>0?`${Math.min(100,a.experience/a.maxExperience*100).toFixed(1)}%`:'0%';
+   this.place(this.stateElement,[['经验',exp,20],['背包',`${a.weight}/${a.maxWeight}`,38],['穿戴',`${a.wearWeight}/${a.maxWearWeight}`,56],['腕力',`${a.handWeight}/${a.maxHandWeight}`,74],['金币',String(a.gold),92]]);
+  }
  }
- private meter(name:string,value:number,max:number,kind:string){const block=document.createElement('div');block.className='vital';const label=document.createElement('span');label.textContent=`${name} ${value} / ${max}`;const meter=document.createElement('div');meter.className=`meter ${kind}`;const fill=document.createElement('i');fill.style.width=`${max>0?Math.max(0,Math.min(100,value/max*100)):0}%`;meter.append(fill);block.append(label,meter);return block;}
+ private place(root:HTMLElement,rows:[string,string,number][]){
+  for(const [name,value,top] of rows){
+   const label=document.createElement('span');label.className='classic-stat';label.style.left='20px';label.style.top=`${top}px`;label.textContent=name;
+   const amount=document.createElement('span');amount.className='classic-stat-value';amount.style.left='126px';amount.style.top=`${top}px`;amount.textContent=value;
+   root.append(label,amount);
+  }
+ }
 }
+
+function range(value:RangeStat){return `${value.min}-${value.max}`;}

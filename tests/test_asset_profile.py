@@ -81,15 +81,16 @@ class ActorAssetProfileTests(unittest.TestCase):
     def test_castle_configs_are_normalized_for_engine_encoding(self):
         text = (ROOT / 'scripts/prepare-runtime.py').read_text(encoding='utf-8')
         self.assertIn('def _normalize_castle_configs()', text)
-        self.assertIn('target.read_text(encoding="utf-8-sig")', text)
-        self.assertIn('target.write_text(read_text(source), encoding="utf-8-sig")', text)
+        self.assertIn('raw.decode("gb18030")', text)
+        self.assertIn('target.write_bytes(text.encode("gb18030"))', text)
 
-    def test_castle_manager_initializes_the_persisted_castle_directory_first(self):
+    def test_castle_manager_loads_persisted_directories_without_duplicates(self):
         text = (ROOT / 'vendor/openmir2/src/M2Server/Castle/CastleManager.cs').read_text(
             encoding='utf-8-sig')
-        self.assertIn('new UserCastle("0")', text)
-        self.assertNotIn('castle.ConfigDir = "0"', text)
-        self.assertLess(text.index('castle.EnvirList.Add("0151")'), text.index('castle.Initialize();'))
+        self.assertIn('ReadCastleDirectories()', text)
+        self.assertIn('result.Add(castleDir)', text)
+        self.assertIn('loadList.Add(CastleList[i].ConfigDir)', text)
+        self.assertIn('if (CastleList.Count > 0)', text)
 
     def test_profile_maps_have_exported_chunks(self):
         profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text())
@@ -201,3 +202,80 @@ class ActorAssetProfileTests(unittest.TestCase):
             self.assertEqual(len(library['frames']), frame_count)
             self.assertEqual(library['empty'], [])
             self.assertEqual(library['missing'], [])
+
+    def test_classic_ui_libraries_are_hash_locked(self):
+        profile = json.loads((ROOT / 'content/classic-176/asset-sources.json').read_text())
+        ui = {entry['file']: entry for entry in profile['uiFiles']}
+        for name in ('Prguse.Lib', 'Prguse2.Lib', 'Title.Lib', 'ChrSel.Lib', 'MagIcon.Lib'):
+            entry = ui[name]
+            self.assertGreater(entry['bytes'], 0)
+            self.assertRegex(entry['sha256'], r'^[0-9a-f]{64}$')
+            self.assertIn(f'/Data/{name}', entry['url'])
+
+    def test_exported_classic_ui_covers_required_hud_frames(self):
+        layout = json.loads((ROOT / 'content/classic-176/ui-layout.json').read_text())
+        self.assertEqual(layout['canvas'], {'width': 800, 'height': 600})
+        self.assertEqual(layout['mainDialog']['index'], 0)
+        self.assertEqual(layout['mainDialog']['y'], 448)
+        for library, indices in layout['requiredFrames'].items():
+            path = ROOT / 'assets/web/ui' / library / 'library.json'
+            self.assertTrue(path.is_file(), library)
+            manifest = json.loads(path.read_text())
+            for index in indices:
+                self.assertIn(str(index), manifest['frames'], f'{library}:{index}')
+                frame = manifest['frames'][str(index)]
+                self.assertGreater(frame['width'], 0, f'{library}:{index}')
+                self.assertGreater(frame['height'], 0, f'{library}:{index}')
+
+    def test_classic_login_and_select_layout_matches_crystal(self):
+        layout = json.loads((ROOT / 'content/classic-176/ui-layout.json').read_text())
+        self.assertEqual(layout['login']['library'], 'ChrSel')
+        self.assertEqual(layout['login']['index'], 0)
+        self.assertEqual(layout['login']['dialog']['index'], 1084)
+        self.assertEqual(layout['login']['dialog']['x'], 236)
+        self.assertEqual(layout['select']['library'], 'Prguse')
+        self.assertEqual(layout['select']['index'], 65)
+        self.assertEqual(layout['select']['slot']['count'], 4)
+        self.assertEqual(layout['newCharacter']['index'], 73)
+        source = (ROOT / 'apps/web/src/classic-auth.ts').read_text()
+        self.assertIn("index:1084", source)
+        self.assertIn("uiFrame(this.libraries.get('Prguse')!, 65)", source)
+        markup = (ROOT / 'apps/web/play.html').read_text()
+        self.assertIn('data-auth-login', markup)
+        self.assertIn('data-auth-select', markup)
+        self.assertIn('data-auth-start', markup)
+
+    def test_classic_inventory_and_equipment_layout_matches_crystal(self):
+        layout = json.loads((ROOT / 'content/classic-176/ui-layout.json').read_text())
+        grid = layout['inventoryGrid']
+        self.assertEqual(grid, {'columns': 8, 'visible': 40, 'cellWidth': 36, 'cellHeight': 32,
+                                'originX': 9, 'originY': 37, 'gapX': 1, 'gapY': 1})
+        self.assertEqual(layout['characterPage'], {'library': 'Prguse', 'index': 340, 'x': 8, 'y': 90})
+        self.assertEqual(layout['paperdollActor'], {'x': 70, 'y': 150, 'direction': 4})
+        self.assertEqual(layout['windows']['inventory']['index'], 196)
+        self.assertEqual(layout['windows']['character']['index'], 504)
+        slots = {cell['slot']: (cell['x'], cell['y']) for cell in layout['equipmentCells']}
+        self.assertEqual(slots[1], (123, 7))
+        self.assertEqual(slots[0], (163, 7))
+        self.assertEqual(slots[4], (203, 7))
+        self.assertEqual(slots[9], (8, 242))
+        self.assertEqual(len(layout['equipmentCells']), 13)
+        paperdoll = (ROOT / 'apps/web/src/paperdoll.ts').read_text()
+        self.assertIn("playerLayers", paperdoll)
+        self.assertIn("SOUTH=4", paperdoll)
+        self.assertIn('id="paperdoll-actor"', (ROOT / 'apps/web/play.html').read_text())
+        drops = (ROOT / 'apps/web/src/ground-items.ts').read_text()
+        self.assertIn("fontFamily:'SimSun, Songti SC, serif'", drops)
+        self.assertIn('fill:0xffe085', drops)
+
+    def test_classic_cursors_are_hash_locked_and_exported(self):
+        profile = json.loads((ROOT / 'content/classic-176/asset-sources.json').read_text())
+        layout = json.loads((ROOT / 'content/classic-176/ui-layout.json').read_text())
+        files = {entry['file']: entry for entry in profile['cursorFiles']}
+        for name in layout['cursors'].values():
+            entry = files[name]
+            self.assertEqual(entry['bytes'], 4286)
+            self.assertRegex(entry['sha256'], r'^[0-9a-f]{64}$')
+            path = ROOT / 'assets/web/ui/Cursors' / name
+            self.assertTrue(path.is_file(), name)
+            self.assertEqual(path.stat().st_size, entry['bytes'])

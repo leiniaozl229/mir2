@@ -25,7 +25,7 @@ public static class InventoryProjection
         return packet.Id switch
         {
             200 => new { type = "itemAdded", item = Parse(packet.Body) },
-            202 => new { type = "itemRemoved", makeIndex = packet.Recog },
+            202 => new { type = "itemRemoved", makeIndex = Parse(packet.Body).makeIndex },
             203 => new { type = "itemUpdated", item = Parse(packet.Body) },
             621 => new { type = "equipment", slots = ParseEquipment(packet).Select(value => new { slot = value.Key, item = value.Value }) },
             600 or 601 => new { type = "dropResult", makeIndex = packet.Recog, accepted = packet.Id == 600 },

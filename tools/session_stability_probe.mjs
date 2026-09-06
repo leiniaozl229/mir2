@@ -5,8 +5,8 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 const root = new URL('..', import.meta.url);
 const gatewayUrl = process.env.MIR2_GATEWAY_URL ?? 'ws://127.0.0.1:18800/ws';
 const durationMs = Number(process.env.MIR2_STABILITY_MS ?? 30000);
-if (!Number.isFinite(durationMs) || durationMs < 5000 || durationMs > 3600000)
-  throw new Error('MIR2_STABILITY_MS must be between 5000 and 3600000');
+if (!Number.isFinite(durationMs) || durationMs < 5000 || durationMs > 7200000)
+  throw new Error('MIR2_STABILITY_MS must be between 5000 and 7200000');
 const credentials = JSON.parse(await readFile(new URL('.runtime/probe-account.json', root), 'utf8'));
 const report = { gatewayUrl, durationMs, passed: false, snapshots: 0, reconnect: false, errors: [] };
 

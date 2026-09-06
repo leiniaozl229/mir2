@@ -25,6 +25,8 @@ using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjecti
 {
     var entity = projected.RootElement;
     Require(entity.GetProperty("name").GetString() == "鸡", "separately encoded entity name");
+    Require(entity.GetProperty("nameColor").GetInt32() == 255, "entity name color from appearance string");
+    Require(entity.GetProperty("kind").GetString() == "monster", "ordinary monster kind");
     Require(entity.GetProperty("feature").GetUInt32() == 10485771 && entity.GetProperty("x").GetInt32() == 296,
         "entity feature and position projection");
 }
@@ -36,6 +38,14 @@ using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjecti
         "struck fields project as health and damage");
     Require(!health.TryGetProperty("x", out _), "damage HP fields are not positions");
 }
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(11, 88, 291, 612, 0, []), ""))))
+    Require(projected.RootElement.GetProperty("kind").ValueKind == JsonValueKind.Null,
+        "unnamed movement update does not overwrite entity kind");
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(
+    new LegacyPacket(11, 88, 291, 612, 0, []), "", knownName: "变异骷髅(Test)", knownNameColor: 229))))
+    Require(projected.RootElement.GetProperty("kind").GetString() == "slave"
+        && projected.RootElement.GetProperty("name").GetString() == "变异骷髅(Test)",
+        "cached summon identity is restored on unnamed movement");
 using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(14, 99, 296, 624, 3, []), ""))))
     Require(projected.RootElement.GetProperty("action").GetString() == "attack"
         && projected.RootElement.GetProperty("direction").GetInt32() == 3, "attack action projection");
@@ -60,6 +70,21 @@ using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjecti
     Require(projected.RootElement.GetProperty("type").GetString() == "guildResult"
         && projected.RootElement.GetProperty("action").GetString() == "open"
         && !projected.RootElement.GetProperty("accepted").GetBoolean(), "guild no-membership projection");
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(100, 0, 0, 0, 0,
+    LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes("[沙巴克 攻城战已经开始]"))), ""))))
+    Require(projected.RootElement.GetProperty("castleWar").GetProperty("phase").GetString() == "started"
+        && projected.RootElement.GetProperty("castleWar").GetProperty("castleName").GetString() == "沙巴克",
+        "castle war start system message projection");
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(100, 0, 0, 0, 0,
+    LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes("[沙巴克 攻城战离结束还有10分钟]"))), ""))))
+    Require(projected.RootElement.GetProperty("castleWar").GetProperty("phase").GetString() == "warning"
+        && projected.RootElement.GetProperty("castleWar").GetProperty("remainingMinutes").GetInt32() == 10,
+        "castle war warning system message projection");
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(100, 0, 0, 0, 0,
+    LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes("[沙巴克 已被 攻城行会 占领]"))), ""))))
+    Require(projected.RootElement.GetProperty("castleWar").GetProperty("phase").GetString() == "captured"
+        && projected.RootElement.GetProperty("castleWar").GetProperty("guildName").GetString() == "攻城行会",
+        "castle war capture system message projection");
 using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(753, 0, 0, 0, 1,
     LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes("测试行会\r \r1\r<Notice>\r欢迎\r<KillGuilds>\r敌对行会\r<AllyGuilds>\r友好行会"))), ""))))
     Require(projected.RootElement.GetProperty("type").GetString() == "guildInfo"
@@ -169,6 +194,23 @@ using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjecti
 }
 using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(800, 12, 0, 0, 0, []), "Test", 12))))
     Require(projected.RootElement.GetProperty("type").GetString() == "entityRemoved", "space move hide removes the prior entity");
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(656, 99, 254, 0, 0, []), ""))))
+    Require(projected.RootElement.GetProperty("type").GetString() == "nameColor"
+        && projected.RootElement.GetProperty("id").GetInt32() == 99
+        && projected.RootElement.GetProperty("color").GetInt32() == 254, "summon name color packet");
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(42, 99, 249, 0, 0, LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes("变异骷髅"))), ""))))
+    Require(projected.RootElement.GetProperty("name").GetString() == "变异骷髅"
+        && projected.RootElement.GetProperty("nameColor").GetInt32() == 249
+        && projected.RootElement.GetProperty("kind").GetString() == "slave", "username packet carries palette color");
+var slaveActor = new LegacyPacket(10, 88, 290, 616, 0,
+    [..LegacyCodec.Encode(description), ..LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes("变异骷髅/254"))]);
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(slaveActor, "Test"))))
+    Require(projected.RootElement.GetProperty("kind").GetString() == "slave"
+        && projected.RootElement.GetProperty("nameColor").GetInt32() == 254, "summon appearance uses slave kind");
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(42, 100, 0xE5, 0, 0,
+    LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes("变异骷髅(Test)"))), ""))))
+    Require(projected.RootElement.GetProperty("kind").GetString() == "slave"
+        && projected.RootElement.GetProperty("nameColor").GetInt32() == 229, "higher-level summon name suffix uses slave kind");
 using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
 byte[] nativeItem = Convert.FromHexString(File.ReadAllText("tests/fixtures/native-client-item.hex").Trim());
 var item = InventoryProjection.Parse(nativeItem);
@@ -179,6 +221,10 @@ BitConverter.GetBytes(99).CopyTo(secondItem, 100);
 var bagPacket = new LegacyPacket(201, 0, 0, 0, 2, [..LegacyCodec.Encode(nativeItem), (byte)'/', ..LegacyCodec.Encode(secondItem), (byte)'/']);
 using (var bag = JsonDocument.Parse(JsonSerializer.Serialize(InventoryProjection.Project(bagPacket))))
     Require(bag.RootElement.GetProperty("items").GetArrayLength() == 2, "independently encoded bag records");
+using (var removed = JsonDocument.Parse(JsonSerializer.Serialize(InventoryProjection.Project(
+    new LegacyPacket(202, 321, 0, 0, 1, LegacyCodec.Encode(nativeItem))))))
+    Require(removed.RootElement.GetProperty("makeIndex").GetInt32() == 0x12345678,
+        "item removal projection reads instance identity from the item body");
 bool badCount = false;
 try { InventoryProjection.Project(bagPacket with { Series = 3 }); } catch (InvalidDataException) { badCount = true; }
 Require(badCount, "bag count mismatch rejected");
@@ -343,6 +389,14 @@ using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(MagicProjecti
     Require(effect.GetProperty("casterId").GetInt32() == 91 && effect.GetProperty("targetId").GetInt32() == 92
         && effect.GetProperty("effectType").GetInt32() == 4 && effect.GetProperty("effect").GetInt32() == 5,
         "magic effect projection");
+}
+var spellCastPacket = new LegacyPacket(17, 91, 301, 611, 1, "11"u8.ToArray());
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(MagicProjection.Project(spellCastPacket))))
+{
+    var spell = projected.RootElement;
+    Require(spell.GetProperty("type").GetString() == "spellCast"
+        && spell.GetProperty("magicId").GetInt32() == 11,
+        "plain ASCII spell cast projection");
 }
 var listener = new TcpListener(IPAddress.Loopback, 0);
 listener.Start();

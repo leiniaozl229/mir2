@@ -19,6 +19,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
     private readonly Dictionary<int, InventoryItem> equipment = [];
     private readonly Dictionary<int, (ushort x, ushort y, bool dead, uint? feature)> entities = [];
     private readonly Dictionary<int, string> entityNames = [];
+    private readonly Dictionary<int, byte> entityNameColors = [];
     private (ushort x, ushort y)? confirmedPosition;
     private (ushort x, ushort y)? pendingPosition;
     private ItemAction? pendingItemAction;
@@ -68,6 +69,8 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                 try
                 {
                     var root = command.RootElement;
+                    if (Environment.GetEnvironmentVariable("MIR2_PROTOCOL_TRACE") == "1")
+                        Console.Error.WriteLine($"[protocol] web command {root}");
                     string type = root.GetProperty("type").GetString() ?? "";
                     if (type == "register" && phase == "login") await Register(root, cancellation);
                 else if (type == "login" && phase == "login") await Login(root, cancellation);
@@ -415,6 +418,8 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
             while (!lifetime.IsCancellationRequested)
             {
                 var packet = await game.Receive(lifetime.Token);
+                if (Environment.GetEnvironmentVariable("MIR2_PROTOCOL_TRACE") == "1")
+                    Console.Error.WriteLine($"[protocol] web game packet id={packet.Id} recog={packet.Recog} param={packet.Param} tag={packet.Tag} series={packet.Series} body={packet.EncodedBody.Length}");
                 if (packet.Id == 658) { await game.Send(1018, lifetime.Token); continue; }
                 if (packet.Id == 51)
                 {
@@ -432,6 +437,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                         equipment.Clear();
                         entities.Clear();
                         entityNames.Clear();
+                        entityNameColors.Clear();
                         ClearTradeState();
                     }
                     mapGeneration++;
@@ -448,6 +454,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                         ClearStorage();
                         entities.Clear();
                         entityNames.Clear();
+                        entityNameColors.Clear();
                         ClearTradeState();
                     }
                 }
@@ -465,6 +472,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                         ClearStorage();
                         entities.Clear();
                         entityNames.Clear();
+                        entityNameColors.Clear();
                         ClearTradeState();
                     }
                     phase = "world";
@@ -477,11 +485,20 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     phase = "world";
                 }
                 object? commandResult = null;
-                if (packet.Id == -1 && packet.Status?.StartsWith("+GD/", StringComparison.Ordinal) == true)
+                object? warriorSkill = null;
+                if (packet.Id == -1 && packet.Status is string status)
                     lock (worldStateLock)
                     {
-                        if (pendingPosition is { } next) { confirmedPosition = next; pendingPosition = null; }
-                        else if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = true }; }
+                        if (status.StartsWith("+GD/", StringComparison.Ordinal))
+                        {
+                            if (pendingPosition is { } next) { confirmedPosition = next; pendingPosition = null; }
+                            else if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = true }; }
+                        }
+                        else if (WarriorSkillStatus(status) is { } warrior)
+                        {
+                            warriorSkill = warrior;
+                            if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = true }; }
+                        }
                     }
                 else if (packet.Id == 28) lock (worldStateLock)
                 {
@@ -489,6 +506,13 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     else if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = false }; }
                 }
                 UpdateEntities(packet);
+                string? knownName = null;
+                byte? knownNameColor = null;
+                lock (worldStateLock)
+                {
+                    entityNames.TryGetValue(packet.Recog, out knownName);
+                    if (entityNameColors.TryGetValue(packet.Recog, out byte color)) knownNameColor = color;
+                }
                 UpdateInventory(packet);
                 UpdateSkills(packet);
                 var itemAction = UpdateItemState(packet);
@@ -500,7 +524,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     if (packet.Id == 643) { activeNpc = packet.Recog; ClearShop(pendingRepair is not null); ClearStorage(); }
                     shopResult = UpdateShopState(packet);
                 }
-                var projection = WorldProjection.Project(packet, character, playerActorId) ?? InventoryProjection.Project(packet) ?? CharacterProjection.Project(packet)
+                var projection = WorldProjection.Project(packet, character, playerActorId, knownName, knownNameColor) ?? InventoryProjection.Project(packet) ?? CharacterProjection.Project(packet)
                     ?? MagicProjection.Project(packet) ?? NpcProjection.Project(packet) ?? ShopProjection.Project(packet);
                 if (projection is not null) await Send(projection, lifetime.Token);
                 if (packet.Id == 50)
@@ -515,6 +539,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                 lock (worldStateLock) storageResult = UpdateStorageState(packet);
                 if (storageResult is not null) await Send(storageResult, lifetime.Token);
                 if (commandResult is not null) await Send(commandResult, lifetime.Token);
+                if (warriorSkill is not null) await Send(warriorSkill, lifetime.Token);
                 // Preserve per-record encoding until each legacy message has a typed projection.
                 await Send(new { type = "legacy", id = packet.Id, recog = packet.Recog, param = packet.Param,
                     tag = packet.Tag, series = packet.Series, encodedBody = Convert.ToBase64String(packet.EncodedBody), status = packet.Status }, lifetime.Token);
@@ -536,6 +561,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
             {
                 entities[packet.Recog] = (packet.Param, packet.Tag, false, WorldProjection.Feature(packet));
                 if (WorldProjection.Name(packet, character, playerActorId) is { } name) entityNames[packet.Recog] = name;
+                if (WorldProjection.NameColor(packet) is { } color) entityNameColors[packet.Recog] = color;
             }
             else if (packet.Id is 32 or 34)
             {
@@ -546,8 +572,18 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                 entities[packet.Recog] = (packet.Param, packet.Tag, false, alive.feature);
             else if (packet.Id == 41 && entities.TryGetValue(packet.Recog, out var prior))
                 entities[packet.Recog] = (prior.x, prior.y, prior.dead, WorldProjection.Feature(packet));
-            else if (packet.Id == 42) entityNames[packet.Recog] = WorldProjection.DisplayName(packet.Text);
-            else if (packet.Id is 29 or 30 or 800 or 806) { entities.Remove(packet.Recog); entityNames.Remove(packet.Recog); }
+            else if (packet.Id == 42)
+            {
+                string[] parts = packet.Text.Split('/', 2);
+                entityNames[packet.Recog] = WorldProjection.DisplayName(parts[0]);
+                if (parts.Length > 1 && byte.TryParse(parts[1], out byte color)) entityNameColors[packet.Recog] = color;
+            }
+            else if (packet.Id is 29 or 30 or 800 or 806)
+            {
+                entities.Remove(packet.Recog);
+                entityNames.Remove(packet.Recog);
+                entityNameColors.Remove(packet.Recog);
+            }
         }
     }
 
@@ -614,6 +650,11 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
         string guildName = Field(command, "guildName", 20);
         if (guildName.Length == 0 || guildName.Any(character => char.IsControl(character) || character is '<' or '>' or '\r' or '\n'))
             throw new InvalidOperationException("Invalid target guild name");
+        // The king exposes the war action on a second dialogue page. Enter
+        // that page before submitting the protected @@guildwar action so the
+        // legacy NPC can validate the current jump label.
+        await game.Send(1011, cancellation, "@guildwar", recog: npcId);
+        await Task.Delay(100, cancellation);
         await game.Send(1011, cancellation, $"@@guildwar\r{guildName}", recog: npcId);
     }
 
@@ -1012,7 +1053,9 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
 
     private async Task CastMagic(JsonElement command, CancellationToken cancellation)
     {
-        int requestedMagicId = command.GetProperty("magicId").GetInt32(), targetId = command.GetProperty("targetId").GetInt32();
+        int requestedMagicId = command.GetProperty("magicId").GetInt32();
+        int targetId = command.TryGetProperty("targetId", out var targetElement) && targetElement.ValueKind == JsonValueKind.Number
+            ? targetElement.GetInt32() : 0;
         MagicSkill skill;
         ushort targetX, targetY;
         lock (worldStateLock)
@@ -1021,7 +1064,9 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                 throw new InvalidOperationException("Skill is unavailable");
             if (pendingSpell is not null || pendingPosition is not null) throw new InvalidOperationException("Action confirmation pending");
             var position = confirmedPosition ?? throw new InvalidOperationException("Player position is not ready");
-            if (targetId == playerActorId) (targetX, targetY) = position;
+            int selfId = playerActorId ?? throw new InvalidOperationException("Player position is not ready");
+            if (targetId <= 0) targetId = selfId;
+            if (targetId == selfId) (targetX, targetY) = position;
             else
             {
                 if (!entities.TryGetValue(targetId, out var target) || target.dead || target.feature is not uint feature || (feature & 255) == 50)
@@ -1040,6 +1085,16 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
         }
         catch { lock (worldStateLock) pendingSpell = null; throw; }
     }
+
+    private static object? WarriorSkillStatus(string status) => status switch
+    {
+        "+LNG" => new { type = "warriorSkill", thrusting = true },
+        "+ULNG" => new { type = "warriorSkill", thrusting = false },
+        "+WID" => new { type = "warriorSkill", halfMoon = true },
+        "+UWID" => new { type = "warriorSkill", halfMoon = false },
+        "+FIR" => new { type = "warriorSkill", fireHit = true },
+        _ => null
+    };
 
     private object? UpdateShopState(LegacyPacket packet)
     {
@@ -1180,7 +1235,8 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                 var item = InventoryProjection.Parse(packet.Body);
                 if (inventory.ContainsKey(item.makeIndex)) inventory[item.makeIndex] = item;
             }
-            else if (packet.Id is 202 or 600) inventory.Remove(packet.Recog);
+            else if (packet.Id == 202) inventory.Remove(InventoryProjection.Parse(packet.Body).makeIndex);
+            else if (packet.Id == 600) inventory.Remove(packet.Recog);
         }
     }
 

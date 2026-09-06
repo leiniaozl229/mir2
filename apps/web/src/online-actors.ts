@@ -1,6 +1,21 @@
 import {Assets,Container,Graphics,Sprite,Text,Texture} from 'pixi.js';
 import {resolveMonsterVisual} from './monster-visuals';
-export type Entity={id:number;x:number;y:number;direction:number;feature:number;name:string;self:boolean;action:string;dead?:boolean;hp?:number;maxHp?:number;status?:number;hitSpeed?:number};
+export type Entity={id:number;x:number;y:number;direction:number;feature:number;name:string;self:boolean;action:string;dead?:boolean;hp?:number;maxHp?:number;status?:number;hitSpeed?:number;nameColor?:number;kind?:string};
+export type PlayerLayers={bodyName:string;offset:number;hairName?:string;weaponName?:string;weaponOffset:number};
+
+export function playerLayers(feature:number):PlayerLayers|undefined{
+ const race=feature&255;
+ if(race!==0)return;
+ const weapon=(feature>>>8)&255,dress=(feature>>>24)&255,hair=(feature>>>16)&255;
+ const armourShape=dress>>1,weaponShape=weapon>>1;
+ return {
+  bodyName:armourShape<=13?`CArmour${String(armourShape).padStart(2,'0')}`:'CArmour00',
+  offset:(dress&1)?808:0,
+  hairName:(hair>>1)<=1?`CHair0${hair>>1}`:undefined,
+  weaponName:weaponShape>0?`CWeapon${String(weaponShape).padStart(2,'0')}`:undefined,
+  weaponOffset:(weapon&1)?416:0,
+ };
+}
 type Frame={file:string;offsetX:number;offsetY:number};
 type Action={start:number;count:number;skip:number;interval:number};
 type Library={frames:Record<string,Frame>;actions:Record<string,Action>};
@@ -25,31 +40,24 @@ async function staticPose(name:string,index:number){
 }
 export class OnlineActor {
  readonly container=new Container();
- private marker=new Graphics();private weapon=new Sprite();private body=new Sprite();private hair=new Sprite();private healthBack=new Graphics();private health=new Graphics();private label=new Text({text:'',style:{fontFamily:'sans-serif',fontSize:12,fill:0xffffff,stroke:{color:0x000000,width:3}}});
+ private marker=new Graphics();private weapon=new Sprite();private body=new Sprite();private hair=new Sprite();private healthBack=new Graphics();private health=new Graphics();private label=new Text({text:'',style:{fontFamily:'SimSun, Songti SC, serif',fontSize:12,fill:0xffffff,stroke:{color:0x000000,width:3}}});
  private sequence=0;private key='';private start=0;private frames:Pose[]=[];private weaponFrames:Pose[]=[];private hairFrames:Pose[]=[];private interval=500;private entity:Entity;private movement:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;
- constructor(entity:Entity,interact?:(entity:Entity)=>void){this.entity=entity;this.container.sortableChildren=true;this.marker.zIndex=-2;this.body.zIndex=0;this.hair.zIndex=1;this.healthBack.zIndex=this.health.zIndex=8;this.label.zIndex=9;this.container.addChild(this.marker,this.weapon,this.body,this.hair,this.healthBack,this.health,this.label);this.label.anchor.set(.5,1);this.label.position.set(24,-64);if(interact){this.container.eventMode='static';this.container.cursor='pointer';this.container.on('pointertap',event=>{event.stopPropagation();interact(this.entity);});}}
+ constructor(entity:Entity,interact?:(entity:Entity)=>void){this.entity=entity;this.container.sortableChildren=true;this.marker.zIndex=-2;this.body.zIndex=0;this.hair.zIndex=1;this.healthBack.zIndex=this.health.zIndex=8;this.label.zIndex=9;this.container.addChild(this.marker,this.weapon,this.body,this.hair,this.healthBack,this.health,this.label);this.label.anchor.set(.5,1);this.label.position.set(24,-64);if(interact){this.container.eventMode='static';this.container.on('pointertap',event=>{event.stopPropagation();interact(this.entity);});}this.applyCursor();}
  update(entity:Entity){
   const toX=entity.x*48,toY=entity.y*32,moving=(entity.action==='walking'||entity.action==='running')&&(this.entity.x!==entity.x||this.entity.y!==entity.y);
   if(moving)this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start:performance.now(),duration:entity.action==='running'?400:600};else{this.movement=undefined;this.container.position.set(toX,toY);}
-  this.entity=entity;this.container.zIndex=entity.y*700+entity.x+.5;this.label.text=entity.name;this.drawHealth();
+  this.entity=entity;this.container.zIndex=entity.y*700+entity.x+.5;this.label.text=entity.name;this.label.style.fill=nameFill(entity.nameColor);this.applyCursor();this.drawHealth();
   const status=(entity.status??0)>>>0;
   this.container.alpha=(status&0x00800000)!==0?.38:1;
   this.body.tint=(status&0x00000001)!==0?0x8f8f8f:(status&0xC0000000)!==0?0x8aa86e:0xffffff;
-  const race=entity.feature&255,weapon=(entity.feature>>>8)&255,dress=(entity.feature>>>24)&255,hair=(entity.feature>>>16)&255;
+  const race=entity.feature&255,dress=(entity.feature>>>24)&255;
+  const slave=entity.kind==='slave'||entity.nameColor===254||entity.name==='变异骷髅';
   this.marker.clear();if(race===50)this.marker.circle(24,-22,12).fill(0x9a793f).stroke({color:0xe0c27d,width:2});
+  else if(slave)this.marker.circle(24,-18,10).stroke({color:0x00ff66,width:2,alpha:.9});
   let bodyName:string|undefined,hairName:string|undefined,weaponName:string|undefined,offset=0,weaponOffset=0,staticIndex:number|undefined;
-  if(race===0){
-   // GetFeature packs the dress shape in the high byte and the gender in
-   // its low bit.  The classic armour libraries share the same 808-frame
-   // male/female layout, so authoritative equipment updates can select the
-   // matching visual without changing the actor animation table.
-   const armourShape=dress>>1;
-   if(armourShape<=13)bodyName=`CArmour${String(armourShape).padStart(2,'0')}`;
-   else bodyName='CArmour00';
-   offset=(dress&1)?808:0;
-   if((hair>>1)<=1)hairName=`CHair0${hair>>1}`;
-   const weaponShape=weapon>>1;
-   if(weaponShape>0){weaponName=`CWeapon${String(weaponShape).padStart(2,'0')}`;weaponOffset=(weapon&1)?416:0;}
+  const layers=playerLayers(entity.feature);
+  if(layers){
+   bodyName=layers.bodyName;offset=layers.offset;hairName=layers.hairName;weaponName=layers.weaponName;weaponOffset=layers.weaponOffset;
   }
   else if(race===50){bodyName='NPC00';staticIndex=entity.feature>>>16;}
   else{
@@ -83,7 +91,24 @@ export class OnlineActor {
   const y=this.label.y+2,ratio=Math.max(0,Math.min(1,this.entity.hp!/this.entity.maxHp!));
   this.healthBack.rect(4,y,40,4).fill(0x201810);this.health.rect(5,y+1,38*ratio,2).fill(0xd13c32);
  }
+ private applyCursor(){
+  const race=this.entity.feature&255;
+  this.container.cursor=race===50?'url("/ui/Cursors/Cursor_Npc.CUR") 0 0, pointer':this.entity.dead?'url("/ui/Cursors/Cursor_Default.CUR") 0 0, auto':'url("/ui/Cursors/Cursor_Normal_Atk.CUR") 0 0, crosshair';
+ }
  destroy(){this.sequence++;this.container.destroy({children:true});}
 }
 
 function armourShapeKey(dress:number){return dress>>1;}
+function nameFill(color:number|undefined){
+ if(color===undefined||color===255)return 0xffffff;
+ if(color===254)return 0x00ff66;
+ if(color===249)return 0xff4040;
+ if(color===250)return 0xffff40;
+ if(color===0x93)return 0x80ff80;
+ if(color===0x9A)return 0x40e0a0;
+ if(color===0xE5)return 0xa0e0ff;
+ if(color===0xA8)return 0xffc040;
+ if(color===0xB4)return 0xff80c0;
+ if(color===0xFC)return 0x80ffff;
+ return 0xffffff;
+}

@@ -1,11 +1,13 @@
 using System.Buffers.Binary;
+using System.Text.RegularExpressions;
 
 namespace Mir2.WebGateway;
 
 /// <summary>Only fields confirmed against the pinned server are projected.</summary>
 public static class WorldProjection
 {
-    public static object? Project(LegacyPacket packet, string character, int? playerActorId = null)
+    public static object? Project(LegacyPacket packet, string character, int? playerActorId = null,
+        string? knownName = null, byte? knownNameColor = null)
     {
         if (packet.Id is 10 or 11 or 13 or 50 or 801 or 807)
         {
@@ -14,11 +16,20 @@ public static class WorldProjection
             uint? feature = description.Length >= 8 ? BinaryPrimitives.ReadUInt32LittleEndian(description) : null;
             uint? status = description.Length >= 8 ? BinaryPrimitives.ReadUInt32LittleEndian(description.AsSpan(4)) : null;
             bool self = packet.Id == 50 || playerActorId == packet.Recog;
-            string? name = self ? character : null;
+            string? name = self ? character : knownName;
+            byte? nameColor = knownNameColor;
             if (packet.Id is 10 or 801 or 807 && packet.EncodedBody.Length > 11)
-                name = DisplayName(LegacyCodec.Gbk.GetString(LegacyCodec.Decode(packet.EncodedBody.AsSpan(11))).Split('/')[0]);
+            {
+                string[] parts = LegacyCodec.Gbk.GetString(LegacyCodec.Decode(packet.EncodedBody.AsSpan(11))).Split('/');
+                name = DisplayName(parts[0]);
+                if (parts.Length > 1 && byte.TryParse(parts[1], out byte color)) nameColor = color;
+            }
             return new { type = "entity", id = packet.Recog, x = packet.Param, y = packet.Tag,
-                direction = packet.Series & 255, feature, status, name, self,
+                direction = packet.Series & 255, feature, status, name, nameColor, self,
+                // Movement/update packets can omit the name. Keep the kind
+                // unknown in that case so a later update cannot overwrite a
+                // previously classified summon with "monster".
+                kind = name is null && !self ? null : Kind(self, feature, name, nameColor),
                 action = packet.Id == 11 ? "walking" : packet.Id == 13 ? "running" : "standing", dead = false };
         }
         return packet.Id switch
@@ -29,10 +40,11 @@ public static class WorldProjection
             32 or 34 => new { type = "entityDied", id = packet.Recog, x = packet.Param, y = packet.Tag, direction = packet.Series & 255 },
             27 => new { type = "entityAlive", id = packet.Recog, x = packet.Param, y = packet.Tag, direction = packet.Series & 255 },
             41 => new { type = "appearance", id = packet.Recog, feature = (uint)packet.Param | (uint)packet.Tag << 16 },
-            42 => new { type = "entityName", id = packet.Recog, name = DisplayName(packet.Text) },
+            42 => EntityName(packet),
+            656 => new { type = "nameColor", id = packet.Recog, color = packet.Param & 255 },
             44 => new { type = "experience", total = packet.Recog, gained = (uint)packet.Param | (uint)packet.Tag << 16 },
             40 => Chat(packet, "local"),
-            100 => new { type = "systemMessage", text = packet.Text },
+            100 => SystemMessage(packet),
             101 => Chat(packet, "group"),
             102 => Chat(packet, "shout"),
             103 => Chat(packet, "whisper"),
@@ -76,6 +88,22 @@ public static class WorldProjection
             name = DisplayName(LegacyCodec.Gbk.GetString(LegacyCodec.Decode(packet.EncodedBody.AsSpan(11))).Split('/')[0]);
         return name;
     }
+    public static byte? NameColor(LegacyPacket packet)
+    {
+        if (packet.Id is 10 or 801 or 807 && packet.EncodedBody.Length > 11)
+        {
+            string[] parts = LegacyCodec.Gbk.GetString(LegacyCodec.Decode(packet.EncodedBody.AsSpan(11))).Split('/');
+            return parts.Length > 1 && byte.TryParse(parts[1], out byte color) ? color : null;
+        }
+        return null;
+    }
+    private static object EntityName(LegacyPacket packet)
+    {
+        string[] parts = packet.Text.Split('/', 2);
+        byte? color = parts.Length > 1 && byte.TryParse(parts[1], out byte parsed) ? parsed : (byte)(packet.Param & 255);
+        string name = DisplayName(parts[0]);
+        return new { type = "entityName", id = packet.Recog, name, nameColor = color, kind = Kind(false, null, name, color) };
+    }
     private static object Chat(LegacyPacket packet, string channel) => new
     {
         type = "chat",
@@ -85,6 +113,29 @@ public static class WorldProjection
         background = packet.Param >> 8,
         text = packet.Text
     };
+    private static object SystemMessage(LegacyPacket packet) => new
+    {
+        type = "systemMessage",
+        text = packet.Text,
+        castleWar = ParseCastleWar(packet.Text)
+    };
+    private static object? ParseCastleWar(string text)
+    {
+        Match started = Regex.Match(text, @"^\[(?<castle>.+?) 攻城战已经开始\]$", RegexOptions.CultureInvariant);
+        if (started.Success)
+            return new { phase = "started", castleName = started.Groups["castle"].Value };
+
+        Match warning = Regex.Match(text, @"^\[(?<castle>.+?) 攻城战离结束还有(?<minutes>\d+)分钟\]$", RegexOptions.CultureInvariant);
+        if (warning.Success && int.TryParse(warning.Groups["minutes"].Value, out int remainingMinutes))
+            return new { phase = "warning", castleName = warning.Groups["castle"].Value, remainingMinutes };
+
+        Match captured = Regex.Match(text, @"^\[(?<castle>.+?) 已被\s*(?<guild>.+?)\s*占领\]$", RegexOptions.CultureInvariant);
+        if (captured.Success)
+            return new { phase = "captured", castleName = captured.Groups["castle"].Value, guildName = captured.Groups["guild"].Value };
+
+        Match ended = Regex.Match(text, @"^\[(?<castle>.+?) 攻城战已经结束\]$", RegexOptions.CultureInvariant);
+        return ended.Success ? new { phase = "ended", castleName = ended.Groups["castle"].Value } : null;
+    }
     private static object GroupResult(LegacyPacket packet, string action, bool accepted) => new
     {
         type = "groupResult",
@@ -161,4 +212,17 @@ public static class WorldProjection
         reason = accepted ? 0 : packet.Recog
     };
     public static string DisplayName(string name) => name.Replace('\\', '\n').TrimEnd('\n');
+    public static string Kind(bool self, uint? feature, string? name, byte? nameColor)
+    {
+        // Summon colours are level-dependent in the classic server
+        // (255, 254, 0x93, 0x9A, 0xE5, ...). The visible name also carries
+        // the master in parentheses, so relying on only the level-1 colour
+        // misclassified higher-level summons as hostile monsters.
+        bool hasMasterSuffix = name is not null && name.Length > 2 && name[0..^1].Contains('(') && name[^1] == ')';
+        if (nameColor == 254 || name == "变异骷髅" || hasMasterSuffix) return "slave";
+        byte race = (byte)((feature ?? uint.MaxValue) & 255);
+        if (self || race == 0) return "player";
+        if (race == 50) return "npc";
+        return "monster";
+    }
 }

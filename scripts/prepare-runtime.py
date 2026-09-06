@@ -392,7 +392,7 @@ def _copy_classic_market_definitions(route_mode):
 
 
 def _normalize_castle_configs():
-    """Make legacy castle INI files readable by the UTF-8 engine config loader."""
+    """Keep legacy castle INI files in the engine's GB2312 encoding."""
     source_root = SOURCE / "Mir200/Castle"
     target_root = SERVER / "Mir200/Castle"
     normalized = 0
@@ -402,13 +402,17 @@ def _normalize_castle_configs():
         target = target_root / source.relative_to(source_root)
         target.parent.mkdir(parents=True, exist_ok=True)
         if target.exists():
+            raw = target.read_bytes()
             try:
-                target.read_text(encoding="utf-8-sig")
-                continue
+                text = raw.decode("gb18030")
             except UnicodeDecodeError:
-                pass
+                text = raw.decode("utf-8-sig")
+            if raw == text.encode("gb18030"):
+                continue
             target.chmod(0o600)
-        target.write_text(read_text(source), encoding="utf-8-sig")
+        else:
+            text = read_text(source)
+        target.write_bytes(text.encode("gb18030"))
         normalized += 1
     return normalized
 

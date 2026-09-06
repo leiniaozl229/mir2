@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "source": "skill-rules.json",
+  "spellCost": "round(spell / 4 * (level + 1), away-from-zero) + defSpell",
+  "summon": {
+    "name": "变异骷髅",
+    "nameColor": 254,
+    "reagent": "护身符",
+    "slot": 9
+  },
+  "skills": {
+    "火球术": {
+      "use": "hostile",
+      "job": "wizard"
+    },
+    "治愈术": {
+      "use": "self",
+      "job": "taoist"
+    },
+    "基本剑术": {
+      "use": "passive",
+      "job": "warrior"
+    },
+    "大火球": {
+      "use": "hostile",
+      "job": "wizard"
+    },
+    "雷电术": {
+      "use": "hostile",
+      "job": "wizard"
+    },
+    "抗拒火环": {
+      "use": "self",
+      "job": "wizard"
+    },
+    "魔法盾": {
+      "use": "self",
+      "job": "wizard",
+      "statusBit": 1048576
+    },
+    "攻杀剑术": {
+      "use": "passive",
+      "job": "warrior"
+    },
+    "刺杀剑术": {
+      "use": "toggle",
+      "job": "warrior",
+      "status": "thrusting"
+    },
+    "半月弯刀": {
+      "use": "toggle",
+      "job": "warrior",
+      "status": "halfMoon"
+    },
+    "烈火剑法": {
+      "use": "charge",
+      "job": "warrior",
+      "status": "fireHit"
+    },
+    "施毒术": {
+      "use": "hostile",
+      "job": "taoist",
+      "reagent": "灰色药粉(少量)"
+    },
+    "灵魂火符": {
+      "use": "hostile",
+      "job": "taoist",
+      "reagent": "护身符"
+    },
+    "幽灵盾": {
+      "use": "self",
+      "job": "taoist",
+      "reagent": "护身符",
+      "statusBit": 2097152
+    },
+    "召唤骷髅": {
+      "use": "self",
+      "job": "taoist",
+      "reagent": "护身符",
+      "summon": true
+    }
+  }
+}

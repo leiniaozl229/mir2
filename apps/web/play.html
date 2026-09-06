@@ -5,51 +5,115 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>传奇 2 · 联机</title>
 </head>
-<body>
+<body class="classic-play">
 <main>
-  <header>
+  <header class="dev-chrome">
     <span>THE LEGEND OF MIR II</span>
-    <h1>比奇 · 联机测试</h1><button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="true">声音：开</button>
-  <p>鼠标左键、方向键或 WASD 行走，鼠标右键或 Shift 加方向键跑步；F1–F8 选择技能；点击远处怪物、NPC 或掉落物会自动接近，随后持续攻击、交谈或拾取。</p>
+    <h1>比奇 · 联机</h1>
+  <p>鼠标左键、方向键或 WASD 行走，鼠标右键或 Shift 加方向键跑步；F1–F8 对目标技能选择后再点击，对治愈/召唤/魔法盾/半月/烈火等自我或开关技能直接施放；点击远处怪物、NPC 或掉落物会自动接近，随后持续攻击、交谈或拾取。</p>
   </header>
-  <form id="login">
-    <label>账号 <input id="account" autocomplete="username" required minlength="4" maxlength="10" pattern="[A-Za-z0-9]+"></label>
-    <label>密码 <input id="password" type="password" autocomplete="current-password" required maxlength="10"></label>
-    <button>登录</button><button id="register" type="button">注册并登录</button>
-  </form>
-  <div id="characters"></div>
-  <form id="create-character" hidden>
-    <label>角色名 <input id="character-name" required minlength="3" maxlength="10"></label>
-    <label>职业 <select id="character-job"><option value="0">战士</option><option value="1">法师</option><option value="2">道士</option></select></label>
-    <label>性别 <select id="character-sex"><option value="0">男</option><option value="1">女</option></select></label>
-    <label>发型 <select id="character-hair"><option value="0">短发</option><option value="2">长发</option></select></label>
-    <button>创建角色</button>
-  </form>
-  <p id="connection" role="status">等待登录</p>
-  <p id="combat-status" role="status">等待战斗事件</p>
+  <section id="game-stage" aria-label="800×600 经典画面">
   <section id="viewport-shell" aria-label="经典游戏画面">
     <section id="viewport"></section>
-    <canvas id="mini-map" width="150" height="117" aria-label="小地图"></canvas>
     <div id="classic-hud" aria-label="经典界面">
-      <div class="hud-topbar"><span class="hud-crest" aria-hidden="true">M2</span><span data-hud-job>未入场</span><strong data-hud-name>等待角色</strong><span data-hud-status>饥饿:正常</span><span data-hud-coords>地图 0 · 0,0</span><span class="hud-window-buttons"><button type="button" data-window-open="character">角色</button><button type="button" data-window-open="skills">技能</button><button type="button" data-window-open="inventory">背包</button></span></div>
-      <div class="hud-orbs" aria-label="资源状态">
-        <div class="hud-orb hp-orb" data-hud-hp-orb><span>HP</span><strong data-hud-hp>0 / 0</strong></div>
-        <div class="hud-exp"><i data-hud-exp-fill></i><span data-hud-exp>经验 0 / 0</span></div>
-        <div class="hud-orb mp-orb" data-hud-mp-orb><span>MP</span><strong data-hud-mp>0 / 0</strong></div>
+      <div class="hud-minimap-frame" data-hud-minimap-frame>
+        <canvas id="mini-map" width="120" height="110" aria-label="小地图"></canvas>
+        <span data-hud-coords>0:0</span>
       </div>
-      <div class="hud-hotbar" data-hud-hotbar aria-label="快捷技能栏"></div>
+      <div class="hud-skillbar" data-hud-skillbar><div class="hud-hotbar" data-hud-hotbar aria-label="快捷技能栏"></div></div>
+      <div class="hud-chatbar" data-hud-chatbar></div>
+      <div class="hud-chat" data-hud-chat></div>
+      <div class="hud-main" data-hud-main>
+        <span data-hud-class hidden></span>
+        <span data-hud-job></span>
+        <strong data-hud-name></strong>
+        <span data-hud-gold>0</span>
+        <span data-hud-status></span>
+        <span data-hud-hp>0/0</span>
+        <span data-hud-mp>0/0</span>
+        <span data-hud-exp>0/0</span>
+        <div class="hud-orb-well hp" data-hud-orb><span data-hud-orb-image></span><div class="hud-orb-fill" data-hud-hp-fill><img alt=""></div></div>
+        <div class="hud-orb-well mp" data-hud-orb><span data-hud-orb-image></span><div class="hud-orb-fill" data-hud-mp-fill><img alt=""></div></div>
+        <div class="hud-exp-track" data-hud-exp-track><i data-hud-exp-fill></i></div>
+        <div class="hud-weight" data-hud-weight><i data-hud-weight-fill></i></div>
+      </div>
+      <div class="hud-window-buttons">
+        <button type="button" data-window-open="character"></button>
+        <button type="button" data-window-open="inventory"></button>
+        <button type="button" data-window-open="skills"></button>
+        <button type="button" data-window-open="quest"></button>
+        <button type="button" data-window-open="attack"></button>
+      </div>
     </div>
+    <section id="character-window" class="classic-window character-window" hidden aria-label="角色窗口">
+      <strong class="classic-char-name" data-character-name></strong>
+      <button type="button" class="classic-window-close" data-window-close="character" aria-label="关闭"></button>
+      <button type="button" data-character-tab="paperdoll" aria-label="装备"></button>
+      <button type="button" data-character-tab="status" aria-label="属性"></button>
+      <button type="button" data-character-tab="state" aria-label="状态"></button>
+      <button type="button" data-character-tab="skills" aria-label="技能"></button>
+      <div class="character-page" data-character-page="paperdoll"></div>
+      <div id="paperdoll-actor" aria-hidden="true"></div>
+      <section id="character-panel" class="character-page character-panel" data-character-page="status" hidden aria-label="角色属性"></section>
+      <section id="character-state" class="character-page" data-character-page="state" hidden aria-label="负重状态"></section>
+      <div class="character-page" data-character-page="skills" hidden><div id="skills" class="skill-grid">尚未收到技能数据</div></div>
+      <div id="equipment-items" class="equipment-grid paperdoll"></div>
+    </section>
+    <section id="inventory-window" class="classic-window inventory-window" hidden aria-label="背包">
+      <button type="button" class="classic-window-close" data-window-close="inventory" aria-label="关闭"></button>
+      <div id="inventory-items" class="inventory-grid classic-bag"></div>
+    </section>
     <section id="classic-window" class="classic-window" hidden aria-label="经典窗口">
       <div class="classic-window-heading"><strong id="classic-window-title">角色状态</strong><button id="classic-window-close" type="button">关闭</button></div>
-      <nav class="classic-window-tabs" aria-label="经典窗口标签"><button type="button" data-window-tab="character">角色</button><button type="button" data-window-tab="quest">任务</button><button type="button" data-window-tab="skills">技能</button><button type="button" data-window-tab="equipment">装备</button><button type="button" data-window-tab="inventory">背包</button><button type="button" data-window-tab="targets">目标</button><button type="button" data-window-tab="ground">地面物品</button><button type="button" data-window-tab="chat">聊天</button><button type="button" data-window-tab="group">队伍</button><button type="button" data-window-tab="attack">攻击模式</button><button type="button" data-window-tab="guild">行会</button><button type="button" data-window-tab="trade">交易</button></nav>
+      <nav class="classic-window-tabs" aria-label="经典窗口标签"><button type="button" data-window-tab="quest">任务</button><button type="button" data-window-tab="targets">目标</button><button type="button" data-window-tab="ground">地面</button><button type="button" data-window-tab="chat">聊天</button><button type="button" data-window-tab="group">队伍</button><button type="button" data-window-tab="attack">攻击</button><button type="button" data-window-tab="guild">行会</button><button type="button" data-window-tab="trade">交易</button></nav>
       <div id="classic-window-body" class="classic-window-body"></div>
     </section>
     <div id="classic-modal-layer" aria-live="polite"></div>
+    <button id="audio-toggle" class="audio-toggle" type="button" aria-pressed="true">声音：开</button>
+    <div id="auth-overlay" data-auth-scene="login">
+      <div class="auth-scene" data-auth-login>
+        <div data-auth-login-dialog>
+          <span data-auth-title-label></span>
+          <span data-auth-account-label></span>
+          <span data-auth-pass-label></span>
+          <form id="login">
+            <input id="account" autocomplete="username" required minlength="4" maxlength="10" pattern="[A-Za-z0-9]+" aria-label="账号">
+            <input id="password" type="password" autocomplete="current-password" required maxlength="10" aria-label="密码">
+            <button id="auth-login-ok" type="submit" aria-label="登录"></button>
+            <button id="register" type="button" aria-label="新账号"></button>
+          </form>
+        </div>
+      </div>
+      <div class="auth-scene" data-auth-select hidden>
+        <span data-auth-select-title></span>
+        <img data-auth-portrait alt="" hidden>
+        <div id="characters"></div>
+        <button type="button" data-auth-start aria-label="开始游戏"></button>
+        <button type="button" data-auth-new aria-label="新建角色"></button>
+        <button type="button" data-auth-exit aria-label="退出"></button>
+      </div>
+      <form id="create-character" class="auth-scene" hidden>
+        <span data-auth-create-title></span>
+        <img data-auth-create-portrait alt="">
+        <input id="character-name" required minlength="3" maxlength="10" aria-label="角色名">
+        <select id="character-job" hidden aria-hidden="true"><option value="0">战士</option><option value="1">法师</option><option value="2">道士</option></select>
+        <select id="character-sex" hidden aria-hidden="true"><option value="0">男</option><option value="1">女</option></select>
+        <select id="character-hair" hidden aria-hidden="true"><option value="0">短发</option><option value="2">长发</option></select>
+        <button type="button" data-auth-job="0" aria-label="战士"></button>
+        <button type="button" data-auth-job="1" aria-label="法师"></button>
+        <button type="button" data-auth-job="2" aria-label="道士"></button>
+        <button type="button" data-auth-sex="0" aria-label="男"></button>
+        <button type="button" data-auth-sex="1" aria-label="女"></button>
+        <button id="auth-create-ok" type="submit" aria-label="确认创建"></button>
+        <button type="button" data-auth-create-cancel aria-label="取消"></button>
+      </form>
+      <p id="connection" role="status">等待登录</p>
+    </div>
   </section>
+  </section>
+  <p id="combat-status" class="dev-chrome" role="status">等待战斗事件</p>
   <section id="revive-panel" class="revive-panel" aria-label="角色死亡" hidden><strong>你已经死亡</strong><p>返回角色安全区后恢复游戏。</p><button id="return-to-town" type="button">回城复活</button></section>
-  <section id="character-panel" class="character-panel" aria-label="角色状态">等待角色属性…</section>
   <section id="quest-panel" class="group-panel quest-panel" aria-label="任务"><strong>任务日志</strong><div id="quest-log">与任务 NPC 交谈后会显示任务进度。</div></section>
-  <details open><summary>技能</summary><div id="skills" class="skill-grid">尚未收到技能数据</div></details>
   <details open><summary>附近目标与 NPC</summary><div id="nearby-targets" class="target-list">等待附近对象…</div></details>
   <details open><summary>地面物品</summary><div id="ground-items" class="ground-item-list">地面没有物品</div></details>
   <section class="chat-panel" aria-label="聊天"><ol id="chat-log" aria-live="polite"></ol><form id="chat-form"><label>频道 <select id="chat-channel"><option value="local">附近</option><option value="shout">喊话</option><option value="whisper">私聊</option><option value="group">组队</option><option value="guild">行会</option></select></label><label id="chat-target-wrap" hidden>对象 <input id="chat-target" maxlength="10" autocomplete="off" placeholder="角色名"></label><label>内容 <input id="chat-input" maxlength="180" autocomplete="off" placeholder="输入消息，按 Enter 发送"></label><button>发送</button></form></section>
@@ -61,9 +125,7 @@
   <section id="shop-panel" class="shop-panel" aria-label="商店" hidden></section>
   <section id="repair-panel" class="shop-panel" aria-label="修理" hidden></section>
   <section id="storage-panel" class="storage-panel" aria-label="仓库" hidden></section>
-  <details open><summary>装备</summary><div id="equipment-items" class="equipment-grid"></div></details>
-  <details open><summary>背包</summary><div id="inventory-items" class="inventory-grid"><p>等待服务端背包数据…</p></div></details>
-  <footer><output id="status">正在载入地图…</output><p>当前可验证账号注册、三职业角色创建、登录、0/1/2/3 及 570 张可解析经典地图的跨图与重连、角色同步、属性、状态、连续走跑、近战、版本技能代表动画、死亡回城、五频道聊天、两人组队、攻击模式、行会面板、玩家交易、基础声音、挖肉、原始 NPC 与对话、比奇试炼任务、商店买卖和修理、仓库存取、装备实时持久、药品、背包、丢弃和拾取；其中 121 张精选路线带有分层向导与区域刷怪，地图上的经典 HUD 已显示 HP/MP 球、经验条、坐标、状态和技能快捷栏，经典窗口标签已覆盖角色、任务、技能、装备、背包、目标、地面物品、聊天、队伍、攻击模式、行会和交易，完整技能数值与全量任务内容仍在接入。</p><a href="/">地图校验</a></footer>
+  <footer class="dev-chrome"><output id="status">正在载入地图…</output><p>当前可验证账号注册、三职业角色创建、登录、0/1/2/3 及 570 张可解析经典地图的跨图与重连、角色同步、属性、状态、连续走跑、近战、版本技能代表动画、死亡回城、五频道聊天、两人组队、攻击模式、行会面板、玩家交易、基础声音、挖肉、原始 NPC 与对话、比奇试炼任务、商店买卖和修理、仓库存取、装备实时持久、药品、背包、丢弃和拾取；其中 121 张精选路线带有分层向导与区域刷怪。联机页使用 Crystal Prguse/Title 800×600 原始界面帧绘制血蓝球、底部面板、8×5 背包格、角色装备窗、对话框、小地图、经典鼠标和 F1–F8 栏；完整技能数值、全量任务内容和原端逐像素校准仍在接入。</p><a href="/">地图校验</a></footer>
 </main>
 <script type="module" src="/src/play.ts"></script>
 </body>

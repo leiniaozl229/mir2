@@ -1,4 +1,5 @@
 import { Application, Assets, Container, Graphics, Sprite, Texture } from 'pixi.js';
+import {FrameBudget} from './perf';
 
 type Chunk={x:number;y:number;width:number;height:number;file:string};
 type World={width:number;height:number;chunks:Chunk[]};
@@ -9,6 +10,8 @@ export async function createMapView(viewport:HTMLElement,status:HTMLOutputElemen
 const app=new Application();
 await app.init({width:800,height:600,background:0x080a08,antialias:false,preference:'webgl'});
 viewport.appendChild(app.canvas);
+const frameBudget=new FrameBudget();
+frameBudget.attach(app.ticker);
 const getJSON=async<T>(url:string):Promise<T>=>{const response=await fetch(url);if(!response.ok)throw new Error(`${url}: ${response.status}`);return response.json();};
 let mapId='0',world=await getJSON<World>('/maps/0/map.json');
 const names=['Tiles','SmTiles','Objects'];
@@ -123,7 +126,7 @@ let renderTail:Promise<void>=Promise.resolve();
 const scheduleRender=()=>{const task=renderTail.then(render,render);renderTail=task.catch(()=>{});return task;};
 
 await scheduleRender();
-return {app,depth,get width(){return world.width;},get height(){return world.height;},get map(){return mapId;},
+return {app,depth,frameBudget,get width(){return world.width;},get height(){return world.height;},get map(){return mapId;},
  get center(){return {x:centerX,y:centerY};},
  async setCenter(x:number,y:number){centerX=Math.max(0,Math.min(world.width-1,Math.round(x)));centerY=Math.max(0,Math.min(world.height-1,Math.round(y)));await scheduleRender();},
  setMarker(x:number,y:number){markerX=Math.round(x);markerY=Math.round(y);redrawMiniMap();},

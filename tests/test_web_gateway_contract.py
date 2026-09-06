@@ -16,6 +16,14 @@ class WebGatewayContractTests(unittest.TestCase):
         self.assertIn(".runtime/pvp-attacker.json", source)
         self.assertIn(".runtime/pvp-victim.json", source)
 
+    def test_castle_probe_keeps_default_path_non_mutating(self):
+        source = (ROOT / "tools/castle_war_probe.mjs").read_text()
+        self.assertIn("MIR2_CASTLE_EXPECT_LIST", source)
+        self.assertIn("@requestcastlewarA", source)
+        self.assertIn("startsWith('@requestcastlewarnow')", source)
+        self.assertIn("castle-war.json", source)
+        self.assertIn("qualificationResponse", source)
+
     def test_character_creation_probe_covers_empty_account_entry(self):
         source = (ROOT / "tools/character_creation_probe.mjs").read_text()
         for message_type in ("registrationResult", "characterCreationResult", "characters", "map"):
@@ -28,6 +36,7 @@ class WebGatewayContractTests(unittest.TestCase):
         self.assertIn("mapGeneration", source)
         self.assertIn("report.reconnect = true", source)
         self.assertIn("session-stability.json", source)
+        self.assertIn("durationMs > 7200000", source)
         for message_type in ("attributes", "equipment", "inventory", "skills"):
             self.assertIn(f"'{message_type}'", source)
 

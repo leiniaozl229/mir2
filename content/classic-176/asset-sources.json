@@ -384,5 +384,125 @@
       "bytes": 707628,
       "sha256": "3587c71a95515931cb3a22a82e88063acc5fab3083230cabd0ad738919321d3d"
     }
+  ],
+  "uiFiles": [
+    {
+      "file": "Prguse.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Prguse.Lib",
+      "bytes": 12414386,
+      "sha256": "584b67694a420a29c98f51b04cdf681acf1ed071c15c57014fdfd59c762a3c96",
+      "ranges": [
+        [0, 13],
+        [44, 44],
+        [65, 65],
+        [73, 73],
+        [76, 76],
+        [100, 104],
+        [340, 340],
+        [410, 410],
+        [544, 544],
+        [995, 995],
+        [1084, 1084],
+        [1900, 2250],
+        [2420, 2440]
+      ]
+    },
+    {
+      "file": "Prguse2.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Prguse2.Lib",
+      "bytes": 3557648,
+      "sha256": "510ebc77315089075fc472c9ef745be2e16c6dece970c307d6859ce074cce861",
+      "ranges": [
+        [197, 209],
+        [257, 259],
+        [307, 307],
+        [360, 368]
+      ]
+    },
+    {
+      "file": "Title.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Title.Lib",
+      "bytes": 5617784,
+      "sha256": "bd3e9485548e9b3cb5d4cb261c9a01a07752fb41fcea7f5d8569e602feaed648",
+      "ranges": [
+        [20, 20],
+        [30, 32],
+        [40, 40],
+        [168, 169],
+        [196, 198],
+        [280, 282],
+        [320, 354],
+        [360, 362],
+        [483, 485],
+        [500, 508],
+        [660, 667],
+        [737, 739]
+      ]
+    },
+    {
+      "file": "ChrSel.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/ChrSel.Lib",
+      "bytes": 53289233,
+      "sha256": "4be898a0dae083802959ee4b1d2c093320fbc0a46ec68b30ac5fc856744a8197",
+      "ranges": [
+        [0, 18],
+        [20, 20],
+        [40, 40],
+        [60, 60],
+        [300, 300],
+        [320, 320],
+        [340, 340]
+      ]
+    },
+    {
+      "file": "MagIcon.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/MagIcon.Lib",
+      "bytes": 199927,
+      "sha256": "5f49bf35158f680852a66833ec3c706ad045448ef1526d1f7fdd116807de3030"
+    }
+  ],
+  "cursorFiles": [
+    {
+      "file": "Cursor_Default.CUR",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Cursors/Cursor_Default.CUR",
+      "bytes": 4286,
+      "sha256": "99a6004c30aa186b2a98ff28b01be6af0ba4dcda27b40d6d54465fbc4cb9a3ed"
+    },
+    {
+      "file": "Cursor_Normal_Atk.CUR",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Cursors/Cursor_Normal_Atk.CUR",
+      "bytes": 4286,
+      "sha256": "0baa30b9b7ad471a189aa0aec7e2e82c68fe519600a8881c6dba097add588f5f"
+    },
+    {
+      "file": "Cursor_Compulsion_Atk.CUR",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Cursors/Cursor_Compulsion_Atk.CUR",
+      "bytes": 4286,
+      "sha256": "c537769621ec0ed8fe6a3e3b3f2c05a47387985b040095d34a5da9371d03ff83"
+    },
+    {
+      "file": "Cursor_Npc.CUR",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Cursors/Cursor_Npc.cur",
+      "bytes": 4286,
+      "sha256": "4a9f6b7f00f75f48d852acbe422d619fe7118d418dc5800bab8c736702800c05"
+    },
+    {
+      "file": "Cursor_TextPrompt.CUR",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Cursors/Cursor_TextPrompt.CUR",
+      "bytes": 4286,
+      "sha256": "5bf9fe596ddd371368d9895e675d9475db16c04b11510fd53b67f9cacd323106"
+    },
+    {
+      "file": "Cursor_Trash.CUR",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Cursors/Cursor_Trash.CUR",
+      "bytes": 4286,
+      "sha256": "b31ddec3107fa75240f723e4ff4ba31f67a1d6e68f843df1fc6e35036a9f1390"
+    },
+    {
+      "file": "Cursor_Upgrade.CUR",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Cursors/Cursor_Upgrade.CUR",
+      "bytes": 4286,
+      "sha256": "61b2c32486ffbc527e533677a4a0df457904508bcf4815afccbdfcb16d281338"
+    }
   ]
 }
