@@ -87,7 +87,8 @@ export class ClassicHud {
   }
   try{
    const nationalPrguse=await loadNationalUiLibrary('prguse');
-   this.nationalLibraries.set('prguse',nationalPrguse);this.nationalReady=true;this.mountNationalHud(root);
+  this.nationalLibraries.set('prguse',nationalPrguse);this.nationalReady=true;this.mountNationalHud(root);
+   void loadNationalUiLibrary('magic-icons').then(icons=>{this.nationalLibraries.set('magic-icons',icons);this.renderHotbar();}).catch(()=>{});
   }catch{
    this.nationalReady=false;
   }
@@ -228,16 +229,17 @@ export class ClassicHud {
  }
  private renderHotbar(){
   this.hotbar.replaceChildren();
-  const icons=this.libraries.get('MagIcon');
+  const icons=this.libraries.get('MagIcon'),nationalIcons=this.nationalLibraries.get('magic-icons');
   for(let index=0;index<8;index++){
    const skill=this.skills[index],button=document.createElement('button');
    button.type='button';button.className='hud-slot';button.style.left=`${15+index*25}px`;button.style.top='3px';
    if(this.nationalReady){button.style.left=`${8+index*34}px`;button.style.width='30px';button.style.height='30px';}
    button.title=skill?`${skill.name} · ${skill.level}级`:`F${index+1}`;
    if(index===this.selected)button.classList.add('selected');
-   if(skill&&icons){
-    const frame=icons.frames[String(skill.magicId)]??icons.frames[String(Math.max(0,skill.magicId-1))]??icons.frames['1'];
-    if(frame){const image=new Image();image.src=uiUrl('MagIcon', frame);image.alt=skill.name;button.append(image);}
+   if(skill&&(nationalIcons||icons)){
+    const nationalFrame=nationalIcons?.frames[String(skill.magicId)]??nationalIcons?.frames[String(Math.max(0,skill.magicId-1))];
+    const frame=nationalFrame??icons?.frames[String(skill.magicId)]??icons?.frames[String(Math.max(0,skill.magicId-1))]??icons?.frames['1'];
+    if(frame){const image=new Image();image.src=nationalFrame?`/ui-national/magic-icons/${nationalFrame.file}`:uiUrl('MagIcon', frame);image.alt=skill.name;button.append(image);}
     else button.textContent=skill.name.slice(0,1);
    }
    const key=document.createElement('kbd');key.textContent=`F${index+1}`;button.append(key);

@@ -1,4 +1,5 @@
 import {Assets,Container,Sprite,Text,Texture} from 'pixi.js';
+import {loadNationalUiLibrary} from './classic-ui';
 
 export type GroundItem={id:number;x:number;y:number;looks:number;name:string};
 type Frame={file:string;width:number;height:number};
@@ -9,6 +10,7 @@ export class GroundItems {
  private visuals=new Map<number,Container>();
  private generation=0;
  private library?:Promise<Library>;
+ private nationalLibrary?:Promise<Library>;
  constructor(private layer:Container,private pickup:(item:GroundItem)=>void,private list?:HTMLElement){this.renderList();}
  clear(){this.generation++;for(const visual of this.visuals.values())visual.destroy({children:true});this.visuals.clear();this.items.clear();this.renderList();}
  at(x:number,y:number){return [...this.items.values()].find(item=>item.x===x&&item.y===y);}
@@ -21,9 +23,11 @@ export class GroundItems {
   label.anchor.set(.5,1);label.position.set(24,2);visual.addChild(sprite,label);this.layer.addChild(visual);this.visuals.set(item.id,visual);
   visual.on('pointertap',event=>{event.stopPropagation();this.pickup(item);});
   const generation=this.generation;
-  void this.loadLibrary().then(async library=>{
-   const frame=library.frames[item.looks];if(!frame||generation!==this.generation||this.items.get(item.id)!==item)return;
-   const texture=await Assets.load<Texture>(`/items/DnItems/${frame.file}`);texture.source.scaleMode='nearest';
+  void this.loadNationalLibrary().catch(()=>undefined).then(async national=>{
+   const fallback=await this.loadLibrary();
+   const frame=national?.frames[item.looks]??fallback.frames[item.looks];
+   if(!frame||generation!==this.generation||this.items.get(item.id)!==item)return;
+   const texture=await Assets.load<Texture>(national?.frames[item.looks]?`/ui-national/dnitems/${frame.file}`:`/items/DnItems/${frame.file}`);texture.source.scaleMode='nearest';
    if(generation!==this.generation||this.items.get(item.id)!==item)return;
    sprite.texture=texture;sprite.anchor.set(.5);sprite.position.set(24,16);
   }).catch(()=>{if(this.items.get(item.id)===item)label.text=`${item.name} · 地面图待校准`;});
@@ -42,5 +46,9 @@ export class GroundItems {
    return response.json() as Promise<Library>;
   }).catch(error=>{this.library=undefined;throw error;});
   return this.library;
+ }
+ private loadNationalLibrary(){
+  if(!this.nationalLibrary)this.nationalLibrary=loadNationalUiLibrary('dnitems').catch(error=>{this.nationalLibrary=undefined;throw error;});
+  return this.nationalLibrary;
  }
 }

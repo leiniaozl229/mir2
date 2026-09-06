@@ -1,3 +1,5 @@
+import {loadNationalUiLibrary} from './classic-ui';
+
 export type InventoryItem={name:string;makeIndex:number;durability:number;maxDurability:number;stdMode:number;weight:number;looks:number};
 type Icons={frames:Record<string,{file:string}>};
 type InventoryActions={drop:(makeIndex:number)=>void;equip:(makeIndex:number,slot:number)=>void;use:(makeIndex:number)=>void;trade?:(makeIndex:number)=>void};
@@ -31,10 +33,11 @@ export function bagCellPosition(index:number){
 }
 
 export class InventoryView {
- private items=new Map<number,InventoryItem>();private pending=new Set<number>();private known=false;private icons:Icons|undefined;
+ private items=new Map<number,InventoryItem>();private pending=new Set<number>();private known=false;private icons:Icons|undefined;private nationalIcons:Icons|undefined;
  constructor(private element:HTMLElement,private actions:InventoryActions){
   this.element.classList.add('classic-bag');
   void loadIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});
+  void loadNationalUiLibrary('items').then(icons=>{this.nationalIcons=icons;this.render();}).catch(()=>{});
  }
  clear(){this.known=false;this.items.clear();this.pending.clear();this.render();}
  replace(items:InventoryItem[]){this.known=true;this.items=new Map(items.map(item=>[item.makeIndex,item]));this.pending.clear();this.render();}
@@ -56,7 +59,8 @@ export class InventoryView {
     const pending=this.pending.has(item.makeIndex);
     cell.dataset.itemId=String(item.makeIndex);cell.disabled=pending;
     cell.title=`${item.name}\n持久 ${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`;
-    cell.append(imageOrEmpty(this.icons?.frames[item.looks],item));
+    const nationalIcon=this.nationalIcons?.frames[item.looks],icon=nationalIcon??this.icons?.frames[item.looks];
+    cell.append(imageOrEmpty(icon,item,nationalIcon?`/ui-national/items/${nationalIcon.file}`:undefined));
     cell.onclick=event=>{
      event.preventDefault();
      if(event.shiftKey&&this.actions.trade)this.begin(item,()=>this.actions.trade!(item.makeIndex));
@@ -74,10 +78,11 @@ export class InventoryView {
 }
 
 export class EquipmentView {
- private slots=new Map<number,InventoryItem>();private pending=new Set<number>();private icons:Icons|undefined;
+ private slots=new Map<number,InventoryItem>();private pending=new Set<number>();private icons:Icons|undefined;private nationalIcons:Icons|undefined;
  constructor(private element:HTMLElement,private takeOff:(slot:number)=>void){
   this.element.classList.add('paperdoll');
   void loadIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});this.render();
+  void loadNationalUiLibrary('items').then(icons=>{this.nationalIcons=icons;this.render();}).catch(()=>{});
  }
  clear(){this.slots.clear();this.pending.clear();this.render();}
  replace(values:{slot:number;item:InventoryItem}[]){this.slots=new Map(values.map(value=>[value.slot,value.item]));this.pending.clear();this.render();}
@@ -96,7 +101,8 @@ export class EquipmentView {
     button.dataset.durability=String(item.durability);button.dataset.maxDurability=String(item.maxDurability);
     button.title=`${cell.name}：${item.name}\n持久 ${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`;
     button.disabled=this.pending.has(cell.slot);
-    button.append(imageOrEmpty(this.icons?.frames[item.looks],item));
+    const nationalIcon=this.nationalIcons?.frames[item.looks],icon=nationalIcon??this.icons?.frames[item.looks];
+    button.append(imageOrEmpty(icon,item,nationalIcon?`/ui-national/items/${nationalIcon.file}`:undefined));
     button.onclick=()=>{this.pending.add(cell.slot);this.render();this.takeOff(cell.slot);};
    }else{button.title=`${cell.name}：空`;button.disabled=true;}
    this.element.append(button);
@@ -108,7 +114,7 @@ function defaultSlot(mode:number){
  if(mode===10||mode===11)return 0;if(mode===5||mode===6)return 1;if([28,29,30].includes(mode))return 2;if([19,20,21].includes(mode))return 3;if(mode===15)return 4;
  if([24,26].includes(mode))return 5;if(mode===25||mode===51)return 9;if(mode===22||mode===23)return 7;if(mode===54||mode===64)return 10;if(mode===52||mode===62)return 11;if(mode===53||mode===63)return 12;return -1;
 }
-function imageOrEmpty(icon:{file:string}|undefined,item:InventoryItem){
- if(icon){const image=document.createElement('img');image.src=`/items/Items/${icon.file}`;image.alt=item.name;return image;}
+function imageOrEmpty(icon:{file:string}|undefined,item:InventoryItem,url?:string){
+ if(icon){const image=document.createElement('img');image.src=url??`/items/Items/${icon.file}`;image.alt=item.name;return image;}
  const empty=document.createElement('span');empty.className='missing-item-icon';empty.setAttribute('aria-label',`${item.name} 图标待校准`);return empty;
 }
