@@ -50,10 +50,12 @@ def main():
         if family["id"] not in selected:
             continue
         match = choose_variant(family, files)
-        entry = {"id": family["id"], "label": family["label"]}
+        required = family.get("required", True)
+        entry = {"id": family["id"], "label": family["label"], "required": required}
         if match is None:
-            entry["status"] = "missing-or-unsupported"
-            report["ok"] = False
+            entry["status"] = "missing-or-unsupported" if required else "optional-missing"
+            if required:
+                report["ok"] = False
         elif match[0].suffix.casefold() == ".pak":
             entry["status"] = "pak-requires-engine-specific-decoder"
             entry["files"] = [path.name for path in match]

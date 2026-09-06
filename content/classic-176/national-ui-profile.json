@@ -17,6 +17,7 @@
       {
         "id": "newopui",
         "label": "游戏操作 UI",
+        "required": false,
         "variants": [["NewopUI.wil", "NewopUI.wix"], ["NewopUI.wzl", "NewopUI.wzx"], ["NewopUI.pak"]]
       },
       {
@@ -32,16 +33,19 @@
       {
         "id": "prguse3",
         "label": "主界面公共控件扩展 3",
+        "required": false,
         "variants": [["Prguse3.wil", "Prguse3.wix"], ["Prguse3.wzl", "Prguse3.wzx"], ["Prguse3.pak"]]
       },
       {
         "id": "ui1",
         "label": "对话与按钮 UI",
+        "required": false,
         "variants": [["ui1.wil", "ui1.wix"], ["ui1.wzl", "ui1.wzx"], ["ui1.pak"]]
       },
       {
         "id": "ui3",
         "label": "窗口与对话 UI",
+        "required": false,
         "variants": [["ui3.wil", "ui3.wix"], ["ui3.wzl", "ui3.wzx"], ["ui3.pak"]]
       },
       {

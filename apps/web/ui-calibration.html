@@ -10,13 +10,14 @@
   <header>
     <span>THE LEGEND OF MIR II</span>
     <h1>2003 国服 UI 基准台</h1>
-    <p>固定 800×600 坐标。当前页面加载 Crystal 候选帧，仅用于交互链路和校准工具开发；导入匹配的国服 Data 后，再逐窗口核对位置、尺寸、文字基线和交互热区。</p>
+      <p>固定 800×600 坐标。页面优先显示已导入的 2003 国服原始素材；未找到匹配 Data 时回退到 Crystal 候选帧，用于逐窗口核对位置、尺寸、文字基线和交互热区。</p>
   </header>
 
   <section class="calibration-workbench" aria-label="UI 校准工作台">
     <div id="calibration-stage-frame">
       <div id="calibration-reference" aria-hidden="true"><img id="reference-image" alt=""></div>
       <div id="calibration-content">
+        <div id="national-preview" hidden aria-label="已导入的 2003 国服原始素材"></div>
         <div id="calibration-playfield" aria-label="主画面预览">
           <span>地图画面基准区 · 800×600</span>
           <small>切换到 HUD、角色窗、背包窗或 NPC 窗口进行校准</small>
@@ -63,7 +64,8 @@
 
     <aside class="calibration-controls" aria-label="校准控制">
       <fieldset><legend>界面场景</legend><button type="button" data-scene="login">登录</button><button type="button" data-scene="select">选角</button><button type="button" data-scene="create">创建角色</button><button type="button" data-scene="hud">主 HUD</button><button type="button" data-scene="character">角色窗</button><button type="button" data-scene="inventory">背包窗</button><button type="button" data-scene="npc">NPC 对话</button></fieldset>
-      <fieldset><legend>对照工具</legend><label><input id="show-grid" type="checkbox"> 显示 16px 网格</label><label><input id="show-ruler" type="checkbox" checked> 显示坐标尺</label><label>截图透明度 <input id="reference-opacity" type="range" min="0" max="1" step="0.05" value="0.5"></label><label class="file-input">载入国服截图 <input id="reference-file" type="file" accept="image/png,image/jpeg,image/webp"></label><button id="clear-reference" type="button">清除截图</button></fieldset>
+        <fieldset><legend>对照工具</legend><label><input id="show-grid" type="checkbox"> 显示 16px 网格</label><label><input id="show-ruler" type="checkbox" checked> 显示坐标尺</label><label>截图透明度 <input id="reference-opacity" type="range" min="0" max="1" step="0.05" value="0.5"></label><label class="file-input">载入国服截图 <input id="reference-file" type="file" accept="image/png,image/jpeg,image/webp"></label><button id="clear-reference" type="button">清除截图</button></fieldset>
+      <fieldset><legend>素材源</legend><label><input id="show-national-ui" type="checkbox" checked disabled> 显示已导入国服原始素材</label></fieldset>
       <p id="calibration-status-message" role="status">正在加载候选界面帧…</p>
       <p class="calibration-note">当前基准：2003 原始 1.76 国服金币版。校准原则：先对齐窗口左上角，再校准文字基线、图标偏移和点击热区。截图只在当前浏览器内存中使用，不写入仓库。</p>
     </aside>

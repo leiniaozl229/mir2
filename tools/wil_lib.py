@@ -50,6 +50,7 @@ class WeMadeLibrary:
         self.index_data = self.index_path.read_bytes()
         self.version = None
         self.palette = None
+        self.flip_y = False
         self.image_header_size = 16 if self.kind == "wzl" else 8
         self.index_header_size = 52 if self.kind == "wzl" else 48
         if self.kind == "wil":
@@ -62,18 +63,37 @@ class WeMadeLibrary:
         palette_count = struct.unpack_from("<i", self.data, 48)[0]
         if not 1 <= palette_count <= 256:
             raise WeMadeFormatError(f"unsupported WIL palette size: {palette_count}")
-        self.version = struct.unpack_from("<i", self.data, 56)[0]
-        if self.version not in (0, 1):
-            raise WeMadeFormatError(f"unsupported WIL version: {self.version}")
-        self.index_header_size = 48 if self.version == 0 else 52
-        self.image_header_size = 8 if self.version == 0 else 12
-        palette_offset = 60 if self.version == 0 else 64
-        if palette_offset + (palette_count - 1) * 4 > len(self.data):
+        if self.data.startswith(b"#ILIB v1.0-"):
+            # Classic client WIL stores the palette byte length at 52 and
+            # starts the 256 RGBA entries at 56. There is no version integer
+            # in this header variant; the first image starts at 1080.
+            self.version = 0
+            self.index_header_size = 48
+            self.image_header_size = 8
+            palette_offset = 56
+            self.flip_y = True
+        else:
+            # Keep support for the compact fixture/header variant used by
+            # the initial importer tests.
+            self.version = struct.unpack_from("<i", self.data, 56)[0]
+            if self.version not in (0, 1):
+                raise WeMadeFormatError(f"unsupported WIL version: {self.version}")
+            self.index_header_size = 48 if self.version == 0 else 52
+            self.image_header_size = 8 if self.version == 0 else 12
+            palette_offset = 60 if self.version == 0 else 64
+        palette_entries = palette_count if self.data.startswith(b"#ILIB v1.0-") else palette_count - 1
+        if palette_offset + palette_entries * 4 > len(self.data):
             raise WeMadeFormatError("truncated WIL palette")
         # Palette index 0 is the transparent color in the classic 8-bit WIL.
         self.palette = [0] * palette_count
-        for index in range(1, palette_count):
-            color = struct.unpack_from("<I", self.data, palette_offset + (index - 1) * 4)[0]
+        if self.data.startswith(b"#ILIB v1.0-"):
+            palette_indices = range(1, palette_count)
+            palette_index_offset = lambda index: index
+        else:
+            palette_indices = range(1, palette_count)
+            palette_index_offset = lambda index: index - 1
+        for index in palette_indices:
+            color = struct.unpack_from("<I", self.data, palette_offset + palette_index_offset(index) * 4)[0]
             self.palette[index] = color | 0xFF000000
 
     def _read_offsets(self):
@@ -82,7 +102,16 @@ class WeMadeLibrary:
         size = len(self.index_data) - self.index_header_size
         if size % 4:
             raise WeMadeFormatError("misaligned WIX/WZX index table")
-        return list(struct.unpack_from(f"<{size // 4}i", self.index_data, self.index_header_size))
+        offsets = list(struct.unpack_from(f"<{size // 4}i", self.index_data, self.index_header_size))
+        # A few original libraries append a terminal offset after the last
+        # real frame. Some clients leave that value just past the extracted
+        # WIL length, so discard only a trailing invalid entry while keeping
+        # malformed offsets in the middle strict.
+        while offsets and offsets[-1] >= len(self.data) and all(
+            offset == 0 or 0 <= offset < len(self.data) for offset in offsets[:-1]
+        ):
+            offsets.pop()
+        return offsets
 
     @property
     def count(self):
@@ -113,6 +142,11 @@ class WeMadeLibrary:
         if end > len(self.data):
             raise WeMadeFormatError(f"truncated WIL pixels: {index}")
         pixels = self.data[start:end]
+        if self.flip_y and height > 1:
+            pixels = b"".join(
+                pixels[row * width:(row + 1) * width]
+                for row in range(height - 1, -1, -1)
+            )
         return self._frame(index, width, height, x, y, self._indexed_pixels(pixels, width, height))
 
     def _wzl_frame(self, index, offset):

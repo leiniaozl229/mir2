@@ -34,13 +34,14 @@ def validate(data_dir: Optional[Path]):
         "families": [],
         "ok": False,
     }
+    required_families = [family["id"] for family in families if family.get("required", True)]
     if data_dir is None:
         report["error"] = "missing --data-dir"
-        report["missingFamilies"] = [family["id"] for family in families]
+        report["missingFamilies"] = required_families
         return report
     if not data_dir.is_dir():
         report["error"] = f"data directory does not exist: {data_dir}"
-        report["missingFamilies"] = [family["id"] for family in families]
+        report["missingFamilies"] = required_families
         return report
 
     index = file_index(data_dir)
@@ -51,11 +52,21 @@ def validate(data_dir: Optional[Path]):
             if all(name.casefold() in index for name in variant):
                 matched = {"files": variant, "paths": [index[name.casefold()] for name in variant]}
                 break
-        result = {"id": family["id"], "label": family["label"], "matched": matched}
+        result = {
+            "id": family["id"],
+            "label": family["label"],
+            "required": family.get("required", True),
+            "matched": matched,
+        }
         report["families"].append(result)
-        if matched is None:
+        if matched is None and family.get("required", True):
             missing.append(family["id"])
     report["missingFamilies"] = missing
+    report["missingOptionalFamilies"] = [
+        family["id"]
+        for family, result in zip(families, report["families"])
+        if result["matched"] is None and not family.get("required", True)
+    ]
     report["ok"] = not missing
     report["status"] = "ready-for-decoder" if report["ok"] else "blocked-missing-reference-assets"
     return report

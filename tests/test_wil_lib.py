@@ -27,6 +27,27 @@ def classic_wil_fixture(directory):
     return directory / "Prguse.wil"
 
 
+def original_wil_fixture(directory, trailing_offset=False):
+    header = bytearray(56)
+    header[:36] = b"#ILIB v1.0-WEMADE Entertainment inc."
+    struct.pack_into("<i", header, 44, 1)
+    struct.pack_into("<i", header, 48, 256)
+    struct.pack_into("<i", header, 52, 1024)
+    palette = bytearray(256 * 4)
+    palette[4:8] = bytes((0, 0, 128, 0))
+    image_offset = len(header) + len(palette)
+    image = struct.pack("<hhhh", 2, 2, -3, 4) + bytes((1, 1, 0, 0))
+    (directory / "Original.wil").write_bytes(header + palette + image)
+    offsets = [image_offset]
+    if trailing_offset:
+        offsets.append(image_offset + len(image) + 8)
+    index = bytearray(48)
+    index[:36] = b"#INDX v1.0-WEMADE Entertainment inc."
+    struct.pack_into("<i", index, 44, len(offsets))
+    (directory / "Original.wix").write_bytes(index + struct.pack(f"<{len(offsets)}i", *offsets))
+    return directory / "Original.wil"
+
+
 def classic_wzl_fixture(directory):
     raw = bytes((1, 2, 0, 0))
     compressed = zlib.compress(raw)
@@ -53,6 +74,22 @@ class WeMadeLibraryTests(unittest.TestCase):
             frame = WeMadeLibrary(source).frame(0)
             self.assertEqual((frame["width"], frame["height"], frame["offsetX"], frame["offsetY"]), (2, 1, 5, -6))
             self.assertEqual(len(frame["pixels"]), 8)
+
+    def test_original_wil_header_reads_palette_at_offset_56(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = original_wil_fixture(Path(temporary))
+            frame = WeMadeLibrary(source).frame(0)
+            self.assertEqual((frame["width"], frame["height"], frame["offsetX"], frame["offsetY"]), (2, 2, -3, 4))
+            self.assertEqual(frame["pixels"][:4], b"\x00\x00\x00\x00")
+            self.assertEqual(frame["pixels"][4:8], b"\x00\x00\x00\x00")
+            self.assertEqual(frame["pixels"][8:12], b"\x00\x00\x80\xFF")
+
+    def test_original_wil_discards_trailing_terminal_offset(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = original_wil_fixture(Path(temporary), trailing_offset=True)
+            library = WeMadeLibrary(source)
+            self.assertEqual(library.count, 1)
+            self.assertIsNotNone(library.frame(0))
 
     def test_export_writes_browser_manifest(self):
         with tempfile.TemporaryDirectory() as temporary:
