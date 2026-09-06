@@ -1,0 +1,13 @@
+[@main]
+石棺材屋向导：选择目的地。\
+<比奇省/@home>  <阴森石路/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D611 50 46
+BREAK

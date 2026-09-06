@@ -1,0 +1,14 @@
+[@main]
+屠龙殿向导：选择目的地。\
+<比奇省/@home>  <上一层 幻境九层/@prev>  <返回比奇/@home>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE H009 150 150
+BREAK
+

@@ -1,0 +1,19 @@
+[@main]
+恶魔祭坛向导：选择目的地。\
+<比奇省/@home>  <上一层 赤月山谷秘道二/@prev>  <下一层 赤月魔穴/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D10052 100 100
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D10062 20 20
+BREAK
+

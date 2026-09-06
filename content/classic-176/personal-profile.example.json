@@ -1,0 +1,12 @@
+{
+  "id": "solo-classic",
+  "label": "个人经典档",
+  "experienceMultiplier": 1,
+  "dropMultiplier": 1.0,
+  "spawnDelayMultiplier": 1.0,
+  "gm": {
+    "enabled": false,
+    "character": "",
+    "ip": "127.0.0.1"
+  }
+}

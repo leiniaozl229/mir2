@@ -1,0 +1,15 @@
+--- a/src/GameSrv/Npc/Merchant.cs
++++ b/src/GameSrv/Npc/Merchant.cs
+@@ -798,6 +798,12 @@
+                     {
+                         string sMsg = HUtil32.GetValidStr3(sData, ref sLabel, '\r');
+                         playObject.ScriptLable = sData;
++                        if (sLabel.StartsWith("@@InPutString", StringComparison.OrdinalIgnoreCase) &&
++                            int.TryParse(sLabel.AsSpan("@@InPutString".Length), out int stringIndex) &&
++                            stringIndex >= 0 && stringIndex < playObject.MSString.Length)
++                        {
++                            playObject.MSString[stringIndex] = sMsg;
++                        }
+                         bool boCanJmp = playObject.LableIsCanJmp(sLabel);
+                         if (string.Compare(sLabel, ScriptFlagConst.sSL_SENDMSG, StringComparison.OrdinalIgnoreCase) == 0)
+                         {

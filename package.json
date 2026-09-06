@@ -1,0 +1,9 @@
+{
+  "name": "mir2-web",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {"dev": "vite --config apps/web/vite.config.ts", "build": "tsc --noEmit && vite build --config apps/web/vite.config.ts"},
+  "dependencies": {"pixi.js": "8.13.2"},
+  "devDependencies": {"typescript": "5.9.3", "vite": "7.1.5"}
+}

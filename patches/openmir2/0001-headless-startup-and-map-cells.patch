@@ -1,0 +1,541 @@
+diff --git a/src/GameGate/Services/ServerManager.cs b/src/GameGate/Services/ServerManager.cs
+index 226b054..b340603 100644
+--- a/src/GameGate/Services/ServerManager.cs
++++ b/src/GameGate/Services/ServerManager.cs
+@@ -167,6 +167,10 @@ namespace GameGate.Services
+             }
+ 
+             ServerService[] availableList = _serverServices.Where(x => x.ClientThread.Running == RunningState.Runing).ToArray();//允许分配玩家连接
++            if (availableList.Length == 0)
++            {
++                return null;
++            }
+             if (availableList.Length == 1)
+             {
+                 threadId = 1;
+diff --git a/src/GameGate/Services/ServerService.cs b/src/GameGate/Services/ServerService.cs
+index 874568b..5356071 100644
+--- a/src/GameGate/Services/ServerService.cs
++++ b/src/GameGate/Services/ServerService.cs
+@@ -38,7 +38,7 @@ namespace GameGate.Services
+         public void Initialize()
+         {
+             _serverSocket.Setup(new TouchSocketConfig()
+-                .SetListenIPHosts(new IPHost(IPAddress.Parse(_gateInfo.ServerAdress), _gateInfo.GatePort))
++                .SetListenIPHosts(new IPHost(IPAddress.Parse(_gateInfo.GateAddress), _gateInfo.GatePort))
+                 .ConfigureContainer(a =>
+                 {
+                     a.AddConsoleLogger();
+@@ -165,7 +165,7 @@ namespace GameGate.Services
+ 
+         private Task ServerSocketClientDisconnect(ISocketClient client, DisconnectEventArgs e)
+         {
+-            if (!sessionMap.TryGetValue(client.Id, out int sessionId))
++            if (!sessionMap.TryRemove(client.Id, out int sessionId))
+             {
+                 return Task.CompletedTask;
+             }
+@@ -176,6 +176,7 @@ namespace GameGate.Services
+                 return Task.CompletedTask;
+             }
+             ClientThread clientThread = clientSession.ServerThread;
++            int closedSocketId = clientSession.Session.SckHandle;
+             if (clientThread != null)
+             {
+                 for (int i = 0; i < clientThread.SessionArray.Length; i++)
+@@ -202,7 +203,7 @@ namespace GameGate.Services
+             {
+                 LogService.Info("断开链接: " + sRemoteAddress);
+             }
+-            _closeSession.Enqueue(client.MainSocket.Handle.ToInt32()); //等待通知GameSvr断开用户会话,否则会出现退出游戏后再次登陆游戏提示账号已经登陆
++            _closeSession.Enqueue(closedSocketId); //等待通知GameSvr断开用户会话,否则会出现退出游戏后再次登陆游戏提示账号已经登陆
+             SessionContainer.CloseSession(GateInfo.ServiceId, sessionId);
+             LogService.Debug($"用户断开链接 Ip:[{sRemoteAddress}] ThreadId:{_gateInfo.ServiceId} SessionId:{sessionId}");
+             return Task.CompletedTask;
+@@ -236,4 +237,4 @@ namespace GameGate.Services
+             return Task.CompletedTask;
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/GameSrv/AppService.cs b/src/GameSrv/AppService.cs
+index 2c615e0..00940f0 100644
+--- a/src/GameSrv/AppService.cs
++++ b/src/GameSrv/AppService.cs
+@@ -94,7 +94,8 @@ namespace GameSrv
+             catch (Exception ex)
+             {
+                 _exitCode = 1;
+-                LogService.Error("初始化游戏基础数据失败...", ex);
++                LogService.Error("初始化游戏基础数据失败...", ex);
++                throw;
+             }
+             return Task.CompletedTask;
+         }
+@@ -358,4 +359,4 @@ namespace GameSrv
+             return Task.CompletedTask;
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/GameSrv/Maps/Maps.cs b/src/GameSrv/Maps/Maps.cs
+index b250ac0..507866b 100644
+--- a/src/GameSrv/Maps/Maps.cs
++++ b/src/GameSrv/Maps/Maps.cs
+@@ -346,9 +346,13 @@
+                     Console.Write("\r正在读取地图数据...[{0}/{1}]", i, loadList.Count);
+                 }
+                 Console.Write("\n"); // 完成后换行
+-                Console.SetCursorPosition(0, Console.CursorTop - 1); // 将光标移动到上一行
+-                Console.Write(new string(' ', Console.WindowWidth)); // 使用空格覆盖这一行
+-                Console.SetCursorPosition(0, Console.CursorTop - 1); // 再次将光标移动到上一行
++                if (!Console.IsOutputRedirected && Console.CursorTop > 0)
++                {
++                    int row = Console.CursorTop - 1;
++                    Console.SetCursorPosition(0, row);
++                    Console.Write(new string(' ', Console.WindowWidth));
++                    Console.SetCursorPosition(0, row);
++                }
+                 
+                 // 加载地图连接点
+                 for (int i = 0; i < loadList.Count; i++)
+@@ -478,4 +482,4 @@
+             }
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/GameSrv/Services/FrnEngn.cs b/src/GameSrv/Services/FrnEngn.cs
+index 56d1fa3..edfd19f 100644
+--- a/src/GameSrv/Services/FrnEngn.cs
++++ b/src/GameSrv/Services/FrnEngn.cs
+@@ -62,6 +62,9 @@ namespace GameSrv.Services
+                 {
+                     if (m_SaveRcdList[j].QueryId == queryId)
+                     {
++                        if (m_SaveRcdList[j].PlayObject != null)
++                            m_SaveRcdList[j].PlayObject.RcdSaved = true;
++                        ProtocolTrace.Write("database save acknowledged; release pending record");
+                         m_SaveRcdList.RemoveAt(j);
+                         break;
+                     }
+diff --git a/src/GameSrv/Services/PlayerDataService.cs b/src/GameSrv/Services/PlayerDataService.cs
+index f0c4fb7..d30bf0f 100644
+--- a/src/GameSrv/Services/PlayerDataService.cs
++++ b/src/GameSrv/Services/PlayerDataService.cs
+@@ -123,7 +123,7 @@ namespace GameSrv.Services
+                 {
+                     if (nIdent == Messages.DBR_SAVEHUMANRCD && nRecog == 1)
+                     {
+-                        // M2Share.FrontEngine.RemoveSaveList(queryId);
++                        M2Share.FrontEngine.RemoveSaveList(queryId);
+                     }
+                     SaveProcessList.TryDequeue(out _);
+                 }
+diff --git a/src/GameSrv/Word/Threads/CharacterDataProcessor.cs b/src/GameSrv/Word/Threads/CharacterDataProcessor.cs
+index 4cd8e90..dcc8cf8 100644
+--- a/src/GameSrv/Word/Threads/CharacterDataProcessor.cs
++++ b/src/GameSrv/Word/Threads/CharacterDataProcessor.cs
+@@ -80,13 +80,6 @@ namespace GameSrv.Word.Threads
+                 {
+                     saveRcd.ReTryCount++;
+                 }
+-                else
+-                {
+-                    if (saveRcd.PlayObject != null)
+-                    {
+-                        saveRcd.PlayObject.RcdSaved = true;
+-                    }
+-                }
+             }
+             M2Share.FrontEngine.ClearSaveRcdTempList();
+             PlayerDataService.ProcessSaveQueue();
+@@ -130,13 +123,15 @@ namespace GameSrv.Word.Threads
+ 
+         private static bool LoadCharacterData(LoadDBInfo loadUser, ref bool reTry)
+         {
++            ProtocolTrace.Write("character load processing");
+             int queryId = 0;
+             bool result = false;
+             reTry = false;
+             if (M2Share.FrontEngine.InSaveRcdList(loadUser.ChrName))
+             {
++                ProtocolTrace.Write("character load waiting for save");
+                 reTry = true;// 反回TRUE,则重新加入队列
+-                return false;
++                return true;
+             }
+             /*if (SystemShare.WorldEngine.GetPlayObjectEx(loadUser.ChrName) != null)
+             {
+@@ -157,6 +152,7 @@ namespace GameSrv.Word.Threads
+                     HumanRcd = null,
+                     QueryId = queryId
+                 };
++                ProtocolTrace.Write("character database query queued");
+                 SystemShare.WorldEngine.AddUserOpenInfo(userOpenInfo);
+                 result = true;
+             }
+diff --git a/src/GameSrv/Word/WorldServer.cs b/src/GameSrv/Word/WorldServer.cs
+index 3c296d2..fbcae5c 100644
+--- a/src/GameSrv/Word/WorldServer.cs
++++ b/src/GameSrv/Word/WorldServer.cs
+@@ -235,8 +235,6 @@ namespace GameSrv.Word
+                 SwitchDataInfo switchDataInfo;
+                 if (!SystemShare.Config.VentureServer)
+                 {
+-                    userOpenInfo.ChrName = string.Empty;
+-                    userOpenInfo.LoadUser.SessionID = 0;
+                     switchDataInfo = GetSwitchData(userOpenInfo.ChrName, userOpenInfo.LoadUser.SessionID);
+                 }
+                 else
+diff --git a/src/LoginGate/Services/ClientThread.cs b/src/LoginGate/Services/ClientThread.cs
+index a2134d1..8ae2a39 100644
+--- a/src/LoginGate/Services/ClientThread.cs
++++ b/src/LoginGate/Services/ClientThread.cs
+@@ -254,7 +254,7 @@ public class ClientThread
+         };
+         byte[] dataBuff = SerializerUtil.Serialize(serverMessage);
+         byte[] data = new byte[ServerDataPacket.FixedHeaderLen + sendBuffer.Length];
+-        MemoryCopy.BlockCopy(dataBuff, 0, data, 0, data.Length);
++        Buffer.BlockCopy(dataBuff, 0, data, 0, dataBuff.Length);
+         MemoryCopy.BlockCopy(sendBuffer, 0, data, dataBuff.Length, sendBuffer.Length);
+         _clientSocket.Send(data);
+         SendBytes += data.Length;
+diff --git a/src/M2Server/Actor/AnimalObject.cs b/src/M2Server/Actor/AnimalObject.cs
+index 515e6ca..352d3ee 100644
+--- a/src/M2Server/Actor/AnimalObject.cs
++++ b/src/M2Server/Actor/AnimalObject.cs
+@@ -69,6 +69,19 @@ namespace M2Server.Actor
+         /// </summary>
+         private int HolySeizeInterval;
+ 
++        /// <summary>Apply corpse harvesting without unsigned counter wraparound.</summary>
++        public bool ApplyHarvestDamage(byte leatherLoss, ushort qualityLoss)
++        {
++            BodyLeathery = (byte)Math.Max(0, BodyLeathery - leatherLoss);
++            ReduceMeatQuality(qualityLoss);
++            return BodyLeathery == 0;
++        }
++
++        public void ReduceMeatQuality(int loss)
++        {
++            MeatQuality = (ushort)Math.Max(0, MeatQuality - loss);
++        }
++
+         public AnimalObject()
+         {
+             TargetX = -1;
+diff --git a/src/M2Server/Actor/BaseObject.Base.cs b/src/M2Server/Actor/BaseObject.Base.cs
+index ec9e3af..6926ddb 100644
+--- a/src/M2Server/Actor/BaseObject.Base.cs
++++ b/src/M2Server/Actor/BaseObject.Base.cs
+@@ -673,7 +673,7 @@ namespace M2Server.Actor
+                             {
+                                 if (Animal)
+                                 {
+-                                    ((AnimalObject)this).MeatQuality -= (ushort)(nDamage * 1000);
++                                    ((AnimalObject)this).ReduceMeatQuality(nDamage * 1000);
+                                 }
+                                 SendMsg(Messages.RM_STRUCK, nDamage, WAbil.HP, WAbil.MaxHP, processMsg.ActorId);
+                             }
+diff --git a/src/M2Server/Actor/BaseObject.cs b/src/M2Server/Actor/BaseObject.cs
+index fa2cf35..0e3ba4a 100644
+--- a/src/M2Server/Actor/BaseObject.cs
++++ b/src/M2Server/Actor/BaseObject.cs
+@@ -538,22 +538,17 @@ namespace M2Server.Actor
+             StdItem stdItem = SystemShare.ItemSystem.GetStdItem(userItem.Index);
+             if (stdItem != null)
+             {
+-                if (stdItem.StdMode == 40)
+-                {
+-                    ushort idura = userItem.Dura;
+-                    idura = (ushort)(idura - 2000);
+-                    if (idura <= 0)
+-                    {
+-                        idura = 0;
+-                    }
+-                    userItem.Dura = idura;
+-                }
+                 MapItem mapItem = new MapItem
+                 {
+                     UserItem = new UserItem(userItem),
+                     Name = CustomItemSystem.GetItemName(userItem),// 取自定义物品名称
+                     Looks = stdItem.Looks
+                 };
++                // Apply ground wear to the copy; a rejected drop retains the bag item.
++                if (stdItem.StdMode == 40)
++                {
++                    mapItem.UserItem.Dura = (ushort)Math.Max(0, userItem.Dura - 2000);
++                }
+                 if (stdItem.StdMode == 45)
+                 {
+                     mapItem.Looks = (ushort)M2Share.GetRandomLook(mapItem.Looks, stdItem.Shape);
+@@ -1103,6 +1098,7 @@ namespace M2Server.Actor
+         public void SpaceMove(string sMap, short nX, short nY, int nInt)
+         {
+             IEnvirnoment envir = SystemShare.MapMgr.FindMap(sMap);
++            ProtocolTrace.Write($"SpaceMove actor={ChrName} target={sMap}:{nX},{nY} found={envir != null} server={envir?.ServerIndex}");
+             if (envir != null) //todo 这里有问题
+             {
+                 if (M2Share.ServerIndex == envir.ServerIndex)
+@@ -1142,6 +1138,7 @@ namespace M2Server.Actor
+                         }
+                         SpaceMoved = true;
+                         moveSuccess = true;
++                        ProtocolTrace.Write($"SpaceMove committed actor={ChrName} at={MapName}:{CurrX},{CurrY}");
+                     }
+                     if (!moveSuccess)
+                     {
+@@ -1149,6 +1146,7 @@ namespace M2Server.Actor
+                         CurrX = nOldX;
+                         CurrY = nOldY;
+                         Envir.AddMapObject(CurrX, CurrY, CellType, this.ActorId, this);
++                        ProtocolTrace.Write($"SpaceMove rolled back actor={ChrName} at={MapName}:{CurrX},{CurrY}");
+                     }
+                     OnEnvirnomentChanged();
+                 }
+@@ -2853,4 +2848,4 @@ namespace M2Server.Actor
+             return string.Format(str, par);
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/M2Server/Castle/CastleConf.cs b/src/M2Server/Castle/CastleConf.cs
+index adab501..08da326 100644
+--- a/src/M2Server/Castle/CastleConf.cs
++++ b/src/M2Server/Castle/CastleConf.cs
+@@ -266,6 +266,7 @@ namespace M2Server.Castle
+             for (int i = 0; i < userCastle.Archers.Length; i++)
+             {
+                 ArcherUnit objUnit = userCastle.Archers[i];
++                if (objUnit == null) continue;
+                 if (objUnit.nX != 0)
+                 {
+                     WriteInteger("Defense", $"Archer_{i + 1}_X", objUnit.nX);
+@@ -292,6 +293,7 @@ namespace M2Server.Castle
+             for (int i = 0; i < userCastle.Guards.Length; i++)
+             {
+                 ArcherUnit objUnit = userCastle.Guards[i];
++                if (objUnit == null) continue;
+                 if (objUnit.nX != 0)
+                 {
+                     WriteInteger("Defense", $"Guard_{i + 1}_X", objUnit.nX);
+diff --git a/src/M2Server/Maps/Envirnoment.cs b/src/M2Server/Maps/Envirnoment.cs
+index 9915dc2..9657ef8 100644
+--- a/src/M2Server/Maps/Envirnoment.cs
++++ b/src/M2Server/Maps/Envirnoment.cs
+@@ -922,7 +922,6 @@ namespace M2Server.Maps
+                     Height = binReader.ReadInt16();
+                     Initialize(Width, Height);
+                     fileStream.Position = 52;
+-                    bool isInitialize = true;
+ 
+                     MapUnitInfo mapUnitInfo = new MapUnitInfo();
+                     for (int nW = 0; nW < Width; nW++)
+@@ -930,6 +929,7 @@ namespace M2Server.Maps
+                         n24 = nW * Height;
+                         for (int nH = 0; nH < Height; nH++)
+                         {
++                            bool isInitialize = true;
+                             mapUnitInfo.wBkImg = binReader.ReadUInt16();
+                             mapUnitInfo.wMidImg = binReader.ReadUInt16();
+                             mapUnitInfo.wFrImg = binReader.ReadUInt16();
+@@ -1501,4 +1501,4 @@ namespace M2Server.Maps
+             public byte btLight;
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/M2Server/Net/ChannelMessageHandler.cs b/src/M2Server/Net/ChannelMessageHandler.cs
+index 8aeb325..fec52d6 100644
+--- a/src/M2Server/Net/ChannelMessageHandler.cs
++++ b/src/M2Server/Net/ChannelMessageHandler.cs
+@@ -149,6 +149,7 @@ namespace M2Server.Net
+             try
+             {
+                 int nUserIdx;
++                ProtocolTrace.Write($"gate packet kind={msgPacket.Ident} socket={msgPacket.Socket} bytes={nMsgLen}");
+                 switch (msgPacket.Ident)
+                 {
+                     case Grobal2.GM_OPEN:
+@@ -335,6 +336,7 @@ namespace M2Server.Net
+                                     NewUserTick = HUtil32.GetTickCount(),
+                                     PlayTime = nPlayTime
+                                 };
++                                ProtocolTrace.Write("authenticated; enqueue character load");
+                                 M2Share.FrontEngine.AddToLoadRcdList(loadRcdInfo);
+                             }
+                             else
+diff --git a/src/M2Server/Player/PlayObject.Operate.cs b/src/M2Server/Player/PlayObject.Operate.cs
+index 7d81cc7..6567484 100644
+--- a/src/M2Server/Player/PlayObject.Operate.cs
++++ b/src/M2Server/Player/PlayObject.Operate.cs
+@@ -703,6 +703,7 @@ namespace M2Server.Player
+         {
+             dwDelayTime = 0;
+             IActor baseObject = SystemShare.ActorMgr.Get(charId);
++            ProtocolTrace.Write($"butch found={baseObject != null} player={CurrX},{CurrY} request={nX},{nY} dead={baseObject?.Death} animal={baseObject?.Animal} skeleton={baseObject?.Skeleton} items={baseObject?.ItemList?.Count} leather={baseObject?.BodyLeathery}");
+             if (!SystemShare.Config.CloseSpeedHackCheck)
+             {
+                 int dwCheckTime = HUtil32.GetTickCount() - TurnTick;
+@@ -721,13 +722,7 @@ namespace M2Server.Player
+                     {
+                         byte n10 = (byte)(M2Share.RandomNumber.Random(16) + 5);
+                         ushort meatQuality = (ushort)(M2Share.RandomNumber.Random(201) + 100);
+-                        baseObject.BodyLeathery -= n10;
+-                        ((AnimalObject)baseObject).MeatQuality -= meatQuality;//随机降低肉的品质
+-                        if (((AnimalObject)baseObject).MeatQuality <= 0)
+-                        {
+-                            ((AnimalObject)baseObject).MeatQuality = 0;
+-                        }
+-                        if (baseObject.BodyLeathery <= 0)
++                        if (((AnimalObject)baseObject).ApplyHarvestDamage(n10, meatQuality))
+                         {
+                             if (baseObject.Race >= ActorRace.Animal && baseObject.Race < ActorRace.Monster)
+                             {
+diff --git a/src/M2Server/Player/PlayObject.cs b/src/M2Server/Player/PlayObject.cs
+index c832caa..79906a9 100644
+--- a/src/M2Server/Player/PlayObject.cs
++++ b/src/M2Server/Player/PlayObject.cs
+@@ -3350,7 +3350,7 @@ namespace M2Server.Player
+                 }
+                 else
+                 {
+-                    sChrName = Format(RankLevelName, ChrName);
++                    sChrName = Format(RankLevelName.Replace("%s", "{0}"), ChrName);
+                 }
+                 if (!string.IsNullOrEmpty(MasterName))
+                 {
+@@ -5485,4 +5485,4 @@ namespace M2Server.Player
+             VisibleEvents.Add(MapEvent);
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/Modules/SystemModule/Data/MapItem.cs b/src/Modules/SystemModule/Data/MapItem.cs
+index a1be831..c3039cd 100644
+--- a/src/Modules/SystemModule/Data/MapItem.cs
++++ b/src/Modules/SystemModule/Data/MapItem.cs
+@@ -38,7 +38,7 @@ namespace SystemModule.Data
+ 
+         public MapItem()
+         {
+-            // this.ItemId = M2Share.ActorMgr.GetNextIdentity();
++            ItemId = SystemShare.ActorMgr.GetNextIdentity();
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/OpenMir2/Base/SystemEnvironment.cs b/src/OpenMir2/Base/SystemEnvironment.cs
+index 2b2a773..ddf9d83 100644
+--- a/src/OpenMir2/Base/SystemEnvironment.cs
++++ b/src/OpenMir2/Base/SystemEnvironment.cs
+@@ -211,7 +211,7 @@ namespace OpenMir2.Base
+         /// <summary>
+         /// 虚拟内存使用率
+         /// </summary>
+-        public static ulong VirtualMemoryLoad => (memoryInfo.ullTotalVirtual - memoryInfo.ullAvailVirtual) * 100 / memoryInfo.ullTotalVirtual;
++        public static ulong VirtualMemoryLoad => memoryInfo.ullTotalVirtual == 0 ? 0 : (memoryInfo.ullTotalVirtual - memoryInfo.ullAvailVirtual) * 100 / memoryInfo.ullTotalVirtual;
+ 
+         public static bool IsWindows()
+         {
+diff --git a/src/OpenMir2/Common/StringList.cs b/src/OpenMir2/Common/StringList.cs
+index e2996c1..285d8a0 100644
+--- a/src/OpenMir2/Common/StringList.cs
++++ b/src/OpenMir2/Common/StringList.cs
+@@ -259,7 +259,9 @@ namespace OpenMir2.Common
+         /// <param name="fileName"></param>
+         public void SaveToFile(string fileName)
+         {
+-            Encoding fs = GetEncoding(fileName, Encoding.GetEncoding("gb2312"));
++            Encoding fs = File.Exists(fileName)
++                ? GetEncoding(fileName, Encoding.GetEncoding("gb2312"))
++                : Encoding.GetEncoding("gb2312");
+             StreamWriter sw2 = new StreamWriter(fileName, false, fs);
+             for (int i = 0; i < this.Count; i++)
+             {
+@@ -351,4 +353,4 @@ namespace OpenMir2.Common
+             _size = 0;
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/OpenMir2/ProtocolTrace.cs b/src/OpenMir2/ProtocolTrace.cs
+new file mode 100644
+index 0000000..d0a21fd
+--- /dev/null
++++ b/src/OpenMir2/ProtocolTrace.cs
+@@ -0,0 +1,10 @@
++using System;
++namespace OpenMir2;
++public static class ProtocolTrace
++{
++    public static void Write(string stage)
++    {
++        if (Environment.GetEnvironmentVariable("MIR2_PROTOCOL_TRACE") == "1")
++            LogService.Info("[protocol] " + stage);
++    }
++}
+diff --git a/src/Modules/ScriptEngine/ScriptParsers.cs b/src/Modules/ScriptEngine/ScriptParsers.cs
+index c5b49bc..77b5eab 100644
+--- a/src/Modules/ScriptEngine/ScriptParsers.cs
++++ b/src/Modules/ScriptEngine/ScriptParsers.cs
+@@ -498,7 +498,7 @@ namespace ScriptSystem
+                 }
+                 else
+                 {
+-                    nCMDCode = code - 1;
++                    nCMDCode = code;
+                 }
+             }
+ 
+@@ -1892,4 +1892,4 @@ namespace ScriptSystem
+             }
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/M2Server/Npc/NormNpc.cs b/src/M2Server/Npc/NormNpc.cs
+index e96a172..9bdf722 100644
+--- a/src/M2Server/Npc/NormNpc.cs
++++ b/src/M2Server/Npc/NormNpc.cs
+@@ -209,6 +209,7 @@ namespace M2Server.Npc
+             if (string.Compare(sParam1, "KILL", StringComparison.OrdinalIgnoreCase) == 0)
+             {
+                 nInt1 = HUtil32.StrToInt(sParam2, -1);
++                PlayObject.WAbil.HP = 0;
+                 switch (nInt1)
+                 {
+                     case 1:
+diff --git a/src/Modules/ScriptEngine/Processings/ExecutionProcessingSys.cs b/src/Modules/ScriptEngine/Processings/ExecutionProcessingSys.cs
+index 672bf8a..e996cc4 100644
+--- a/src/Modules/ScriptEngine/Processings/ExecutionProcessingSys.cs
++++ b/src/Modules/ScriptEngine/Processings/ExecutionProcessingSys.cs
+@@ -2174,8 +2174,10 @@ namespace ScriptSystem.Processings
+ 
+         private void ActionOfMapMove(INormNpc normNpc, IPlayerActor playerActor, QuestActionInfo questActionInfo, ref bool Success)
+         {
++            ProtocolTrace.Write($"script MAPMOVE player={playerActor.ChrName} from={playerActor.MapName}:{playerActor.CurrX},{playerActor.CurrY} target={questActionInfo.sParam1}:{questActionInfo.nParam2},{questActionInfo.nParam3}");
+             playerActor.SendRefMsg(Messages.RM_SPACEMOVE_FIRE, 0, 0, 0, 0, "");
+             playerActor.SpaceMove(questActionInfo.sParam1, (short)questActionInfo.nParam2, (short)questActionInfo.nParam3, 0);
++            ProtocolTrace.Write($"script MAPMOVE result player={playerActor.ChrName} at={playerActor.MapName}:{playerActor.CurrX},{playerActor.CurrY}");
+         }
+ 
+         private void ActionOfClose(INormNpc normNpc, IPlayerActor playerActor, QuestActionInfo questActionInfo, ref bool Success)
+@@ -5274,6 +5274,7 @@ namespace ScriptSystem.Processings
+             int nMode = HUtil32.StrToInt(questActionInfo.sParam1, -1);
+             if (nMode >= 0 && nMode <= 3)
+             {
++                playerActor.WAbil.HP = 0;
+                 switch (nMode)
+                 {
+                     case 1:

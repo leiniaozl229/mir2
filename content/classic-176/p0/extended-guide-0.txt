@@ -1,0 +1,33 @@
+[@main]
+扩展路线向导：选择目的地。\
+<白日门/@gate11> <赤月峡谷/@red> <封魔谷/@gate4> <苍月岛/@gate5> <幻境/@gateh> <返回/@home>
+
+[@gate11]
+#ACT
+MAPMOVE 11 250 250
+BREAK
+
+[@red]
+#ACT
+MAPMOVE D10011 202 195
+BREAK
+
+[@gate4]
+#ACT
+MAPMOVE 4 255 250
+BREAK
+
+[@gate5]
+#ACT
+MAPMOVE 5 400 400
+BREAK
+
+[@gateh]
+#ACT
+MAPMOVE H001 75 75
+BREAK
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK

@@ -1,0 +1,19 @@
+[@main]
+疾风殿向导：选择目的地。\
+<比奇省/@home>  <上一层 封魔道/@prev>  <下一层 光芒回廊/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D2003 140 159
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D2005 50 50
+BREAK
+

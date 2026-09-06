@@ -1,0 +1,6 @@
+[submodule "vendor/openmir2"]
+	path = vendor/openmir2
+	url = https://github.com/mirbeta/OpenMir2.git
+[submodule "vendor/mirserver-data"]
+	path = vendor/mirserver-data
+	url = https://github.com/mirbeta/MirServer.git

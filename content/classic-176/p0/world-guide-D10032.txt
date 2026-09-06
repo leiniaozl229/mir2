@@ -1,0 +1,19 @@
+[@main]
+赤月右回廊向导：选择目的地。\
+<比奇省/@home>  <上一层 赤月左回廊/@prev>  <下一层 赤月抉择之地/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D10031 150 150
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D1004 150 150
+BREAK
+

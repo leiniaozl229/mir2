@@ -1,0 +1,29 @@
+[@main]
+矿区 A 层向导：选择目的地。\
+<废矿入口/@mine>  <矿区通道/@mine2>  <矿区 B 层/@mineb>  <矿区 C 层/@minec>\
+<比奇省/@home>  <返回/@exit>
+
+[@mine]
+#ACT
+MAPMOVE D401 100 100
+BREAK
+
+[@mine2]
+#ACT
+MAPMOVE D402 100 100
+BREAK
+
+[@mineb]
+#ACT
+MAPMOVE D411 60 7
+BREAK
+
+[@minec]
+#ACT
+MAPMOVE D414 14 79
+BREAK
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK

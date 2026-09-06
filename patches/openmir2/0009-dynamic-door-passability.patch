@@ -1,0 +1,109 @@
+--- a/src/Modules/SystemModule/Data/MapDoor.cs
++++ b/src/Modules/SystemModule/Data/MapDoor.cs
+@@ -9,10 +9,11 @@
+         public short nY;
+         public DoorStatus Status;
+         public int n08;
++        public CellAttribute ClosedAttribute;
+ 
+         public MapDoor()
+         {
+             // DoorId = M2Share.ActorMgr.GetNextIdentity();
+         }
+     }
+-}
+\ No newline at end of file
++}
+--- a/src/Modules/SystemModule/Maps/IEnvirnoment.cs
++++ b/src/Modules/SystemModule/Maps/IEnvirnoment.cs
+@@ -83,6 +83,8 @@
+ 
+         bool GetDoor(int nX, int nY, ref MapDoor door);
+ 
++        void SetDoorState(int nX, int nY, bool opened);
++
+         string GetEnvirInfo();
+ 
+         MapEvent GetEvent(int nX, int nY);
+@@ -117,4 +119,4 @@
+ 
+         void Dispose();
+     }
+-}
+\ No newline at end of file
++}
+--- a/src/M2Server/Maps/Envirnoment.cs
++++ b/src/M2Server/Maps/Envirnoment.cs
+@@ -312,7 +312,37 @@
+             }
+             return true;
+         }
++
++        public void SetDoorState(int nX, int nY, bool opened)
++        {
++            if (!CellMatch(nX, nY))
++            {
++                return;
++            }
++
++            MapDoor door = default;
++            if (!GetDoor(nX, nY, ref door))
++            {
++                return;
++            }
+ 
++            for (int i = 0; i < DoorList.Count; i++)
++            {
++                MapDoor linkedDoor = DoorList[i];
++                if (linkedDoor.n08 != door.n08 || !ReferenceEquals(linkedDoor.Status, door.Status))
++                {
++                    continue;
++                }
++
++                ref MapCellInfo cellInfo = ref CellArray[linkedDoor.nX * Height + linkedDoor.nY];
++                cellInfo.Attribute = opened ? CellAttribute.Walk : linkedDoor.ClosedAttribute;
++                if (opened)
++                {
++                    cellInfo.ObjList ??= new NativeList<CellObject>();
++                }
++            }
++        }
++
+         public bool CellMatch(int nX, int nY)
+         {
+             return nX >= 0 && nX < Width && nY >= 0 && nY < Height;
+@@ -964,7 +994,8 @@
+                                         nX = (short)nW,
+                                         nY = (short)nH,
+                                         n08 = point,
+-                                        Status = null
++                                        Status = null,
++                                        ClosedAttribute = CellArray[n24 + nH].Attribute
+                                     };
+                                     for (int i = 0; i < DoorList.Count; i++)
+                                     {
+--- a/src/GameSrv/Word/WorldServer.cs
++++ b/src/GameSrv/Word/WorldServer.cs
+@@ -1447,6 +1447,7 @@
+             {
+                 door.Status.Opened = true;
+                 door.Status.OpenTick = HUtil32.GetTickCount();
++                envir.SetDoorState(nX, nY, true);
+                 SendDoorStatus(envir, nX, nY, Messages.RM_DOOROPEN, 0, nX, nY);
+             }
+         }
+@@ -1460,6 +1461,7 @@
+ 
+             door.Status.Opened = false;
+             SendDoorStatus(envir, door.nX, door.nY, Messages.RM_DOORCLOSE, 0, door.nX, door.nY);
++            envir.SetDoorState(door.nX, door.nY, false);
+         }
+ 
+         private static void SendDoorStatus(IEnvirnoment envir, int nX, int nY, short wIdent, short wX, int nDoorX, int nDoorY)
+@@ -1924,4 +1926,4 @@
+             QuestNpcList.Add(normNpc);
+         }
+     }
+-}
+\ No newline at end of file
++}

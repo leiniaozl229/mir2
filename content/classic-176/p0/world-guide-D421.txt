@@ -1,0 +1,39 @@
+[@main]
+山谷矿区一层向导：选择目的地。\
+<山谷矿区二层/@d422>  <废矿区南部/@d406>  <矿区通道/@d402>  <比奇省/@home>\
+<沃玛森林/@forest>  <毒蛇山谷/@snake>  <盟重省/@league>  <返回/@exit>
+
+[@d422]
+#ACT
+MAPMOVE D422 97 103
+BREAK
+
+[@d406]
+#ACT
+MAPMOVE D406 109 113
+BREAK
+
+[@d402]
+#ACT
+MAPMOVE D402 100 100
+BREAK
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@forest]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@snake]
+#ACT
+MAPMOVE 2 510 474
+BREAK
+
+[@league]
+#ACT
+MAPMOVE 3 332 328
+BREAK

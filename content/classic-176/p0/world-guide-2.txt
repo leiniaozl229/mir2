@@ -1,0 +1,54 @@
+[@main]
+毒蛇山谷传送向导：选择目的地。\
+<比奇省/@to0>  <沃玛森林/@to1>  <盟重省/@to3>\
+<兽人古墓一层/@cave>  <沃玛寺庙入口/@woma>  <沃玛寺庙一层/@woma1>  <废矿入口/@mine>  <矿区通道/@mine1>  <石墓入口/@pig>  <石墓深处/@pig1>  <返回/@exit>
+
+[@to0]
+#ACT
+MAPMOVE 0 329 268
+BREAK
+
+[@to1]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@to3]
+#ACT
+MAPMOVE 3 332 328
+BREAK
+
+[@cave]
+#ACT
+MAPMOVE D001 153 362
+BREAK
+
+[@woma]
+#ACT
+MAPMOVE D021 50 50
+BREAK
+
+[@woma1]
+#ACT
+MAPMOVE D022 338 355
+BREAK
+
+[@mine]
+#ACT
+MAPMOVE D401 100 100
+BREAK
+
+[@mine1]
+#ACT
+MAPMOVE D402 100 100
+BREAK
+
+[@pig]
+#ACT
+MAPMOVE D710 25 25
+BREAK
+
+[@pig1]
+#ACT
+MAPMOVE D715 29 344
+BREAK

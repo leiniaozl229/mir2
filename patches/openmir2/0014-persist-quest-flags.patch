@@ -1,0 +1,135 @@
+diff --git a/src/Storeages/DBSvr.Storage.MySQL/PlayDataStorage.Query.cs b/src/Storeages/DBSvr.Storage.MySQL/PlayDataStorage.Query.cs
+index f945b39..35bc3b6 100644
+--- a/src/Storeages/DBSvr.Storage.MySQL/PlayDataStorage.Query.cs
++++ b/src/Storeages/DBSvr.Storage.MySQL/PlayDataStorage.Query.cs
+@@ -174,8 +174,9 @@ namespace DBSrv.Storage.MySQL
+                 GetMagicRecord(playerId, context, ref humanRcd);
+                 GetItemRecord(playerId, context, ref humanRcd);
+                 GetBagItemRecord(playerId, context, ref humanRcd);
+-                GetStorageRecord(playerId, context, ref humanRcd);
+-                GetPlayerStatus(playerId, context, ref humanRcd);
++                GetStorageRecord(playerId, context, ref humanRcd);
++                GetPlayerStatus(playerId, context, ref humanRcd);
++                GetQuestRecord(playerId, context, ref humanRcd);
+             }
+             catch (Exception e)
+             {
+@@ -186,8 +187,46 @@ namespace DBSrv.Storage.MySQL
+             {
+                 context.Dispose();
+             }
+-            return true;
+-        }
++            return true;
++        }
++
++        private void GetQuestRecord(int playerId, StorageContext context, ref CharacterDataInfo humanRcd)
++        {
++            const string sql = "SELECT QUESTOPENINDEX, QUESTFININDEX, QUEST FROM characters_quest WHERE PLAYERID=@PlayerId ORDER BY Id DESC LIMIT 1";
++            try
++            {
++                MySqlConnector.MySqlCommand command = context.CreateCommand();
++                command.CommandText = sql;
++                command.Parameters.AddWithValue("@PlayerId", playerId);
++                using MySqlConnector.MySqlDataReader reader = command.ExecuteReader();
++                if (!reader.Read()) return;
++                humanRcd.Data.QuestUnitOpen = DecodeQuestBytes(reader, "QUESTOPENINDEX");
++                humanRcd.Data.QuestFlag = DecodeQuestBytes(reader, "QUESTFININDEX");
++                humanRcd.Data.QuestUnit = DecodeQuestBytes(reader, "QUEST");
++            }
++            catch (Exception ex)
++            {
++                LogService.Error("[Exception] PlayDataStorage.GetQuestRecord: " + ex.Message);
++            }
++        }
++
++        private static byte[] DecodeQuestBytes(MySqlConnector.MySqlDataReader reader, string name)
++        {
++            if (reader.IsDBNull(reader.GetOrdinal(name))) return new byte[128];
++            string value = reader.GetString(name);
++            if (string.IsNullOrWhiteSpace(value)) return new byte[128];
++            try
++            {
++                byte[] decoded = Convert.FromBase64String(value);
++                if (decoded.Length == 128) return decoded;
++            }
++            catch (FormatException) { }
++            byte[] fallback = new byte[128];
++            string[] fields = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
++            for (int i = 0; i < Math.Min(fields.Length, fallback.Length); i++)
++                if (byte.TryParse(fields[i], out byte item)) fallback[i] = item;
++            return fallback;
++        }
+ 
+         private CharacterData GetChrRecord(int playerId, StorageContext context)
+         {
+@@ -637,4 +676,4 @@ namespace DBSrv.Storage.MySQL
+             }
+         }
+     }
+-}
+\ No newline at end of file
++}
+diff --git a/src/Storeages/DBSvr.Storage.MySQL/PlayDataStorage.Save.cs b/src/Storeages/DBSvr.Storage.MySQL/PlayDataStorage.Save.cs
+index 1df622c..03dcc85 100644
+--- a/src/Storeages/DBSvr.Storage.MySQL/PlayDataStorage.Save.cs
++++ b/src/Storeages/DBSvr.Storage.MySQL/PlayDataStorage.Save.cs
+@@ -63,6 +63,7 @@ namespace DBSrv.Storage.MySQL
+                 SaveMagics(context, playerId, humanRcd.Data.Magic);
+                 SaveBonusability(context, playerId, humanRcd.Data.BonusAbil);
+                 SaveStatus(context, playerId, humanRcd.Data.StatusTimeArr);
++                SaveQuest(context, playerId, humanRcd.Data);
+                 context.Commit();
+                 LogService.Debug($"保存角色[{humanRcd.Header.Name}]数据成功");
+             }
+@@ -490,22 +491,35 @@ namespace DBSrv.Storage.MySQL
+             }
+         }
+ 
+-        private void SaveQuest(StorageContext context, int id, CharacterDataInfo humanRcd)
++        private void SaveQuest(StorageContext context, int id, CharacterData data)
+         {
+-            const string sSqlStr4 = "DELETE FROM characters_quest WHERE PlayerId=@PlayerId";
++            const string deleteSql = "DELETE FROM characters_quest WHERE PlayerId=@PlayerId";
+             try
+             {
+-                MySqlConnector.MySqlCommand command = context.CreateCommand();
+-                command.CommandText = sSqlStr4;
+-                command.Parameters.AddWithValue("@PlayerId", id);
+-                command.ExecuteNonQuery();
++                using (MySqlConnector.MySqlCommand delete = context.CreateCommand())
++                {
++                    delete.CommandText = deleteSql;
++                    delete.Parameters.AddWithValue("@PlayerId", id);
++                    delete.ExecuteNonQuery();
++                }
++                const string insertSql = "INSERT INTO characters_quest (PLAYERID, QUESTOPENINDEX, QUESTFININDEX, QUEST) VALUES (@PlayerId, @QuestOpen, @QuestFlag, @QuestUnit)";
++                using MySqlConnector.MySqlCommand insert = context.CreateCommand();
++                insert.CommandText = insertSql;
++                insert.Parameters.AddWithValue("@PlayerId", id);
++                insert.Parameters.AddWithValue("@QuestOpen", EncodeQuestBytes(data.QuestUnitOpen));
++                insert.Parameters.AddWithValue("@QuestFlag", EncodeQuestBytes(data.QuestFlag));
++                insert.Parameters.AddWithValue("@QuestUnit", EncodeQuestBytes(data.QuestUnit));
++                insert.ExecuteNonQuery();
+             }
+-            catch
++            catch (Exception ex)
+             {
+-                LogService.Error("[Exception] PlayDataStorage.SaveQuest");
++                LogService.Error("[Exception] PlayDataStorage.SaveQuest: " + ex.Message);
+             }
+         }
+ 
++        private static string EncodeQuestBytes(byte[] value)
++            => Convert.ToBase64String(value is { Length: 128 } ? value : new byte[128]);
++
+         private void SaveStatus(StorageContext context, int playerId, ushort[] statusTimeArr)
+         {
+             try
+@@ -649,4 +663,4 @@ namespace DBSrv.Storage.MySQL
+         }
+ 
+     }
+-}
+\ No newline at end of file
++}

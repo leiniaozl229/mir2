@@ -1,0 +1,19 @@
+[@main]
+烈焰殿向导：选择目的地。\
+<比奇省/@home>  <上一层 光芒回廊/@prev>  <下一层 雷霆之路/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D2005 50 50
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D2007 96 104
+BREAK
+

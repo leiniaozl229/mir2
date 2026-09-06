@@ -1,0 +1,65 @@
+diff --git a/src/GameSrv/Npc/Merchant.cs b/src/GameSrv/Npc/Merchant.cs
+index 2231d6a..d6ab599 100644
+--- a/src/GameSrv/Npc/Merchant.cs
++++ b/src/GameSrv/Npc/Merchant.cs
+@@ -206,7 +206,7 @@ namespace GameSrv.Npc
+         /// <summary>
+         /// 刷新在售商品
+         /// </summary>
+-        private void RefillGoods()
++        private void RefillGoods(bool force = false)
+         {
+             const string sExceptionMsg = "[Exception] TMerchant::RefillGoods {0}/{1}:{2} [{3}] Code:{4}";
+             try
+@@ -217,9 +217,10 @@ namespace GameSrv.Npc
+                 {
+                     goods = RefillGoodsList[i];
+                     int goodCout = goods.Count;
+-                    if ((HUtil32.GetTickCount() - goods.RefillTick) > (goods.RefillTime * 60 * 1000))
+-                    {
+-                        goods.RefillTick = HUtil32.GetTickCount();
++                    if (force || (HUtil32.GetTickCount() - goods.RefillTick) > (goods.RefillTime * 60 * 1000))
++                    {
++                        goods.RefillTick = HUtil32.GetTickCount();
++                        RefillGoodsList[i] = goods;
+                         nIndex = SystemShare.ItemSystem.GetStdItemIdx(goods.ItemName);
+                         if (nIndex > 0)
+                         {
+@@ -231,7 +232,7 @@ namespace GameSrv.Npc
+                                 RefillGoodsItems(ref refillList, goods.ItemName, goods.Count - nRefillCount);
+                                 LocalDb.SaveGoodRecord(this, ScriptName + '-' + MapName);
+                                 LocalDb.SaveGoodPriceRecord(this, ScriptName + '-' + MapName);
+-                                return;
++                                continue;
+                             }
+                             if (goodCout < nRefillCount)
+                             {
+@@ -1055,13 +1056,14 @@ namespace GameSrv.Npc
+             }
+         }
+ 
+-        public void LoadNpcData()
+-        {
+-            string sFile = ScriptName + '-' + MapName;
+-            LocalDb.LoadGoodRecord(this, sFile);
+-            LocalDb.LoadGoodPriceRecord(this, sFile);
+-            LoadUpgradeList();
+-        }
++        public void LoadNpcData()
++        {
++            string sFile = ScriptName + '-' + MapName;
++            LocalDb.LoadGoodRecord(this, sFile);
++            LocalDb.LoadGoodPriceRecord(this, sFile);
++            RefillGoods(true);
++            LoadUpgradeList();
++        }
+ 
+         private void SaveNpcData()
+         {
+@@ -1805,4 +1807,4 @@ namespace GameSrv.Npc
+             obj = null;
+         }
+     }
+-}
+\ No newline at end of file
++}

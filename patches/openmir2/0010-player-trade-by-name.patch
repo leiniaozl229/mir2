@@ -1,0 +1,71 @@
+--- a/src/M2Server/Player/PlayObject.Operate.cs
++++ b/src/M2Server/Player/PlayObject.Operate.cs
+@@ -930,30 +930,24 @@
+                 return;
+             }
+             IActor poseObject = GetPoseCreate();
+-            if (poseObject.Race == ActorRace.Play)
++            IPlayerActor targetPlayObject = poseObject as IPlayerActor;
++            if (targetPlayObject == null && !string.IsNullOrWhiteSpace(sHumName))
++                targetPlayObject = SystemShare.WorldEngine.GetPlayObject(sHumName);
++            if (targetPlayObject != null && targetPlayObject != this && targetPlayObject.Envir == Envir &&
++                Math.Max(Math.Abs(targetPlayObject.CurrX - CurrX), Math.Abs(targetPlayObject.CurrY - CurrY)) <= 1 &&
++                !targetPlayObject.Dealing)
+             {
+-                IPlayerActor targetPlayObject = (IPlayerActor)poseObject;
+-                if (targetPlayObject != this)
++                if (targetPlayObject.AllowDeal && targetPlayObject.IsCanDeal)
+                 {
+-                    if (targetPlayObject.GetPoseCreate() == this && !targetPlayObject.Dealing)
+-                    {
+-                        if (targetPlayObject.AllowDeal && targetPlayObject.IsCanDeal)
+-                        {
+-                            targetPlayObject.SysMsg(ChrName + MessageSettings.OpenedDealMsg, MsgColor.Green, MsgType.Hint);
+-                            SysMsg(targetPlayObject.ChrName + MessageSettings.OpenedDealMsg, MsgColor.Green, MsgType.Hint);
+-                            this.OpenDealDlg(targetPlayObject);
+-                            targetPlayObject.OpenDealDlg(this);
+-                        }
+-                        else
+-                        {
+-                            SysMsg(MessageSettings.PoseDisableDealMsg, MsgColor.Red, MsgType.Hint);
+-                        }
+-                    }
+-                    else
+-                    {
+-                        SendDefMessage(Messages.SM_DEALTRY_FAIL, 0, 0, 0, 0);
+-                    }
++                    targetPlayObject.SysMsg(ChrName + MessageSettings.OpenedDealMsg, MsgColor.Green, MsgType.Hint);
++                    SysMsg(targetPlayObject.ChrName + MessageSettings.OpenedDealMsg, MsgColor.Green, MsgType.Hint);
++                    this.OpenDealDlg(targetPlayObject);
++                    targetPlayObject.OpenDealDlg(this);
+                 }
++                else
++                {
++                    SysMsg(MessageSettings.PoseDisableDealMsg, MsgColor.Red, MsgType.Hint);
++                }
+             }
+             else
+             {
+@@ -1060,7 +1054,8 @@
+                 return;
+             }
+             bool bo09 = false;
+-            if (DealCreat != null && GetPoseCreate() == DealCreat)
++            if (DealCreat != null && (GetPoseCreate() == DealCreat ||
++                (DealCreat.Envir == Envir && Math.Max(Math.Abs(DealCreat.CurrX - CurrX), Math.Abs(DealCreat.CurrY - CurrY)) <= 1)))
+             {
+                 if (!DealCreat.DealSuccess)
+                 {
+--- a/src/M2Server/Player/PlayObject.Message.cs
++++ b/src/M2Server/Player/PlayObject.Message.cs
+@@ -29,7 +29,9 @@
+             {
+                 if (Dealing)
+                 {
+-                    if (GetPoseCreate() != DealCreat || DealCreat == this || DealCreat == null)
++                    if (DealCreat == this || DealCreat == null ||
++                        (GetPoseCreate() != DealCreat &&
++                         (DealCreat.Envir != Envir || Math.Max(Math.Abs(DealCreat.CurrX - CurrX), Math.Abs(DealCreat.CurrY - CurrY)) > 1)))
+                     {
+                         DealCancel();
+                     }

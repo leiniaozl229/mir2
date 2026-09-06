@@ -1,0 +1,2 @@
+import { defineConfig } from 'vite';
+export default defineConfig({root:'apps/web', publicDir:'../../assets/web', server:{host:'127.0.0.1',port:5173,strictPort:true,proxy:{'/ws':{target:'ws://127.0.0.1:18800',ws:true}}}, build:{outDir:'../../dist/web',emptyOutDir:true,rollupOptions:{input:['apps/web/index.html','apps/web/actors.html','apps/web/play.html']}}});

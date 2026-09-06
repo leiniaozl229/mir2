@@ -1,0 +1,148 @@
+diff --git a/src/M2Server/Player/PlayObject.cs b/src/M2Server/Player/PlayObject.cs
+--- a/src/M2Server/Player/PlayObject.cs
++++ b/src/M2Server/Player/PlayObject.cs
+@@ -1,4 +1,5 @@
+ ﻿using M2Server.Actor;
++using M2Server.Maps;
+ using OpenMir2;
+ using OpenMir2.Consts;
+ using OpenMir2.Data;
+@@ -1652,33 +1653,12 @@
+                     GainExp(monsterExp);
+                 }
+             }
+-            // 是否执行任务脚本
+-            if (Envir.IsCheapStuff())// 地图是否有任务脚本
+-            {
+-                if (GroupOwner != 0)
+-                {
+-                    IPlayerActor groupOwnerPlay = (IPlayerActor)SystemShare.ActorMgr.Get(GroupOwner);
+-                    for (int i = 0; i < groupOwnerPlay.GroupMembers.Count; i++)
+-                    {
+-                        IPlayerActor groupHuman = groupOwnerPlay.GroupMembers[i];
+-                        if (!groupHuman.Death && Envir == groupHuman.Envir && Math.Abs(CurrX - groupHuman.CurrX) <= 12 && Math.Abs(CurrX - groupHuman.CurrX) <= 12 && this == groupHuman)
+-                        {
+-                        }
+-                        else
+-                        {
+-                        }
+-                        //QuestNPC = Envir.GetQuestNpc(groupHuman, ChrName, "", tCheck);
+-                        //if (QuestNPC != null)
+-                        //{
+-                        //    QuestNPC.Click(groupHuman);
+-                        //}
+-                    }
+-                }
+-                //QuestNPC = Envir.GetQuestNpc(this, ChrName, "", false);
+-                //if (QuestNPC != null)
+-                //{
+-                //    QuestNPC.Click(this);
+-                //}
++            // MapQuest.txt registers a hidden quest NPC for a monster/item
++            // objective. Trigger it after the server confirms the kill so the
++            // imported classic quest can run its native Q script.
++            if (Envir is Envirnoment map && map.TryTriggerQuest(this, killObject.ChrName, "", false))
++            {
++                // The script owns the reward and follow-up map transition.
+             }
+             try
+             {
+diff --git a/src/M2Server/Maps/Envirnoment.cs b/src/M2Server/Maps/Envirnoment.cs
+--- a/src/M2Server/Maps/Envirnoment.cs
++++ b/src/M2Server/Maps/Envirnoment.cs
+@@ -1,5 +1,6 @@
+ using M2Server.Actor;
+ using M2Server.Monster.Monsters;
++using M2Server.Player;
+ using OpenMir2;
+ using OpenMir2.Common;
+ using OpenMir2.Data;
+@@ -50,6 +51,7 @@
+         /// 任务
+         /// </summary>
+         private readonly IList<MapQuestInfo> QuestList;
++        private readonly IList<Func<PlayObject, string, string, bool, INormNpc>> QuestResolvers;
+         private int monCount;
+         private int humCount;
+         public IList<PointInfo> PointList { get; set; }
+@@ -63,6 +65,7 @@
+             Flag = new MapInfoFlag();
+             DoorList = new List<MapDoor>();
+             QuestList = new List<MapQuestInfo>();
++            QuestResolvers = new List<Func<PlayObject, string, string, bool, INormNpc>>();
+             PointList = new List<PointInfo>();
+         }
+ 
+@@ -779,7 +782,27 @@
+ 
+         public bool IsCheapStuff()
+         {
+-            return QuestList.Any();
++            return QuestList.Any() || QuestResolvers.Count > 0;
++        }
++
++        public void AddQuestResolver(Func<PlayObject, string, string, bool, INormNpc> resolver)
++        {
++            QuestResolvers.Add(resolver);
++        }
++
++        public bool TryTriggerQuest(PlayObject player, string monsterName, string itemName, bool grouped)
++        {
++            foreach (Func<PlayObject, string, string, bool, INormNpc> resolver in QuestResolvers)
++            {
++                INormNpc questNpc = resolver(player, monsterName, itemName, grouped);
++                if (questNpc == null)
++                {
++                    continue;
++                }
++                questNpc.Click(player);
++                return true;
++            }
++            return false;
+         }
+ 
+         public bool AddMineToEvent<T>(int nX, int nY, T stoneMineEvent) where T : StoneMineEvent
+diff --git a/src/GameSrv/Maps/MapQuestManager.cs b/src/GameSrv/Maps/MapQuestManager.cs
+--- a/src/GameSrv/Maps/MapQuestManager.cs
++++ b/src/GameSrv/Maps/MapQuestManager.cs
+@@ -1,4 +1,6 @@
+-﻿using M2Server.Player;
++﻿using M2Server.Maps;
++using M2Server.Player;
++using SystemModule.Actors;
+ 
+ namespace GameSrv.Maps
+ {
+@@ -7,7 +9,7 @@
+         public Dictionary<string, Merchant> questDict = new Dictionary<string, Merchant>();
+         private IList<MapQuestInfo> QuestList = new List<MapQuestInfo>();
+ 
+-        public bool CreateQuest(int nFlag, int nValue, string sMonName, string sItem, string sQuest, bool boGrouped)
++        public bool CreateQuest(string sMapName, int nFlag, int nValue, string sMonName, string sItem, string sQuest, bool boGrouped)
+         {
+             if (nFlag < 0)
+             {
+@@ -52,6 +54,11 @@
+             SystemShare.WorldEngine.AddQuestNpc(questMerchant);
+             mapQuest.NPC = questMerchant;
+             QuestList.Add(mapQuest);
++            if (SystemShare.MapMgr.FindMap(sMapName) is Envirnoment map)
++            {
++                map.AddQuestResolver((player, monsterName, itemName, grouped) =>
++                    GetQuestNpc(player, monsterName, itemName, grouped));
++            }
+             return true;
+         }
+ 
+diff --git a/src/GameSrv/DB/LocalDB.cs b/src/GameSrv/DB/LocalDB.cs
+--- a/src/GameSrv/DB/LocalDB.cs
++++ b/src/GameSrv/DB/LocalDB.cs
+@@ -383,7 +383,7 @@
+                                 int n38 = HUtil32.StrToInt(s34, 0);
+                                 int n3C = HUtil32.StrToInt(s20, 0);
+                                 bool boGrouped = HUtil32.CompareLStr(s30, "GROUP");
+-                                if (!GameShare.QuestManager.CreateQuest(n38, n3C, sMonName, sItem, sQuest, boGrouped))
++                                if (!GameShare.QuestManager.CreateQuest(sMap, n38, n3C, sMonName, sItem, sQuest, boGrouped))
+                                 {
+                                     result = -i;
+                                 }

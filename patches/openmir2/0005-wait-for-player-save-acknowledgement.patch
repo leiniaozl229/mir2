@@ -1,0 +1,79 @@
+diff --git a/src/GameSrv/AppService.cs b/src/GameSrv/AppService.cs
+--- a/src/GameSrv/AppService.cs
++++ b/src/GameSrv/AppService.cs
+@@ -12,6 +12,7 @@ namespace GameSrv
+         private readonly CancellationTokenSource _cancellationTokenSource;
+         private readonly CommandLineApplication _application;
+         private PeriodicTimer _timer;
++        private int _stopping;
+ 
+         public AppService(GameApp serverApp)
+         {
+@@ -122,6 +123,7 @@ namespace GameSrv
+             LogService.Info("欢迎使用翎风系列游戏软件...");
+             LogService.Info("网站:http://www.gameofmir.com");
+             LogService.Info("论坛:http://bbs.gameofmir.com");
++            _ = Task.Run(ProcessLoopAsync);
+         }
+ 
+         public Task StopAsync(CancellationToken stoppingToken)
+@@ -134,14 +136,25 @@ namespace GameSrv
+         {
+             if (SystemShare.WorldEngine.PlayObjectCount > 0) //服务器关闭，强制保存玩家数据
+             {
+-                LogService.Debug("保存玩家数据");
++                LogService.Info("正在保存在线玩家数据...");
+                 IEnumerable<SystemModule.Actors.IPlayerActor> playObjectList = SystemShare.WorldEngine.GetPlayObjects();
+                 foreach (SystemModule.Actors.IPlayerActor play in playObjectList)
+                 {
+                     WorldServer.SaveHumanRcd(play);
+                 }
+-                LogService.Debug("数据保存完毕.");
+             }
++
++            long deadline = Environment.TickCount64 + 10_000;
++            while (!M2Share.FrontEngine.IsIdle() && Environment.TickCount64 < deadline)
++            {
++                Thread.Sleep(50);
++            }
++            if (!M2Share.FrontEngine.IsIdle())
++            {
++                LogService.Error($"等待玩家数据写入数据库超时，队列剩余 {M2Share.FrontEngine.SaveListCount()} 条.");
++                return;
++            }
++            LogService.Info("玩家存档队列已写入数据库.");
+         }
+ 
+         private const string CloseTransferMessgae = "服务器关闭倒计时[{0}],无需下线或退出游戏,稍后自动回到安全区.";
+@@ -203,7 +216,7 @@ namespace GameSrv
+             }, _cancellationTokenSource.Token);
+         }
+ 
+-        private async void OnShutdown()
++        private async Task OnShutdown()
+         {
+             LogService.Debug("Application is stopping");
+             M2Share.StartReady = false;
+@@ -351,5 +364,8 @@
+-        public Task StoppingAsync(CancellationToken cancellationToken)
++        public async Task StoppingAsync(CancellationToken cancellationToken)
+         {
+-            OnShutdown();
+-            return Task.CompletedTask;
++            if (Interlocked.Exchange(ref _stopping, 1) != 0)
++            {
++                return;
++            }
++            await OnShutdown();
+         }
+diff --git a/src/GameSrv/Program.cs b/src/GameSrv/Program.cs
+--- a/src/GameSrv/Program.cs
++++ b/src/GameSrv/Program.cs
+@@ -10,7 +10,6 @@ namespace GameSrv
+             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+             AppServer serviceRunner = new AppServer();
+             CancellationTokenSource cts = new CancellationTokenSource();
+-            cts.Token.Register(() => _ = serviceRunner.StopAsync(cts.Token));
+             // 监听 Ctrl+C 事件
+             Console.CancelKeyPress += (sender, e) =>
+             {

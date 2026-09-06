@@ -1,0 +1,13 @@
+[@main]
+黑暗地带向导：选择目的地。\
+<比奇省/@home>  <生死之间/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D613 50 50
+BREAK

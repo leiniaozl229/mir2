@@ -1,0 +1,44 @@
+name: mir2
+services:
+  db:
+    image: mysql:8.4@sha256:b3b90af2a6552ae30c266fdb7d5dd55f3afb72404bb78d37fe8a23eb857fd3fb
+    env_file: .runtime/db.env
+    volumes:
+      - mir2-db:/var/lib/mysql
+      - ./.runtime/sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "MYSQL_PWD=$$MYSQL_ROOT_PASSWORD mysql -uroot -e 'SELECT 1' >/dev/null 2>&1"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+  engine:
+    image: mcr.microsoft.com/dotnet/sdk:8.0@sha256:bb32ba3ba3ea36e38572d9d8db76fa15f7cbf722f3f886e06bca6d528bd4fba8
+    depends_on:
+      db:
+        condition: service_healthy
+    working_dir: /workspace
+    command: ["bash", "scripts/run-server.sh"]
+    environment:
+      MIR2_PROTOCOL_TRACE: ${MIR2_PROTOCOL_TRACE:-0}
+    init: true
+    stop_grace_period: 30s
+    volumes:
+      - ./:/workspace
+    ports:
+      - "127.0.0.1:17000:7000"
+      - "127.0.0.1:17100:7100"
+      - "127.0.0.1:17200:7200"
+  web-gateway:
+    image: mcr.microsoft.com/dotnet/sdk:10.0@sha256:e1ffd2a92ae84c1291bc1b6887501f8af98e6331e7af6d4c8d37168c5e87a64c
+    depends_on:
+      - engine
+    command: ["dotnet", "/app/WebGateway.dll"]
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8800
+      MIR2_ENGINE_HOST: engine
+    volumes:
+      - ./.runtime/web-gateway:/app:ro
+    ports:
+      - "127.0.0.1:18800:8800"
+volumes:
+  mir2-db:

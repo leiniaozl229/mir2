@@ -1,0 +1,9 @@
+--- a/src/Modules/SystemModule/ActorManager.cs
++++ b/src/Modules/SystemModule/ActorManager.cs
+@@ -57,4 +57,4 @@ namespace SystemModule
+ 
+         public T Get<T>(int actorId) where T : IActor
+         {
+-            return _actorsMap.TryGetValue(actorId, out IActor actor) ? (T)actor : default;
++            return _actorsMap.TryGetValue(actorId, out IActor actor) && actor is T typedActor ? typedActor : default;
+         }

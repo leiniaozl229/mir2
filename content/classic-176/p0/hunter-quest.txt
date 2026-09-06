@@ -1,0 +1,60 @@
+[@main]
+#IF
+CHECK [1004] 1
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-deer|complete|猎人试炼|已完成|向边界猎人报告肉|奖励已领取：600 经验与 2 个小量金创药|END\
+<返回/@main>
+
+#IF
+CHECK [1003] 1
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-deer|accepted|猎人试炼|收集 1 块肉|击杀比奇省的鹿并拾取肉|试炼已开始，去城外找鹿。|END\
+<交付肉/@turnin> <返回/@main>
+
+#IF
+CHECK [1003] 0
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-deer|available|猎人试炼|接受猎人试炼|边界猎人需要 1 块肉，完成后可获得经验和药品。|END\
+<接受试炼/@accept>
+
+[@accept]
+#IF
+CHECK [1003] 0
+#ACT
+SET [1003] 1
+#SAY
+任务标记QMARK|p0-deer|accepted|猎人试炼|收集 1 块肉|击杀比奇省的鹿并拾取肉|试炼已开始，去城外找鹿。|END\
+<交付肉/@turnin> <返回/@main>
+
+[@turnin]
+#IF
+CHECK [1003] 1
+CHECKITEM 肉 1
+#ACT
+TAKE 肉 1
+SET [1004] 1
+GIVE 金创药(小量) 2
+CHANGEXP 600
+#SAY
+任务标记QMARK|p0-deer|complete|猎人试炼|已完成|向边界猎人报告肉|奖励已领取：600 经验与 2 个小量金创药|END\
+<返回/@main>
+#ELSESAY
+任务标记QMARK|p0-deer|accepted|猎人试炼|收集 1 块肉|击杀比奇省的鹿并拾取肉|你还没有带来肉。|END\
+<返回/@main>
+
+[@abandon]
+#IF
+CHECK [1003] 1
+#ACT
+RESET [1003] 1
+#SAY
+任务标记QMARK|p0-deer|available|猎人试炼|接受猎人试炼|边界猎人需要 1 块肉，完成后可获得经验和药品。|试炼已放弃。|END\
+<重新接受/@accept>
+#ELSESAY
+<返回/@main>

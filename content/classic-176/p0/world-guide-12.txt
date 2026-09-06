@@ -1,0 +1,19 @@
+[@main]
+丛林迷宫向导：选择目的地。\
+<比奇省/@home>  <上一层 白日门/@prev>  <下一层 赤月峡谷北/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE 11 250 250
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D10011 202 195
+BREAK
+

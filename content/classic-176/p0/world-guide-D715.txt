@@ -1,0 +1,59 @@
+[@main]
+石墓深处向导：选择目的地。\
+<比奇省/@home>  <沃玛森林/@forest>  <毒蛇山谷/@snake>  <盟重省/@league>\
+<石墓入口/@pig>  <石墓一层/@pig1>  <石墓四层/@pig4>  <石墓六层/@pig6>  <沃玛寺庙一层/@woma>  <矿区通道/@mine>  <兽人古墓一层/@cave>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@forest]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@snake]
+#ACT
+MAPMOVE 2 510 474
+BREAK
+
+[@league]
+#ACT
+MAPMOVE 3 332 328
+BREAK
+
+[@pig]
+#ACT
+MAPMOVE D710 25 25
+BREAK
+
+[@pig1]
+#ACT
+MAPMOVE D711 205 197
+BREAK
+
+[@pig4]
+#ACT
+MAPMOVE D714 15 201
+BREAK
+
+[@pig6]
+#ACT
+MAPMOVE D716 24 26
+BREAK
+
+[@woma]
+#ACT
+MAPMOVE D022 338 355
+BREAK
+
+[@mine]
+#ACT
+MAPMOVE D402 100 100
+BREAK
+
+[@cave]
+#ACT
+MAPMOVE D001 153 362
+BREAK

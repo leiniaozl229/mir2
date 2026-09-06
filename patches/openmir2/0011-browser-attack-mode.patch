@@ -1,0 +1,26 @@
+--- a/src/OpenMir2/Messages.cs
++++ b/src/OpenMir2/Messages.cs
+@@ -103,4 +103,8 @@
+         public const int CM_GUILDALLY = 1044;
+         public const int CM_GUILDBREAKALLY = 1045;
++        /// <summary>
++        /// 浏览器攻击模式切换
++        /// </summary>
++        public const int CM_ATTACKMODE = 1046;
+         public const int CM_SPEEDHACKUSER = 10430;
+         public const int CM_PROTOCOL = 2000;
+--- a/src/M2Server/Player/PlayObject.Message.cs
++++ b/src/M2Server/Player/PlayObject.Message.cs
+@@ -927,4 +927,11 @@
+                     }
+                     break;
++                case Messages.CM_ATTACKMODE:
++                    if (processMsg.nParam2 is >= (int)AttackMode.HAM_ALL and <= (int)AttackMode.HAM_PKATTACK)
++                    {
++                        AttatckMode = (AttackMode)processMsg.nParam2;
++                    }
++                    SendDefMessage(Messages.SM_ATTACKMODE, (byte)AttatckMode, 0, 0, 0);
++                    break;
+                 case Messages.CM_CREATEGROUP:
+                     ClientCreateGroup(processMsg.Msg.Trim());
+                     break;

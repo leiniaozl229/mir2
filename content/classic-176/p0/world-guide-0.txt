@@ -1,0 +1,365 @@
+[@main]
+玛法大陆传送向导：选择目的地。\
+<沃玛森林/@to1>  <毒蛇山谷/@to2>  <盟重省/@to3>\
+<兽人古墓一层/@cave>  <沃玛寺庙入口/@woma>  <沃玛寺庙一层/@woma1>  <沃玛二层/@woma2>  <教主大殿/@woma3>\
+<废矿入口/@mine>  <矿区通道/@mine1>  <矿区一层/@mine2>  <矿区B二层/@mine3>  <矿物回收站/@mine4>  <废矿南部/@mine5>\
+<矿区B层/@mineb>  <矿区A层/@minea>  <矿区C层/@minec>  <山谷矿区一层/@valley1>  <山谷矿区二层/@valley2>\
+<祖玛一层/@zuma1>  <祖玛二层/@zuma2>  <祖玛三层/@zuma3>  <祖玛四层/@zuma4>  <祖玛五层/@zuma5>\
+<石墓入口/@pig>  <石墓一层/@pig1>  <石墓二层/@pig2>  <石墓三层/@pig3>  <石墓四层/@pig4>  <石墓六层/@pig6>  <石墓深处/@pig5>\
+  <白日门/@gate11>  <封魔谷/@gate4>  <苍月岛/@gate5>  <幻境一层/@gateh>  <赤月峡谷北/@gatered>\
+  <祖玛图书馆一层/@d511>   <祖玛图书馆二层/@d512>   <祖玛图书馆三层/@d513>   <祖玛图书馆四层/@d514>   <祖玛教主之家/@d515>   <地牢一层东/@d601>   <地牢一层西/@d602>   <地牢一层北/@d603>   <地牢二层西/@d604>   <地牢二层北/@d605>   <死亡棺材/@d606>   <铁灯笼屋/@d607>   <紫水晶屋/@d608>   <石路小溪/@d609>   <石棺材屋/@d610>   <阴森石路/@d611>   <兽人古墓二层/@d002>   <兽人古墓三层/@d003>   <天然洞穴一层/@d011>   <天然洞穴二层/@d012>   <矿区桥一/@d412>   <矿区桥二/@d415>   <矿区桥三/@d416>   <山谷矿区桥/@d423>   <黑暗地带/@d612>   <生死之间/@d613>   <传奇部落/@d614>   <邪恶势力/@d615>   <幽明圣域/@d616>   <恐怖空间/@d617>   <一线天/@d618>   <绝望悬崖/@d619>   <秘密通道/@d701>   <石墓七层/@d717> <返回/@exit>
+
+[@to1]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@to2]
+#ACT
+MAPMOVE 2 510 474
+BREAK
+
+[@to3]
+#ACT
+MAPMOVE 3 332 328
+BREAK
+
+[@cave]
+#ACT
+MAPMOVE D001 153 362
+BREAK
+
+[@woma]
+#ACT
+MAPMOVE D021 50 50
+BREAK
+
+[@woma1]
+#ACT
+MAPMOVE D022 338 355
+BREAK
+
+[@woma2]
+#ACT
+MAPMOVE D023 198 195
+BREAK
+
+[@woma3]
+#ACT
+MAPMOVE D024 16 19
+BREAK
+
+[@mine]
+#ACT
+MAPMOVE D401 100 100
+BREAK
+
+[@mine1]
+#ACT
+MAPMOVE D402 100 100
+BREAK
+
+[@mine2]
+#ACT
+MAPMOVE D403 100 100
+BREAK
+
+[@mine3]
+#ACT
+MAPMOVE D404 100 100
+BREAK
+
+[@mine4]
+#ACT
+MAPMOVE D405 112 103
+BREAK
+
+[@mine5]
+#ACT
+MAPMOVE D406 109 113
+BREAK
+
+[@mineb]
+#ACT
+MAPMOVE D411 60 7
+BREAK
+
+[@minea]
+#ACT
+MAPMOVE D413 10 7
+BREAK
+
+[@minec]
+#ACT
+MAPMOVE D414 14 79
+BREAK
+
+[@valley1]
+#ACT
+MAPMOVE D421 87 87
+BREAK
+
+[@valley2]
+#ACT
+MAPMOVE D422 97 103
+BREAK
+
+[@zuma1]
+#ACT
+MAPMOVE D501 200 200
+BREAK
+
+[@zuma2]
+#ACT
+MAPMOVE D502 200 200
+BREAK
+
+[@zuma3]
+#ACT
+MAPMOVE D503 200 200
+BREAK
+
+[@zuma4]
+#ACT
+MAPMOVE D504 200 200
+BREAK
+
+[@zuma5]
+#ACT
+MAPMOVE D505 53 54
+BREAK
+
+[@pig]
+#ACT
+MAPMOVE D710 25 25
+BREAK
+
+[@pig1]
+#ACT
+MAPMOVE D711 205 197
+BREAK
+
+[@pig2]
+#ACT
+MAPMOVE D712 196 204
+BREAK
+
+[@pig3]
+#ACT
+MAPMOVE D713 200 200
+BREAK
+
+[@pig2]
+#ACT
+MAPMOVE D711 205 197
+BREAK
+
+[@pig4]
+#ACT
+MAPMOVE D714 15 201
+BREAK
+
+[@pig6]
+#ACT
+MAPMOVE D716 24 26
+BREAK
+
+[@pig5]
+#ACT
+MAPMOVE D715 29 344
+BREAK
+
+[@d002]
+#ACT
+MAPMOVE D002 200 200
+BREAK
+
+[@d003]
+#ACT
+MAPMOVE D003 196 204
+BREAK
+
+[@d011]
+#ACT
+MAPMOVE D011 200 200
+BREAK
+
+[@d012]
+#ACT
+MAPMOVE D012 200 200
+BREAK
+
+[@d412]
+#ACT
+MAPMOVE D412 50 50
+BREAK
+
+[@d415]
+#ACT
+MAPMOVE D415 53 46
+BREAK
+
+[@d416]
+#ACT
+MAPMOVE D416 50 43
+BREAK
+
+[@d423]
+#ACT
+MAPMOVE D423 50 50
+BREAK
+
+[@d612]
+#ACT
+MAPMOVE D612 150 154
+BREAK
+
+[@d613]
+#ACT
+MAPMOVE D613 50 50
+BREAK
+
+[@d614]
+#ACT
+MAPMOVE D614 49 49
+BREAK
+
+[@d615]
+#ACT
+MAPMOVE D615 48 50
+BREAK
+
+[@d616]
+#ACT
+MAPMOVE D616 50 49
+BREAK
+
+[@d617]
+#ACT
+MAPMOVE D617 50 50
+BREAK
+
+[@d618]
+#ACT
+MAPMOVE D618 100 106
+BREAK
+
+[@d619]
+#ACT
+MAPMOVE D619 60 50
+BREAK
+
+[@d701]
+#ACT
+MAPMOVE D701 96 100
+BREAK
+
+[@d717]
+#ACT
+MAPMOVE D717 50 50
+BREAK
+
+[@d511]
+#ACT
+MAPMOVE D511 22 20
+BREAK
+
+[@d512]
+#ACT
+MAPMOVE D512 22 20
+BREAK
+
+[@d513]
+#ACT
+MAPMOVE D513 22 20
+BREAK
+
+[@d514]
+#ACT
+MAPMOVE D514 22 20
+BREAK
+
+[@d515]
+#ACT
+MAPMOVE D515 20 20
+BREAK
+
+[@d601]
+#ACT
+MAPMOVE D601 101 127
+BREAK
+
+[@d602]
+#ACT
+MAPMOVE D602 123 119
+BREAK
+
+[@d603]
+#ACT
+MAPMOVE D603 125 117
+BREAK
+
+[@d604]
+#ACT
+MAPMOVE D604 110 100
+BREAK
+
+[@d605]
+#ACT
+MAPMOVE D605 92 100
+BREAK
+
+[@d606]
+#ACT
+MAPMOVE D606 100 97
+BREAK
+
+[@d607]
+#ACT
+MAPMOVE D607 25 25
+BREAK
+
+[@d608]
+#ACT
+MAPMOVE D608 25 24
+BREAK
+
+[@d609]
+#ACT
+MAPMOVE D609 24 25
+BREAK
+
+[@d610]
+#ACT
+MAPMOVE D610 25 25
+BREAK
+
+[@d611]
+#ACT
+MAPMOVE D611 50 46
+BREAK
+
+[@gate11]
+#ACT
+MAPMOVE 11 250 250
+BREAK
+
+[@gate4]
+#ACT
+MAPMOVE 4 255 250
+BREAK
+
+[@gate5]
+#ACT
+MAPMOVE 5 400 400
+BREAK
+
+[@gateh]
+#ACT
+MAPMOVE H001 75 75
+BREAK
+
+[@gatered]
+#ACT
+MAPMOVE D10011 202 195
+BREAK

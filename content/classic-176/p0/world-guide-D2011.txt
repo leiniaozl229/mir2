@@ -1,0 +1,19 @@
+[@main]
+魔魂殿向导：选择目的地。\
+<比奇省/@home>  <上一层 纵横道/@prev>  <下一层 炼狱回廊/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D2010 142 142
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D2012 50 50
+BREAK
+

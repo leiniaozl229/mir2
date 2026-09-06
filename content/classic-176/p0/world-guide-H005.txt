@@ -1,0 +1,19 @@
+[@main]
+幻境五层向导：选择目的地。\
+<比奇省/@home>  <上一层 幻境四层/@prev>  <下一层 幻境六层/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE H004 101 102
+BREAK
+
+[@next]
+#ACT
+MAPMOVE H006 50 50
+BREAK
+

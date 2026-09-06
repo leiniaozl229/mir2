@@ -1,0 +1,39 @@
+[@main]
+矿物回收站向导：选择目的地。\
+<矿区B二层/@d404>  <废矿南部/@d406>  <山谷矿区一层/@d421>  <比奇省/@home>\
+<沃玛森林/@forest>  <毒蛇山谷/@snake>  <盟重省/@league>  <返回/@exit>
+
+[@d404]
+#ACT
+MAPMOVE D404 100 100
+BREAK
+
+[@d406]
+#ACT
+MAPMOVE D406 109 113
+BREAK
+
+[@d421]
+#ACT
+MAPMOVE D421 87 87
+BREAK
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@forest]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@snake]
+#ACT
+MAPMOVE 2 510 474
+BREAK
+
+[@league]
+#ACT
+MAPMOVE 3 332 328
+BREAK

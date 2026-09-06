@@ -1,0 +1,21 @@
+[@main]
+这里是兽人古墓一层的测试入口。\
+<前往骷髅精灵测试区/@boss>\
+<返回比奇/@return>\
+<离开/@exit>
+
+[@boss]
+#IF
+#ACT
+HUMANHP = 128
+HUMANMP = 541
+MONCLEAR D001
+MONGENEX D001 190 340 骷髅精灵 1 1 1
+CHANGEMODE 2 1
+MAPMOVE D001 198 332
+
+[@return]
+#IF
+#ACT
+CHANGEMODE 2 0
+MAPMOVE 0 285 608

@@ -1,0 +1,39 @@
+[@main]
+石墓二层向导：选择目的地。\
+<石墓一层/@d711>  <石墓三层/@d713>  <石墓入口/@d710>  <比奇省/@home>\
+<沃玛森林/@forest>  <毒蛇山谷/@snake>  <盟重省/@league>  <返回/@exit>
+
+[@d711]
+#ACT
+MAPMOVE D711 205 197
+BREAK
+
+[@d713]
+#ACT
+MAPMOVE D713 200 200
+BREAK
+
+[@d710]
+#ACT
+MAPMOVE D710 25 25
+BREAK
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@forest]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@snake]
+#ACT
+MAPMOVE 2 510 474
+BREAK
+
+[@league]
+#ACT
+MAPMOVE 3 332 328
+BREAK

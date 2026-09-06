@@ -1,0 +1,12 @@
+.runtime/
+assets/raw/
+assets/web/
+node_modules/
+dist/
+**/bin/
+**/obj/
+__pycache__/
+.DS_Store
+.env
+*.log
+core

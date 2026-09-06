@@ -1,0 +1,14 @@
+[@main]
+赤月魔穴向导：选择目的地。\
+<比奇省/@home>  <上一层 恶魔祭坛/@prev>  <返回比奇/@home>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D10061 15 14
+BREAK
+

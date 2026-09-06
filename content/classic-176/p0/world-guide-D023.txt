@@ -1,0 +1,34 @@
+[@main]
+沃玛寺庙二层向导：选择目的地。\
+<沃玛一层/@woma1>  <教主大殿/@woma2>  <比奇省/@home>\
+<矿区通道/@mine>  <石墓深处/@pig>  <兽人古墓一层/@cave>  <返回/@exit>
+
+[@woma1]
+#ACT
+MAPMOVE D022 338 355
+BREAK
+
+[@woma2]
+#ACT
+MAPMOVE D024 16 19
+BREAK
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@mine]
+#ACT
+MAPMOVE D402 100 100
+BREAK
+
+[@pig]
+#ACT
+MAPMOVE D715 29 344
+BREAK
+
+[@cave]
+#ACT
+MAPMOVE D001 153 362
+BREAK

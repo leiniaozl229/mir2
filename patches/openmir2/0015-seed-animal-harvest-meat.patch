@@ -1,0 +1,38 @@
+diff --git a/src/M2Server/Player/PlayObject.Operate.cs b/src/M2Server/Player/PlayObject.Operate.cs
+--- a/src/M2Server/Player/PlayObject.Operate.cs
++++ b/src/M2Server/Player/PlayObject.Operate.cs
+@@ -730,7 +730,34 @@ namespace M2Server.Player
+                                 baseObject.ApplyMeatQuality();
+                                 baseObject.SendRefMsg(Messages.RM_SKELETON, baseObject.Dir, baseObject.CurrX, baseObject.CurrY, 0, "");
+                             }
++                            // Some classic data packs omit the animal's MonItems entry.
++                            // Seed the standard meat item at harvest time so skinning remains
++                            // useful and quest scripts can consume the result.
++                            if (baseObject.ItemList.Count == 0)
++                            {
++                                UserItem meat = new UserItem();
++                                if (SystemShare.ItemSystem.CopyToUserItemFromName("肉", ref meat))
++                                {
++                                    baseObject.ItemList.Add(meat);
++                                }
++                                else
++                                {
++                                    StdItem meatStd = SystemShare.ItemSystem.GetStdItem(50);
++                                    if (meatStd == null)
++                                    {
++                                        Dispose(meat);
++                                    }
++                                    else
++                                    {
++                                        meat.Index = 50;
++                                        meat.MakeIndex = M2Share.GetItemNumber();
++                                        meat.Dura = meatStd.DuraMax;
++                                        meat.DuraMax = meatStd.DuraMax;
++                                        baseObject.ItemList.Add(meat);
++                                    }
++                                }
++                            }
+                             if (!TakeBagItems(baseObject))
+                             {
+                                 SysMsg(MessageSettings.YouFoundNothing, MsgColor.Red, MsgType.Hint);
+                             }

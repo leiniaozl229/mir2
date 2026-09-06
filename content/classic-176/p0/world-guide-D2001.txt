@@ -1,0 +1,19 @@
+[@main]
+崎路向导：选择目的地。\
+<比奇省/@home>  <上一层 封魔矿区/@prev>  <下一层 连接通道/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D2000 100 100
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D2002 25 25
+BREAK
+

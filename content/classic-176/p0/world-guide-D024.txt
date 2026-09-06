@@ -1,0 +1,19 @@
+[@main]
+沃玛教主大殿向导：选择目的地。\
+<沃玛二层/@woma2>  <沃玛一层/@woma1>  <比奇省/@home>\
+<返回/@exit>
+
+[@woma2]
+#ACT
+MAPMOVE D023 198 195
+BREAK
+
+[@woma1]
+#ACT
+MAPMOVE D022 338 355
+BREAK
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK

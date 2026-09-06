@@ -1,0 +1,27 @@
+diff --git a/src/Modules/ScriptEngine/ScriptParsers.cs b/src/Modules/ScriptEngine/ScriptParsers.cs
+index c5b49bc..f30c8aa 100644
+--- a/src/Modules/ScriptEngine/ScriptParsers.cs
++++ b/src/Modules/ScriptEngine/ScriptParsers.cs
+@@ -35,7 +35,11 @@ namespace ScriptSystem
+                             LogService.Warn($"重复脚本检测编码[{codeField.CommandName}]定义");
+                             continue;
+                         }
+-                        ConditionCodeDefMap.Add(codeField.CommandName, i);
++                        // Reflection order is not a script opcode contract.  The
++                        // enum value is the only stable key shared with the
++                        // condition dispatcher.
++                        ConditionCodeDefMap.Add(codeField.CommandName,
++                            (int)Enum.Parse<ConditionCode>(conditionFields[i].Name));
+                     }
+                 }
+             }
+@@ -54,7 +58,8 @@ namespace ScriptSystem
+                             LogService.Warn($"重复脚本执行编码[{codeField.CommandName}]定义");
+                             continue;
+                         }
+-                        ExecutionCodeDefMap.Add(codeField.CommandName, i);
++                        ExecutionCodeDefMap.Add(codeField.CommandName,
++                            (int)Enum.Parse<ExecutionCode>(executionFields[i].Name));
+                     }
+                 }
+             }

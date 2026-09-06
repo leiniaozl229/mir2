@@ -1,0 +1,34 @@
+[@main]
+祖玛寺庙二层向导：选择目的地。\
+<祖玛寺庙一层/@d501>  <祖玛寺庙三层/@d503>  <比奇省/@home>  <沃玛森林/@forest>\
+<毒蛇山谷/@snake>  <盟重省/@league>  <返回/@exit>
+
+[@d501]
+#ACT
+MAPMOVE D501 200 200
+BREAK
+
+[@d503]
+#ACT
+MAPMOVE D503 200 200
+BREAK
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@forest]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@snake]
+#ACT
+MAPMOVE 2 510 474
+BREAK
+
+[@league]
+#ACT
+MAPMOVE 3 332 328
+BREAK

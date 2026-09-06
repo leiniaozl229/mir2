@@ -1,0 +1,77 @@
+diff --git a/src/Modules/ScriptEngine/Consts/ConditionCode.cs b/src/Modules/ScriptEngine/Consts/ConditionCode.cs
+index 24cc9a1..a997ed3 100644
+--- a/src/Modules/ScriptEngine/Consts/ConditionCode.cs
++++ b/src/Modules/ScriptEngine/Consts/ConditionCode.cs
+@@ -487,6 +487,13 @@
+         /// 检测地图地图
+         /// </summary>
+         [ScriptDefName("CHECKMAP")]
+-        CHECKMAP
++        CHECKMAP,
++
++        // Names used by the classic data pack for the existing point/gold
++        // condition handlers.  Explicit values preserve all legacy opcodes.
++        [ScriptDefName("CHECKGAMEGIRD")]
++        CHECKGAMEGIRD = CHECKGAMEPOINT,
++        [ScriptDefName("CHECKGAMEDIAMOND")]
++        CHECKGAMEDIAMOND = CHECKGAMEGOLD
+     }
+ }
+\ No newline at end of file
+diff --git a/src/Modules/ScriptEngine/Consts/ExecutionCode.cs b/src/Modules/ScriptEngine/Consts/ExecutionCode.cs
+index 7d25099..dec1b50 100644
+--- a/src/Modules/ScriptEngine/Consts/ExecutionCode.cs
++++ b/src/Modules/ScriptEngine/Consts/ExecutionCode.cs
+@@ -765,6 +765,35 @@
+         /// 回收对话框中的物品
+         /// </summary>
+         [ScriptDefName("TAKEDLGITEM")]
+-        TakeDlgItem
++        TakeDlgItem,
++
++        // Compatibility aliases used by the classic Mir script pack.  Keep these
++        // explicit so adding aliases never renumbers the established opcodes.
++        [ScriptDefName("GAMEGIRD")]
++        GameGird = GamePoint,
++        [ScriptDefName("GAMEDIAMOND")]
++        GameDiamond = GameGold,
++
++        // These commands belong to optional bot/launcher extensions.  Recognize
++        // them so the corresponding classic scripts load; the browser runtime
++        // intentionally treats them as no-op compatibility directives.
++        [ScriptDefName("SETSCTIMER")]
++        SetScTimer = SetOnTimer,
++        [ScriptDefName("KILLSCTIMER")]
++        KillScTimerCompat = KillScTimer,
++        [ScriptDefName("CHANGEATTACKMODE")]
++        ChangeAttackMode = 2002,
++        [ScriptDefName("SENDSCROLLMSG")]
++        SendScrollMsg = 2003,
++        [ScriptDefName("RECALLHERO")]
++        RecallHero = 2004,
++        [ScriptDefName("WEBBROWSER")]
++        WebBrowser = 2005,
++        [ScriptDefName("OFFLINEPLAYEX")]
++        OfflinePlayEx = 2006,
++        [ScriptDefName("READRANDOMLINE")]
++        ReadRandomLine = 2007,
++        [ScriptDefName("DELLINELIST")]
++        DelLineListCompat = DelNameList
+     }
+ }
+\ No newline at end of file
+diff --git a/src/Modules/ScriptEngine/Processings/GrobalVarProcessingSys.cs b/src/Modules/ScriptEngine/Processings/GrobalVarProcessingSys.cs
+index fb9de41..90cdf87 100644
+--- a/src/Modules/ScriptEngine/Processings/GrobalVarProcessingSys.cs
++++ b/src/Modules/ScriptEngine/Processings/GrobalVarProcessingSys.cs
+@@ -71,6 +71,10 @@ namespace ScriptSystem.Processings
+             ProcessGrobalMessage[GrobalVarCode.nVAR_GOLDCOUNT] = GetGoldCount;
+             ProcessGrobalMessage[GrobalVarCode.nVAR_GAMEGOLD] = GetGameGold;
+             ProcessGrobalMessage[GrobalVarCode.nVAR_GAMEPOINT] = GetGamePoint;
++            // The classic pack calls these same balances GAMEGAMEDIAMOND and
++            // GAMEGIRD. Their source IDs are already reserved in GrobalVarCode.
++            ProcessGrobalMessage[GrobalVarCode.nVAR_GAMEDIAMOND] = GetGameGold;
++            ProcessGrobalMessage[GrobalVarCode.nVAR_GAMEGIRD] = GetGamePoint;
+             ProcessGrobalMessage[GrobalVarCode.nVAR_LOGINTIME] = GetLoginTime;
+             ProcessGrobalMessage[GrobalVarCode.nVAR_LOGINLONG] = GetLoginTime;
+             ProcessGrobalMessage[GrobalVarCode.nVAR_DRESS] = GetDress;

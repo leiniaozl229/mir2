@@ -1,0 +1,13 @@
+[@main]
+山谷矿区桥向导：选择目的地。\
+<比奇省/@home>  <山谷矿区二层/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D422 97 103
+BREAK

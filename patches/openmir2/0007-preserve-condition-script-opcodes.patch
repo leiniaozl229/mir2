@@ -1,0 +1,23 @@
+diff --git a/src/Modules/ScriptEngine/ScriptParsers.cs b/src/Modules/ScriptEngine/ScriptParsers.cs
+index 0df3d35..6a0e75e 100644
+--- a/src/Modules/ScriptEngine/ScriptParsers.cs
++++ b/src/Modules/ScriptEngine/ScriptParsers.cs
+@@ -314,17 +314,17 @@ namespace ScriptSystem
+                 else if (code == (int)ConditionCode.CHECKUNIT)
+                 {
+                     nCMDCode = code;
+                     HUtil32.ArrestStringEx(sParam1, "[", "]", ref sParam1);
+                     if (!HUtil32.IsStringNumber(sParam1))
+                     {
+                         nCMDCode = 0;
+                     }
+                     if (!HUtil32.IsStringNumber(sParam2))
+                     {
+                         nCMDCode = 0;
+                     }
+                 }
+                 else
+                 {
+-                    nCMDCode = code - 1;
++                    nCMDCode = code;
+                 }

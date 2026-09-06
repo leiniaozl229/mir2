@@ -1,0 +1,13 @@
+[@main]
+矿区桥一向导：选择目的地。\
+<比奇省/@home>  <矿区桥二/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D415 53 46
+BREAK

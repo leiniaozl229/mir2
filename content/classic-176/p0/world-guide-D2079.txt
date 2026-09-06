@@ -1,0 +1,14 @@
+[@main]
+牛魔寺庙大厅向导：选择目的地。\
+<比奇省/@home>  <上一层 牛魔寺庙六层/@prev>  <返回比奇/@home>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D2078 150 150
+BREAK
+

@@ -1,0 +1,17 @@
+diff --git a/src/Modules/ScriptEngine/ScriptEngine.cs b/src/Modules/ScriptEngine/ScriptEngine.cs
+index 246ce70..42d0188 100644
+--- a/src/Modules/ScriptEngine/ScriptEngine.cs
++++ b/src/Modules/ScriptEngine/ScriptEngine.cs
+@@ -890,7 +890,11 @@ namespace ScriptSystem
+                 if (ExecutionProcessing.IsRegister(questActionInfo.nCmdCode))
+                 {
+                     ExecutionProcessing.Execute(normNpc, playerActor, questActionInfo, ref result);
+-                    return result;
++                    if (!result)
++                    {
++                        return false;
++                    }
++                    continue;
+                 }
+                 ExecutionCode executionCode = (ExecutionCode)questActionInfo.nCmdCode;
+                 switch (executionCode)

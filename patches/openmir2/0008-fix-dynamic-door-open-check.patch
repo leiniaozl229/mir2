@@ -1,0 +1,12 @@
+diff --git a/src/M2Server/Player/PlayObject.Operate.cs b/src/M2Server/Player/PlayObject.Operate.cs
+--- a/src/M2Server/Player/PlayObject.Operate.cs
++++ b/src/M2Server/Player/PlayObject.Operate.cs
+@@ -363,7 +363,7 @@
+         private void ClientOpenDoor(int nX, int nY)
+         {
+             MapDoor door = default;
+-            if (Envir.GetDoor(nX, nY, ref door))
++            if (!Envir.GetDoor(nX, nY, ref door))
+             {
+                 return;
+             }

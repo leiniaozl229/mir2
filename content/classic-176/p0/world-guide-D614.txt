@@ -1,0 +1,13 @@
+[@main]
+传奇部落向导：选择目的地。\
+<比奇省/@home>  <邪恶势力/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D615 48 50
+BREAK

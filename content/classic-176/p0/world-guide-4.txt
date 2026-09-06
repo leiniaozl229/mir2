@@ -1,0 +1,14 @@
+[@main]
+封魔谷向导：选择目的地。\
+<比奇省/@home>  <下一层 封魔矿区/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D2000 100 100
+BREAK
+

@@ -1,0 +1,18 @@
+--- a/src/Modules/ScriptEngine/ScriptParsers.cs
++++ b/src/Modules/ScriptEngine/ScriptParsers.cs
+@@ -889,6 +889,15 @@
+                             }
+                             continue;
+                         }
++                        // A few legacy admin panels embed rich-text help lines
++                        // inside an action block. They are display metadata, not
++                        // executable commands; keep them out of the action parser
++                        // while preserving the same markup in #SAY blocks.
++                        if ((scriptType == 11 || scriptType == 12 || scriptType == 13) &&
++                            line.StartsWith("<color=", StringComparison.OrdinalIgnoreCase))
++                        {
++                            continue;
++                        }
+                         switch (scriptType)
+                         {
+                             case 10:

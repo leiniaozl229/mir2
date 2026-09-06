@@ -1,0 +1,14 @@
+[@main]
+封魔殿向导：选择目的地。\
+<比奇省/@home>  <上一层 炼狱回廊/@prev>  <返回比奇/@home>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D2012 50 50
+BREAK
+

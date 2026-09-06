@@ -1,0 +1,55 @@
+[@main]
+沃玛寺庙一层向导：选择目的地。\
+<比奇省/@home>  <沃玛森林/@forest>  <毒蛇山谷/@snake>  <盟重省/@league>\
+<沃玛寺庙入口/@woma>  <沃玛寺庙二层/@woma2>  <沃玛教主大殿/@woma3>\
+<兽人古墓一层/@cave>  <矿区通道/@mine>  <石墓深处/@pig>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@forest]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@snake]
+#ACT
+MAPMOVE 2 510 474
+BREAK
+
+[@league]
+#ACT
+MAPMOVE 3 332 328
+BREAK
+
+[@woma]
+#ACT
+MAPMOVE D021 50 50
+BREAK
+
+[@woma2]
+#ACT
+MAPMOVE D023 198 195
+BREAK
+
+[@woma3]
+#ACT
+MAPMOVE D024 16 19
+BREAK
+
+[@cave]
+#ACT
+MAPMOVE D001 153 362
+BREAK
+
+[@mine]
+#ACT
+MAPMOVE D402 100 100
+BREAK
+
+[@pig]
+#ACT
+MAPMOVE D715 29 344
+BREAK

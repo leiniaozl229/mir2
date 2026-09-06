@@ -1,0 +1,60 @@
+[@main]
+#IF
+CHECK [1008] 1
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-weapon|complete|铁匠试炼|已完成|向铁匠学徒报告木剑|奖励已领取：300 经验与 100 金币|END\
+<返回/@main>
+
+#IF
+CHECK [1007] 1
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-weapon|accepted|铁匠试炼|交付 1 把木剑|从武器店购买或使用初始装备准备木剑|铁匠学徒需要一把木剑校准新炉火。|END\
+<交付木剑/@turnin> <返回/@main>
+
+#IF
+CHECK [1007] 0
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-weapon|available|铁匠试炼|接受铁匠试炼|铁匠学徒需要 1 把木剑，完成后可获得经验和金币。|END\
+<接受任务/@accept>
+
+[@accept]
+#IF
+CHECK [1007] 0
+#ACT
+SET [1007] 1
+#SAY
+任务标记QMARK|p0-weapon|accepted|铁匠试炼|交付 1 把木剑|从武器店购买或使用初始装备准备木剑|任务已开始，去准备一把木剑。|END\
+<交付木剑/@turnin> <返回/@main>
+
+[@turnin]
+#IF
+CHECK [1007] 1
+CHECKITEM 木剑 1
+#ACT
+TAKE 木剑 1
+SET [1008] 1
+GIVE 金币 100
+CHANGEXP 300
+#SAY
+任务标记QMARK|p0-weapon|complete|铁匠试炼|已完成|向铁匠学徒报告木剑|奖励已领取：300 经验与 100 金币|END\
+<返回/@main>
+#ELSESAY
+任务标记QMARK|p0-weapon|accepted|铁匠试炼|交付 1 把木剑|从武器店购买或使用初始装备准备木剑|你还没有带来木剑。|END\
+<返回/@main>
+
+[@abandon]
+#IF
+CHECK [1007] 1
+#ACT
+RESET [1007] 1
+#SAY
+任务标记QMARK|p0-weapon|available|铁匠试炼|接受铁匠试炼|铁匠学徒需要 1 把木剑，完成后可获得经验和金币。|任务已放弃。|END\
+<重新接受/@accept>
+#ELSESAY
+<返回/@main>

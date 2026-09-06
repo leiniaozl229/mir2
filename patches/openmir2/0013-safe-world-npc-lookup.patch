@@ -1,0 +1,14 @@
+--- a/src/GameSrv/Word/WorldServer.cs
++++ b/src/GameSrv/Word/WorldServer.cs
+@@ -1418,9 +1418,9 @@ namespace GameSrv.Word
+         public INormNpc FindNpc(int npcId)
+         {
+-            return SystemShare.ActorMgr.Get<INormNpc>(npcId);
++            return SystemShare.ActorMgr.Get(npcId) as INormNpc;
+         }
+ 
+         public IMerchant FindMerchant(int npcId)
+         {
+-            return SystemShare.ActorMgr.Get<IMerchant>(npcId);
++            return SystemShare.ActorMgr.Get(npcId) as IMerchant;
+         }

@@ -1,0 +1,83 @@
+diff --git a/src/Modules/ScriptEngine/Processings/ExecutionProcessingSys.cs b/src/Modules/ScriptEngine/Processings/ExecutionProcessingSys.cs
+--- a/src/Modules/ScriptEngine/Processings/ExecutionProcessingSys.cs
++++ b/src/Modules/ScriptEngine/Processings/ExecutionProcessingSys.cs
+@@ -5193,14 +5193,14 @@
+                 return;
+             }
+             char cMethod = questActionInfo.sParam1[0];
+-            Ability abil = playerActor.Abil;
++            Ability abil = playerActor.WAbil;
+             switch (cMethod)
+             {
+                 case '=':
+-                    abil.HP = (ushort)nHp;
++                    abil.HP = (ushort)HUtil32._MIN(nHp, abil.MaxHP);
+                     break;
+                 case '-':
+-                    if (playerActor.WAbil.HP >= nHp)
++                    if (abil.HP >= nHp)
+                     {
+                         abil.HP -= (ushort)nHp;
+                     }
+@@ -5210,17 +5210,14 @@
+                     }
+                     break;
+                 case '+':
+-                    abil.HP += (ushort)nHp;
+-                    if (playerActor.WAbil.HP > playerActor.WAbil.MaxHP)
+-                    {
+-                        abil.HP = playerActor.WAbil.MaxHP;
+-                    }
++                    abil.HP = (ushort)HUtil32._MIN(abil.HP + nHp, abil.MaxHP);
+                     break;
+             }
+-            playerActor.Abil = abil;
++            playerActor.WAbil = abil;
++            playerActor.HealthSpellChanged();
+             if (SystemShare.Config.ShowScriptActionMsg)
+             {
+-                playerActor.SysMsg(string.Format(MessageSettings.ScriptChangeHumanHPMsg, playerActor.WAbil.MaxHP), MsgColor.Green, MsgType.Hint);
++                playerActor.SysMsg(string.Format(MessageSettings.ScriptChangeHumanHPMsg.Replace("%d", "{0}"), playerActor.WAbil.HP), MsgColor.Green, MsgType.Hint);
+             }
+         }
+ 
+@@ -5233,14 +5230,14 @@
+                 return;
+             }
+             char cMethod = questActionInfo.sParam1[0];
+-            Ability abil = playerActor.Abil;
++            Ability abil = playerActor.WAbil;
+             switch (cMethod)
+             {
+                 case '=':
+-                    abil.MP = (ushort)nMp;
++                    abil.MP = (ushort)HUtil32._MIN(nMp, abil.MaxMP);
+                     break;
+                 case '-':
+-                    if (playerActor.WAbil.MP >= nMp)
++                    if (abil.MP >= nMp)
+                     {
+                         abil.MP -= (ushort)nMp;
+                     }
+@@ -5250,17 +5247,14 @@
+                     }
+                     break;
+                 case '+':
+-                    abil.MP += (ushort)nMp;
+-                    if (playerActor.WAbil.MP > playerActor.WAbil.MaxMP)
+-                    {
+-                        abil.MP = playerActor.WAbil.MaxMP;
+-                    }
++                    abil.MP = (ushort)HUtil32._MIN(abil.MP + nMp, abil.MaxMP);
+                     break;
+             }
+-            playerActor.Abil = abil;
++            playerActor.WAbil = abil;
++            playerActor.HealthSpellChanged();
+             if (SystemShare.Config.ShowScriptActionMsg)
+             {
+-                playerActor.SysMsg(string.Format(MessageSettings.ScriptChangeHumanMPMsg, new[] { playerActor.WAbil.MaxMP }), MsgColor.Green, MsgType.Hint);
++                playerActor.SysMsg(string.Format(MessageSettings.ScriptChangeHumanMPMsg.Replace("%d", "{0}"), playerActor.WAbil.MP), MsgColor.Green, MsgType.Hint);
+             }
+         }
+ 

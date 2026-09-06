@@ -1,0 +1,49 @@
+[@main]
+石墓一层向导：选择目的地。\
+<石墓入口/@pig>  <石墓二层/@pig2>  <石墓三层/@pig3>  <石墓四层/@pig4>  <石墓六层/@pig6>  <石墓深处/@pig5>\
+<比奇省/@home>  <沃玛一层/@woma>  <矿区通道/@mine>  <返回/@exit>
+
+[@pig]
+#ACT
+MAPMOVE D710 25 25
+BREAK
+
+[@pig4]
+#ACT
+MAPMOVE D714 15 201
+BREAK
+
+[@pig2]
+#ACT
+MAPMOVE D712 196 204
+BREAK
+
+[@pig3]
+#ACT
+MAPMOVE D713 200 200
+BREAK
+
+[@pig6]
+#ACT
+MAPMOVE D716 24 26
+BREAK
+
+[@pig5]
+#ACT
+MAPMOVE D715 29 344
+BREAK
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@woma]
+#ACT
+MAPMOVE D022 338 355
+BREAK
+
+[@mine]
+#ACT
+MAPMOVE D402 100 100
+BREAK

@@ -1,0 +1,13 @@
+[@main]
+绝望悬崖向导：选择目的地。\
+<比奇省/@home>  <黑暗地带/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D612 150 154
+BREAK

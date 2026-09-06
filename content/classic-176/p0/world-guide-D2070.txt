@@ -1,0 +1,19 @@
+[@main]
+牛魔寺庙出入口向导：选择目的地。\
+<比奇省/@home>  <上一层 骨魔洞五层/@prev>  <下一层 牛魔寺庙一层/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D2067 145 158
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D2071 150 150
+BREAK
+

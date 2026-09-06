@@ -1,0 +1,13 @@
+[@main]
+地牢一层东向导：选择目的地。\
+<比奇省/@home>  <地牢一层西/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D602 123 119
+BREAK

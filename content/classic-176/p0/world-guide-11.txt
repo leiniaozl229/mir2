@@ -1,0 +1,14 @@
+[@main]
+白日门向导：选择目的地。\
+<比奇省/@home>  <下一层 丛林迷宫/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE 12 174 249
+BREAK
+

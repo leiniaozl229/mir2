@@ -1,0 +1,13 @@
+[@main]
+地牢二层北向导：选择目的地。\
+<比奇省/@home>  <死亡棺材/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D606 100 97
+BREAK

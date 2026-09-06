@@ -1,0 +1,60 @@
+[@main]
+#IF
+CHECK [1002] 1
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-trial|complete|比奇试炼|已完成|向比奇老兵报告鸡肉|奖励已领取：1000 经验与 3 个小量金创药|END\
+<返回/@main>
+
+#IF
+CHECK [1001] 1
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-trial|accepted|比奇试炼|收集 1 个鸡肉|击杀比奇省的鸡并拾取鸡肉|试炼已开始，去城外找鸡。|END\
+<交付鸡肉/@turnin> <返回/@main>
+
+#IF
+CHECK [1001] 0
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-trial|available|比奇试炼|接受新手试炼|比奇老兵需要 1 个鸡肉，完成后可获得经验和药品。|END\
+<接受试炼/@accept>
+
+[@accept]
+#IF
+CHECK [1001] 0
+#ACT
+SET [1001] 1
+#SAY
+任务标记QMARK|p0-trial|accepted|比奇试炼|收集 1 个鸡肉|击杀比奇省的鸡并拾取鸡肉|试炼已开始，去城外找鸡。|END\
+<交付鸡肉/@turnin> <返回/@main>
+
+[@turnin]
+#IF
+CHECK [1001] 1
+CHECKITEM 鸡肉 1
+#ACT
+TAKE 鸡肉 1
+SET [1002] 1
+GIVE 金创药(小量) 3
+CHANGEXP 1000
+#SAY
+任务标记QMARK|p0-trial|complete|比奇试炼|已完成|向比奇老兵报告鸡肉|奖励已领取：1000 经验与 3 个小量金创药|END\
+<返回/@main>
+#ELSESAY
+任务标记QMARK|p0-trial|accepted|比奇试炼|收集 1 个鸡肉|击杀比奇省的鸡并拾取鸡肉|你还没有带来鸡肉。|END\
+<返回/@main>
+
+[@abandon]
+#IF
+CHECK [1001] 1
+#ACT
+RESET [1001] 1
+#SAY
+任务标记QMARK|p0-trial|available|比奇试炼|接受新手试炼|比奇老兵需要 1 个鸡肉，完成后可获得经验和药品。|试炼已放弃。|END\
+<重新接受/@accept>
+#ELSESAY
+<返回/@main>

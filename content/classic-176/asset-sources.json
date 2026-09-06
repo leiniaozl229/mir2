@@ -1,0 +1,388 @@
+{
+  "schemaVersion": 1,
+  "status": "candidate-needs-visual-calibration",
+  "source": "Crystal patch ShandaMir2 libraries",
+  "files": [
+    {
+      "file": "Objects.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Map/ShandaMir2/Objects.Lib",
+      "bytes": 44683401,
+      "sha256": "6c4decfc1ac6ca23bce6ebb953f32ae7ba8b6620ed676f5d7f496ab1ea8e2f8b"
+    },
+    {
+      "file": "SmTiles.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Map/ShandaMir2/SmTiles.Lib",
+      "bytes": 372682,
+      "sha256": "3c111f30c1b956be988b1123a35182e969e360334a12b9c51630374828907c0f"
+    },
+    {
+      "file": "Tiles.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Map/ShandaMir2/Tiles.Lib",
+      "bytes": 78884815,
+      "sha256": "98ea436fdba1de0b401b67bb76d75fdde0360e458461f6acc5fedc592d2d1865"
+    }
+  ],
+  "formatReference": "Suprcode/Crystal Client/MirGraphics/MLibrary.cs",
+  "excludedCandidates": [
+    {
+      "repository": "https://github.com/etorth/mir2x_res",
+      "commit": "ed2e3599e6fbc128bb0c897b65818cb665df2a15",
+      "reason": "Map texture groups use Tilesc/Housesc/Object1c; direct 1.76 index mapping unproven."
+    }
+  ],
+  "actorFiles": [
+    {
+      "file": "CArmour00.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/00.Lib",
+      "bytes": 3335095,
+      "sha256": "456e9564285f381e09b3887995593970c948ddbede8c1800d51224772d73ced7"
+    },
+    {
+      "file": "CArmour01.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/01.Lib",
+      "bytes": 4529875,
+      "sha256": "39a863bcf540ab3c5c1cbe16b669e0d8548860d882135f921bfd2732cb7cdd99"
+    },
+    {
+      "file": "CArmour02.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/02.Lib",
+      "bytes": 4366813,
+      "sha256": "b274a07d0bf8cf0019171b64982e93c25322f6574576aed225b0ccf09f3d89aa"
+    },
+    {
+      "file": "CArmour03.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/03.Lib",
+      "bytes": 3540581,
+      "sha256": "df3dd27f8f33f12bb4a13a26f8b72c2b2175b449b1ef85f0eb4fed1dea3e8fbe"
+    },
+    {
+      "file": "CArmour04.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/04.Lib",
+      "bytes": 3660285,
+      "sha256": "98797e3a3f4722a57fe0836f9ba165b2de4c98e157e2d88db1bfaceba0b06594"
+    },
+    {
+      "file": "CArmour05.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/05.Lib",
+      "bytes": 3148776,
+      "sha256": "e25cf27048cb767bd1e3439d9e40e8d7eaa630bcd81fe44438c3ada822351ba6"
+    },
+    {
+      "file": "CArmour06.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/06.Lib",
+      "bytes": 5225212,
+      "sha256": "d01057a850c0bfc530a96d9395688d3aa240c0addb2d17225b805daa2572afbc"
+    },
+    {
+      "file": "CArmour07.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/07.Lib",
+      "bytes": 4262108,
+      "sha256": "e7e5b4e1eec6d6e63243e4c9efdfb20775cddc004a26a3b59feb117f7c9765ed"
+    },
+    {
+      "file": "CArmour08.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/08.Lib",
+      "bytes": 4660939,
+      "sha256": "0ac8b9ed2369f40aeb8339ca18198323fd3de5f54282b8c4e09cd80c65c6f967"
+    },
+    {
+      "file": "CArmour09.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/09.Lib",
+      "bytes": 4449139,
+      "sha256": "9469eb3cd092518751fcee6c5703ae590575251b3087006e3c8cb3dce8e0e2da"
+    },
+    {
+      "file": "CArmour10.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/10.Lib",
+      "bytes": 5579595,
+      "sha256": "870304f256bad11ec24516d65792b80549545f14fe72feb521e2bff99a6dfe09"
+    },
+    {
+      "file": "CArmour11.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/11.Lib",
+      "bytes": 6636853,
+      "sha256": "35c32a0ee4cbeb091f47d3f63b7039e67ae165b68d8b323abed91d73f26e713d"
+    },
+    {
+      "file": "CArmour12.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/12.Lib",
+      "bytes": 7897588,
+      "sha256": "955376ea470a1b29d717d0ffa6422a0b686268156b847957e61b1baf2063f80e"
+    },
+    {
+      "file": "CArmour13.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CArmour/13.Lib",
+      "bytes": 4209144,
+      "sha256": "eb5394f0eb4173292b25fbd46e27f862601c5f82e751939cfa78b08f00c0bb05"
+    },
+    {
+      "file": "CHair00.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CHair/00.Lib",
+      "bytes": 476194,
+      "sha256": "876288217ef6ad4568a04e57913b892182d1ed6550fdf933dcf932f9a5b85c93"
+    },
+    {
+      "file": "Monster000.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/000.Lib",
+      "bytes": 339120,
+      "sha256": "2a7eb1c3219a529c7e01b2a6b00e4f29dd6694bfa0c0af9ee8777cdc6094efa7"
+    },
+    {
+      "file": "Monster003.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/003.Lib",
+      "bytes": 161598,
+      "sha256": "802145bbe1c80f7673f0024f4ed1dcbd5f8bed46e6a66623a139676ce611cdb9"
+    },
+    {
+      "file": "Monster004.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/004.Lib",
+      "bytes": 414018,
+      "sha256": "c4d0078f54ec3ba62c092e8675e093dd9b74b4bf3ab3da140bc0d23b5ecb29a3"
+    },
+    {
+      "file": "Monster006.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/006.Lib",
+      "bytes": 472097,
+      "sha256": "2639b11bce1437d7902c6546c037d62704302618fe01fb757ba01e6db7d28ede"
+    },
+    {
+      "file": "Monster019.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/019.Lib",
+      "bytes": 232091,
+      "sha256": "6156d34b72c66a41800221b5ea55c8b9bd31b95c0491dda9bfe50020a08b8d13"
+    },
+    {
+      "file": "Monster020.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/020.Lib",
+      "bytes": 270552,
+      "sha256": "d3cdafd1f11e99465a30b0e3d2cc2c3c565f36a46fde335c5f36472f4b93ddd6"
+    },
+    {
+      "file": "Monster022.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/022.Lib",
+      "bytes": 738653,
+      "sha256": "e152ef8e2e63de848755062b0c88b1108a4ad092abe67ed1f28b108dcf197b06"
+    },
+    {
+      "file": "Monster024.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/024.Lib",
+      "bytes": 707140,
+      "sha256": "4e3f7f9f9366165e1ed19ef7c6515e29d8d07bb4dba850ebca811240e929f653"
+    },
+    {
+      "file": "Monster025.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/025.Lib",
+      "bytes": 732903,
+      "sha256": "49dde75a2176d9d663aee9394eccb1ddb00835f5cffaec1b238658766fc70346"
+    },
+    {
+      "file": "Monster026.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/026.Lib",
+      "bytes": 925256,
+      "sha256": "8eb9444e8d840e09ff252466c4c267b85dd02238a9e54cc32cb32a9daa8d6f7c"
+    },
+    {
+      "file": "Monster030.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/030.Lib",
+      "bytes": 1017116,
+      "sha256": "fbb10bd6993d1ceef496e2245483a82e4c61cf8876f2e22ff70cb3ff2d9adc7d"
+    },
+    {
+      "file": "Monster032.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/032.Lib",
+      "bytes": 1357631,
+      "sha256": "ed395196372cf9f7e965ee4b693cd2336c11991d6c98b02fbbf88ff20e5aee27"
+    },
+    {
+      "file": "Monster045.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/045.Lib",
+      "bytes": 694763,
+      "sha256": "7bf44cdb425546451f8ea8e92e93cda1198d12c015ed658e9b55c6e684c49b10"
+    },
+    {
+      "file": "Monster046.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/046.Lib",
+      "bytes": 703144,
+      "sha256": "d1a869280652be1fe42a87d1c968122c19c60380d17bdb56f9b306ad9c1ac14a"
+    },
+    {
+      "file": "Monster047.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/047.Lib",
+      "bytes": 848844,
+      "sha256": "2347271016d6a8ea28fbc803aed21488bcf61c67e620767bd061e0cb0f355992"
+    },
+    {
+      "file": "Monster061.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/061.Lib",
+      "bytes": 3269419,
+      "sha256": "377f599e0d8d229f6150ff929d2dcf08b7ba2d2a83ea144996d10fdc6f6d734b"
+    },
+    {
+      "file": "Monster062.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/062.Lib",
+      "bytes": 591958,
+      "sha256": "e29f8f352b32ec6a165f578cbed2e02584edb0004d5a052b76eb1370014b2777"
+    },
+    {
+      "file": "Monster070.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/070.Lib",
+      "bytes": 635095,
+      "sha256": "256c96305c8f2187b9e91f2580e57f68fafcbfaadeac953d08fa611fcf38cb1b"
+    },
+    {
+      "file": "Monster072.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/072.Lib",
+      "bytes": 498241,
+      "sha256": "5abdf1d697ee80bf419c6a1e6c35cdcebd0e0735d017f43491bd9fed0f2d2c05"
+    },
+    {
+      "file": "Monster103.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/103.Lib",
+      "bytes": 328440,
+      "sha256": "b0a2e870e7a252866c78b415367b02aeda8a52a358d52577058d2861ba9f0c17"
+    },
+    {
+      "file": "Monster112.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Monster/112.Lib",
+      "bytes": 455031,
+      "sha256": "001e10129443d5535df8b1e02c65b9c5ceaff5f3b6c8cd0e8205c5bf1ea2ffc0"
+    },
+    {
+      "file": "CHair01.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CHair/01.Lib",
+      "bytes": 559142,
+      "sha256": "0efbbd32c396acbb3c27ad98e59c383d78622961e091cf46963ac838e5f078b9"
+    },
+    {
+      "file": "CWeapon01.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CWeapon/01.Lib",
+      "bytes": 134743,
+      "sha256": "6c0217139ccd28669b46cf8cdc6da2d0822a84d5431ee4d110dd7d7190bb4882"
+    },
+    {
+      "file": "CWeapon02.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CWeapon/02.Lib",
+      "bytes": 206441,
+      "sha256": "6c5fc49b3eb9ac3b7b6c1ba78b146822ef4fcfdf211af999ffaade76485a73ab"
+    },
+    {
+      "file": "CWeapon03.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CWeapon/03.Lib",
+      "bytes": 312918,
+      "sha256": "ce80fd92a9ed251c93978fa5aa8b8d44580f39a2764e6f08468a564ba2c0a704"
+    },
+    {
+      "file": "CWeapon04.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CWeapon/04.Lib",
+      "bytes": 321063,
+      "sha256": "edff6c4cd3690d10112249b5e104e899c16ffb44757017227adcd10ef7347efd"
+    },
+    {
+      "file": "CWeapon06.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CWeapon/06.Lib",
+      "bytes": 394023,
+      "sha256": "600a30997f24705a9fc52d4a52a3c14a0f30dcc2094cbcd07bef5adf8f060d45"
+    },
+    {
+      "file": "CWeapon19.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/CWeapon/19.Lib",
+      "bytes": 367274,
+      "sha256": "a4a9181a43ee20dc3539c282f780b6472cb36ad5620fb9fe71845cc7b8469b92"
+    },
+    {
+      "file": "NPC00.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/NPC/00.Lib",
+      "bytes": 95385,
+      "sha256": "697db13d3ee3ddf33adb2e1ab85e891abb5c09fdfcd2ae2ed659e55e224ea6c4"
+    }
+  ],
+  "effectFiles": [
+    {
+      "file": "Magic.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Magic.Lib",
+      "bytes": 9328415,
+      "sha256": "75b52ee743b023aabd74cb5bad8a0577ffd82b13bb0a41e356c8dabd66d6048a",
+      "ranges": [
+        [
+          0,
+          179
+        ],
+        [
+          200,
+          209
+        ],
+        [
+          370,
+          379
+        ]
+      ]
+    },
+    {
+      "file": "Magic2.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Magic2.Lib",
+      "bytes": 21144703,
+      "sha256": "c93ee6186c4748751fb67825e1ce9f8b8933c8ec57e0d5aa4fc2237dcbcd2e01",
+      "ranges": [
+        [
+          10,
+          14
+        ],
+        [
+          20,
+          22
+        ]
+      ]
+    }
+  ],
+  "itemFiles": [
+    {
+      "file": "Items.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/Items.Lib",
+      "bytes": 4035433,
+      "sha256": "5d5f6e0251d2e5f7d87cb18352be2c2999ea311a7aa988de63dcf2fa78f9fb5a"
+    },
+    {
+      "file": "DnItems.Lib",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Data/dnitems.Lib",
+      "bytes": 1715976,
+      "sha256": "0238a89ef5d9f616615b912dccccbdf6270fd605465e2e12da1bc5c43c940607"
+    }
+  ],
+  "audioFiles": [
+    {
+      "file": "1.wav",
+      "role": "movement",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Sound/1.wav",
+      "bytes": 35328,
+      "sha256": "f815cb0983eb1e809e692b40c25eb584cbd7ab4a3c293f5f540b8ff0a37de0b5"
+    },
+    {
+      "file": "50.wav",
+      "role": "swing",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Sound/50.wav",
+      "bytes": 41004,
+      "sha256": "ba9e0bd753dd8c92ca1fc3727e3151a904d05266819242f923d3ff96ff3cbe6c"
+    },
+    {
+      "file": "60.wav",
+      "role": "struck",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Sound/60.wav",
+      "bytes": 71200,
+      "sha256": "2efa4e2ae9101364f96d404a2f487c0010efd026648ac30d0d6c9fc464437c94"
+    },
+    {
+      "file": "022-1.wav",
+      "role": "skeleton-attack",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Sound/022-1.wav",
+      "bytes": 75780,
+      "sha256": "689e863c5fb8791d5b189cbacecc5ab55275fc7ac1a4b288a488c73d509bcf14"
+    },
+    {
+      "file": "levelup.wav",
+      "role": "level-up",
+      "url": "https://mirfiles.com/resources/mir2/crystal/patch/Sound/levelup.wav",
+      "bytes": 707628,
+      "sha256": "3587c71a95515931cb3a22a82e88063acc5fab3083230cabd0ad738919321d3d"
+    }
+  ]
+}

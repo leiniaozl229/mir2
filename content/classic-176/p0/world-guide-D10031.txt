@@ -1,0 +1,19 @@
+[@main]
+赤月左回廊向导：选择目的地。\
+<比奇省/@home>  <上一层 赤月峡谷广场/@prev>  <下一层 赤月右回廊/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@prev]
+#ACT
+MAPMOVE D1002 155 156
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D10032 146 153
+BREAK
+

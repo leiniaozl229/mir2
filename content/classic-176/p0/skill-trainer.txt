@@ -1,0 +1,117 @@
+[@main]
+请选择你的职业测试技能。\
+<升到七级/@levelseven>\
+<准备洞穴战斗测试/@cavecombat>\
+<领取火球术秘籍/@fireballbook>\
+<领取治愈术秘籍/@healingbook>\
+<领取基本剑术秘籍/@fencingbook>\
+<战士技能测试/@warriorset>\
+<法师技能测试/@wizardset>\
+<道士技能测试/@taoistset>\
+<调整治愈术测试状态/@healingtest>\
+<进入兽人古墓/@orcgrave>\
+<测试死亡回城/@death>\
+<离开/@exit>
+
+[@levelseven]
+#IF
+#ACT
+CHANGELEVEL = 7
+#SAY
+等级已经调整为七级。\
+<返回/@main>
+
+[@cavecombat]
+#IF
+#ACT
+CHANGELEVEL = 30
+HUMANHP = 128
+HUMANMP = 541
+ADDSKILL 雷电术 3
+GIVE 金创药(中量) 5
+GIVE 魔法药(中量) 5
+#SAY
+已升到三十级、学会三级雷电术，并领取洞穴测试药品。此入口只属于 P0 验证世界。\
+<进入兽人古墓/@orcgrave>\
+<返回/@main>
+
+[@fireballbook]
+#IF
+#ACT
+GIVE 火球术 1
+#SAY
+火球术秘籍已放入背包。\
+<返回/@main>
+
+[@healingbook]
+#IF
+#ACT
+GIVE 治愈术 1
+#SAY
+治愈术秘籍已放入背包。\
+<返回/@main>
+
+[@fencingbook]
+#IF
+#ACT
+GIVE 基本剑术 1
+#SAY
+基本剑术秘籍已放入背包。\
+<返回/@main>
+
+[@warriorset]
+#IF
+CHECKJOB Warrior
+#ACT
+ADDSKILL 攻杀剑术 3
+ADDSKILL 刺杀剑术 3
+ADDSKILL 半月弯刀 3
+ADDSKILL 烈火剑法 3
+#SAY
+战士测试技能已学会：攻杀剑术、刺杀剑术、半月弯刀、烈火剑法。\
+<返回/@main>
+
+[@wizardset]
+#IF
+CHECKJOB Wizard
+#ACT
+ADDSKILL 大火球 3
+ADDSKILL 雷电术 3
+ADDSKILL 抗拒火环 3
+ADDSKILL 魔法盾 3
+#SAY
+法师测试技能已学会：大火球、雷电术、抗拒火环、魔法盾。\
+<返回/@main>
+
+[@taoistset]
+#IF
+CHECKJOB Taoist
+#ACT
+ADDSKILL 施毒术 3
+ADDSKILL 灵魂火符 3
+ADDSKILL 幽灵盾 3
+ADDSKILL 召唤骷髅 3
+#SAY
+道士测试技能已学会：施毒术、灵魂火符、幽灵盾、召唤骷髅。\
+<返回/@main>
+
+[@healingtest]
+#IF
+#ACT
+HUMANHP = 5
+HUMANMP = 9999
+#SAY
+生命已调整为 5，魔法值已补满。请在技能栏对自己施放治愈术。\
+<返回/@main>
+
+[@orcgrave]
+#IF
+#ACT
+MAPMOVE D001 152 362
+
+[@death]
+#IF
+#ACT
+KILL 3
+#SAY
+角色已进入死亡状态。

@@ -1,0 +1,60 @@
+[@main]
+#IF
+CHECK [1006] 1
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-potion|complete|药剂筹备|已完成|向药师学徒报告药剂|奖励已领取：200 经验与 1 个中量金创药|END\
+<返回/@main>
+
+#IF
+CHECK [1005] 1
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-potion|accepted|药剂筹备|收集 2 个小量金创药|从药店购买或打怪获得小量金创药|药师学徒需要补充药柜。|END\
+<交付药剂/@turnin> <返回/@main>
+
+#IF
+CHECK [1005] 0
+#ACT
+BREAK
+#SAY
+任务标记QMARK|p0-potion|available|药剂筹备|接受药剂筹备|药师学徒需要 2 个小量金创药，完成后可获得经验和中量药剂。|END\
+<接受任务/@accept>
+
+[@accept]
+#IF
+CHECK [1005] 0
+#ACT
+SET [1005] 1
+#SAY
+任务标记QMARK|p0-potion|accepted|药剂筹备|收集 2 个小量金创药|从药店购买或打怪获得小量金创药|任务已开始，去边界药店准备药剂。|END\
+<交付药剂/@turnin> <返回/@main>
+
+[@turnin]
+#IF
+CHECK [1005] 1
+CHECKITEM 金创药(小量) 2
+#ACT
+TAKE 金创药(小量) 2
+SET [1006] 1
+GIVE 金创药(中量) 1
+CHANGEXP 200
+#SAY
+任务标记QMARK|p0-potion|complete|药剂筹备|已完成|向药师学徒报告药剂|奖励已领取：200 经验与 1 个中量金创药|END\
+<返回/@main>
+#ELSESAY
+任务标记QMARK|p0-potion|accepted|药剂筹备|收集 2 个小量金创药|从药店购买或打怪获得小量金创药|你还没有准备好 2 个小量金创药。|END\
+<返回/@main>
+
+[@abandon]
+#IF
+CHECK [1005] 1
+#ACT
+RESET [1005] 1
+#SAY
+任务标记QMARK|p0-potion|available|药剂筹备|接受药剂筹备|药师学徒需要 2 个小量金创药，完成后可获得经验和中量药剂。|任务已放弃。|END\
+<重新接受/@accept>
+#ELSESAY
+<返回/@main>

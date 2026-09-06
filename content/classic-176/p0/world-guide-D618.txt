@@ -1,0 +1,13 @@
+[@main]
+一线天向导：选择目的地。\
+<比奇省/@home>  <绝望悬崖/@next>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@next]
+#ACT
+MAPMOVE D619 60 50
+BREAK

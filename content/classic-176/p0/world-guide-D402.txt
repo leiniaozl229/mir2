@@ -1,0 +1,54 @@
+[@main]
+矿区通道向导：选择目的地。\
+<比奇省/@home>  <沃玛森林/@forest>  <毒蛇山谷/@snake>  <盟重省/@league>\
+<废矿入口/@mine>  <矿区一层/@mine2>  <山谷矿区一层/@valley>  <沃玛寺庙一层/@woma>  <兽人古墓一层/@cave>  <石墓深处/@pig>  <返回/@exit>
+
+[@home]
+#ACT
+MAPMOVE 0 330 266
+BREAK
+
+[@forest]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@snake]
+#ACT
+MAPMOVE 2 510 474
+BREAK
+
+[@league]
+#ACT
+MAPMOVE 3 332 328
+BREAK
+
+[@mine]
+#ACT
+MAPMOVE D401 100 100
+BREAK
+
+[@woma]
+#ACT
+MAPMOVE D022 338 355
+BREAK
+
+[@mine2]
+#ACT
+MAPMOVE D403 100 100
+BREAK
+
+[@valley]
+#ACT
+MAPMOVE D421 87 87
+BREAK
+
+[@cave]
+#ACT
+MAPMOVE D001 153 362
+BREAK
+
+[@pig]
+#ACT
+MAPMOVE D715 29 344
+BREAK

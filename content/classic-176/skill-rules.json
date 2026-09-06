@@ -1,0 +1,366 @@
+{
+  "schemaVersion": 1,
+  "source": "02-mir2_data.sql",
+  "skills": {
+    "火球术": {
+      "magicId": 1,
+      "effectType": 1,
+      "effect": 1,
+      "spell": 4,
+      "power": 8,
+      "maxPower": 8,
+      "defSpell": 1,
+      "defPower": 2,
+      "defMaxPower": 2,
+      "job": 1,
+      "needLevels": [
+        7,
+        11,
+        16
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 60,
+      "description": ""
+    },
+    "治愈术": {
+      "magicId": 2,
+      "effectType": 2,
+      "effect": 2,
+      "spell": 7,
+      "power": 14,
+      "maxPower": 20,
+      "defSpell": 0,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 2,
+      "needLevels": [
+        7,
+        11,
+        16
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 40,
+      "description": ""
+    },
+    "基本剑术": {
+      "magicId": 3,
+      "effectType": 0,
+      "effect": 0,
+      "spell": 0,
+      "power": 0,
+      "maxPower": 0,
+      "defSpell": 0,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 0,
+      "needLevels": [
+        7,
+        11,
+        16
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 0,
+      "description": ""
+    },
+    "大火球": {
+      "magicId": 5,
+      "effectType": 1,
+      "effect": 3,
+      "spell": 3,
+      "power": 6,
+      "maxPower": 6,
+      "defSpell": 5,
+      "defPower": 10,
+      "defMaxPower": 10,
+      "job": 1,
+      "needLevels": [
+        19,
+        23,
+        25
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 60,
+      "description": ""
+    },
+    "施毒术": {
+      "magicId": 6,
+      "effectType": 2,
+      "effect": 4,
+      "spell": 4,
+      "power": 0,
+      "maxPower": 0,
+      "defSpell": 0,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 2,
+      "needLevels": [
+        14,
+        17,
+        20
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 40,
+      "description": ""
+    },
+    "攻杀剑术": {
+      "magicId": 7,
+      "effectType": 0,
+      "effect": 5,
+      "spell": 0,
+      "power": 0,
+      "maxPower": 0,
+      "defSpell": 0,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 0,
+      "needLevels": [
+        19,
+        22,
+        24
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 0,
+      "description": ""
+    },
+    "抗拒火环": {
+      "magicId": 8,
+      "effectType": 4,
+      "effect": 6,
+      "spell": 8,
+      "power": 1,
+      "maxPower": 1,
+      "defSpell": 0,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 1,
+      "needLevels": [
+        12,
+        15,
+        19
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 30,
+      "description": ""
+    },
+    "雷电术": {
+      "magicId": 11,
+      "effectType": 7,
+      "effect": 9,
+      "spell": 12,
+      "power": 14,
+      "maxPower": 28,
+      "defSpell": 6,
+      "defPower": 10,
+      "defMaxPower": 10,
+      "job": 1,
+      "needLevels": [
+        17,
+        20,
+        23
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 100,
+      "description": ""
+    },
+    "刺杀剑术": {
+      "magicId": 12,
+      "effectType": 0,
+      "effect": 13,
+      "spell": 0,
+      "power": 0,
+      "maxPower": 0,
+      "defSpell": 0,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 0,
+      "needLevels": [
+        25,
+        27,
+        29
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 0,
+      "description": ""
+    },
+    "灵魂火符": {
+      "magicId": 13,
+      "effectType": 8,
+      "effect": 10,
+      "spell": 5,
+      "power": 15,
+      "maxPower": 28,
+      "defSpell": 2,
+      "defPower": 10,
+      "defMaxPower": 10,
+      "job": 2,
+      "needLevels": [
+        18,
+        21,
+        24
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 60,
+      "description": ""
+    },
+    "幽灵盾": {
+      "magicId": 14,
+      "effectType": 9,
+      "effect": 11,
+      "spell": 15,
+      "power": 0,
+      "maxPower": 0,
+      "defSpell": 0,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 2,
+      "needLevels": [
+        22,
+        24,
+        26
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 40,
+      "description": ""
+    },
+    "召唤骷髅": {
+      "magicId": 17,
+      "effectType": 4,
+      "effect": 15,
+      "spell": 16,
+      "power": 0,
+      "maxPower": 0,
+      "defSpell": 8,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 2,
+      "needLevels": [
+        19,
+        23,
+        26
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 50,
+      "description": ""
+    },
+    "半月弯刀": {
+      "magicId": 25,
+      "effectType": 0,
+      "effect": 23,
+      "spell": 0,
+      "power": 0,
+      "maxPower": 0,
+      "defSpell": 3,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 0,
+      "needLevels": [
+        28,
+        31,
+        34
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 0,
+      "description": ""
+    },
+    "烈火剑法": {
+      "magicId": 26,
+      "effectType": 0,
+      "effect": 24,
+      "spell": 0,
+      "power": 0,
+      "maxPower": 0,
+      "defSpell": 7,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 0,
+      "needLevels": [
+        35,
+        37,
+        40
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 0,
+      "description": ""
+    },
+    "魔法盾": {
+      "magicId": 31,
+      "effectType": 4,
+      "effect": 29,
+      "spell": 20,
+      "power": 0,
+      "maxPower": 0,
+      "defSpell": 30,
+      "defPower": 0,
+      "defMaxPower": 0,
+      "job": 1,
+      "needLevels": [
+        31,
+        34,
+        38
+      ],
+      "trainLevels": [
+        200,
+        300,
+        500
+      ],
+      "delay": 0,
+      "description": ""
+    }
+  }
+}
