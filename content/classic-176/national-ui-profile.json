@@ -1,0 +1,128 @@
+{
+  "schemaVersion": 1,
+  "id": "shanda-2003-1.76-cn",
+  "label": "2003 原始 1.76 国服金币版",
+  "status": "awaiting-reference-client-data",
+  "canvas": {
+    "width": 800,
+    "height": 600,
+    "coordinateOrigin": "top-left",
+    "scalePolicy": "integer-preferred"
+  },
+  "sourceContract": {
+    "root": "Data",
+    "acceptedFormats": ["WIL/WIX", "WZL/WZX", "PAK"],
+    "caseSensitiveAtRuntime": false,
+    "families": [
+      {
+        "id": "newopui",
+        "label": "游戏操作 UI",
+        "variants": [["NewopUI.wil", "NewopUI.wix"], ["NewopUI.wzl", "NewopUI.wzx"], ["NewopUI.pak"]]
+      },
+      {
+        "id": "prguse",
+        "label": "主界面公共控件",
+        "variants": [["Prguse.wil", "Prguse.wix"], ["Prguse.wzl", "Prguse.wzx"], ["Prguse.pak"]]
+      },
+      {
+        "id": "prguse2",
+        "label": "主界面公共控件扩展",
+        "variants": [["Prguse2.wil", "Prguse2.wix"], ["Prguse2.wzl", "Prguse2.wzx"], ["Prguse2.pak"]]
+      },
+      {
+        "id": "prguse3",
+        "label": "主界面公共控件扩展 3",
+        "variants": [["Prguse3.wil", "Prguse3.wix"], ["Prguse3.wzl", "Prguse3.wzx"], ["Prguse3.pak"]]
+      },
+      {
+        "id": "ui1",
+        "label": "对话与按钮 UI",
+        "variants": [["ui1.wil", "ui1.wix"], ["ui1.wzl", "ui1.wzx"], ["ui1.pak"]]
+      },
+      {
+        "id": "ui3",
+        "label": "窗口与对话 UI",
+        "variants": [["ui3.wil", "ui3.wix"], ["ui3.wzl", "ui3.wzx"], ["ui3.pak"]]
+      },
+      {
+        "id": "stateitem",
+        "label": "装备与状态窗口",
+        "variants": [["stateitem.wil", "stateitem.wix"], ["stateitem.wzl", "stateitem.wzx"], ["stateitem.pak"]]
+      },
+      {
+        "id": "chrsel",
+        "label": "登录与选角",
+        "variants": [["ChrSel.wil", "ChrSel.wix"], ["ChrSel.wzl", "ChrSel.wzx"], ["ChrSel.pak"]]
+      },
+      {
+        "id": "mmap",
+        "label": "小地图",
+        "variants": [["mmap.wil", "mmap.wix"], ["mmap.wzl", "mmap.wzx"], ["mmap.pak"]]
+      },
+      {
+        "id": "magic-icons",
+        "label": "技能图标",
+        "variants": [["MagIcon.wil", "MagIcon.wix"], ["MagIcon.wzl", "MagIcon.wzx"], ["MagIcon.pak"]]
+      },
+      {
+        "id": "items",
+        "label": "物品图标",
+        "variants": [["Items.wil", "Items.wix"], ["Items.wzl", "Items.wzx"], ["Items.pak"]]
+      },
+      {
+        "id": "dnitems",
+        "label": "地面物品图标",
+        "variants": [["DnItems.wil", "DnItems.wix"], ["DnItems.wzl", "DnItems.wzx"], ["DnItems.pak"]]
+      }
+    ]
+  },
+  "keyboard": {
+    "inventory": "F9",
+    "character": "F10",
+    "skills": "F11",
+    "chat": "Enter",
+    "walk": ["ArrowKeys", "WASD"],
+    "run": "Shift+Direction",
+    "attackMode": "Ctrl+H"
+  },
+  "functionalMap": [
+    {"id": "health", "label": "生命", "sourceFamilies": ["prguse", "newopui"], "placement": "measure-from-reference"},
+    {"id": "mana", "label": "魔法", "sourceFamilies": ["prguse", "newopui"], "placement": "measure-from-reference"},
+    {"id": "map", "label": "地图", "sourceFamilies": ["mmap", "newopui"], "placement": "measure-from-reference"},
+    {"id": "trade", "label": "交易", "sourceFamilies": ["newopui", "ui1", "ui3"], "placement": "measure-from-reference"},
+    {"id": "guild", "label": "行会", "sourceFamilies": ["newopui", "ui1", "ui3"], "placement": "measure-from-reference"},
+    {"id": "group", "label": "编组", "sourceFamilies": ["newopui", "ui1", "ui3"], "placement": "measure-from-reference"},
+    {"id": "item-shortcuts", "label": "物品快捷栏", "sourceFamilies": ["newopui", "prguse"], "placement": "measure-from-reference"},
+    {"id": "character-select", "label": "返回角色选择", "sourceFamilies": ["newopui", "ui1"], "placement": "measure-from-reference"},
+    {"id": "exit", "label": "退出", "sourceFamilies": ["newopui", "ui1"], "placement": "measure-from-reference"},
+    {"id": "character", "label": "角色窗口", "sourceFamilies": ["newopui", "stateitem", "ui3"], "placement": "measure-from-reference"},
+    {"id": "inventory", "label": "背包窗口", "sourceFamilies": ["newopui", "stateitem", "ui3"], "placement": "measure-from-reference"},
+    {"id": "skills", "label": "技能窗口", "sourceFamilies": ["newopui", "ui3", "magic-icons"], "placement": "measure-from-reference"},
+    {"id": "sound", "label": "声音", "sourceFamilies": ["newopui"], "placement": "measure-from-reference"},
+    {"id": "time", "label": "时间", "sourceFamilies": ["newopui"], "placement": "measure-from-reference"},
+    {"id": "level", "label": "等级", "sourceFamilies": ["newopui"], "placement": "measure-from-reference"},
+    {"id": "experience", "label": "经验", "sourceFamilies": ["newopui", "prguse"], "placement": "measure-from-reference"},
+    {"id": "weight", "label": "负重", "sourceFamilies": ["newopui", "prguse"], "placement": "measure-from-reference"},
+    {"id": "hunger", "label": "饥饿", "sourceFamilies": ["newopui"], "placement": "measure-from-reference"},
+    {"id": "chat", "label": "聊天窗口", "sourceFamilies": ["newopui", "ui1", "ui3"], "placement": "measure-from-reference"},
+    {"id": "nearby-chat", "label": "附近聊天", "sourceFamilies": ["newopui", "ui1", "ui3"], "placement": "measure-from-reference"}
+  ],
+  "referenceScreens": [
+    "login",
+    "select",
+    "create",
+    "hud",
+    "character",
+    "inventory",
+    "skills",
+    "npc",
+    "chat",
+    "trade"
+  ],
+  "fallback": {
+    "id": "crystal-candidate",
+    "layout": "content/classic-176/ui-layout.json",
+    "allowedFor": ["interaction-smoke-test", "asset-pipeline-development"],
+    "visualClaim": "candidate-only"
+  }
+}

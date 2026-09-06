@@ -1,6 +1,9 @@
 {
   "schemaVersion": 1,
-  "source": "Suprcode/Crystal Client/MirScenes/Dialogs at 0e315fe, 800x600",
+  "profile": "shanda-2003-1.76-cn",
+  "source": "Crystal candidate layout; replace after shanda-2003-1.76-cn reference assets are imported",
+  "fallbackProfile": "crystal-candidate",
+  "status": "fallback-only-until-reference-assets",
   "canvas": {"width": 800, "height": 600},
   "libraries": {
     "Prguse": "Prguse.Lib",

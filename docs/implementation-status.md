@@ -167,7 +167,7 @@ D001 已加入四类普通骨系怪物和一个首领的服务端权威刷新。
 
 首批声音已接入。`asset-sources.json` 固定 Crystal Sound 目录中的 `1.wav`、`50.wav`、`60.wav`、`022-1.wav` 和 `levelup.wav`，共 930,940 字节，全部是 44.1 kHz、16 位 PCM WAV；导入器校验大小和 SHA-256 后复制到浏览器资源。客户端把它们分别绑定到移动、挥击、受击、骷髅攻击与升级事件，并提供持久化声音开关。浏览器实查声音开关由开切换到关再恢复为开，随后服务端确认角色从 289,618 走到 290,618；自动化环境无法代替人工听感与音量平衡验收。
 
-P4 经典界面已开始用原始图库替换测试页皮肤。`asset-sources.json` 锁定 Crystal `Prguse.Lib`、`Prguse2.Lib`、`Title.Lib`、`ChrSel.Lib` 和 `MagIcon.Lib`；导入器导出 800×600 主界面、血蓝球、经验/负重条、F1–F8 栏、聊天条、小地图框、背包窗、角色窗、NPC 对话框、技能图标，以及登录背景、选角列表和创建角色窗。`content/classic-176/ui-layout.json` 固定 Crystal 800 分辨率坐标，登录对话居中于 800×600 裁切视口。联机页入图前显示 ChrSel/Title 登录与选角，入图后收起认证层。装备窗在 Title 504 / Prguse 340 底图上叠加 13 个原始物品格，并用当前角色 `GetFeature` 的 CArmour/CHair/CWeapon 南向站立帧叠成换装人偶；真实浏览器在比奇打开角色窗时加载 `CArmour00/16` 与 `CHair01/16`。地面掉落名使用 SimSun 金色描边；探针角色丢出鸡肉后地面列表与状态为 `鸡肉 · 301,623`。原端逐像素对照仍待校准。
+P4 经典界面已建立 2003 国服基准契约。`content/classic-176/national-ui-profile.json` 固定 800×600 画布、WIL/WIX、WZL/WZX、PAK 三种输入形态、NewopUI/Prguse/Prguse2/Prguse3/ui1/ui3/stateitem/ChrSel/mmap/MagIcon/Items/DnItems 素材族，以及 F9/F10/F11 经典窗口快捷键。`tools/validate-national-ui.py --data-dir <Data>` 会在解码前检查本地客户端素材是否成套存在。当前 `asset-sources.json` 里的 Crystal `Prguse.Lib`、`Prguse2.Lib`、`Title.Lib`、`ChrSel.Lib` 和 `MagIcon.Lib` 仍作为回退候选，校准台会明确标记这一状态；导入国服 Data 后，再把登录、选角、主 HUD、角色窗、背包窗、NPC 对话和技能图标切换到同版本帧表。原端逐像素对照仍待素材到位。
 
 `tools/world_catalog_audit.py` 从锁定地图与源 `MonGen.txt` 生成可追踪刷怪清单，对照 `monsters` 表、MonItems 掉落文件和已导出外观；P0 22 怪基线必须命中，缺 SQL 会使内容审计失败，缺掉落/缺外观记入报告但不单独否定 570 张地图闭合。`tools/frame_budget_probe.mjs` 与 `apps/web/perf.html` 已完成 800×600 比奇参考场景采样：基准和 100 对象压力场景 p95 均为 `16.7ms`，约 `59.88 FPS`。`tools/reconnect_probe.mjs` 已以同一角色连续 20 次重连并收到 `attributes`、`equipment`、`inventory`、`skills` 四组权威快照，最终停留在地图 0 的 `286,620`。Safari / Firefox、连续 2 小时稳定性与沙巴克联机战役仍待验收。
 
@@ -179,4 +179,4 @@ P4 经典界面已开始用原始图库替换测试页皮肤。`asset-sources.js
 
 本轮补齐城堡初始化生命周期：待地图与行会加载完成后再初始化城堡，按 `Castle/List.txt` 去重读取配置目录，并保留真实目录名写回列表；100 系统广播会投影 `castleWar` 状态，行会面板显示攻城开始、结束提醒和占领结果。`tests/CastleRegression` 已覆盖城堡目录去重，网关回归覆盖对应的沙巴克系统消息字段。
 
-本轮继续推进国服 UI 复刻：新增 `/ui-calibration.html` 校准台，固定 800×600 设计坐标，提供登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话场景；支持载入国服截图做内存透明叠加、16px 网格、坐标尺和鼠标设计坐标读数。联机页接入同一套 `ClassicStage` 缩放器，窄窗口只缩放完整游戏画面，不重排国服控件。校准台已通过 Vite 生产构建、真实浏览器场景切换和 70 项 Python 回归。
+本轮继续推进国服 UI 复刻：新增 `national-ui-profile.json` 和 `validate-national-ui.py`，把 2003 原始 1.76 国服 Data 作为视觉基准，将 Crystal 素材降级为候选回退；补齐 F9/F10/F11 窗口快捷键。`/ui-calibration.html` 固定 800×600 设计坐标，提供登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话场景；支持载入国服截图做内存透明叠加、16px 网格、坐标尺和鼠标设计坐标读数。联机页接入同一套 `ClassicStage` 缩放器，窄窗口只缩放完整游戏画面，不重排国服控件。校准台和素材契约通过生产构建与 Python 回归。

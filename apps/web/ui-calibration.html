@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>传奇 2 · 国服 UI 校准</title>
+  <title>传奇 2 · 2003 国服 UI 基准</title>
 </head>
 <body class="classic-play ui-calibration-page">
 <main>
   <header>
     <span>THE LEGEND OF MIR II</span>
-    <h1>国服 UI 校准台</h1>
-    <p>固定 800×600 坐标，使用当前锁定的 Crystal 原始界面帧。可加载国服截图作透明叠加，逐窗口核对位置、尺寸、文字基线和交互热区。</p>
+    <h1>2003 国服 UI 基准台</h1>
+    <p>固定 800×600 坐标。当前页面加载 Crystal 候选帧，仅用于交互链路和校准工具开发；导入匹配的国服 Data 后，再逐窗口核对位置、尺寸、文字基线和交互热区。</p>
   </header>
 
   <section class="calibration-workbench" aria-label="UI 校准工作台">
@@ -64,8 +64,8 @@
     <aside class="calibration-controls" aria-label="校准控制">
       <fieldset><legend>界面场景</legend><button type="button" data-scene="login">登录</button><button type="button" data-scene="select">选角</button><button type="button" data-scene="create">创建角色</button><button type="button" data-scene="hud">主 HUD</button><button type="button" data-scene="character">角色窗</button><button type="button" data-scene="inventory">背包窗</button><button type="button" data-scene="npc">NPC 对话</button></fieldset>
       <fieldset><legend>对照工具</legend><label><input id="show-grid" type="checkbox"> 显示 16px 网格</label><label><input id="show-ruler" type="checkbox" checked> 显示坐标尺</label><label>截图透明度 <input id="reference-opacity" type="range" min="0" max="1" step="0.05" value="0.5"></label><label class="file-input">载入国服截图 <input id="reference-file" type="file" accept="image/png,image/jpeg,image/webp"></label><button id="clear-reference" type="button">清除截图</button></fieldset>
-      <p id="calibration-status-message" role="status">正在加载原始界面帧…</p>
-      <p class="calibration-note">校准原则：先对齐窗口左上角，再校准文字基线、图标偏移和点击热区。截图只在当前浏览器内存中使用，不写入仓库。</p>
+      <p id="calibration-status-message" role="status">正在加载候选界面帧…</p>
+      <p class="calibration-note">当前基准：2003 原始 1.76 国服金币版。校准原则：先对齐窗口左上角，再校准文字基线、图标偏移和点击热区。截图只在当前浏览器内存中使用，不写入仓库。</p>
     </aside>
   </section>
   <footer><a href="/play.html">返回联机页面</a> · <a href="/">返回地图校验</a></footer>
