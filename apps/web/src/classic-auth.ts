@@ -1,8 +1,9 @@
-import {applyUiFrame,loadUiLibrary,uiFrame,uiUrl,type Frame} from './classic-ui';
+import {applyNationalUiFrame,applyUiFrame,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
 
 export type SelectCharacter={name:string;job:number;level:number;sex:number;hair?:number};
 type Library=Awaited<ReturnType<typeof loadUiLibrary>>;
 type ButtonSpec={library:string;index:number;hover:number;pressed:number;x:number;y:number};
+type NationalLibrary=Awaited<ReturnType<typeof loadNationalUiLibrary>>;
 
 const portraits:Record<string,number>={'0-0':20,'1-0':40,'2-0':60,'0-1':300,'1-1':320,'2-1':340};
 const login={
@@ -43,6 +44,8 @@ const created={
 
 export class ClassicAuth {
  private libraries=new Map<string,Library>();
+ private nationalLibraries=new Map<string,NationalLibrary>();
+ private nationalReady=false;
  private characters:SelectCharacter[]=[];
  private selected=0;
  private job=0;
@@ -117,10 +120,42 @@ export class ClassicAuth {
   }
   for(const spec of created.sexes){
    const button=this.root.querySelector<HTMLButtonElement>(`[data-auth-sex="${spec.sex}"]`)!;
-   this.skinToggle(button, spec, ()=>{this.sex=spec.sex;this.sexInput.value=String(spec.sex);this.renderCreate();});
+  this.skinToggle(button, spec, ()=>{this.sex=spec.sex;this.sexInput.value=String(spec.sex);this.renderCreate();});
+  }
+  try{
+   const [prguse,chrsel]=await Promise.all([loadNationalUiLibrary('prguse'),loadNationalUiLibrary('chrsel')]);
+   this.nationalLibraries.set('prguse',prguse);this.nationalLibraries.set('chrsel',chrsel);this.nationalReady=true;
+   this.mountNationalAuth();
+  }catch{
+   this.nationalReady=false;
   }
   this.renderCreate();
   this.showLogin();
+ }
+
+ private mountNationalAuth(){
+  const prguse=this.nationalLibraries.get('prguse'),chrsel=this.nationalLibraries.get('chrsel');
+  if(!prguse||!chrsel)return;
+  this.root.classList.add('national-auth');
+  clipBackdrop(this.loginScene,'chrsel',uiFrame(chrsel,22),'/ui-national');
+  const dialog=this.root.querySelector<HTMLElement>('[data-auth-login-dialog]')!;
+  place(dialog,252,173);applyNationalUiFrame(dialog,'prguse',uiFrame(prguse,60));
+  for(const selector of ['[data-auth-title-label]','[data-auth-account-label]','[data-auth-pass-label]']){
+   const element=this.root.querySelector<HTMLElement>(selector);if(element)element.hidden=true;
+  }
+  const account=this.root.querySelector<HTMLElement>('#account')!,password=this.root.querySelector<HTMLElement>('#password')!;
+  place(account,95,82,140,20);place(password,95,111,140,20);
+  const loginButton=this.root.querySelector<HTMLButtonElement>('#auth-login-ok')!,registerButton=this.root.querySelector<HTMLButtonElement>('#register')!;
+  clearSkin(loginButton);clearSkin(registerButton);place(loginButton,168,159,76,39);place(registerButton,20,204,104,39);
+
+  clipBackdrop(this.selectScene,'prguse',uiFrame(prguse,65),'/ui-national');
+  const selectTitle=this.root.querySelector<HTMLElement>('[data-auth-select-title]');if(selectTitle)selectTitle.hidden=true;
+  for(const selector of ['[data-auth-start]','[data-auth-new]','[data-auth-exit]']){
+   const button=this.root.querySelector<HTMLButtonElement>(selector);if(button)clearSkin(button);
+  }
+  place(this.root.querySelector<HTMLButtonElement>('[data-auth-start]')!,348,450,110,34);
+  place(this.root.querySelector<HTMLButtonElement>('[data-auth-new]')!,335,483,130,34);
+  place(this.root.querySelector<HTMLButtonElement>('[data-auth-exit]')!,355,535,90,32);
  }
 
  bind(handlers:{start:(name:string)=>void;create:()=>void;exit:()=>void}){
@@ -171,9 +206,14 @@ export class ClassicAuth {
    const button=document.createElement('button');
    button.type='button';
    button.className='auth-slot';
-   place(button, spec.x, spec.y+index*spec.step);
-   const filled=character?uiFrame(title, spec.filledIndex+character.job+(index===this.selected?5:0)):uiFrame(prguse, spec.index);
-   applyUiFrame(button, character?'Title':'Prguse', filled);
+   if(this.nationalReady){
+    if(index>1){button.hidden=true;this.charactersElement.append(button);continue;}
+    const x=index===0?44:618;place(button,x,448,184,128);button.style.backgroundImage='none';
+   }else{
+    place(button, spec.x, spec.y+index*spec.step);
+    const filled=character?uiFrame(title, spec.filledIndex+character.job+(index===this.selected?5:0)):uiFrame(prguse, spec.index);
+    applyUiFrame(button, character?'Title':'Prguse', filled);
+   }
    if(character){
     const name=document.createElement('span');name.className='auth-slot-name';name.textContent=character.name;
     const meta=document.createElement('span');meta.className='auth-slot-meta';meta.textContent=`${character.level}  ${['战士','法师','道士'][character.job]??''}`;
@@ -190,7 +230,9 @@ export class ClassicAuth {
   this.portrait.hidden=false;
   this.portrait.src=uiUrl('ChrSel', frame);
   this.portrait.alt=selected.name;
-  place(this.portrait, select.portrait.x+frame.offsetX, select.portrait.y+frame.offsetY, frame.width, frame.height);
+  const portraitX=this.nationalReady?(this.selected===0?150:500):select.portrait.x;
+  const portraitY=this.nationalReady?95:select.portrait.y;
+  place(this.portrait, portraitX+frame.offsetX, portraitY+frame.offsetY, frame.width, frame.height);
  }
 
  private renderCreate(){
@@ -253,10 +295,12 @@ function placeLabel(root:HTMLElement,selector:string,library:string,frame:Frame,
  applyUiFrame(element, library, frame);
 }
 
-function clipBackdrop(element:HTMLElement,name:string,frame:Frame){
+function clipBackdrop(element:HTMLElement,name:string,frame:Frame,base='/ui'){
  element.style.width='800px';
  element.style.height='600px';
- element.style.backgroundImage=`url(${uiUrl(name, frame)})`;
+ element.style.backgroundImage=`url(${base==='/ui'?uiUrl(name,frame):nationalUiUrl(name,frame)})`;
  element.style.backgroundRepeat='no-repeat';
  element.style.backgroundPosition='0 0';
 }
+
+function clearSkin(element:HTMLElement){element.style.backgroundImage='none';element.style.backgroundColor='transparent';}

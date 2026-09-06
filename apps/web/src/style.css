@@ -62,7 +62,6 @@ body.classic-cursors.in-world .item-cell{cursor:var(--cursor-default)}
 .auth-slot-name{top:9px}
 .auth-slot-meta{top:28px}
 [data-auth-portrait],[data-auth-create-portrait]{position:absolute;image-rendering:pixelated;pointer-events:none;max-width:none}
-[data-auth-title-label],[data-auth-account-label],[data-auth-pass-label],[data-auth-select-title],[data-auth-create-title]{position:absolute;background-repeat:no-repeat;image-rendering:pixelated}
-
+[data-auth-title-label],[data-auth-account-label],[data-auth-pass-label],[data-auth-select-title],[data-auth-create-title]{position:absolute;background-repeat:no-repeat;image-rendering:pixelated}#auth-overlay.national-auth .auth-slot-name{left:68px;top:39px;color:#e8d6a0}#auth-overlay.national-auth .auth-slot-meta{left:68px;top:60px;color:#c9b98c}
 
 
