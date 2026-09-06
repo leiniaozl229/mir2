@@ -6,6 +6,7 @@ type ButtonSpec={library:string;index:number;hover:number;pressed:number;x:numbe
 type NationalLibrary=Awaited<ReturnType<typeof loadNationalUiLibrary>>;
 
 const portraits:Record<string,number>={'0-0':20,'1-0':40,'2-0':60,'0-1':300,'1-1':320,'2-1':340};
+const nationalPortraits:Record<string,number>={'0-0':80,'1-0':40,'2-0':60,'0-1':160,'1-1':220,'2-1':200};
 const login={
  dialog:{library:'Prguse',index:1084,x:236,y:190},
  title:{library:'Title',index:30,x:113,y:12},
@@ -229,8 +230,16 @@ export class ClassicAuth {
    }
    if(character){
     const name=document.createElement('span');name.className='auth-slot-name';name.textContent=character.name;
-    const meta=document.createElement('span');meta.className='auth-slot-meta';meta.textContent=`${character.level}  ${['战士','法师','道士'][character.job]??''}`;
-    button.append(name, meta);
+    const meta=document.createElement('span');meta.className='auth-slot-meta';
+    const job=document.createElement('span');job.className='auth-slot-job';
+    if(this.nationalReady){
+     meta.textContent=String(character.level);
+     job.textContent=['战士','法师','道士'][character.job]??'';
+     button.append(name, meta, job);
+    }else{
+     meta.textContent=`${character.level}  ${['战士','法师','道士'][character.job]??''}`;
+     button.append(name, meta);
+    }
     button.onclick=()=>{this.selected=index;this.renderSlots();};
     button.ondblclick=()=>this.onStart(character.name);
    }
@@ -238,14 +247,25 @@ export class ClassicAuth {
   }
   const selected=this.characters[this.selected];
   if(!selected){this.portrait.hidden=true;return;}
+  this.portrait.hidden=false;
+  this.portrait.alt=selected.name;
+  if(this.nationalReady){
+   const nationalChr=this.nationalLibraries.get('chrsel');
+   if(nationalChr){
+    const frame=uiFrame(nationalChr, nationalPortraits[`${selected.job}-${selected.sex}`]??80);
+    this.portrait.src=nationalUiUrl('chrsel', frame);
+    const height=Math.min(frame.height, 318);
+    const width=Math.round(frame.width*height/frame.height);
+    const portraitX=this.selected===0?40:500;
+    place(this.portrait, portraitX, 112, width, height);
+    this.portrait.style.objectFit='contain';
+    return;
+   }
+  }
   const index=portraits[`${selected.job}-${selected.sex}`]??20;
   const frame=uiFrame(chrSel, index);
-  this.portrait.hidden=false;
   this.portrait.src=uiUrl('ChrSel', frame);
-  this.portrait.alt=selected.name;
-  const portraitX=this.nationalReady?(this.selected===0?150:500):select.portrait.x;
-  const portraitY=this.nationalReady?95:select.portrait.y;
-  place(this.portrait, portraitX+frame.offsetX, portraitY+frame.offsetY, frame.width, frame.height);
+  place(this.portrait, select.portrait.x+frame.offsetX, select.portrait.y+frame.offsetY, frame.width, frame.height);
  }
 
  private renderCreate(){

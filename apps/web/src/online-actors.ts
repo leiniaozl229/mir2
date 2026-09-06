@@ -46,7 +46,7 @@ export class OnlineActor {
  update(entity:Entity){
   const toX=entity.x*48,toY=entity.y*32,moving=(entity.action==='walking'||entity.action==='running')&&(this.entity.x!==entity.x||this.entity.y!==entity.y);
   if(moving)this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start:performance.now(),duration:entity.action==='running'?400:600};else{this.movement=undefined;this.container.position.set(toX,toY);}
-  this.entity=entity;this.container.zIndex=entity.y*700+entity.x+.5;this.label.text=entity.name;this.label.style.fill=nameFill(entity.nameColor);this.applyCursor();this.drawHealth();
+  this.entity=entity;this.container.zIndex=entity.y*10000+entity.x+.5;this.label.text=entity.name;this.label.style.fill=nameFill(entity.nameColor);this.applyCursor();this.drawHealth();
   const status=(entity.status??0)>>>0;
   this.container.alpha=(status&0x00800000)!==0?.38:1;
   this.body.tint=(status&0x00000001)!==0?0x8f8f8f:(status&0xC0000000)!==0?0x8aa86e:0xffffff;

@@ -1,6 +1,6 @@
 import type {CharacterAttributes} from './character-panel';
 import type {MagicSkill} from './skills';
-import {applyNationalUiFrame,applyUiFrame,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,type Frame} from './classic-ui';
+import {applyNationalUiFrame,applyUiFrame,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
 
 type ResourceState={hp:number;mp:number;maxHp:number;maxMp:number;experience:number;maxExperience:number};
 type UiButton={library:string;index:number;hover:number;pressed:number;x:number;y:number;window:string};
@@ -99,17 +99,32 @@ export class ClassicHud {
  private mountNationalHud(root:HTMLElement){
   const prguse=this.nationalLibraries.get('prguse');
   if(!prguse)return;
-  root.classList.add('national-ui');
+  root.classList.add('national-ui');document.body.classList.add('national-play');
   const main=root.querySelector<HTMLElement>('[data-hud-main]')!;
   applyNationalUiFrame(main,'prguse',uiFrame(prguse,1));main.style.left='0';main.style.top='349px';
-  for(const selector of ['[data-hud-minimap-frame]','[data-hud-skillbar]','[data-hud-chatbar]']){
+  void punchNationalHudChat(main,prguse);
+  for(const selector of ['[data-hud-minimap-frame]','[data-hud-skillbar]','[data-hud-chatbar]','[data-hud-exp-track]','[data-hud-weight]']){
    const element=root.querySelector<HTMLElement>(selector);if(element)element.style.backgroundImage='none';
   }
+  const orb=uiFrame(prguse,4);
+  this.hpFill.replaceChildren(orbImage(orb,0,true));
+  this.mpFill.replaceChildren(orbImage(orb,-46,true));
+  const mini=root.querySelector<HTMLElement>('[data-hud-minimap-frame]');
+  if(mini){mini.style.left='688px';mini.style.top='400px';mini.style.width='100px';mini.style.height='108px';}
   const windowButtons=Array.from(root.querySelectorAll<HTMLButtonElement>('.hud-window-buttons button'));
-  const positions=[[686,42],[718,42],[748,3],[684,3],[750,42]];
+  const positions=[[640,400],[678,390],[718,370],[0,0],[760,360]];
   windowButtons.forEach((button,index)=>{
    const position=positions[index]??positions[0];
-   button.style.backgroundImage='none';button.style.left=`${position[0]}px`;button.style.top=`${position[1]}px`;button.style.width='34px';button.style.height='34px';
+   button.style.backgroundImage='none';button.style.width='32px';button.style.height='32px';
+   if(index===3){button.hidden=true;return;}
+   button.hidden=false;button.style.left=`${position[0]}px`;button.style.top=`${position[1]}px`;
+   if(index===4){
+    button.setAttribute('aria-label','声音');
+    button.addEventListener('click',event=>{
+     event.preventDefault();event.stopImmediatePropagation();
+     document.querySelector<HTMLButtonElement>('#audio-toggle')?.click();
+    },true);
+   }
   });
  }
 
@@ -151,8 +166,8 @@ export class ClassicHud {
  private skinNationalWindow(element:HTMLElement,kind:string){
   const prguse=this.nationalLibraries.get('prguse');
   const specs:Record<string,{index:number;x:number;y:number;closeX:number;closeY:number}>={
-   character:{index:370,x:284,y:138,closeX:207,closeY:2},
-   inventory:{index:3,x:232,y:165,closeX:308,closeY:155},
+   character:{index:380,x:272,y:80,closeX:232,closeY:2},
+   inventory:{index:3,x:232,y:165,closeX:308,closeY:204},
    npc:{index:402,x:192,y:126,closeX:390,closeY:2},
    shop:{index:402,x:192,y:126,closeX:390,closeY:2},
    repair:{index:402,x:192,y:126,closeX:390,closeY:2},
@@ -162,6 +177,16 @@ export class ClassicHud {
   if(!prguse||!spec)return false;
   element.classList.add('national-window');element.classList.toggle('national-panel',['shop','repair','storage'].includes(kind));element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;element.style.right='auto';element.style.bottom='auto';
   applyNationalUiFrame(element,'prguse',uiFrame(prguse,spec.index));
+  if(kind==='character'){
+   const paper=element.querySelector<HTMLElement>('[data-character-page="paperdoll"]');
+   if(paper){applyNationalUiFrame(paper,'prguse',uiFrame(prguse,378));paper.style.left='44px';paper.style.top='72px';}
+   const status=element.querySelector<HTMLElement>('[data-character-page="status"]');
+   if(status){applyNationalUiFrame(status,'prguse',uiFrame(prguse,370));status.style.left='12px';status.style.top='52px';}
+   const labels=['装备','属性','状态','技能'];
+   element.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach((button,index)=>{
+    button.style.left=`${8+index*60}px`;button.style.top='28px';button.style.width='56px';button.style.height='18px';button.textContent=labels[index]??'';
+   });
+  }
   const close=element.querySelector<HTMLButtonElement>('#classic-window-close, [data-window-close], #close-dialogue, .classic-window-close');
   if(close){clearSkin(close);close.style.left=`${spec.closeX}px`;close.style.top=`${spec.closeY}px`;close.style.width='22px';close.style.height='22px';}
   return true;
@@ -198,7 +223,7 @@ export class ClassicHud {
   this.gold.textContent=this.attributes?String(this.attributes.gold):'0';
   this.coords.textContent=`${this.x}:${this.y}`;
   const prguse=this.libraries.get('Prguse');
-  if(prguse&&this.attributes){
+  if(prguse&&this.attributes&&!this.nationalReady){
    const icon=uiFrame(prguse, 100+(this.attributes.job===1?1:this.attributes.job===2?2:0));
    applyUiFrame(this.classIcon, 'Prguse', icon);
    this.classIcon.hidden=false;
@@ -211,13 +236,14 @@ export class ClassicHud {
   const {hp,mp,maxHp,maxMp,experience,maxExperience}=this.resources;
   this.hpText.textContent=`${Math.max(0,hp)}/${Math.max(0,maxHp)}`;
   this.mpText.textContent=`${Math.max(0,mp)}/${Math.max(0,maxMp)}`;
-  this.hpFill.style.height=`${ratio(hp,maxHp)*80}px`;
-  this.mpFill.style.height=`${ratio(mp,maxMp)*80}px`;
-  this.expFill.style.width=`${ratio(experience,maxExperience)*784}px`;
+  const orbHeight=this.nationalReady?90:80,barWidth=this.nationalReady?75:784,weightWidth=this.nationalReady?75:76;
+  this.hpFill.style.height=`${ratio(hp,maxHp)*orbHeight}px`;
+  this.mpFill.style.height=`${ratio(mp,maxMp)*orbHeight}px`;
+  this.expFill.style.width=`${ratio(experience,maxExperience)*barWidth}px`;
   this.expText.textContent=`${Math.max(0,experience)}/${Math.max(0,maxExperience)}`;
   const weight=this.attributes?ratio(this.attributes.weight,this.attributes.maxWeight):0;
   const weightFill=document.querySelector<HTMLElement>('[data-hud-weight-fill]');
-  if(weightFill)weightFill.style.width=`${weight*76}px`;
+  if(weightFill)weightFill.style.width=`${weight*weightWidth}px`;
  }
  private renderStatus(){
   const labels:[[number,string],...Array<[number,string]>]=[
@@ -226,7 +252,7 @@ export class ClassicHud {
    [0x00400000,'神圣战甲'],[0x00200000,'幽灵盾'],[0x00100000,'魔法盾'],[0x00000001,'石化'],[0x00000002,'开天眼']
   ];
   const active=labels.filter(([bit])=>(this.statusMask&bit)!==0).map(([,label])=>label);
-  const hunger=['正常','微饿','饥饿','很饿','饥荒'][this.hunger]??'正常';
+  const hunger=['','微饿','饥饿','很饿','饥荒'][this.hunger]??'';
   this.statusText.textContent=[...active,hunger].filter(Boolean).join(' ');
   this.statusText.classList.toggle('hud-status-alert',active.length>0||this.hunger>=3);
  }
@@ -236,7 +262,7 @@ export class ClassicHud {
   for(let index=0;index<8;index++){
    const skill=this.skills[index],button=document.createElement('button');
    button.type='button';button.className='hud-slot';button.style.left=`${15+index*25}px`;button.style.top='3px';
-   if(this.nationalReady){button.style.left=`${8+index*34}px`;button.style.width='30px';button.style.height='30px';}
+   if(this.nationalReady){button.style.left=`${index*31}px`;button.style.top='1px';button.style.width='26px';button.style.height='26px';}
    button.title=skill?`${skill.name} · ${skill.level}级`:`F${index+1}`;
    if(index===this.selected)button.classList.add('selected');
    if(skill&&(nationalIcons||icons)){
@@ -252,8 +278,25 @@ export class ClassicHud {
  }
 }
 
-function orbImage(frame:Frame,offsetX:number){
- const image=new Image();image.src=uiUrl('Prguse', frame);image.alt='';image.style.left=`${offsetX}px`;return image;
+function orbImage(frame:Frame,offsetX:number,national=false){
+ const image=new Image();image.src=national?nationalUiUrl('prguse', frame):uiUrl('Prguse', frame);image.alt='';image.style.left=`${offsetX}px`;return image;
+}
+async function punchNationalHudChat(main:HTMLElement,prguse:NationalLibrary){
+ const frame=uiFrame(prguse,1),image=new Image();
+ image.src=nationalUiUrl('prguse', frame);
+ await image.decode().catch(()=>undefined);
+ if(!image.naturalWidth)return;
+ const canvas=document.createElement('canvas');canvas.width=frame.width;canvas.height=frame.height;
+ const context=canvas.getContext('2d');if(!context)return;
+ context.drawImage(image,0,0);
+ const pixels=context.getImageData(0,0,canvas.width,canvas.height),data=pixels.data;
+ const left=207,right=Math.min(canvas.width-1,594),top=120,bottom=Math.min(canvas.height-1,243);
+ for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
+  const i=(y*canvas.width+x)*4;
+  if(data[i]>248&&data[i+1]>248&&data[i+2]>248&&data[i+3]>200){data[i]=26;data[i+1]=22;data[i+2]=18;data[i+3]=255;}
+ }
+ context.putImageData(pixels,0,0);
+ main.style.backgroundImage=`url(${canvas.toDataURL('image/png')})`;
 }
 function clearSkin(element:HTMLElement){element.style.backgroundImage='none';element.style.backgroundColor='transparent';}
 function ratio(value:number,max:number){return max>0?Math.max(0,Math.min(1,value/max)):0;}

@@ -177,11 +177,17 @@ const classicWindowSources=[
 for(const source of classicWindowSources){source.node.hidden=source.id!=='chat';if(source.id!=='chat')classicWindowBody.append(source.node);}
 document.querySelector<HTMLElement>('[data-hud-chat]')!.append(document.querySelector<HTMLElement>('.chat-panel')!);
 function setCharacterPage(page:'paperdoll'|'status'|'state'|'skills'){
+ hideClassicWindows('character');
  characterWindow.hidden=false;classicHud.skinWindow(characterWindow,'character');
  characterWindow.querySelectorAll<HTMLElement>('[data-character-page]').forEach(node=>node.hidden=node.dataset.characterPage!==page);
  document.querySelector<HTMLElement>('#equipment-items')!.hidden=page!=='paperdoll';
  document.querySelector<HTMLElement>('#paperdoll-actor')!.hidden=page!=='paperdoll';
  characterWindow.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach(button=>button.classList.toggle('active',button.dataset.characterTab===page));
+}
+function hideClassicWindows(except:'character'|'inventory'|'classic'|undefined=undefined){
+ if(except!=='character')characterWindow.hidden=true;
+ if(except!=='inventory')inventoryWindow.hidden=true;
+ if(except!=='classic')classicWindow.hidden=true;
 }
 function toggleClassicWindow(id:string){
  if(id==='character'||id==='equipment'){
@@ -189,11 +195,18 @@ function toggleClassicWindow(id:string){
   setCharacterPage('paperdoll');return;
  }
  if(id==='skills'){setCharacterPage('skills');return;}
- if(id==='inventory'){inventoryWindow.hidden=!inventoryWindow.hidden;if(!inventoryWindow.hidden)classicHud.skinWindow(inventoryWindow,'inventory');return;}
+ if(id==='inventory'){
+  const open=inventoryWindow.hidden;
+  if(open)hideClassicWindows('inventory');
+  inventoryWindow.hidden=!open;
+  if(open)classicHud.skinWindow(inventoryWindow,'inventory');
+  return;
+ }
  showClassicWindow(id);
 }
 function showClassicWindow(id:string){
  const source=classicWindowSources.find(value=>value.id===id);if(!source)return;
+ hideClassicWindows('classic');
  for(const value of classicWindowSources)if(value.id!=='chat')value.node.hidden=value.node!==source.node;
  classicWindowTitle.textContent=source.label;
  if(id==='chat'){classicWindow.hidden=true;return;}
@@ -254,7 +267,7 @@ function scheduleCombat(){if(combatTimer===undefined)combatTimer=window.setTimeo
 function continueCombat(){
  if(combatTarget===undefined)return;
  const target=entities.get(combatTarget),actor=self===undefined?undefined:entities.get(self);
- if(!target||target.dead||!actor||actor.dead||socket?.readyState!==WebSocket.OPEN){stopCombat();return;}
+ if(!target||target.dead||(target.hp!==undefined&&target.hp<=0)||!actor||actor.dead||socket?.readyState!==WebSocket.OPEN){stopCombat();return;}
  const dx=Math.sign(target.x-actor.x),dy=Math.sign(target.y-actor.y),distance=Math.max(Math.abs(target.x-actor.x),Math.abs(target.y-actor.y));
  if(distance>1){const id=target.id;combatTarget=undefined;pursuitTarget=id;interact(target);return;}
  if(distance!==1){stopCombat();return;}
@@ -396,13 +409,13 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='npcDialogue'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){
    if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);
    dialogueNpcId=String(message.npcName).includes('国王')?message.npcId:undefined;renderGuild();
-   shop.clear();storage.clear();repair.clear();dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueTitle.textContent=message.npcName;dialogueText.textContent=message.text;dialogueOptions.replaceChildren();
+   shop.clear();storage.clear();repair.clear();hideClassicWindows();dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueTitle.textContent=message.npcName;dialogueText.textContent=message.text;dialogueOptions.replaceChildren();
    for(const option of message.options){if(option.input){const form=document.createElement('form');form.className='dialogue-input';const input=document.createElement('input');input.type='text';input.maxLength=80;input.placeholder=option.text;input.required=true;const button=document.createElement('button');button.type='submit';button.textContent=option.text;form.onsubmit=event=>{event.preventDefault();active.send(JSON.stringify({type:'dialogueSelect',npcId:message.npcId,command:option.command,input:input.value}));};form.append(input,button);dialogueOptions.append(form);}else{const button=document.createElement('button');button.type='button';button.textContent=option.text;button.onclick=()=>active.send(JSON.stringify({type:'dialogueSelect',npcId:message.npcId,command:option.command}));dialogueOptions.append(button);}}
   }
-  else if(message.type==='dialogueMessage'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueText.textContent=message.text;}
+  else if(message.type==='dialogueMessage'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);hideClassicWindows();dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueText.textContent=message.text;}
   else if(message.type==='npcDialogueClosed'){dialogueElement.hidden=true;dialogueNpcId=undefined;renderGuild();shop.clear();storage.clear();repair.clear();}
-  else if(message.type==='shop'){dialogueElement.hidden=true;storage.clear();repair.clear();shop.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent=`商店已打开 · ${message.items.length} 种商品`;}
-  else if(message.type==='shopSell'){dialogueElement.hidden=true;storage.clear();repair.clear();shop.openSell(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent='请选择要出售的背包物品';}
+  else if(message.type==='shop'){dialogueElement.hidden=true;storage.clear();repair.clear();hideClassicWindows();shop.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent=`商店已打开 · ${message.items.length} 种商品`;}
+  else if(message.type==='shopSell'){dialogueElement.hidden=true;storage.clear();repair.clear();hideClassicWindows();shop.openSell(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent='请选择要出售的背包物品';}
   else if(message.type==='shopDetails'){shop.showDetails(message.npcId,message.items);connection.textContent=`已载入 ${message.items.length} 件具体商品`;}
   else if(message.type==='shopPurchaseResult'){
    shop.resolve(message.name,message.makeIndex,message.accepted);if(message.accepted&&message.gold!==null)characterPanel.currency({gold:message.gold});
@@ -414,11 +427,11 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
    shop.resolveSale(message.item,message.accepted);if(message.accepted){inventory.remove(message.item.makeIndex);if(message.gold!==null)characterPanel.currency({gold:message.gold});}
    connection.textContent=message.accepted?`已卖出 ${message.item.name} · 当前 ${message.gold} 金币`:`出售 ${message.item.name} 失败`;
   }
-  else if(message.type==='repairItems'){dialogueElement.hidden=true;shop.clear();storage.clear();repair.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#repair-panel')!,'repair');connection.textContent='请选择要修理的背包物品';}
+  else if(message.type==='repairItems'){dialogueElement.hidden=true;shop.clear();storage.clear();hideClassicWindows();repair.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#repair-panel')!,'repair');connection.textContent='请选择要修理的背包物品';}
   else if(message.type==='repairQuote'){repair.showQuote(message.npcId,message.item,message.price);connection.textContent=message.price>=0?`${message.item.name} 修理需要 ${message.price} 金币`:`${message.item.name} 无需或无法修理`;}
   else if(message.type==='repairResult'){repair.resolve(message.item,message.accepted);if(message.accepted){inventory.update(message.item);if(message.gold!==null)characterPanel.currency({gold:message.gold});}connection.textContent=message.accepted?`${message.item.name} 修理完成 · 当前 ${message.gold} 金币`:`${message.item.name} 修理失败`;}
-  else if(message.type==='storageDeposit'){dialogueElement.hidden=true;shop.clear();repair.clear();storage.openDeposit(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent='请选择要存入仓库的物品';}
-  else if(message.type==='storageItems'){dialogueElement.hidden=true;shop.clear();repair.clear();storage.openItems(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent=`仓库共 ${message.items.length} 件物品`;}
+  else if(message.type==='storageDeposit'){dialogueElement.hidden=true;shop.clear();repair.clear();hideClassicWindows();storage.openDeposit(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent='请选择要存入仓库的物品';}
+  else if(message.type==='storageItems'){dialogueElement.hidden=true;shop.clear();repair.clear();hideClassicWindows();storage.openItems(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent=`仓库共 ${message.items.length} 件物品`;}
   else if(message.type==='storageResult'){
    storage.resolve(message.item,message.accepted);if(message.accepted&&message.kind==='store')inventory.remove(message.item.makeIndex);
    const reasons:Record<number,string>={1:'服务端拒绝操作',2:'仓库已满',3:'背包空间或负重不足'};connection.textContent=message.accepted?(message.kind==='store'?`已存入 ${message.item.name}`:`已取回 ${message.item.name}`):`仓库操作失败 · ${reasons[message.reason]??`原因 ${message.reason}`}`;
@@ -487,9 +500,11 @@ view.app.canvas.addEventListener('contextmenu',event=>event.preventDefault());
 view.app.canvas.addEventListener('pointerdown',event=>{
  if(performance.now()<ignoreCanvasPointerUntil)return;
  const entity=self===undefined?undefined:entities.get(self);if(!entity||entity.dead||pending||socket?.readyState!==WebSocket.OPEN)return;
- const rect=view.app.canvas.getBoundingClientRect();const dx=Math.sign(Math.floor(((event.clientX-rect.left)*800/rect.width-400)/48)),dy=Math.sign(Math.floor(((event.clientY-rect.top)*600/rect.height-300)/32));
+ const rect=view.app.canvas.getBoundingClientRect(),stageX=(event.clientX-rect.left)*800/rect.width,stageY=(event.clientY-rect.top)*600/rect.height;
+ const dx=Math.sign(Math.floor((stageX-400)/48)),dy=Math.sign(Math.floor((stageY-300)/32));
+ const clickedX=view.center.x+Math.floor((stageX-400)/48),clickedY=view.center.y+Math.floor((stageY-300)/32);
+ const target=[...entities.values()].find(candidate=>!candidate.self&&candidate.x===clickedX&&candidate.y===clickedY);
  if(dx===0&&dy===0){const item=groundItems.at(entity.x,entity.y);if(item){socket.send(JSON.stringify({type:'pickup'}));connection.textContent=`正在拾取 ${item.name}…`;}return;}
- const target=[...entities.values()].find(candidate=>!candidate.self&&(candidate.feature&255)!==0&&(candidate.feature&255)!==50&&candidate.x===entity.x+dx&&candidate.y===entity.y+dy);
  if(target){interact(target);return;}
  stopCombat();doorRetry=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;sendMovement(entity,dx,dy,event.shiftKey||event.button===2);
 });

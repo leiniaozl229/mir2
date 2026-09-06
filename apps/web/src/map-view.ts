@@ -8,7 +8,7 @@ type Library={frames:Record<string,Frame>;empty:number[];missing:number[]};
 
 export async function createMapView(viewport:HTMLElement,status:HTMLOutputElement){
 const app=new Application();
-await app.init({width:800,height:600,background:0x080a08,antialias:false,preference:'webgl'});
+await app.init({width:800,height:600,background:0x080a08,antialias:false,preference:'webgl',roundPixels:true});
 viewport.appendChild(app.canvas);
 const frameBudget=new FrameBudget();
 frameBudget.attach(app.ticker);
@@ -55,7 +55,7 @@ async function render(){
    if(!frame){if(!library.empty.includes(index))unresolved++;continue;}
    const animation=layer===2?data.getUint8(offset+8):0;
    const floorTile=layer===0||(!animation&&((frame.width===48&&frame.height===32)||(frame.width===96&&frame.height===64)));
-   const sprite=new Sprite();sprite.position.set(px,floorTile?py:py+32-frame.height);sprite.zIndex=y*activeWorld.width+x;
+   const sprite=new Sprite();sprite.position.set(px,floorTile?py:py+32-frame.height);sprite.zIndex=y*10000+x;
    if(animation&128){sprite.blendMode='add';if(index>=2723&&index<=2732){sprite.x+=frame.offsetX;sprite.y+=frame.offsetY;}}
    (floorTile?floor:objects).addChild(sprite);
    const frameJobs:Promise<Texture>[]=[];

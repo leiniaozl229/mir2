@@ -18,7 +18,7 @@ export class GroundItems {
  remove(id:number){this.items.delete(id);this.visuals.get(id)?.destroy({children:true});this.visuals.delete(id);this.renderList();}
  add(item:GroundItem){
   this.remove(item.id);this.items.set(item.id,item);
-  const visual=new Container();visual.position.set(item.x*48,item.y*32);visual.zIndex=item.y*700+item.x+.25;visual.eventMode='static';visual.cursor='url("/ui/Cursors/Cursor_Default.CUR") 0 0, pointer';
+  const visual=new Container();visual.position.set(item.x*48,item.y*32);visual.zIndex=item.y*10000+item.x+.25;visual.eventMode='static';visual.cursor='url("/ui/Cursors/Cursor_Default.CUR") 0 0, pointer';
   const sprite=new Sprite(Texture.EMPTY),label=new Text({text:item.name,style:{fontFamily:'SimSun, Songti SC, serif',fontSize:12,fill:0xffe085,stroke:{color:0x000000,width:3}}});
   label.anchor.set(.5,1);label.position.set(24,2);visual.addChild(sprite,label);this.layer.addChild(visual);this.visuals.set(item.id,visual);
   visual.on('pointertap',event=>{event.stopPropagation();this.pickup(item);});

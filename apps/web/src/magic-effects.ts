@@ -105,7 +105,7 @@ export class MagicEffects {
   requestAnimationFrame(tick);
  }
 
- private makeSprite(at:EntityPosition){const sprite=new Sprite();sprite.blendMode='add';sprite.position.set(at.x*48,at.y*32);sprite.zIndex=at.y*700+at.x+4;this.sprites.add(sprite);this.depth.addChild(sprite);return sprite;}
+  private makeSprite(at:EntityPosition){const sprite=new Sprite();sprite.blendMode='add';sprite.position.set(at.x*48,at.y*32);sprite.zIndex=at.y*10000+at.x+4;this.sprites.add(sprite);this.depth.addChild(sprite);return sprite;}
  private remove(sprite:Sprite){this.sprites.delete(sprite);sprite.destroy();}
  private later(delay:number,action:()=>Promise<void>){const generation=this.generation;window.setTimeout(()=>{if(generation===this.generation)this.run(action());},delay);}
  private run(task:Promise<void>){void task.catch(()=>{});}
