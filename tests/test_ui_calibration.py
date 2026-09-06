@@ -26,9 +26,11 @@ class UiCalibrationTests(unittest.TestCase):
 
     def test_calibration_can_load_reference_without_writing_workspace_files(self):
         source = (ROOT / "apps/web/src/ui-calibration.ts").read_text()
+        markup = (ROOT / "apps/web/ui-calibration.html").read_text()
         self.assertIn("FileReader", source)
         self.assertIn("readAsDataURL", source)
-        self.assertIn("reference-opacity", (ROOT / "apps/web/ui-calibration.html").read_text())
+        self.assertIn("reference-opacity", markup)
+        self.assertEqual(markup.count('id="calibration-status-message"'), 1)
         self.assertNotIn("writeFile", source)
 
 

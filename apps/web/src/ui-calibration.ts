@@ -26,7 +26,7 @@ const sampleItems:InventoryItem[]=[
 
 const hud=new ClassicHud(document.querySelector<HTMLElement>('#classic-hud')!,()=>false);
 const auth=new ClassicAuth(document.querySelector<HTMLElement>('#auth-overlay')!);
-const characterPanel=new CharacterPanel(document.querySelector<HTMLElement>('#calibration-status')!,document.querySelector<HTMLElement>('#calibration-state')!);
+const characterPanel=new CharacterPanel(document.querySelector<HTMLElement>('#calibration-character-status')!,document.querySelector<HTMLElement>('#calibration-state')!);
 const paperdoll=new PaperdollView(document.querySelector<HTMLElement>('#calibration-paperdoll-actor')!);
 const equipment=new EquipmentView(document.querySelector<HTMLElement>('#calibration-equipment-items')!,()=>undefined);
 const inventory=new InventoryView(document.querySelector<HTMLElement>('#calibration-inventory-items')!,{drop:()=>undefined,equip:()=>undefined,use:()=>undefined});
@@ -60,7 +60,7 @@ function show(screenName:Screen){
   const window=document.querySelector<HTMLElement>('#npc-window')!;window.hidden=false;hud.skinWindow(window,'npc');
  }
  document.querySelectorAll<HTMLButtonElement>('[data-scene]').forEach(button=>button.classList.toggle('active',button.dataset.scene===screen));
- document.querySelector<HTMLElement>('#calibration-status')!.setAttribute('data-scene',screen);
+ document.querySelector<HTMLElement>('#calibration-status-message')!.setAttribute('data-scene',screen);
 }
 
 function wireControls(){
@@ -79,7 +79,7 @@ async function boot(){
  hud.replaceAttributes(sampleAttributes);hud.position('0',289,616);hud.replaceSkills([{key:1,level:3,currentTrain:82,magicId:1,name:'基本剑术',effectType:0,effect:0,spell:0,power:0,trainLevels:[0,20,50,100],maxTrain:[0,100,100,100],job:0,delay:0,defSpell:0,defPower:0,maxPower:0,defMaxPower:0,description:'基础剑术'}]);
  characterPanel.replace(sampleAttributes);equipment.replace([{slot:1,item:sampleItems[0]},{slot:0,item:sampleItems[1]}]);inventory.replace(sampleItems);paperdoll.setFeature(0);
  wireControls();show('login');
- document.querySelector<HTMLElement>('#calibration-status')!.textContent='原始界面帧已加载 · 当前场景：登录';
+ document.querySelector<HTMLElement>('#calibration-status-message')!.textContent='原始界面帧已加载 · 当前场景：登录';
 }
 
-void boot().catch(error=>{document.querySelector<HTMLElement>('#calibration-status')!.textContent=`界面素材加载失败：${error instanceof Error?error.message:String(error)}`;});
+void boot().catch(error=>{document.querySelector<HTMLElement>('#calibration-status-message')!.textContent=`界面素材加载失败：${error instanceof Error?error.message:String(error)}`;});
