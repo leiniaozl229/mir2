@@ -153,13 +153,16 @@ export class ClassicHud {
   const specs:Record<string,{index:number;x:number;y:number;closeX:number;closeY:number}>={
    character:{index:370,x:284,y:138,closeX:207,closeY:2},
    inventory:{index:3,x:232,y:165,closeX:308,closeY:155},
-   npc:{index:402,x:192,y:126,closeX:390,closeY:2}
+   npc:{index:402,x:192,y:126,closeX:390,closeY:2},
+   shop:{index:402,x:192,y:126,closeX:390,closeY:2},
+   repair:{index:402,x:192,y:126,closeX:390,closeY:2},
+   storage:{index:402,x:192,y:126,closeX:390,closeY:2}
   };
   const spec=specs[kind];
   if(!prguse||!spec)return false;
-  element.classList.add('national-window');element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;element.style.right='auto';element.style.bottom='auto';
+  element.classList.add('national-window');element.classList.toggle('national-panel',['shop','repair','storage'].includes(kind));element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;element.style.right='auto';element.style.bottom='auto';
   applyNationalUiFrame(element,'prguse',uiFrame(prguse,spec.index));
-  const close=element.querySelector<HTMLButtonElement>('#classic-window-close, [data-window-close], #close-dialogue');
+  const close=element.querySelector<HTMLButtonElement>('#classic-window-close, [data-window-close], #close-dialogue, .classic-window-close');
   if(close){clearSkin(close);close.style.left=`${spec.closeX}px`;close.style.top=`${spec.closeY}px`;close.style.width='22px';close.style.height='22px';}
   return true;
  }

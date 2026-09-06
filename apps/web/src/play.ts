@@ -401,8 +401,8 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   }
   else if(message.type==='dialogueMessage'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueText.textContent=message.text;}
   else if(message.type==='npcDialogueClosed'){dialogueElement.hidden=true;dialogueNpcId=undefined;renderGuild();shop.clear();storage.clear();repair.clear();}
-  else if(message.type==='shop'){dialogueElement.hidden=true;storage.clear();repair.clear();shop.open(message.npcId,message.items);connection.textContent=`商店已打开 · ${message.items.length} 种商品`;}
-  else if(message.type==='shopSell'){dialogueElement.hidden=true;storage.clear();repair.clear();shop.openSell(message.npcId,message.items);connection.textContent='请选择要出售的背包物品';}
+  else if(message.type==='shop'){dialogueElement.hidden=true;storage.clear();repair.clear();shop.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent=`商店已打开 · ${message.items.length} 种商品`;}
+  else if(message.type==='shopSell'){dialogueElement.hidden=true;storage.clear();repair.clear();shop.openSell(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent='请选择要出售的背包物品';}
   else if(message.type==='shopDetails'){shop.showDetails(message.npcId,message.items);connection.textContent=`已载入 ${message.items.length} 件具体商品`;}
   else if(message.type==='shopPurchaseResult'){
    shop.resolve(message.name,message.makeIndex,message.accepted);if(message.accepted&&message.gold!==null)characterPanel.currency({gold:message.gold});
@@ -414,11 +414,11 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
    shop.resolveSale(message.item,message.accepted);if(message.accepted){inventory.remove(message.item.makeIndex);if(message.gold!==null)characterPanel.currency({gold:message.gold});}
    connection.textContent=message.accepted?`已卖出 ${message.item.name} · 当前 ${message.gold} 金币`:`出售 ${message.item.name} 失败`;
   }
-  else if(message.type==='repairItems'){dialogueElement.hidden=true;shop.clear();storage.clear();repair.open(message.npcId,message.items);connection.textContent='请选择要修理的背包物品';}
+  else if(message.type==='repairItems'){dialogueElement.hidden=true;shop.clear();storage.clear();repair.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#repair-panel')!,'repair');connection.textContent='请选择要修理的背包物品';}
   else if(message.type==='repairQuote'){repair.showQuote(message.npcId,message.item,message.price);connection.textContent=message.price>=0?`${message.item.name} 修理需要 ${message.price} 金币`:`${message.item.name} 无需或无法修理`;}
   else if(message.type==='repairResult'){repair.resolve(message.item,message.accepted);if(message.accepted){inventory.update(message.item);if(message.gold!==null)characterPanel.currency({gold:message.gold});}connection.textContent=message.accepted?`${message.item.name} 修理完成 · 当前 ${message.gold} 金币`:`${message.item.name} 修理失败`;}
-  else if(message.type==='storageDeposit'){dialogueElement.hidden=true;shop.clear();repair.clear();storage.openDeposit(message.npcId,message.items);connection.textContent='请选择要存入仓库的物品';}
-  else if(message.type==='storageItems'){dialogueElement.hidden=true;shop.clear();repair.clear();storage.openItems(message.npcId,message.items);connection.textContent=`仓库共 ${message.items.length} 件物品`;}
+  else if(message.type==='storageDeposit'){dialogueElement.hidden=true;shop.clear();repair.clear();storage.openDeposit(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent='请选择要存入仓库的物品';}
+  else if(message.type==='storageItems'){dialogueElement.hidden=true;shop.clear();repair.clear();storage.openItems(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent=`仓库共 ${message.items.length} 件物品`;}
   else if(message.type==='storageResult'){
    storage.resolve(message.item,message.accepted);if(message.accepted&&message.kind==='store')inventory.remove(message.item.makeIndex);
    const reasons:Record<number,string>={1:'服务端拒绝操作',2:'仓库已满',3:'背包空间或负重不足'};connection.textContent=message.accepted?(message.kind==='store'?`已存入 ${message.item.name}`:`已取回 ${message.item.name}`):`仓库操作失败 · ${reasons[message.reason]??`原因 ${message.reason}`}`;

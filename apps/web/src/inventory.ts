@@ -25,7 +25,7 @@ export const EQUIPMENT_CELLS:{slot:number;name:string;x:number;y:number}[]=[
 ];
 
 let iconsPromise:Promise<Icons>|undefined;
-function loadIcons(){return iconsPromise??=fetch('/items/Items/library.json').then(async response=>{if(!response.ok)throw new Error('缺少物品素材');return response.json();});}
+export function loadFallbackItemIcons(){return iconsPromise??=fetch('/items/Items/library.json').then(async response=>{if(!response.ok)throw new Error('缺少物品素材');return response.json();});}
 
 export function bagCellPosition(index:number){
  const x=index%BAG_COLUMNS,y=Math.floor(index/BAG_COLUMNS)%5;
@@ -36,7 +36,7 @@ export class InventoryView {
  private items=new Map<number,InventoryItem>();private pending=new Set<number>();private known=false;private icons:Icons|undefined;private nationalIcons:Icons|undefined;
  constructor(private element:HTMLElement,private actions:InventoryActions){
   this.element.classList.add('classic-bag');
-  void loadIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});
+  void loadFallbackItemIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});
   void loadNationalUiLibrary('items').then(icons=>{this.nationalIcons=icons;this.render();}).catch(()=>{});
  }
  clear(){this.known=false;this.items.clear();this.pending.clear();this.render();}
@@ -81,7 +81,7 @@ export class EquipmentView {
  private slots=new Map<number,InventoryItem>();private pending=new Set<number>();private icons:Icons|undefined;private nationalIcons:Icons|undefined;
  constructor(private element:HTMLElement,private takeOff:(slot:number)=>void){
   this.element.classList.add('paperdoll');
-  void loadIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});this.render();
+  void loadFallbackItemIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});this.render();
   void loadNationalUiLibrary('items').then(icons=>{this.nationalIcons=icons;this.render();}).catch(()=>{});
  }
  clear(){this.slots.clear();this.pending.clear();this.render();}
