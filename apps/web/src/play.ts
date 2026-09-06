@@ -13,6 +13,7 @@ import {RepairView} from './repair';
 import {MagicEffects} from './magic-effects';
 import {ClassicHud} from './classic-hud';
 import {ClassicAuth,type SelectCharacter} from './classic-auth';
+import {ClassicStage} from './classic-stage';
 const connection=document.querySelector<HTMLElement>('#connection')!;
 const loginForm=document.querySelector<HTMLFormElement>('#login')!;
 const createCharacterForm=document.querySelector<HTMLFormElement>('#create-character')!;
@@ -142,6 +143,7 @@ const skillBar=new SkillBar(document.querySelector<HTMLElement>('#skills')!,{
 });
 const classicHud=new ClassicHud(document.querySelector<HTMLElement>('#classic-hud')!,index=>activateSkillSlot(index));
 const classicAuth=new ClassicAuth(document.querySelector<HTMLElement>('#auth-overlay')!);
+new ClassicStage(document.querySelector<HTMLElement>('#game-stage')!,document.querySelector<HTMLElement>('#viewport-shell')!);
 const view=await createMapView(document.querySelector<HTMLElement>('#viewport')!,document.querySelector<HTMLOutputElement>('#status')!);
 const magicEffects=new MagicEffects(view.depth,id=>entities.get(id));
 let ignoreCanvasPointerUntil=0;

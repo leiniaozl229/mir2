@@ -58,6 +58,7 @@ export class ClassicAuth {
  private readonly createPortrait:HTMLImageElement;
  private readonly jobInput:HTMLSelectElement;
  private readonly sexInput:HTMLSelectElement;
+ private readonly mountTask:Promise<void>;
 
  constructor(private readonly root:HTMLElement){
   this.loginScene=root.querySelector<HTMLElement>('[data-auth-login]')!;
@@ -68,8 +69,10 @@ export class ClassicAuth {
   this.createPortrait=root.querySelector<HTMLImageElement>('[data-auth-create-portrait]')!;
   this.jobInput=root.querySelector<HTMLSelectElement>('#character-job')!;
   this.sexInput=root.querySelector<HTMLSelectElement>('#character-sex')!;
-  void this.mount();
+  this.mountTask=this.mount();
  }
+
+ async ready(){await this.mountTask;}
 
  private async mount(){
   const names=['Prguse','Title','ChrSel'] as const;

@@ -29,6 +29,7 @@ export class ClassicHud {
  private readonly hotbar:HTMLElement;
  private readonly statusText:HTMLElement;
  private readonly classIcon:HTMLElement;
+ private readonly mountTask:Promise<void>;
 
  constructor(root:HTMLElement,private readonly select:(index:number)=>boolean){
   this.job=root.querySelector<HTMLElement>('[data-hud-job]')!;
@@ -44,8 +45,10 @@ export class ClassicHud {
   this.hotbar=root.querySelector<HTMLElement>('[data-hud-hotbar]')!;
   this.statusText=root.querySelector<HTMLElement>('[data-hud-status]')!;
   this.classIcon=root.querySelector<HTMLElement>('[data-hud-class]')!;
-  void this.mount(root);
+  this.mountTask=this.mount(root);
  }
+
+ async ready(){await this.mountTask;}
 
  private async mount(root:HTMLElement){
   const [prguse,prguse2,title,icons]=await Promise.all(['Prguse','Prguse2','Title','MagIcon'].map(loadUiLibrary));
