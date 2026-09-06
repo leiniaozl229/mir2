@@ -45,7 +45,7 @@ type NationalLayer={library:string;index:number;x:number;y:number};
 const nationalScenes:Record<Screen,NationalLayer[]>={
  login:[{library:'chrsel',index:22,x:0,y:0},{library:'prguse',index:60,x:252,y:173}],
  select:[{library:'prguse',index:65,x:0,y:0}],
- create:[{library:'prguse',index:63,x:80,y:64}],
+ create:[{library:'prguse',index:73,x:250,y:91}],
  hud:[{library:'prguse',index:1,x:0,y:349}],
  character:[{library:'prguse',index:370,x:284,y:138}],
  inventory:[{library:'prguse',index:3,x:232,y:165}],

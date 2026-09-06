@@ -148,6 +148,19 @@ export class ClassicAuth {
   const loginButton=this.root.querySelector<HTMLButtonElement>('#auth-login-ok')!,registerButton=this.root.querySelector<HTMLButtonElement>('#register')!;
   clearSkin(loginButton);clearSkin(registerButton);place(loginButton,168,159,76,39);place(registerButton,20,204,104,39);
 
+  applyNationalUiFrame(this.createForm,'prguse',uiFrame(prguse,73));place(this.createForm,250,91);
+  const createTitle=this.root.querySelector<HTMLElement>('[data-auth-create-title]');if(createTitle)createTitle.hidden=true;
+  const createName=this.root.querySelector<HTMLElement>('#character-name')!;place(createName,70,106,140,20);
+  const createOk=this.root.querySelector<HTMLButtonElement>('#auth-create-ok')!,createCancel=this.root.querySelector<HTMLButtonElement>('[data-auth-create-cancel]')!;
+  clearSkin(createOk);clearSkin(createCancel);place(createOk,103,361,76,39);place(createCancel,190,361,76,39);
+  this.createPortrait.hidden=true;
+  for(const selector of ['[data-auth-job="0"]','[data-auth-job="1"]','[data-auth-job="2"]','[data-auth-sex="0"]','[data-auth-sex="1"]']){
+   const button=this.root.querySelector<HTMLButtonElement>(selector);if(button)clearSkin(button);
+  }
+  const jobPositions=[[48,157],[98,157],[148,157]],sexPositions=[[93,228],[143,228]];
+  this.root.querySelectorAll<HTMLButtonElement>('[data-auth-job]').forEach((button,index)=>{const position=jobPositions[index];if(position)place(button,position[0],position[1],42,44);});
+  this.root.querySelectorAll<HTMLButtonElement>('[data-auth-sex]').forEach((button,index)=>{const position=sexPositions[index];if(position)place(button,position[0],position[1],42,43);});
+
   clipBackdrop(this.selectScene,'prguse',uiFrame(prguse,65),'/ui-national');
   const selectTitle=this.root.querySelector<HTMLElement>('[data-auth-select-title]');if(selectTitle)selectTitle.hidden=true;
   for(const selector of ['[data-auth-start]','[data-auth-new]','[data-auth-exit]']){
@@ -244,16 +257,16 @@ export class ClassicAuth {
   this.createPortrait.alt=['战士','法师','道士'][this.job]??'角色';
   place(this.createPortrait, created.portrait.x+frame.offsetX, created.portrait.y+frame.offsetY, frame.width, frame.height);
   for(const spec of created.jobs){
-   const button=this.root.querySelector<HTMLButtonElement>(`[data-auth-job="${spec.job}"]`);
+  const button=this.root.querySelector<HTMLButtonElement>(`[data-auth-job="${spec.job}"]`);
    const library=this.libraries.get(spec.library);
    if(!button||!library)continue;
-   applyUiFrame(button, spec.library, uiFrame(library, this.job===spec.job?spec.active:spec.index));
+   if(this.nationalReady)clearSkin(button);else applyUiFrame(button, spec.library, uiFrame(library, this.job===spec.job?spec.active:spec.index));
   }
   for(const spec of created.sexes){
    const button=this.root.querySelector<HTMLButtonElement>(`[data-auth-sex="${spec.sex}"]`);
    const library=this.libraries.get(spec.library);
    if(!button||!library)continue;
-   applyUiFrame(button, spec.library, uiFrame(library, this.sex===spec.sex?spec.active:spec.index));
+   if(this.nationalReady)clearSkin(button);else applyUiFrame(button, spec.library, uiFrame(library, this.sex===spec.sex?spec.active:spec.index));
   }
  }
 
