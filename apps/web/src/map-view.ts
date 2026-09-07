@@ -20,6 +20,7 @@ const chunkCache=new Map<string,Promise<DataView>>();
 const textureCache=new Map<string,Promise<Texture>>();
 let centerX=296,centerY=624,markerX=centerX,markerY=centerY,generation=0,current:Container|undefined,showCollision=false;
 const doorStates=new Map<string,boolean>();
+const collisionCells=new Map<string,boolean>();
 const depth=new Container();depth.sortableChildren=true;app.stage.addChild(depth);let mapSprites:Container[]=[];
 const miniMap=viewport.parentElement?.querySelector<HTMLCanvasElement>('#mini-map');
 let redrawMiniMap:()=>void=()=>{};
@@ -46,7 +47,9 @@ async function render(){
   const ci=chunks.findIndex(c=>x>=c.x&&y>=c.y&&x<c.x+c.width&&y<c.y+c.height);
   const c=chunks[ci],data=buffers[ci],offset=((x-c.x)*c.height+y-c.y)*12;
   const px=x*48,py=y*32;
-  if(showCollision&&((data.getUint16(offset,true)|data.getUint16(offset+4,true))&0x8000))overlay.rect(px,py,48,32).fill({color:0xff4422,alpha:0.25});
+  const blocked=((data.getUint16(offset,true)|data.getUint16(offset+4,true))&0x8000)!==0;
+  collisionCells.set(`${id}:${x}:${y}`,!blocked);
+  if(showCollision&&blocked)overlay.rect(px,py,48,32).fill({color:0xff4422,alpha:0.25});
   for(let layer=0;layer<3;layer++){
    if(layer===0&&(x%2!==0||y%2!==0))continue;
    const index=(data.getUint16(offset+layer*2,true)&0x7fff)-1;
@@ -132,13 +135,18 @@ return {app,depth,frameBudget,get width(){return world.width;},get height(){retu
  setMarker(x:number,y:number){markerX=Math.round(x);markerY=Math.round(y);redrawMiniMap();},
  async setMap(id:string){
   if(!/^[A-Za-z0-9]{1,10}$/.test(id))throw new Error('地图编号无效');
- const next=await getJSON<World>(`/maps/${encodeURIComponent(id)}/map.json`);
+  const next=await getJSON<World>(`/maps/${encodeURIComponent(id)}/map.json`);
+  collisionCells.clear();
   for(const key of doorStates.keys())if(key.startsWith(`${id}:`))doorStates.delete(key);
   mapId=id;world=next;centerX=Math.max(0,Math.min(world.width-1,centerX));centerY=Math.max(0,Math.min(world.height-1,centerY));await scheduleRender();
  },
  setDoor(x:number,y:number,open:boolean){
   if(!Number.isInteger(x)||!Number.isInteger(y))return Promise.resolve();
   doorStates.set(`${mapId}:${x}:${y}`,open);return scheduleRender();
+ },
+ isWalkable(x:number,y:number){
+  const key=`${mapId}:${Math.round(x)}:${Math.round(y)}`;
+  return doorStates.has(key)?doorStates.get(key):collisionCells.get(key);
  },
  async setCollision(value:boolean){showCollision=value;await scheduleRender();}};
 }

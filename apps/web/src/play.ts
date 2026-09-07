@@ -272,6 +272,34 @@ function renderTargets(){
  if(!targets.length){targetsElement.textContent='附近没有可交互对象';return;}
  for(const {entity,distance} of targets){const button=document.createElement('button');button.type='button';button.dataset.entityId=String(entity.id);const race=entity.feature&255,npc=race===50,player=race===0,slave=entity.kind==='slave'||entity.nameColor===254,health=entity.hp===undefined?'':` · ${entity.hp}/${entity.maxHp} HP`;button.textContent=`${slave?'召唤 · ':''}${entity.name||(npc?'NPC':'怪物')} · ${entity.x},${entity.y} · ${distance} 格${health} · ${npc?(distance===1?'对话':'接近'):player?(distance===1?'PK/行会战':'接近'):entity.dead?'挖肉':distance===1?'攻击':'接近'}`;button.onclick=()=>interact(entities.get(entity.id)??entity);targetsElement.append(button);}
 }
+function clickPath(actor:Entity,destination:{x:number;y:number}){
+ const start={x:actor.x,y:actor.y},goal={x:Math.round(destination.x),y:Math.round(destination.y)};
+ if(start.x===goal.x&&start.y===goal.y)return [];
+ // A click can land on a closed door. Keep the direct request in that case
+ // so the server can emit its door state and the normal retry path can run.
+ if(view.isWalkable(goal.x,goal.y)===false)return undefined;
+ const key=(point:{x:number;y:number})=>`${point.x},${point.y}`;
+ const occupied=new Set([...entities.values()].filter(entity=>!entity.self&&!entity.dead).map(entity=>key(entity)));
+ const queue=[start],previous=new Map<string,string>(),points=new Map([[key(start),start]]);
+ const radius=Math.max(18,Math.max(Math.abs(goal.x-start.x),Math.abs(goal.y-start.y))+8);
+ const minX=Math.min(start.x,goal.x)-radius,maxX=Math.max(start.x,goal.x)+radius;
+ const minY=Math.min(start.y,goal.y)-radius,maxY=Math.max(start.y,goal.y)+radius;
+ for(let index=0;index<queue.length;index++){
+  const current=queue[index];
+  if(current.x===goal.x&&current.y===goal.y){
+   const path=[];let cursor=key(goal);
+   while(cursor!==key(start)){const point=points.get(cursor);if(!point)return undefined;path.unshift(point);cursor=previous.get(cursor)!;}
+   return path;
+  }
+  for(const [dx,dy] of directions){
+   const next={x:current.x+dx,y:current.y+dy},nextKey=key(next);
+   if(next.x<minX||next.x>maxX||next.y<minY||next.y>maxY||points.has(nextKey)||occupied.has(nextKey)&&nextKey!==key(goal))continue;
+   if(view.isWalkable(next.x,next.y)!==true)continue;
+   points.set(nextKey,next);previous.set(nextKey,key(current));queue.push(next);
+  }
+ }
+ return undefined;
+}
 function sendMovement(actor:Entity,dx:number,dy:number,run=false,distanceOverride?:number){
  if(actor.dead||pending||socket?.readyState!==WebSocket.OPEN)return false;const direction=directions.findIndex(([x,y])=>x===dx&&y===dy);if(direction<0)return false;
  const distance=distanceOverride??(run?2:1);pending={x:actor.x+dx*distance,y:actor.y+dy*distance,direction,run};socket.send(JSON.stringify({type:'move',...pending}));return true;
@@ -281,10 +309,18 @@ function continueClickDestination(){
  if(!clickDestination||pending)return;
  const actor=self===undefined?undefined:entities.get(self);
  if(!actor||actor.dead){clickDestination=undefined;return;}
- const dx=Math.sign(clickDestination.x-actor.x),dy=Math.sign(clickDestination.y-actor.y),distance=Math.max(Math.abs(clickDestination.x-actor.x),Math.abs(clickDestination.y-actor.y));
- if(!dx&&!dy){clickDestination=undefined;return;}
- const running=clickDestination.run&&distance>=2;
- if(sendMovement(actor,dx,dy,running,running?2:1))connection.textContent=`正在${running?'跑向':'走向'} ${clickDestination.x}, ${clickDestination.y}…`;
+ const path=clickPath(actor,clickDestination);
+ if(path===undefined){
+  const dx=Math.sign(clickDestination.x-actor.x),dy=Math.sign(clickDestination.y-actor.y),distance=Math.max(Math.abs(clickDestination.x-actor.x),Math.abs(clickDestination.y-actor.y));
+  if(!dx&&!dy){clickDestination=undefined;return;}
+  const running=clickDestination.run&&distance>=2;
+  if(sendMovement(actor,dx,dy,running,running?2:1))connection.textContent=`正在${running?'跑向':'走向'} ${clickDestination.x}, ${clickDestination.y}…`;
+  return;
+ }
+ if(!path.length){clickDestination=undefined;return;}
+ const first=path[0],dx=Math.sign(first.x-actor.x),dy=Math.sign(first.y-actor.y);
+ const second=path[1],canRun=clickDestination.run&&second!==undefined&&second.x===actor.x+dx*2&&second.y===actor.y+dy*2;
+ if(sendMovement(actor,dx,dy,canRun,canRun?2:1))connection.textContent=`正在${canRun?'跑向':'走向'} ${clickDestination.x}, ${clickDestination.y}…`;
 }
 function continuePursuit(){
  if(pursuitTarget===undefined||pending)return;
@@ -564,5 +600,12 @@ function castSelf(skill:MagicSkill){
  const use=skillUseOf(skill.magicId);
  connection.textContent=use==='toggle'?`正在开关 ${skill.name}…`:use==='charge'?`正在蓄力 ${skill.name}…`:`正在施放 ${skill.name}…`;
 }
-window.addEventListener('keydown',event=>{if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea'))return;const classicWindowKey:Record<string,string>={F9:'inventory',F10:'character',F11:'skills'};const windowId=classicWindowKey[event.key];if(windowId){event.preventDefault();if(!event.repeat)toggleClassicWindow(windowId);return;}const functionKey=/^F([1-8])$/.exec(event.key);if(functionKey){event.preventDefault();if(!event.repeat)selectSkillSlot(Number(functionKey[1])-1);return;}const offset=movementKeys[event.key];if(!offset||event.repeat)return;event.preventDefault();stopCombat();doorRetry=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;held={key:event.key,dx:offset[0],dy:offset[1],run:event.shiftKey};const actor=self===undefined?undefined:entities.get(self);if(actor)sendMovement(actor,held.dx,held.dy,held.run);});
+function cycleAttackMode(){
+ if(socket?.readyState!==WebSocket.OPEN||self===undefined)return;
+ const mode=(attackMode+1)%7;
+ attackModeSelect.value=String(mode);
+ socket.send(JSON.stringify({type:'attackMode',mode}));
+ connection.textContent='正在切换攻击模式…';
+}
+window.addEventListener('keydown',event=>{if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea'))return;if(event.ctrlKey&&event.key.toLowerCase()==='h'){event.preventDefault();if(!event.repeat)cycleAttackMode();return;}const classicWindowKey:Record<string,string>={F9:'inventory',F10:'character',F11:'skills'};const windowId=classicWindowKey[event.key];if(windowId){event.preventDefault();if(!event.repeat)toggleClassicWindow(windowId);return;}const functionKey=/^F([1-8])$/.exec(event.key);if(functionKey){event.preventDefault();if(!event.repeat)selectSkillSlot(Number(functionKey[1])-1);return;}const offset=movementKeys[event.key];if(!offset||event.repeat)return;event.preventDefault();stopCombat();doorRetry=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;held={key:event.key,dx:offset[0],dy:offset[1],run:event.shiftKey};const actor=self===undefined?undefined:entities.get(self);if(actor)sendMovement(actor,held.dx,held.dy,held.run);});
 window.addEventListener('keyup',event=>{if(held?.key===event.key)held=undefined;});

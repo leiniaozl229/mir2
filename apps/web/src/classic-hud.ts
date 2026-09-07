@@ -124,7 +124,7 @@ export class ClassicHud {
    button.hidden=false;
    if(index===3){
     clearSkin(button);button.onmouseenter=null;button.onmouseleave=null;button.onmousedown=null;button.onmouseup=null;
-    button.setAttribute('aria-label','目标');button.title='附近目标';button.style.left='748px';button.style.top='400px';button.style.width='32px';button.style.height='32px';
+    button.dataset.windowOpen='targets';button.setAttribute('aria-label','目标');button.title='附近目标';button.style.left='748px';button.style.top='400px';button.style.width='32px';button.style.height='32px';
    }else if(spec){
     skinNationalHudButton(button,prguse,spec);
    }
