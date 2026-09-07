@@ -1,5 +1,5 @@
 import type {CharacterAttributes} from './character-panel';
-import type {MagicSkill} from './skills';
+import {arrangeSkills,type MagicSkill} from './skills';
 import {applyNationalUiFrame,applyUiFrame,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
 
 type ResourceState={hp:number;mp:number;maxHp:number;maxMp:number;experience:number;maxExperience:number};
@@ -217,8 +217,8 @@ export class ClassicHud {
  resource(values:Partial<ResourceState>){this.resources={...this.resources,...values};this.renderBars();}
  experience(total:number){this.resources.experience=total;this.renderBars();}
  level(level:number,total:number){if(this.attributes)this.attributes={...this.attributes,level,experience:total};this.resources.experience=total;this.render();}
- replaceSkills(skills:MagicSkill[]){this.skills=[...skills];this.selected=-1;this.renderHotbar();}
- addSkill(skill:MagicSkill){this.skills=[...this.skills.filter(value=>value.magicId!==skill.magicId),skill].sort((a,b)=>a.magicId-b.magicId);this.renderHotbar();}
+ replaceSkills(skills:MagicSkill[]){this.skills=arrangeSkills(skills);this.selected=-1;this.renderHotbar();}
+ addSkill(skill:MagicSkill){this.skills=arrangeSkills([...this.skills.filter(value=>value.magicId!==skill.magicId),skill]);this.renderHotbar();}
  removeSkill(magicId:number){this.skills=this.skills.filter(skill=>skill.magicId!==magicId);if(this.selected>=this.skills.length)this.selected=-1;this.renderHotbar();}
  progress(magicId:number,level:number,currentTrain:number){this.skills=this.skills.map(skill=>skill.magicId===magicId?{...skill,level,currentTrain}:skill);this.renderHotbar();}
  position(map:string,x:number,y:number){this.map=map;this.x=x;this.y=y;this.coords.textContent=`${x}:${y}`;}
@@ -269,8 +269,9 @@ export class ClassicHud {
  private renderHotbar(){
   this.hotbar.replaceChildren();
   const icons=this.libraries.get('MagIcon'),nationalIcons=this.nationalLibraries.get('magic-icons');
+  const skills=arrangeSkills(this.skills);
   for(let index=0;index<8;index++){
-   const skill=this.skills[index],button=document.createElement('button');
+   const skill=skills[index],button=document.createElement('button');
    button.type='button';button.className='hud-slot';button.style.left=`${15+index*25}px`;button.style.top='3px';
    if(this.nationalReady){button.style.left=`${index*31}px`;button.style.top='1px';button.style.width='26px';button.style.height='26px';}
    button.title=skill?`${skill.name} · ${skill.level}级`:`F${index+1}`;

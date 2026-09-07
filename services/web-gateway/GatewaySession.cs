@@ -950,7 +950,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
     private object SkillSnapshot()
     {
         lock (worldStateLock)
-            return new { type = "skills", skills = skills.Values.OrderBy(skill => skill.magicId).ToArray() };
+            return new { type = "skills", skills = skills.Values.ToArray() };
     }
 
     private object? UpdateTradeState(LegacyPacket packet)
