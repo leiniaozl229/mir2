@@ -147,29 +147,33 @@ export class ClassicAuth {
   const account=this.root.querySelector<HTMLElement>('#account')!,password=this.root.querySelector<HTMLElement>('#password')!;
   place(account,95,82,140,20);place(password,95,111,140,20);
   const loginButton=this.root.querySelector<HTMLButtonElement>('#auth-login-ok')!,registerButton=this.root.querySelector<HTMLButtonElement>('#register')!;
-  clearSkin(loginButton);clearSkin(registerButton);place(loginButton,168,159,76,39);place(registerButton,20,204,104,39);
+  this.skinNationalButton(loginButton,prguse,{index:62,hover:62,pressed:62,x:168,y:159,width:76,height:39,backgroundX:0,backgroundY:3});
+  this.skinNationalButton(registerButton,prguse,{index:61,hover:61,pressed:61,x:20,y:204,width:104,height:39,backgroundX:4,backgroundY:2});
 
   applyNationalUiFrame(this.createForm,'prguse',uiFrame(prguse,73));place(this.createForm,250,91);
   const createTitle=this.root.querySelector<HTMLElement>('[data-auth-create-title]');if(createTitle)createTitle.hidden=true;
   const createName=this.root.querySelector<HTMLElement>('#character-name')!;place(createName,70,106,140,20);
   const createOk=this.root.querySelector<HTMLButtonElement>('#auth-create-ok')!,createCancel=this.root.querySelector<HTMLButtonElement>('[data-auth-create-cancel]')!;
-  clearSkin(createOk);clearSkin(createCancel);place(createOk,103,361,76,39);place(createCancel,190,361,76,39);
+  this.skinNationalButton(createOk,prguse,{index:361,hover:362,pressed:363,x:100,y:358,width:80,height:34});
+  clearSkin(createCancel);createCancel.onmouseenter=null;createCancel.onmouseleave=null;createCancel.onmousedown=null;createCancel.onmouseup=null;place(createCancel,190,361,76,39);
   this.createPortrait.hidden=true;
   for(const selector of ['[data-auth-job="0"]','[data-auth-job="1"]','[data-auth-job="2"]','[data-auth-sex="0"]','[data-auth-sex="1"]']){
    const button=this.root.querySelector<HTMLButtonElement>(selector);if(button)clearSkin(button);
   }
-  const jobPositions=[[48,157],[98,157],[148,157]],sexPositions=[[93,228],[143,228]];
-  this.root.querySelectorAll<HTMLButtonElement>('[data-auth-job]').forEach((button,index)=>{const position=jobPositions[index];if(position)place(button,position[0],position[1],42,44);});
-  this.root.querySelectorAll<HTMLButtonElement>('[data-auth-sex]').forEach((button,index)=>{const position=sexPositions[index];if(position)place(button,position[0],position[1],42,43);});
+  const jobPositions=[[47,156],[92,156],[137,156]],sexPositions=[[92,230],[137,230]];
+  this.root.querySelectorAll<HTMLButtonElement>('[data-auth-job]').forEach((button,index)=>{const position=jobPositions[index];if(position)place(button,position[0],position[1],44,36);});
+  this.root.querySelectorAll<HTMLButtonElement>('[data-auth-sex]').forEach((button,index)=>{const position=sexPositions[index];if(position)place(button,position[0],position[1],44,35);});
+  this.bindNationalToggle(this.root.querySelector<HTMLButtonElement>('[data-auth-job="0"]')!,prguse,{normal:74,active:55,hover:55,pressed:55});
+  this.bindNationalToggle(this.root.querySelector<HTMLButtonElement>('[data-auth-job="1"]')!,prguse,{normal:75,active:56,hover:56,pressed:56});
+  this.bindNationalToggle(this.root.querySelector<HTMLButtonElement>('[data-auth-job="2"]')!,prguse,{normal:76,active:57,hover:57,pressed:57});
+  this.bindNationalToggle(this.root.querySelector<HTMLButtonElement>('[data-auth-sex="0"]')!,prguse,{normal:77,active:58,hover:58,pressed:58});
+  this.bindNationalToggle(this.root.querySelector<HTMLButtonElement>('[data-auth-sex="1"]')!,prguse,{normal:78,active:59,hover:59,pressed:59});
 
   clipBackdrop(this.selectScene,'prguse',uiFrame(prguse,65),'/ui-national');
   const selectTitle=this.root.querySelector<HTMLElement>('[data-auth-select-title]');if(selectTitle)selectTitle.hidden=true;
-  for(const selector of ['[data-auth-start]','[data-auth-new]','[data-auth-exit]']){
-   const button=this.root.querySelector<HTMLButtonElement>(selector);if(button)clearSkin(button);
-  }
-  place(this.root.querySelector<HTMLButtonElement>('[data-auth-start]')!,348,450,110,34);
-  place(this.root.querySelector<HTMLButtonElement>('[data-auth-new]')!,335,483,130,34);
-  place(this.root.querySelector<HTMLButtonElement>('[data-auth-exit]')!,355,535,90,32);
+  this.skinNationalButton(this.root.querySelector<HTMLButtonElement>('[data-auth-start]')!,prguse,{index:68,hover:68,pressed:68,x:348,y:450,width:110,height:34,backgroundX:37,backgroundY:6});
+  this.skinNationalButton(this.root.querySelector<HTMLButtonElement>('[data-auth-new]')!,prguse,{index:69,hover:69,pressed:69,x:335,y:483,width:130,height:34,backgroundX:13,backgroundY:3});
+  this.skinNationalButton(this.root.querySelector<HTMLButtonElement>('[data-auth-exit]')!,prguse,{index:72,hover:72,pressed:72,x:355,y:535,width:90,height:32,backgroundX:24,backgroundY:12});
  }
 
  bind(handlers:{start:(name:string)=>void;create:()=>void;exit:()=>void}){
@@ -217,12 +221,21 @@ export class ClassicAuth {
   const spec=select.slot;
   for(let index=0;index<spec.count;index++){
    const character=this.characters[index];
-   const button=document.createElement('button');
-   button.type='button';
-   button.className='auth-slot';
-   if(this.nationalReady){
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='auth-slot';
+  if(this.nationalReady){
     if(index>1){button.hidden=true;this.charactersElement.append(button);continue;}
     const x=index===0?44:618;place(button,x,448,184,128);button.style.backgroundImage='none';
+    const selectSprite=document.createElement('span');selectSprite.className='auth-slot-select';
+    const selectX=index===0?89:67,selectY=index===0?4:5;place(selectSprite,selectX,selectY,76,33);
+    const paintSelect=(frameIndex:number)=>paintNationalButton(selectSprite,prguse,frameIndex,0,0,'');
+    paintSelect(index===this.selected?67:66);
+    button.onmouseenter=()=>paintSelect(67);
+    button.onmouseleave=()=>paintSelect(index===this.selected?67:66);
+    button.onmousedown=()=>paintSelect(67);
+    button.onmouseup=()=>paintSelect(67);
+    button.append(selectSprite);
    }else{
     place(button, spec.x, spec.y+index*spec.step);
     const filled=character?uiFrame(title, spec.filledIndex+character.job+(index===this.selected?5:0)):uiFrame(prguse, spec.index);
@@ -280,13 +293,19 @@ export class ClassicAuth {
   const button=this.root.querySelector<HTMLButtonElement>(`[data-auth-job="${spec.job}"]`);
    const library=this.libraries.get(spec.library);
    if(!button||!library)continue;
-   if(this.nationalReady)clearSkin(button);else applyUiFrame(button, spec.library, uiFrame(library, this.job===spec.job?spec.active:spec.index));
+   if(this.nationalReady){
+    const national=this.nationalLibraries.get('prguse');
+    if(national)paintNationalButton(button,national,this.job===spec.job?spec.active:spec.index,0,0,'');
+   }else applyUiFrame(button, spec.library, uiFrame(library, this.job===spec.job?spec.active:spec.index));
   }
   for(const spec of created.sexes){
    const button=this.root.querySelector<HTMLButtonElement>(`[data-auth-sex="${spec.sex}"]`);
    const library=this.libraries.get(spec.library);
    if(!button||!library)continue;
-   if(this.nationalReady)clearSkin(button);else applyUiFrame(button, spec.library, uiFrame(library, this.sex===spec.sex?spec.active:spec.index));
+   if(this.nationalReady){
+    const national=this.nationalLibraries.get('prguse');
+    if(national)paintNationalButton(button,national,this.sex===spec.sex?spec.active:spec.index,0,0,'');
+   }else applyUiFrame(button, spec.library, uiFrame(library, this.sex===spec.sex?spec.active:spec.index));
   }
  }
 
@@ -300,6 +319,27 @@ export class ClassicAuth {
   button.onmouseleave=()=>applyUiFrame(button, spec.library, uiFrame(library, spec.index));
   button.onmousedown=()=>applyUiFrame(button, spec.library, uiFrame(library, spec.pressed));
   button.onmouseup=()=>applyUiFrame(button, spec.library, uiFrame(library, spec.hover));
+ }
+
+ private skinNationalButton(button:HTMLButtonElement,library:NationalLibrary,spec:{index:number;hover:number;pressed:number;x:number;y:number;width:number;height:number;backgroundX?:number;backgroundY?:number}){
+  place(button,spec.x,spec.y,spec.width,spec.height);
+  const backgroundX=spec.backgroundX??0,backgroundY=spec.backgroundY??0;
+  const paint=(index:number,filter:string)=>paintNationalButton(button,library,index,backgroundX,backgroundY,filter);
+  paint(spec.index,'');
+  button.onmouseenter=()=>paint(spec.hover,'brightness(1.12)');
+  button.onmouseleave=()=>paint(spec.index,'');
+  button.onmousedown=()=>paint(spec.pressed,'brightness(.88)');
+  button.onmouseup=()=>paint(spec.hover,'brightness(1.12)');
+ }
+
+ private bindNationalToggle(button:HTMLButtonElement,library:NationalLibrary,spec:{normal:number;active:number;hover:number;pressed:number}){
+  const selected=()=>button.dataset.authJob!==undefined?this.job===Number(button.dataset.authJob):this.sex===Number(button.dataset.authSex);
+  const paint=(index:number,filter='')=>paintNationalButton(button,library,index,0,0,filter);
+  paint(selected()?spec.active:spec.normal);
+  button.onmouseenter=()=>paint(spec.hover,'brightness(1.12)');
+  button.onmouseleave=()=>paint(selected()?spec.active:spec.normal);
+  button.onmousedown=()=>paint(spec.pressed,'brightness(.88)');
+  button.onmouseup=()=>paint(spec.hover,'brightness(1.12)');
  }
 
  private skinToggle(button:HTMLButtonElement,spec:{library:string;index:number;hover:number;pressed:number;x:number;y:number},activate:()=>void){
@@ -337,3 +377,12 @@ function clipBackdrop(element:HTMLElement,name:string,frame:Frame,base='/ui'){
 }
 
 function clearSkin(element:HTMLElement){element.style.backgroundImage='none';element.style.backgroundColor='transparent';}
+
+function paintNationalButton(element:HTMLElement,library:NationalLibrary,index:number,backgroundX:number,backgroundY:number,filter:string){
+ const frame=uiFrame(library,index);
+ element.style.backgroundImage=`url(${nationalUiUrl('prguse',frame)})`;
+ element.style.backgroundPosition=`${backgroundX}px ${backgroundY}px`;
+ element.style.backgroundRepeat='no-repeat';
+ element.style.backgroundColor='transparent';
+ element.style.filter=filter;
+}
