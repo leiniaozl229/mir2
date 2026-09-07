@@ -284,6 +284,7 @@ export class ClassicHud {
    }
    const key=document.createElement('kbd');key.textContent=`F${index+1}`;button.append(key);
    button.onclick=()=>{if(this.select(index))this.selectSlot(index);};
+   button.oncontextmenu=event=>{event.preventDefault();if(this.select(index))this.selectSlot(index);};
    this.hotbar.append(button);
   }
  }

@@ -300,8 +300,11 @@ async function castAndCollect(client, skill, targetId) {
   } catch (error) {
     result.error = result.error ?? error.message;
   }
+  if (result.accepted || result.warriorSkill) await client.drain(350);
   result.mpBefore = beforeMp;
   result.mpAfter = client.mp;
+  const statusMessages = client.events.slice(before).filter(event => event.type === 'characterStatus');
+  if (statusMessages.length) result.status = statusMessages.at(-1).status;
   result.events = client.events.slice(before).map(event => event.type).filter(type => type !== 'legacy');
   return result;
 }
@@ -425,6 +428,7 @@ async function exerciseJob(kit) {
       const outcome = await castAndCollect(client, skill, targetId);
       outcome.expectedEffect = { type: rule.effectType, effect: rule.effect };
       outcome.expectedCost = spellCost(skill);
+      if (name === '魔法盾') outcome.expectedStatusBit = 0x00100000;
       jobReport.skills.push(outcome);
       await client.drain(400);
     }
@@ -440,7 +444,8 @@ try {
   for (const kit of selectedKits) report.jobs.push(await exerciseJob(kit));
   const expected = selectedKits.flatMap(kit => kit.names);
   const seen = new Set(report.jobs.flatMap(job => job.skills.map(skill => skill.name)));
-  const failed = report.jobs.flatMap(job => job.skills.filter(skill => skill.use !== 'passive' && skill.accepted !== true));
+  const failed = report.jobs.flatMap(job => job.skills.filter(skill => skill.use !== 'passive'
+    && (skill.accepted !== true || skill.name === '魔法盾' && ((skill.status ?? 0) & 0x00100000) === 0)));
   const summon = report.jobs.find(job => job.summon)?.summon;
   report.coverage = expected.filter(name => seen.has(name));
   report.missing = expected.filter(name => !seen.has(name));

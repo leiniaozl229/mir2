@@ -70,7 +70,22 @@ export class InventoryView {
       else if(item.stdMode<=4||item.stdMode===31)this.begin(item,()=>this.actions.use(item.makeIndex));
      }
     };
-    cell.oncontextmenu=event=>{event.preventDefault();this.begin(item,()=>this.actions.drop(item.makeIndex));};
+    cell.draggable=true;
+    cell.ondragstart=event=>{
+     event.dataTransfer?.setData('text/plain',String(item.makeIndex));
+     if(event.dataTransfer)event.dataTransfer.effectAllowed='move';
+    };
+    cell.ondragend=event=>{
+     const rect=this.element.getBoundingClientRect();
+     const outside=event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom;
+     if(outside)this.begin(item,()=>this.actions.drop(item.makeIndex));
+    };
+    cell.oncontextmenu=event=>{
+     event.preventDefault();
+     const slot=defaultSlot(item.stdMode);
+     if(slot>=0)this.begin(item,()=>this.actions.equip(item.makeIndex,slot));
+     else if(item.stdMode<=4||item.stdMode===31)this.begin(item,()=>this.actions.use(item.makeIndex));
+    };
    }else cell.title=this.known?'空':'等待服务端背包数据…';
    this.element.append(cell);
   }

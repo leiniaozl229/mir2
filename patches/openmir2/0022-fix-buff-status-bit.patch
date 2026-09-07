@@ -1,0 +1,6 @@
+diff --git a/src/M2Server/ActorBuffSystem.cs b/src/M2Server/ActorBuffSystem.cs
+--- a/src/M2Server/ActorBuffSystem.cs
++++ b/src/M2Server/ActorBuffSystem.cs
+@@ -290,1 +290,1 @@ namespace M2Server
+-                        nStatus = (int)(nStatus | (0x80000000 >> i));
++                        nStatus = (int)(nStatus | (0x80000000 >> (int)actorBuffs[i].BuffType));
