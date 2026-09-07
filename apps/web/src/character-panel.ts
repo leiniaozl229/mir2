@@ -17,7 +17,7 @@ export class CharacterPanel {
   this.element.replaceChildren();
   if(this.stateElement)this.stateElement.replaceChildren();
   if(!a){this.element.textContent='等待角色属性…';return;}
-  this.place(this.element,[['HP',`${a.hp}/${a.maxHp}`,20],['MP',`${a.mp}/${a.maxMp}`,38],['防御',range(a.ac),56],['魔防',range(a.mac),74],['攻击',range(a.dc),92],['魔法',range(a.mc),110],['道术',range(a.sc),128]]);
+  this.place(this.element,[['AC',range(a.ac),20],['MAC',range(a.mac),38],['DC',range(a.dc),56],['MC',range(a.mc),74],['SC',range(a.sc),92],['HP',`${a.hp}/${a.maxHp}`,110],['MP',`${a.mp}/${a.maxMp}`,128]]);
   if(this.stateElement){
    const exp=a.maxExperience>0?`${Math.min(100,a.experience/a.maxExperience*100).toFixed(1)}%`:'0%';
    this.place(this.stateElement,[['经验',exp,20],['背包',`${a.weight}/${a.maxWeight}`,38],['穿戴',`${a.wearWeight}/${a.maxWearWeight}`,56],['腕力',`${a.handWeight}/${a.maxHandWeight}`,74],['金币',String(a.gold),92]]);
