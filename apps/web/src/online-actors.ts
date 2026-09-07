@@ -42,7 +42,7 @@ export class OnlineActor {
  readonly container=new Container();
  private marker=new Graphics();private weapon=new Sprite();private body=new Sprite();private hair=new Sprite();private healthBack=new Graphics();private health=new Graphics();private label=new Text({text:'',style:{fontFamily:'SimSun, Songti SC, serif',fontSize:12,fill:0xffffff,stroke:{color:0x000000,width:3}}});
  private sequence=0;private key='';private start=0;private frames:Pose[]=[];private weaponFrames:Pose[]=[];private hairFrames:Pose[]=[];private interval=500;private entity:Entity;private movement:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;private labelBaseY=-64;private labelOffsetY=0;
- constructor(entity:Entity,interact?:(entity:Entity)=>void){this.entity=entity;this.container.sortableChildren=true;this.marker.zIndex=-2;this.body.zIndex=0;this.hair.zIndex=1;this.healthBack.zIndex=this.health.zIndex=8;this.label.zIndex=9;this.container.addChild(this.marker,this.weapon,this.body,this.hair,this.healthBack,this.health,this.label);this.label.anchor.set(.5,1);this.label.position.set(24,this.labelBaseY);if(interact){this.container.eventMode='static';this.container.on('pointertap',event=>{event.stopPropagation();interact(this.entity);});}this.applyCursor();}
+ constructor(entity:Entity,interact?:(entity:Entity)=>void){this.entity=entity;this.container.sortableChildren=true;this.marker.zIndex=-2;this.body.zIndex=0;this.hair.zIndex=1;this.healthBack.zIndex=this.health.zIndex=8;this.label.zIndex=9;this.container.addChild(this.marker,this.weapon,this.body,this.hair,this.healthBack,this.health,this.label);this.label.anchor.set(.5,1);this.label.position.set(24,this.labelBaseY);if(interact)this.container.eventMode='static';this.applyCursor();}
  update(entity:Entity){
   const toX=entity.x*48,toY=entity.y*32,moving=(entity.action==='walking'||entity.action==='running')&&(this.entity.x!==entity.x||this.entity.y!==entity.y);
   if(moving)this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start:performance.now(),duration:entity.action==='running'?400:600};else{this.movement=undefined;this.container.position.set(toX,toY);}
@@ -93,6 +93,7 @@ export class OnlineActor {
  }
  setLabelOffset(offset:number){if(offset===this.labelOffsetY)return;this.labelOffsetY=offset;this.applyLabelOffset();this.drawHealth();}
  labelBounds(){return this.label.getBounds();}
+ hitTest(x:number,y:number){const bounds=this.container.getBounds();return !this.entity.self&&!this.entity.dead&&x>=bounds.x&&x<=bounds.x+bounds.width&&y>=bounds.y&&y<=bounds.y+bounds.height;}
  private applyLabelOffset(){this.label.y=this.labelBaseY+this.labelOffsetY;}
  private applyCursor(){
   const race=this.entity.feature&255;
