@@ -72,6 +72,21 @@ function updateQuest(value:QuestState){
  const key=questStorageKey();if(key)window.localStorage.setItem(key,JSON.stringify(Object.fromEntries(quests)));
  renderQuest();
 }
+function renderDialogueText(value:string){
+ dialogueText.replaceChildren();
+ const token=/COLOR=(cl[A-Za-z]+)\s*/gi;
+ let cursor=0,current='default',match:RegExpExecArray|null;
+ while((match=token.exec(value))){
+  appendDialogueText(value.slice(cursor,match.index),current);
+  current=match[1].toLowerCase();
+  cursor=match.index+match[0].length;
+ }
+ appendDialogueText(value.slice(cursor),current);
+}
+function appendDialogueText(value:string,color:string){
+ if(!value)return;
+ const span=document.createElement('span');span.className=`dialogue-color-${color}`;span.textContent=value;dialogueText.append(span);
+}
 function loadQuest(){
  quests=new Map();
  const key=questStorageKey();
@@ -409,10 +424,10 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='npcDialogue'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){
    if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);
    dialogueNpcId=String(message.npcName).includes('国王')?message.npcId:undefined;renderGuild();
-   shop.clear();storage.clear();repair.clear();hideClassicWindows();dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueTitle.textContent=message.npcName;dialogueText.textContent=message.text;dialogueOptions.replaceChildren();
+   shop.clear();storage.clear();repair.clear();hideClassicWindows();dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueTitle.textContent=message.npcName;renderDialogueText(message.text);dialogueOptions.replaceChildren();
    for(const option of message.options){if(option.input){const form=document.createElement('form');form.className='dialogue-input';const input=document.createElement('input');input.type='text';input.maxLength=80;input.placeholder=option.text;input.required=true;const button=document.createElement('button');button.type='submit';button.textContent=option.text;form.onsubmit=event=>{event.preventDefault();active.send(JSON.stringify({type:'dialogueSelect',npcId:message.npcId,command:option.command,input:input.value}));};form.append(input,button);dialogueOptions.append(form);}else{const button=document.createElement('button');button.type='button';button.textContent=option.text;button.onclick=()=>active.send(JSON.stringify({type:'dialogueSelect',npcId:message.npcId,command:option.command}));dialogueOptions.append(button);}}
   }
-  else if(message.type==='dialogueMessage'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);hideClassicWindows();dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');dialogueText.textContent=message.text;}
+  else if(message.type==='dialogueMessage'&&worldReady&&performance.now()>=suppressNpcDialogsUntil){if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);hideClassicWindows();dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');renderDialogueText(message.text);dialogueOptions.replaceChildren();}
   else if(message.type==='npcDialogueClosed'){dialogueElement.hidden=true;dialogueNpcId=undefined;renderGuild();shop.clear();storage.clear();repair.clear();}
   else if(message.type==='shop'){dialogueElement.hidden=true;storage.clear();repair.clear();hideClassicWindows();shop.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent=`商店已打开 · ${message.items.length} 种商品`;}
   else if(message.type==='shopSell'){dialogueElement.hidden=true;storage.clear();repair.clear();hideClassicWindows();shop.openSell(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent='请选择要出售的背包物品';}
@@ -503,7 +518,11 @@ view.app.canvas.addEventListener('pointerdown',event=>{
  const rect=view.app.canvas.getBoundingClientRect(),stageX=(event.clientX-rect.left)*800/rect.width,stageY=(event.clientY-rect.top)*600/rect.height;
  const dx=Math.sign(Math.floor((stageX-400)/48)),dy=Math.sign(Math.floor((stageY-300)/32));
  const clickedX=view.center.x+Math.floor((stageX-400)/48),clickedY=view.center.y+Math.floor((stageY-300)/32);
- const target=[...entities.values()].find(candidate=>!candidate.self&&candidate.x===clickedX&&candidate.y===clickedY);
+ const candidates=[...entities.values()].filter(candidate=>!candidate.self&&!candidate.dead);
+ const target=candidates.find(candidate=>candidate.x===clickedX&&candidate.y===clickedY)??candidates
+  .map(candidate=>({candidate,distance:Math.max(Math.abs(candidate.x-clickedX),Math.abs(candidate.y-clickedY))}))
+  .filter(entry=>entry.distance<=2)
+  .sort((left,right)=>left.distance-right.distance)[0]?.candidate;
  if(dx===0&&dy===0){const item=groundItems.at(entity.x,entity.y);if(item){socket.send(JSON.stringify({type:'pickup'}));connection.textContent=`正在拾取 ${item.name}…`;}return;}
  if(target){interact(target);return;}
  stopCombat();doorRetry=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;sendMovement(entity,dx,dy,event.shiftKey||event.button===2);

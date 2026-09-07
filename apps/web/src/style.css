@@ -106,3 +106,19 @@ body.classic-play .character-window.national-window [data-character-page=skills]
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-item small{font-size:10px}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-item button{flex:none;padding:2px 4px;border:1px solid #8a6c39;background:#2b1d11;color:#f0d286;font:11px SimSun,serif;white-space:nowrap}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-passive{flex:none;max-width:52px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#c5b27d;font-size:10px}
+body.classic-play main{padding:0;min-height:100vh;display:grid;place-items:center}
+body.classic-play .dev-chrome{display:none}
+body.classic-play #auth-overlay input:focus{outline:1px solid #d6a84c;outline-offset:1px;box-shadow:0 0 0 1px #24170d}
+body.classic-play #auth-overlay button:focus-visible{outline:1px solid #d6a84c;outline-offset:2px}
+body.classic-play #auth-overlay [data-auth-login-dialog] button{appearance:none;color:transparent!important;font-size:0;line-height:0;text-indent:-9999px}
+body.classic-play #classic-modal-layer .npc-dialog{overflow:hidden}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text{display:block;max-height:235px;margin:8px 0;overflow-x:hidden;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;line-height:1.45;color:#e8d6a0}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text::-webkit-scrollbar{width:8px}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text::-webkit-scrollbar-track{background:#1a110b}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text::-webkit-scrollbar-thumb{background:#76552b;border:1px solid #2a1a0d}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-cllime{color:#b8df7a}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clyellow{color:#f0d17a}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clred{color:#e98a6a}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clblue{color:#8ab5e8}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clgreen{color:#8fc77b}
+body.classic-play #viewport-shell:has(#classic-modal-layer>section:not([hidden])) #character-window,body.classic-play #viewport-shell:has(#classic-modal-layer>section:not([hidden])) #inventory-window{display:none!important}
