@@ -19,6 +19,8 @@ const libraries=await Promise.all(names.map(name=>getJSON<Library>(`/libraries/$
 const chunkCache=new Map<string,Promise<DataView>>();
 const textureCache=new Map<string,Promise<Texture>>();
 let centerX=296,centerY=624,markerX=centerX,markerY=centerY,generation=0,current:Container|undefined,showCollision=false;
+let renderWindow:{map:string;left:number;right:number;top:number;bottom:number}|undefined;
+let cameraMotion:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;
 const doorStates=new Map<string,boolean>();
 const collisionCells=new Map<string,boolean>();
 const depth=new Container();depth.sortableChildren=true;app.stage.addChild(depth);let mapSprites:Container[]=[];
@@ -26,7 +28,15 @@ const miniMap=viewport.parentElement?.querySelector<HTMLCanvasElement>('#mini-ma
 let redrawMiniMap:()=>void=()=>{};
 type Animation={sprite:Sprite;textures:Texture[];tick:number};
 let animations:Animation[]=[];
-app.ticker.add(()=>{const tick=Math.floor(performance.now()/100);for(const animation of animations)animation.sprite.texture=animation.textures[Math.floor(tick/(animation.tick+1))%animation.textures.length];});
+app.ticker.add(()=>{
+ const now=performance.now();
+ if(cameraMotion){
+  const progress=Math.min(1,(now-cameraMotion.start)/cameraMotion.duration);
+  app.stage.position.set(cameraMotion.fromX+(cameraMotion.toX-cameraMotion.fromX)*progress,cameraMotion.fromY+(cameraMotion.toY-cameraMotion.fromY)*progress);
+  if(progress===1){app.stage.position.set(cameraMotion.toX,cameraMotion.toY);cameraMotion=undefined;}
+ }
+ const tick=Math.floor(now/100);for(const animation of animations)animation.sprite.texture=animation.textures[Math.floor(tick/(animation.tick+1))%animation.textures.length];
+});
 function chunkData(chunk:Chunk,id:string){
  const key=`${id}/${chunk.file}`;let pending=chunkCache.get(key);
  if(!pending){pending=fetch(`/maps/${encodeURIComponent(id)}/${chunk.file}`).then(async r=>{if(!r.ok)throw new Error('地图块读取失败');return new DataView(await r.arrayBuffer());});chunkCache.set(key,pending);}
@@ -95,7 +105,9 @@ async function render(){
  mapSprites=objects.removeChildren().filter((sprite):sprite is Container=>Boolean(sprite)&&!sprite.destroyed);
  if(mapSprites.length)depth.addChild(...mapSprites);
  objects.destroy();
- current=next;animations=nextAnimations;app.stage.addChildAt(next,0);app.stage.position.set(400-cx*48,300-cy*32);
+ current=next;animations=nextAnimations;app.stage.addChildAt(next,0);
+ renderWindow={map:id,left,right,top,bottom};
+ if(!cameraMotion)app.stage.position.set(400-cx*48,300-cy*32);
  if(miniMap){
   const context=miniMap.getContext('2d');
   if(context){
@@ -131,14 +143,28 @@ const scheduleRender=()=>{const task=renderTail.then(render,render);renderTail=t
 await scheduleRender();
 return {app,depth,frameBudget,get width(){return world.width;},get height(){return world.height;},get map(){return mapId;},
  get center(){return {x:centerX,y:centerY};},
- async setCenter(x:number,y:number){centerX=Math.max(0,Math.min(world.width-1,Math.round(x)));centerY=Math.max(0,Math.min(world.height-1,Math.round(y)));await scheduleRender();},
+ async setCenter(x:number,y:number){
+  cameraMotion=undefined;
+  centerX=Math.max(0,Math.min(world.width-1,Math.round(x)));centerY=Math.max(0,Math.min(world.height-1,Math.round(y)));
+  app.stage.position.set(400-centerX*48,300-centerY*32);
+  await scheduleRender();
+ },
+ moveCenter(x:number,y:number,duration=600){
+  const nextX=Math.max(0,Math.min(world.width-1,Math.round(x))),nextY=Math.max(0,Math.min(world.height-1,Math.round(y)));
+  if(nextX===centerX&&nextY===centerY)return;
+  const targetX=400-nextX*48,targetY=300-nextY*32;
+  cameraMotion={fromX:app.stage.position.x,fromY:app.stage.position.y,toX:targetX,toY:targetY,start:performance.now(),duration};
+  centerX=nextX;centerY=nextY;
+  const window=renderWindow;
+  if(!window||window.map!==mapId||nextX<window.left+6||nextX>window.right-6||nextY<window.top+6||nextY>window.bottom-6)void scheduleRender();
+ },
  setMarker(x:number,y:number){markerX=Math.round(x);markerY=Math.round(y);redrawMiniMap();},
  async setMap(id:string){
   if(!/^[A-Za-z0-9]{1,10}$/.test(id))throw new Error('地图编号无效');
   const next=await getJSON<World>(`/maps/${encodeURIComponent(id)}/map.json`);
   collisionCells.clear();
   for(const key of doorStates.keys())if(key.startsWith(`${id}:`))doorStates.delete(key);
-  mapId=id;world=next;centerX=Math.max(0,Math.min(world.width-1,centerX));centerY=Math.max(0,Math.min(world.height-1,centerY));await scheduleRender();
+  cameraMotion=undefined;renderWindow=undefined;mapId=id;world=next;centerX=Math.max(0,Math.min(world.width-1,centerX));centerY=Math.max(0,Math.min(world.height-1,centerY));app.stage.position.set(400-centerX*48,300-centerY*32);await scheduleRender();
  },
  setDoor(x:number,y:number,open:boolean){
   if(!Number.isInteger(x)||!Number.isInteger(y))return Promise.resolve();
