@@ -30,8 +30,10 @@ class ActorAssetProfileTests(unittest.TestCase):
         routes = profile['p0Baseline']['maps']
         lines = module._classic_mon_gen(routes).splitlines()
         spawn_maps = {line.split()[0] for line in lines if line.strip()}
+        controlled_maps = {"D001"}
         self.assertTrue(spawn_maps.issubset(set(routes)))
-        self.assertEqual(spawn_maps, set(routes))
+        self.assertEqual(spawn_maps | controlled_maps, set(routes))
+        self.assertNotIn("D001", spawn_maps)
         bounds = {
             map_id: module.ClassicMap(path.read_bytes())
             for map_id, path in module._source_map_paths().items()
