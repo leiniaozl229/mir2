@@ -91,7 +91,7 @@ export class OnlineActor {
   const y=this.label.y+2,ratio=Math.max(0,Math.min(1,this.entity.hp!/this.entity.maxHp!));
   this.healthBack.rect(4,y,40,4).fill(0x201810);this.health.rect(5,y+1,38*ratio,2).fill(0xd13c32);
  }
- setLabelOffset(offset:number){this.labelOffsetY=offset;this.applyLabelOffset();this.drawHealth();}
+ setLabelOffset(offset:number){if(offset===this.labelOffsetY)return;this.labelOffsetY=offset;this.applyLabelOffset();this.drawHealth();}
  labelBounds(){return this.label.getBounds();}
  private applyLabelOffset(){this.label.y=this.labelBaseY+this.labelOffsetY;}
  private applyCursor(){
