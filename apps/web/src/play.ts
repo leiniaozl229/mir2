@@ -252,6 +252,20 @@ let credentials:Credentials|undefined,selectedCharacter:string|undefined;
 function appendChat(channel:string,text:string){const line=document.createElement('li');line.dataset.channel=channel;const labels:Record<string,string>={local:'附近',group:'组队',shout:'喊话',whisper:'私聊',guild:'行会',system:'系统'};line.textContent=`[${labels[channel]??channel}] ${text}`;chatLog.append(line);while(chatLog.children.length>100)chatLog.firstElementChild?.remove();chatLog.scrollTop=chatLog.scrollHeight;}
 function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;doorRetry=undefined;held=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];castleWarStatus=undefined;dialogueNpcId=undefined;classicWindow.hidden=true;characterWindow.hidden=true;inventoryWindow.hidden=true;renderGroup();renderAttackMode();renderGuild();clearTrade();if(movementTimer!==undefined)clearTimeout(movementTimer);movementTimer=undefined;if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();equipment.clear();paperdoll.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}dialogueElement.hidden=true;revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();}
 function update(entity:Entity){entities.set(entity.id,entity);let visual=visuals.get(entity.id);if(!visual){visual=new OnlineActor(entity,interact);visuals.set(entity.id,visual);view.depth.addChild(visual.container);}visual.update(entity);if(entity.self)paperdoll.setFeature(entity.feature);renderTargets();}
+function overlap(left:{x:number;y:number;width:number;height:number},right:{x:number;y:number;width:number;height:number}){return left.x<right.x+right.width&&left.x+left.width>right.x&&left.y<right.y+right.height&&left.y+left.height>right.y;}
+function layoutActorLabels(){
+ const placed:{x:number;y:number;width:number;height:number}[]=[];
+ const actors=[...visuals.entries()].map(([id,visual])=>({entity:entities.get(id),visual})).filter((entry):entry is {entity:Entity;visual:OnlineActor}=>Boolean(entry.entity?.name)).sort((left,right)=>Number(right.entity.self)-Number(left.entity.self)||left.entity.y-right.entity.y||left.entity.x-right.entity.x||left.entity.id-right.entity.id);
+ for(const {visual} of actors){
+  let offset=0;
+  for(let level=0;level<8;level++){
+   visual.setLabelOffset(offset);
+   const bounds=visual.labelBounds();
+   if(!placed.some(previous=>overlap(bounds,previous))){placed.push(bounds);break;}
+   offset-=14;
+  }
+ }
+}
 function renderTargets(){
  targetsElement.replaceChildren();const actor=self===undefined?undefined:entities.get(self);if(!actor){targetsElement.textContent='等待附近对象…';return;}
  const targets=[...entities.values()].filter(entity=>{const race=entity.feature&255;return !entity.self&&(race!==0||Boolean(entity.name));}).map(entity=>({entity,distance:Math.max(Math.abs(entity.x-actor.x),Math.abs(entity.y-actor.y))})).filter(value=>value.distance<=8).sort((a,b)=>a.distance-b.distance||a.entity.id-b.entity.id);
@@ -304,7 +318,7 @@ function interact(target:Entity){
  if(target.dead){socket.send(JSON.stringify({type:'butch',targetId:target.id}));update({...actor,direction,action:'harvest'});connection.textContent=`正在挖取 ${target.name}…`;return;}
  combatTarget=target.id;continueCombat();
 }
-view.app.ticker.add(()=>{const time=performance.now();for(const visual of visuals.values())visual.tick(time);});
+view.app.ticker.add(()=>{const time=performance.now();for(const visual of visuals.values())visual.tick(time);layoutActorLabels();});
 function scheduleReconnect(){
  if(!reconnectEnabled||reconnectTimer!==undefined||!credentials)return;
  if(reconnectAttempts>=5){reconnectEnabled=false;document.body.classList.remove('in-world');classicAuth.showLogin();connection.textContent='自动重连失败，请重新登录';return;}

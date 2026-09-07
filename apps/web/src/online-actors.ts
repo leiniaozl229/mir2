@@ -41,12 +41,12 @@ async function staticPose(name:string,index:number){
 export class OnlineActor {
  readonly container=new Container();
  private marker=new Graphics();private weapon=new Sprite();private body=new Sprite();private hair=new Sprite();private healthBack=new Graphics();private health=new Graphics();private label=new Text({text:'',style:{fontFamily:'SimSun, Songti SC, serif',fontSize:12,fill:0xffffff,stroke:{color:0x000000,width:3}}});
- private sequence=0;private key='';private start=0;private frames:Pose[]=[];private weaponFrames:Pose[]=[];private hairFrames:Pose[]=[];private interval=500;private entity:Entity;private movement:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;
- constructor(entity:Entity,interact?:(entity:Entity)=>void){this.entity=entity;this.container.sortableChildren=true;this.marker.zIndex=-2;this.body.zIndex=0;this.hair.zIndex=1;this.healthBack.zIndex=this.health.zIndex=8;this.label.zIndex=9;this.container.addChild(this.marker,this.weapon,this.body,this.hair,this.healthBack,this.health,this.label);this.label.anchor.set(.5,1);this.label.position.set(24,-64);if(interact){this.container.eventMode='static';this.container.on('pointertap',event=>{event.stopPropagation();interact(this.entity);});}this.applyCursor();}
+ private sequence=0;private key='';private start=0;private frames:Pose[]=[];private weaponFrames:Pose[]=[];private hairFrames:Pose[]=[];private interval=500;private entity:Entity;private movement:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;private labelBaseY=-64;private labelOffsetY=0;
+ constructor(entity:Entity,interact?:(entity:Entity)=>void){this.entity=entity;this.container.sortableChildren=true;this.marker.zIndex=-2;this.body.zIndex=0;this.hair.zIndex=1;this.healthBack.zIndex=this.health.zIndex=8;this.label.zIndex=9;this.container.addChild(this.marker,this.weapon,this.body,this.hair,this.healthBack,this.health,this.label);this.label.anchor.set(.5,1);this.label.position.set(24,this.labelBaseY);if(interact){this.container.eventMode='static';this.container.on('pointertap',event=>{event.stopPropagation();interact(this.entity);});}this.applyCursor();}
  update(entity:Entity){
   const toX=entity.x*48,toY=entity.y*32,moving=(entity.action==='walking'||entity.action==='running')&&(this.entity.x!==entity.x||this.entity.y!==entity.y);
   if(moving)this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start:performance.now(),duration:entity.action==='running'?400:600};else{this.movement=undefined;this.container.position.set(toX,toY);}
-  this.entity=entity;this.container.zIndex=entity.y*10000+entity.x+.5;this.label.text=entity.name;this.label.style.fill=nameFill(entity.nameColor);this.applyCursor();this.drawHealth();
+  this.entity=entity;this.container.zIndex=entity.y*10000+entity.x+.5;this.label.text=entity.name;this.label.style.fill=nameFill(entity.nameColor);this.labelOffsetY=0;this.applyLabelOffset();this.applyCursor();this.drawHealth();
   const status=(entity.status??0)>>>0;
   this.container.alpha=(status&0x00800000)!==0?.38:1;
   this.body.tint=(status&0x00000001)!==0?0x8f8f8f:(status&0xC0000000)!==0?0x8aa86e:0xffffff;
@@ -74,7 +74,7 @@ export class OnlineActor {
   if(!bodyName)return;
   this.weapon.zIndex=[0,5,6,7].includes(entity.direction)?-1:2;
   void Promise.all([staticIndex===undefined?poses(bodyName,action,entity.direction,offset):staticPose(bodyName,staticIndex),weaponName?poses(weaponName,action,entity.direction,weaponOffset):Promise.resolve(undefined),hairName?poses(hairName,action,entity.direction,offset):Promise.resolve(undefined)]).then(([body,heldWeapon,hair])=>{
-   if(generation!==this.sequence)return;this.frames=body.frames;this.weaponFrames=heldWeapon?.frames??[];this.hairFrames=hair?.frames??[];this.interval=body.interval;this.start=performance.now();this.label.y=Math.min(...body.frames.map(frame=>frame.y))-4;if(staticIndex!==undefined)this.marker.clear();this.drawHealth();
+   if(generation!==this.sequence)return;this.frames=body.frames;this.weaponFrames=heldWeapon?.frames??[];this.hairFrames=hair?.frames??[];this.interval=body.interval;this.start=performance.now();this.labelBaseY=Math.min(...body.frames.map(frame=>frame.y))-4;this.applyLabelOffset();if(staticIndex!==undefined)this.marker.clear();this.drawHealth();
   }).catch(()=>{if(generation===this.sequence)this.label.text=`${entity.name} · 素材待补齐`;});
  }
  tick(time:number){
@@ -91,6 +91,9 @@ export class OnlineActor {
   const y=this.label.y+2,ratio=Math.max(0,Math.min(1,this.entity.hp!/this.entity.maxHp!));
   this.healthBack.rect(4,y,40,4).fill(0x201810);this.health.rect(5,y+1,38*ratio,2).fill(0xd13c32);
  }
+ setLabelOffset(offset:number){this.labelOffsetY=offset;this.applyLabelOffset();this.drawHealth();}
+ labelBounds(){return this.label.getBounds();}
+ private applyLabelOffset(){this.label.y=this.labelBaseY+this.labelOffsetY;}
  private applyCursor(){
   const race=this.entity.feature&255;
   this.container.cursor=race===50?'url("/ui/Cursors/Cursor_Npc.CUR") 0 0, pointer':this.entity.dead?'url("/ui/Cursors/Cursor_Default.CUR") 0 0, auto':'url("/ui/Cursors/Cursor_Normal_Atk.CUR") 0 0, crosshair';
