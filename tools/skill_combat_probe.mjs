@@ -5,8 +5,11 @@ const root = new URL('..', import.meta.url);
 const gatewayUrl = process.env.MIR2_GATEWAY_URL ?? 'ws://127.0.0.1:18800/ws';
 const combat = JSON.parse(await readFile(new URL('content/classic-176/skill-combat.json', root), 'utf8'));
 const rules = JSON.parse(await readFile(new URL('content/classic-176/skill-rules.json', root), 'utf8')).skills;
-const mapBytes = await readFile(new URL('.runtime/server/Mir200/Map/0.map', root));
-const width = mapBytes.readUInt16LE(0), height = mapBytes.readUInt16LE(2);
+const mapData = new Map();
+for (const mapName of ['0', 'D001']) {
+  const bytes = await readFile(new URL(`.runtime/server/Mir200/Map/${mapName}.map`, root));
+  mapData.set(mapName, { bytes, width: bytes.readUInt16LE(0), height: bytes.readUInt16LE(2) });
+}
 const directions = [[0, -1], [1, -1], [1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1]];
 const kits = [
   { job: 0, command: '@warriorset', names: ['基本剑术', '攻杀剑术', '刺杀剑术', '半月弯刀', '烈火剑法'] },
@@ -26,6 +29,7 @@ class Client {
     this.waiters = [];
     this.events = [];
     this.sequence = 0;
+    this.map = '0';
     this.entities = new Map();
     this.skills = [];
     this.inventory = [];
@@ -51,7 +55,12 @@ class Client {
   }
 
   apply(message) {
-    if (message.type === 'entity') {
+    if (message.type === 'map') {
+      this.map = message.map;
+      this.entities.clear();
+      this.selfId = null;
+      this.position = null;
+    } else if (message.type === 'entity') {
       const prior = this.entities.get(message.id) ?? {};
       const entity = { ...prior, ...message, name: message.name ?? prior.name ?? '', feature: message.feature ?? prior.feature ?? 0 };
       this.entities.set(message.id, entity);
@@ -114,10 +123,11 @@ class Client {
   close() { this.socket.close(); }
 }
 
-function walkable(x, y) {
-  if (x < 0 || y < 0 || x >= width || y >= height) return false;
-  const offset = 52 + (x * height + y) * 12;
-  return ((mapBytes.readUInt16LE(offset) | mapBytes.readUInt16LE(offset + 4)) & 0x8000) === 0;
+function walkable(map, x, y) {
+  const data = mapData.get(map);
+  if (!data || x < 0 || y < 0 || x >= data.width || y >= data.height) return false;
+  const offset = 52 + (x * data.height + y) * 12;
+  return ((data.bytes.readUInt16LE(offset) | data.bytes.readUInt16LE(offset + 4)) & 0x8000) === 0;
 }
 
 function spellCost(skill) {
@@ -160,7 +170,7 @@ async function stepToward(client, x, y) {
   if (!dx && !dy) return true;
   const direction = directions.findIndex(([ox, oy]) => ox === dx && oy === dy);
   const nx = cx + dx, ny = cy + dy;
-  if (!walkable(nx, ny)) return false;
+  if (!walkable(client.map, nx, ny)) return false;
   client.pendingMove = [nx, ny];
   client.send({ type: 'move', x: nx, y: ny, direction });
   const deadline = Date.now() + 4000;
@@ -169,6 +179,10 @@ async function stepToward(client, x, y) {
       const message = await client.receive(Math.max(1, deadline - Date.now()));
       if (message.type === 'legacy' && message.id === -1 && String(message.status).startsWith('+GD/')) {
         client.position = [nx, ny];
+        client.pendingMove = undefined;
+        return true;
+      }
+      if (message.type === 'entity' && message.self && message.x === nx && message.y === ny) {
         client.pendingMove = undefined;
         return true;
       }
@@ -193,7 +207,7 @@ async function walkTo(client, x, y, budget = 12) {
     if (!await stepToward(client, x, y)) {
       for (const [ox, oy] of directions) {
         const nx = cx + ox, ny = cy + oy;
-        if (walkable(nx, ny) && Math.max(Math.abs(nx - x), Math.abs(ny - y)) < Math.max(Math.abs(cx - x), Math.abs(cy - y))) {
+        if (walkable(client.map, nx, ny) && Math.max(Math.abs(nx - x), Math.abs(ny - y)) < Math.max(Math.abs(cx - x), Math.abs(cy - y))) {
           if (await stepToward(client, nx, ny)) break;
         }
       }
@@ -202,23 +216,29 @@ async function walkTo(client, x, y, budget = 12) {
   return Math.max(Math.abs(client.position[0] - x), Math.abs(client.position[1] - y)) <= 1;
 }
 
-async function talk(client, command) {
+async function talk(client, command, npcPattern = /导师/, maxDistance = 20) {
   await client.drain(800);
   const [x, y] = client.position;
-  const trainers = [...client.entities.values()].filter(entity => /导师/.test(entity.name || '') && (entity.feature & 255) === 50);
+  const trainers = [...client.entities.values()].filter(entity => npcPattern.test(entity.name || '') && (entity.feature & 255) === 50);
   trainers.sort((a, b) => Math.max(Math.abs(a.x - x), Math.abs(a.y - y)) - Math.max(Math.abs(b.x - x), Math.abs(b.y - y)));
   const trainer = trainers[0];
-  if (!trainer) throw new Error(`${client.label}: skill trainer is not in view at ${x},${y}`);
+  if (!trainer) throw new Error(`${client.label}: NPC ${npcPattern} is not in view at ${x},${y}`);
   const distance = Math.max(Math.abs(trainer.x - x), Math.abs(trainer.y - y));
-  if (distance > 20) throw new Error(`${client.label}: nearest trainer ${trainer.name} is ${distance} cells away at ${trainer.x},${trainer.y}`);
-  if (distance > 1 && !await walkTo(client, trainer.x, trainer.y))
+  if (distance > maxDistance) throw new Error(`${client.label}: nearest NPC ${trainer.name} is ${distance} cells away at ${trainer.x},${trainer.y}`);
+  if (distance > 1 && !await walkTo(client, trainer.x, trainer.y, Math.max(12, maxDistance)))
     throw new Error(`${client.label}: could not reach ${trainer.name} at ${trainer.x},${trainer.y} from ${client.position}`);
   client.send({ type: 'npc', targetId: trainer.id });
   const dialogue = await client.waitFor('npcDialogue');
   const option = (dialogue.options ?? []).find(entry => entry.command === command);
   if (!option) throw new Error(`${client.label}: missing ${command} in ${JSON.stringify(dialogue.options)}`);
   client.send({ type: 'dialogueSelect', npcId: trainer.id, command });
-  await client.drain(2500);
+  if (command === '@orcgrave' || command === '@boss') {
+    await client.waitFor('map', 45000);
+    const deadline = Date.now() + 15000;
+    while ((!client.selfId || !client.position) && Date.now() < deadline) await client.drain(400);
+    if (!client.selfId || !client.position) throw new Error(`${client.label}: self entity missing after ${command}`);
+    await client.drain(1200);
+  } else await client.drain(2500);
 }
 
 async function waitSkills(client, names) {
@@ -286,6 +306,71 @@ async function castAndCollect(client, skill, targetId) {
   return result;
 }
 
+async function exerciseSummon(client, skill, jobReport) {
+  const entitiesBeforeCast = new Set(client.entities.keys());
+  const outcome = await castAndCollect(client, skill, client.selfId);
+  outcome.expectedEffect = { type: rules[skill.name].effectType, effect: rules[skill.name].effect };
+  outcome.expectedCost = spellCost(skill);
+  jobReport.skills.push(outcome);
+  await client.drain(5000);
+  const slave = [...client.entities.values()].find(entity =>
+    !entitiesBeforeCast.has(entity.id)
+    && (entity.kind === 'slave'
+      || entity.name === combat.summon.name
+      || entity.name?.startsWith(`${combat.summon.name}(${client.label})`)
+      || ((entity.feature & 255) === 23 && (entity.feature >>> 16) === 37)));
+  jobReport.summon = slave ? {
+    spawned: true, id: slave.id, name: slave.name, kind: slave.kind, nameColor: slave.nameColor,
+    classified: slave.kind === 'slave', position: [slave.x, slave.y],
+  } : { spawned: false };
+  if (!slave) return;
+
+  // The boss stays far from the teleport landing point. Walk away from it so
+  // the follower has an unambiguous master-follow movement to reproduce.
+  const origin = [slave.x, slave.y];
+  let movedAny = false;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const [px, py] = client.position;
+    const hostile = await waitForHostile(client, 500);
+    const towardHostile = hostile
+      ? directions.findIndex(([dx, dy]) => dx === Math.sign(hostile.x - px) && dy === Math.sign(hostile.y - py))
+      : -1;
+    const candidates = towardHostile < 0
+      ? directions
+      : [directions[(towardHostile + 4) % 8], ...directions.filter((_, index) => index !== (towardHostile + 4) % 8)];
+    let stepped = false;
+    for (const [dx, dy] of candidates) {
+      if (walkable(client.map, px + dx, py + dy) && await stepToward(client, px + dx, py + dy)) {
+        movedAny = true;
+        stepped = true;
+        break;
+      }
+    }
+    if (!stepped) break;
+  }
+  await client.drain(6000);
+  const moved = client.entities.get(slave.id);
+  jobReport.summon.followed = movedAny && Boolean(moved)
+    && Math.max(Math.abs(moved.x - origin[0]), Math.abs(moved.y - origin[1])) > 0;
+
+  const followPrey = await waitForHostile(client, 5000);
+  if (followPrey && Math.max(Math.abs(followPrey.x - client.position[0]), Math.abs(followPrey.y - client.position[1])) > 1)
+    await walkTo(client, followPrey.x, followPrey.y, 12);
+  if (followPrey && Math.max(Math.abs(followPrey.x - client.position[0]), Math.abs(followPrey.y - client.position[1])) === 1) {
+    jobReport.summon.attackTarget = { id: followPrey.id, name: followPrey.name, position: [followPrey.x, followPrey.y], playerPosition: [...client.position] };
+    const dir = directions.findIndex(([ox, oy]) => ox === Math.sign(followPrey.x - client.position[0]) && oy === Math.sign(followPrey.y - client.position[1]));
+    client.send({ type: 'attack', direction: dir });
+    const until = Date.now() + 12000;
+    while (Date.now() < until) {
+      const message = await client.receive(Math.max(1, until - Date.now())).catch(() => undefined);
+      if (message?.type === 'entityAction' && message.id === slave.id && message.action === 'attack') {
+        jobReport.summon.attacked = true;
+        break;
+      }
+    }
+  }
+}
+
 async function exerciseJob(kit) {
   const client = await enterWorld(kit.job);
   const jobReport = { job: kit.job, character: client.label, skills: [], summon: null };
@@ -305,16 +390,27 @@ async function exerciseJob(kit) {
         await client.drain(1200);
       }
     }
-    // Reset every job to the deterministic trainer test area. This keeps
-    // stale monsters and abandoned summons from changing the summon spawn
-    // tile or exhausting the local hostile targets between runs.
-    await talk(client, '@nearmonsters');
+    // Use the dedicated dungeon boss fixture for repeatable hostile casts.
+    // The normal chicken/deer area is shared by all probe clients and its
+    // short-lived targets can be exhausted by an earlier job.
+    if (kit.job === 0) await talk(client, '@nearmonsters');
+    else {
+      await talk(client, '@orcgrave');
+      await talk(client, '@boss', /古墓向导|首领测试官/, 60);
+    }
+    let summonDone = false;
+    if (kit.job === 2) {
+      const summonSkill = client.skills.find(skill => skill.name === '召唤骷髅');
+      await exerciseSummon(client, summonSkill, jobReport);
+      summonDone = true;
+    }
     const prey = await waitForHostile(client, 8000);
     if (prey && Math.max(Math.abs(prey.x - client.position[0]), Math.abs(prey.y - client.position[1])) > 1)
       await walkTo(client, prey.x, prey.y, 12);
     for (const name of kit.names) {
       const spec = combat.skills[name];
       const skill = client.skills.find(entry => entry.name === name);
+      if (spec.summon && summonDone) continue;
       const rule = rules[name];
       if (spec.use === 'passive') {
         jobReport.skills.push({ name, magicId: skill.magicId, use: 'passive', learned: true, cost: spellCost(skill) });
@@ -326,51 +422,10 @@ async function exerciseJob(kit) {
         if (!target) { jobReport.skills.push({ name, error: 'no nearby hostile target' }); continue; }
         targetId = target.id;
       }
-      const entitiesBeforeCast = spec.summon ? new Set(client.entities.keys()) : null;
       const outcome = await castAndCollect(client, skill, targetId);
       outcome.expectedEffect = { type: rule.effectType, effect: rule.effect };
       outcome.expectedCost = spellCost(skill);
       jobReport.skills.push(outcome);
-      if (spec.summon) {
-        await client.drain(5000);
-        const slave = [...client.entities.values()].find(entity =>
-          entitiesBeforeCast && !entitiesBeforeCast.has(entity.id)
-          && (entity.kind === 'slave'
-            || entity.name === combat.summon.name
-            || entity.name?.startsWith(`${combat.summon.name}(${client.label})`)
-            || ((entity.feature & 255) === 23 && (entity.feature >>> 16) === 37)));
-        jobReport.summon = slave ? {
-          spawned: true, id: slave.id, name: slave.name, kind: slave.kind, nameColor: slave.nameColor,
-          classified: slave.kind === 'slave',
-          position: [slave.x, slave.y],
-        } : { spawned: false };
-        if (slave) {
-          const origin = [slave.x, slave.y];
-          const [px, py] = client.position;
-          for (const [dx, dy] of directions) {
-            if (walkable(px + dx, py + dy) && await stepToward(client, px + dx, py + dy)) break;
-          }
-          await client.drain(2500);
-          const moved = client.entities.get(slave.id);
-          jobReport.summon.followed = moved ? Math.max(Math.abs(moved.x - origin[0]), Math.abs(moved.y - origin[1])) > 0 : false;
-          const prey = await waitForHostile(client, 5000);
-          if (prey && Math.max(Math.abs(prey.x - client.position[0]), Math.abs(prey.y - client.position[1])) > 1)
-            await walkTo(client, prey.x, prey.y, 12);
-          if (prey && Math.max(Math.abs(prey.x - client.position[0]), Math.abs(prey.y - client.position[1])) === 1) {
-            jobReport.summon.attackTarget = { id: prey.id, name: prey.name, position: [prey.x, prey.y], playerPosition: [...client.position] };
-            const dir = directions.findIndex(([ox, oy]) => ox === Math.sign(prey.x - client.position[0]) && oy === Math.sign(prey.y - client.position[1]));
-            client.send({ type: 'attack', direction: dir });
-            const until = Date.now() + 12000;
-            while (Date.now() < until) {
-              const message = await client.receive(Math.max(1, until - Date.now())).catch(() => undefined);
-              if (message?.type === 'entityAction' && message.id === slave.id && message.action === 'attack') {
-                jobReport.summon.attacked = true;
-                break;
-              }
-            }
-          }
-        }
-      }
       await client.drain(400);
     }
   } finally {
@@ -392,7 +447,8 @@ try {
   report.failed = failed.map(skill => skill.name);
   report.summon = summon ?? null;
   report.passed = report.missing.length === 0 && failed.length === 0
-    && Boolean(summon?.spawned) && summon?.classified === true;
+    && Boolean(summon?.spawned) && summon?.classified === true
+    && summon?.followed === true && summon?.attacked === true;
   if (!report.passed) throw new Error(`skill combat incomplete: missing=${report.missing.join(',') || 'none'} failed=${report.failed.join(',') || 'none'} summon=${JSON.stringify(summon)}`);
   console.log(`PASS 15-skill combat probe (${report.jobs.map(job => job.character).join(', ')})`);
 } catch (error) {

@@ -216,14 +216,20 @@ def main():
                     'messages': state.system_messages,
                     'messageCounts': state.packet_counts}, ensure_ascii=False, indent=2))
                 baseline_file = ROOT / '.runtime/reports/inventory-baseline.json'
-                expected_items = (json.loads(baseline_file.read_text())['inventory']
-                                  if baseline_file.exists() else prior_report.get('inventory', []))
+                baseline = json.loads(baseline_file.read_text()) if baseline_file.exists() else {}
+                # Inventory is mutable during a live play session. Older
+                # reports did not identify the account/character, so their
+                # item ids can belong to a different probe character.
+                same_character = baseline.get('account') == account and baseline.get('character') == character
+                expected_items = baseline.get('inventory', []) if same_character else []
+                if baseline_file.exists() and not same_character:
+                    print('INFO ignoring legacy inventory baseline for another or unidentified character')
                 combat_file = ROOT / '.runtime/reports/combat.json'
                 combat_baseline = json.loads(combat_file.read_text()) if combat_file.exists() else {}
-                if not expected_items and combat_baseline.get('harvestInventoryAddition'):
+                if not baseline_file.exists() and combat_baseline.get('harvestInventoryAddition'):
                     from item_codec import parse_client_item
                     expected_items = [parse_client_item(bytes.fromhex(item['packetHex'])) for item in combat_baseline['items']]
-                if not expected_items and prior_report.get('combat'):
+                if not baseline_file.exists() and prior_report.get('combat'):
                     from item_codec import parse_client_item
                     expected_items = [parse_client_item(bytes.fromhex(item['packetHex']))
                                       for item in prior_report['combat'].get('items', [])]
@@ -240,7 +246,8 @@ def main():
                 if '--drop-pickup' in sys.argv:
                     from drop_probe import drop_and_pickup
                     target, ground_result = drop_and_pickup(game, state, world, target)
-                baseline_file.write_text(json.dumps({'inventory': list(state.inventory.values()),
+                baseline_file.write_text(json.dumps({'account': account, 'character': character,
+                    'inventory': list(state.inventory.values()),
                     'source': 'successful live protocol probe'}, ensure_ascii=False, indent=2))
             finally:
                 game.close()

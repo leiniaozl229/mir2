@@ -102,14 +102,15 @@ function candidateSteps(map, origin) {
   return result;
 }
 
-function timedLine(map, origin, stepSize, count) {
+function timedLines(map, origin, stepSize, count) {
+  const lines = [];
   for (let direction = 0; direction < directions.length; direction++) {
     const [dx, dy] = directions[direction];
     const cells = Array.from({ length: stepSize * count }, (_, index) => [
       origin[0] + dx * (index + 1), origin[1] + dy * (index + 1),
     ]);
     if (cells.some(([x, y]) => blocked(map, x, y) || occupied(x, y))) continue;
-    return {
+    lines.push({
       direction,
       steps: Array.from({ length: count }, (_, index) => ({
         direction,
@@ -117,7 +118,18 @@ function timedLine(map, origin, stepSize, count) {
         x: origin[0] + dx * stepSize * (index + 1),
         y: origin[1] + dy * stepSize * (index + 1),
       })),
-    };
+    });
+  }
+  return lines;
+}
+
+async function findRuntimeLine(map, origin, stepSize, count) {
+  for (const line of timedLines(map, origin, stepSize, count)) {
+    const first = line.steps[0];
+    if (!await move(first)) continue;
+    const back = { direction: (line.direction + 4) % 8, run: first.run, x: origin[0], y: origin[1] };
+    if (!await move(back)) throw new Error(`Could not return after probing ${line.direction}`);
+    return line;
   }
   return undefined;
 }
@@ -153,11 +165,26 @@ async function replayTimedLine(map, origin, line, intervalMs) {
   };
 }
 
-async function move(step) {
+async function move(step, allowDoor = true) {
   send({ type: 'move', x: step.x, y: step.y, direction: step.direction, run: step.run });
   const result = await until(message => message.type === 'legacy' && (message.id === -1 || message.id === 28));
   if (result.id === 28) {
     report.rejected++;
+    // The static .map file does not encode the server's current door state.
+    // Follow the browser's real recovery path before declaring the step blocked.
+    if (!allowDoor) return false;
+    send({ type: 'openDoor', x: step.x, y: step.y });
+    const deadline = Date.now() + 1500;
+    while (Date.now() < deadline) {
+      let door;
+      try { door = await receive(Math.min(500, deadline - Date.now())); } catch { return false; }
+      if (door.type === 'error') return false;
+      if (door.type === 'door' && door.x === step.x && door.y === step.y) {
+        if (!door.open) return false;
+        await sleep(120);
+        return move(step, false);
+      }
+    }
     return false;
   }
   report.accepted++;
@@ -186,12 +213,15 @@ try {
 
   // Replay the browser's held-key cadence in both modes and return to the
   // original cell before the ordinary directional coverage below.
-  const walkLine = timedLine(map, position, 1, 3) ?? timedLine(map, position, 1, 2) ?? timedLine(map, position, 1, 1);
+  const walkLine = await findRuntimeLine(map, [...position], 1, 3)
+    ?? await findRuntimeLine(map, [...position], 1, 2)
+    ?? await findRuntimeLine(map, [...position], 1, 1);
   if (!walkLine) throw new Error(`No timed walk line at ${position.join(',')}`);
   report.timedWalk = await replayTimedLine(map, [...position], walkLine, 600);
   if (!report.timedWalk.accepted || !report.timedWalk.returnedToStart)
     throw new Error(`Timed walk did not return to origin: ${JSON.stringify(report.timedWalk)}`);
-  const runLine = timedLine(map, position, 2, 2) ?? timedLine(map, position, 2, 1);
+  const runLine = await findRuntimeLine(map, [...position], 2, 2)
+    ?? await findRuntimeLine(map, [...position], 2, 1);
   if (!runLine) throw new Error(`No timed run line at ${position.join(',')}`);
   report.timedRun = await replayTimedLine(map, [...position], runLine, 400);
   if (!report.timedRun.accepted || !report.timedRun.returnedToStart)
