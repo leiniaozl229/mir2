@@ -112,12 +112,22 @@ export class ClassicHud {
   const mini=root.querySelector<HTMLElement>('[data-hud-minimap-frame]');
   if(mini){mini.style.left='688px';mini.style.top='400px';mini.style.width='100px';mini.style.height='108px';}
   const windowButtons=Array.from(root.querySelectorAll<HTMLButtonElement>('.hud-window-buttons button'));
-  const positions=[[640,400],[678,390],[718,370],[0,0],[760,360]];
+  const nationalButtons=[
+   {index:8,hover:24,pressed:24,x:640,y:410,width:32,height:32,backgroundX:3,backgroundY:0},
+   {index:9,hover:9,pressed:9,x:678,y:390,width:32,height:32,backgroundX:4,backgroundY:0},
+   {index:10,hover:10,pressed:10,x:718,y:370,width:32,height:32,backgroundX:4,backgroundY:0},
+   undefined,
+   {index:11,hover:11,pressed:11,x:760,y:360,width:32,height:32,backgroundX:4,backgroundY:0}
+  ];
   windowButtons.forEach((button,index)=>{
-   const position=positions[index]??positions[0];
-   button.style.backgroundImage='none';button.style.width='32px';button.style.height='32px';
-   if(index===3){button.hidden=true;return;}
-   button.hidden=false;button.style.left=`${position[0]}px`;button.style.top=`${position[1]}px`;
+   const spec=nationalButtons[index];
+   button.hidden=false;
+   if(index===3){
+    clearSkin(button);button.onmouseenter=null;button.onmouseleave=null;button.onmousedown=null;button.onmouseup=null;
+    button.setAttribute('aria-label','目标');button.title='附近目标';button.style.left='748px';button.style.top='400px';button.style.width='32px';button.style.height='32px';
+   }else if(spec){
+    skinNationalHudButton(button,prguse,spec);
+   }
    if(index===4){
     button.setAttribute('aria-label','声音');
     button.addEventListener('click',event=>{
@@ -299,4 +309,18 @@ async function punchNationalHudChat(main:HTMLElement,prguse:NationalLibrary){
  main.style.backgroundImage=`url(${canvas.toDataURL('image/png')})`;
 }
 function clearSkin(element:HTMLElement){element.style.backgroundImage='none';element.style.backgroundColor='transparent';}
+function skinNationalHudButton(button:HTMLButtonElement,library:NationalLibrary,spec:{index:number;hover:number;pressed:number;x:number;y:number;width:number;height:number;backgroundX:number;backgroundY:number}){
+ button.style.left=`${spec.x}px`;button.style.top=`${spec.y}px`;button.style.width=`${spec.width}px`;button.style.height=`${spec.height}px`;
+ const paint=(index:number,filter:string)=>{
+  const frame=uiFrame(library,index);
+  button.style.setProperty('background-image',`url(${nationalUiUrl('prguse',frame)})`,'important');
+  button.style.backgroundPosition=`${spec.backgroundX}px ${spec.backgroundY}px`;
+  button.style.backgroundRepeat='no-repeat';button.style.backgroundColor='transparent';button.style.filter=filter;
+ };
+ paint(spec.index,'');
+ button.onmouseenter=()=>paint(spec.hover,'brightness(1.14)');
+ button.onmouseleave=()=>paint(spec.index,'');
+ button.onmousedown=()=>paint(spec.pressed,'brightness(.86)');
+ button.onmouseup=()=>paint(spec.hover,'brightness(1.14)');
+}
 function ratio(value:number,max:number){return max>0?Math.max(0,Math.min(1,value/max)):0;}
