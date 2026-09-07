@@ -1,20 +1,14 @@
 diff --git a/src/GameSrv/Word/WorldServer.Switch.cs b/src/GameSrv/Word/WorldServer.Switch.cs
 --- a/src/GameSrv/Word/WorldServer.Switch.cs
 +++ b/src/GameSrv/Word/WorldServer.Switch.cs
-@@ -122,21 +122,24 @@ namespace GameSrv.Word
-                 switchData.BlockWhisperArr.Add(playObject.LockWhisperList[i]);
-             }
- 
+@@ -125 +125 @@ namespace GameSrv.Word
 -            for (int i = 0; i < playObject.SlaveList.Count; i++)
 +            if (playObject.SlaveList != null)
-             {
+@@ -127,2 +127 @@ namespace GameSrv.Word
 -                IActor baseObject = playObject.SlaveList[i];
 -                if (i <= 4)
 +                for (int i = 0; i < playObject.SlaveList.Count; i++)
-                 {
-+                    IActor baseObject = playObject.SlaveList[i];
-+                    if (i <= 4)
-+                    {
+@@ -130,7 +129,11 @@ namespace GameSrv.Word
 -                    //switchData.SlaveArr[i].SlaveName = baseObject.ChrName;
 -                    //switchData.SlaveArr[i].KillCount = baseObject.KillMonCount;
 -                    //switchData.SlaveArr[i].SalveLevel = baseObject.SlaveMakeLevel;
@@ -22,6 +16,9 @@ diff --git a/src/GameSrv/Word/WorldServer.Switch.cs b/src/GameSrv/Word/WorldServ
 -                    //switchData.SlaveArr[i].RoyaltySec = (baseObject.MasterRoyaltyTick - HUtil32.GetTickCount()) / 1000;
 -                    //switchData.SlaveArr[i].nHP = baseObject.Abil.HP;
 -                    //switchData.SlaveArr[i].nMP = baseObject.Abil.MP;
++                    IActor baseObject = playObject.SlaveList[i];
++                    if (i <= 4)
++                    {
 +                        //switchData.SlaveArr[i].SlaveName = baseObject.ChrName;
 +                        //switchData.SlaveArr[i].KillCount = baseObject.KillMonCount;
 +                        //switchData.SlaveArr[i].SalveLevel = baseObject.SlaveMakeLevel;
@@ -30,20 +27,13 @@ diff --git a/src/GameSrv/Word/WorldServer.Switch.cs b/src/GameSrv/Word/WorldServ
 +                        //switchData.SlaveArr[i].nHP = baseObject.Abil.HP;
 +                        //switchData.SlaveArr[i].nMP = baseObject.Abil.MP;
 +                    }
-                 }
-             }
+@@ -139 +142 @@ namespace GameSrv.Word
 -            for (int i = 0; i < playObject.ExtraAbil.Length; i++)
 +            for (int i = 0; i < playObject.ExtraAbil.Length && i < switchData.StatusValue.Length; i++)
-             {
-                 if (playObject.ExtraAbil[i] > 0)
-                 {
 diff --git a/src/GameSrv/Word/WorldServer.cs b/src/GameSrv/Word/WorldServer.cs
 --- a/src/GameSrv/Word/WorldServer.cs
 +++ b/src/GameSrv/Word/WorldServer.cs
-@@ -316,6 +316,20 @@ namespace GameSrv.Word
-                     }
-                     if (SystemShare.MapMgr.FindMap(playObject.MapName) == null)
-                     {
+@@ -318,0 +319,14 @@ namespace GameSrv.Word
 +                        string invalidMapName = playObject.MapName;
 +                        short fallbackX = 0;
 +                        short fallbackY = 0;
@@ -58,34 +48,16 @@ diff --git a/src/GameSrv/Word/WorldServer.cs b/src/GameSrv/Word/WorldServer.cs
 +                            playObject.CurrY = GetRandHomeY(playObject);
 +                            LogService.Warn($"角色 {playObject.ChrName} 的存档地图 {invalidMapName} 不存在，已回退到出生地图 {fallbackMapName}。");
 +                        }
-                         playObject.Abil.HP = 0;
-                     }
- 
-@@ -1400,7 +1414,7 @@ namespace GameSrv.Word
-             {
-                 result = SystemShare.Config.HomeMap;
-                 nX = SystemShare.Config.HomeX;
+@@ -1403 +1417 @@ namespace GameSrv.Word
 -                nX = SystemShare.Config.HomeY;
 +                nY = SystemShare.Config.HomeY;
-             }
-             return result;
-         }
-@@ -1801,7 +1815,7 @@ namespace GameSrv.Word
-             {
-                 result = SystemShare.Config.HomeMap;
-                 nX = SystemShare.Config.HomeX;
+@@ -1804 +1818 @@ namespace GameSrv.Word
 -                nX = SystemShare.Config.HomeY;
 +                nY = SystemShare.Config.HomeY;
-             }
-             return result;
-         }
 diff --git a/src/OpenMir2/Data/SwitchDataInfo.cs b/src/OpenMir2/Data/SwitchDataInfo.cs
 --- a/src/OpenMir2/Data/SwitchDataInfo.cs
 +++ b/src/OpenMir2/Data/SwitchDataInfo.cs
-@@ -5,6 +5,18 @@ namespace OpenMir2.Data
- {
-     public class SwitchDataInfo
-     {
+@@ -7,0 +8,12 @@ namespace OpenMir2.Data
 +        public SwitchDataInfo()
 +        {
 +            BlockWhisperArr = new List<string>();
@@ -98,6 +70,3 @@ diff --git a/src/OpenMir2/Data/SwitchDataInfo.cs b/src/OpenMir2/Data/SwitchDataI
 +            StatusTimeOut = new int[7];
 +        }
 +
-         public string sMap;
-         public short wX;
-         public short wY;
