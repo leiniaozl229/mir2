@@ -22,6 +22,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
     private readonly Dictionary<int, byte> entityNameColors = [];
     private (ushort x, ushort y)? confirmedPosition;
     private (ushort x, ushort y)? pendingPosition;
+    private bool pendingAttack;
     private ItemAction? pendingItemAction;
     private int? activeNpc;
     private int? activeShopNpc;
@@ -233,9 +234,13 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     lock (worldStateLock)
                     {
                         if (direction < 0 || direction > 7) throw new InvalidOperationException("Invalid attack direction");
+                        if (pendingAttack || pendingPosition is not null || pendingSpell is not null)
+                            throw new InvalidOperationException("Action confirmation pending");
                         position = confirmedPosition ?? throw new InvalidOperationException("Player position is not ready");
+                        pendingAttack = true;
                     }
-                    await game.Send(3014, cancellation, recog: position.x | position.y << 16, tag: (ushort)direction);
+                    try { await game.Send(3014, cancellation, recog: position.x | position.y << 16, tag: (ushort)direction); }
+                    catch { lock (worldStateLock) pendingAttack = false; throw; }
                 }
                 else if (type == "butch" && phase == "world")
                 {
@@ -274,7 +279,8 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                         throw new InvalidDataException("Invalid movement coordinates");
                     lock (worldStateLock)
                     {
-                        if (pendingPosition is not null) throw new InvalidOperationException("Movement confirmation pending");
+                        if (pendingAttack || pendingPosition is not null || pendingSpell is not null)
+                            throw new InvalidOperationException("Action confirmation pending");
                         var current = confirmedPosition ?? throw new InvalidOperationException("Player position is not ready");
                         var offset = DirectionOffset(direction);
                         int distance = running ? 2 : 1;
@@ -427,6 +433,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     {
                         confirmedPosition = null;
                         pendingPosition = null;
+                        pendingAttack = false;
                         pendingItemAction = null;
                         pendingSpell = null;
                         playerActorId = null;
@@ -448,6 +455,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     lock (worldStateLock)
                     {
                         pendingPosition = null;
+                        pendingAttack = false;
                         pendingSpell = null;
                         activeNpc = null;
                         ClearShop();
@@ -464,6 +472,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     {
                         confirmedPosition = (packet.Param, packet.Tag);
                         pendingPosition = null;
+                        pendingAttack = false;
                         pendingItemAction = null;
                         pendingSpell = null;
                         playerActorId = packet.Recog;
@@ -491,7 +500,8 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     {
                         if (status.StartsWith("+GD/", StringComparison.Ordinal))
                         {
-                            if (pendingPosition is { } next) { confirmedPosition = next; pendingPosition = null; }
+                            if (pendingAttack) pendingAttack = false;
+                            else if (pendingPosition is { } next) { confirmedPosition = next; pendingPosition = null; }
                             else if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = true }; }
                         }
                         else if (WarriorSkillStatus(status) is { } warrior)
@@ -502,7 +512,12 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     }
                 else if (packet.Id == 28) lock (worldStateLock)
                 {
-                    if (pendingPosition is not null) pendingPosition = null;
+                    if (pendingAttack) pendingAttack = false;
+                    else if (pendingPosition is not null)
+                    {
+                        pendingPosition = null;
+                        confirmedPosition = (packet.Param, packet.Tag);
+                    }
                     else if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = false }; }
                 }
                 UpdateEntities(packet);
@@ -1062,7 +1077,8 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
         {
             if (requestedMagicId is < 1 or > ushort.MaxValue || !skills.TryGetValue((ushort)requestedMagicId, out skill!))
                 throw new InvalidOperationException("Skill is unavailable");
-            if (pendingSpell is not null || pendingPosition is not null) throw new InvalidOperationException("Action confirmation pending");
+            if (pendingAttack || pendingSpell is not null || pendingPosition is not null)
+                throw new InvalidOperationException("Action confirmation pending");
             var position = confirmedPosition ?? throw new InvalidOperationException("Player position is not ready");
             int selfId = playerActorId ?? throw new InvalidOperationException("Player position is not ready");
             if (targetId <= 0) targetId = selfId;

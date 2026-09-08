@@ -95,13 +95,17 @@ export class OnlineActor {
  }
  setLabelOffset(offset:number){if(offset===this.labelOffsetY)return;this.labelOffsetY=offset;this.applyLabelOffset();this.drawHealth();}
  labelBounds(){return this.label.getBounds();}
- hitTest(x:number,y:number){const bounds=this.container.getBounds();return !this.entity.self&&!this.entity.dead&&x>=bounds.x&&x<=bounds.x+bounds.width&&y>=bounds.y&&y<=bounds.y+bounds.height;}
+ hitTest(x:number,y:number){return actorHitTest(this.entity.self,this.container.getBounds(),x,y);}
  private applyLabelOffset(){this.label.y=this.labelBaseY+this.labelOffsetY;}
  private applyCursor(){
   const race=this.entity.feature&255;
   this.container.cursor=race===50?'url("/ui/Cursors/Cursor_Npc.CUR") 0 0, pointer':this.entity.dead?'url("/ui/Cursors/Cursor_Default.CUR") 0 0, auto':'url("/ui/Cursors/Cursor_Normal_Atk.CUR") 0 0, crosshair';
  }
  destroy(){this.sequence++;this.container.destroy({children:true});}
+}
+
+export function actorHitTest(self:boolean,bounds:{x:number;y:number;width:number;height:number},x:number,y:number){
+ return !self&&x>=bounds.x&&x<=bounds.x+bounds.width&&y>=bounds.y&&y<=bounds.y+bounds.height;
 }
 
 function armourShapeKey(dress:number){return dress>>1;}

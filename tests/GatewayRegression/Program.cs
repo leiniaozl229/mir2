@@ -1,5 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
+using System.Net.WebSockets;
+using System.Collections.Concurrent;
+using System.Reflection;
 using Mir2.WebGateway;
 using System.Text.Json;
 
@@ -418,4 +421,67 @@ try
     Require((await connection.Receive(timeout.Token)).Id == 51, "coalesced third frame retained");
 }
 finally { listener.Stop(); }
-Console.WriteLine("PASS gateway codec vectors, 1024 payload lengths, GBK, split and coalesced TCP frames");
+
+var actionSocket = new RecorderSocket();
+using (var actionSession = new GatewaySession(actionSocket))
+using (var actionListener = new TcpListener(IPAddress.Loopback, 0))
+using (var actionTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+{
+    actionListener.Start();
+    var flags = BindingFlags.NonPublic | BindingFlags.Instance;
+    var sessionType = typeof(GatewaySession);
+    void Set(string name, object value) => sessionType.GetField(name, flags)!.SetValue(actionSession, value);
+    object? Get(string name) => sessionType.GetField(name, flags)!.GetValue(actionSession);
+    var game = (LegacyConnection)Get("game")!;
+    var connect = game.Connect("127.0.0.1", ((IPEndPoint)actionListener.LocalEndpoint).Port, actionTimeout.Token);
+    using var peer = await actionListener.AcceptTcpClientAsync(actionTimeout.Token);
+    await connect;
+    Set("phase", "world");
+    Set("confirmedPosition", ((ushort)10, (ushort)10));
+    Set("pendingAttack", true);
+    Set("pendingPosition", ((ushort)11, (ushort)10));
+    Set("playerActorId", 7);
+    var reading = (Task)sessionType.GetMethod("ReadGame", flags)!.Invoke(actionSession, [actionTimeout])!;
+
+    await peer.GetStream().WriteAsync("#+GD/1!"u8.ToArray(), actionTimeout.Token);
+    await actionSocket.WaitForCount(1, actionTimeout.Token);
+    Require((ValueTuple<ushort, ushort>?)Get("confirmedPosition") == ((ushort)10, (ushort)10),
+        "attack acknowledgement does not confirm a later movement");
+    Require((ValueTuple<ushort, ushort>?)Get("pendingPosition") == ((ushort)11, (ushort)10),
+        "movement remains pending after attack acknowledgement");
+    Require(!(bool)Get("pendingAttack")!, "attack acknowledgement clears the attack action");
+
+    byte[] rejected = [(byte)'#', ..LegacyCodec.Header(28, recog: 7, param: 10, tag: 10, series: 2), (byte)'!'];
+    await peer.GetStream().WriteAsync(rejected, actionTimeout.Token);
+    await actionSocket.WaitForCount(2, actionTimeout.Token);
+    Require((ValueTuple<ushort, ushort>?)Get("confirmedPosition") == ((ushort)10, (ushort)10),
+        "movement rejection restores the authoritative position");
+    Require(Get("pendingPosition") is null, "movement rejection clears the pending position");
+
+    await actionTimeout.CancelAsync();
+    try { await reading; } catch (OperationCanceledException) { }
+}
+Console.WriteLine("PASS gateway codec vectors, 1024 payload lengths, GBK, split/coalesced TCP frames and action confirmation ordering");
+
+sealed class RecorderSocket : WebSocket
+{
+    private readonly ConcurrentQueue<string> messages = new();
+    public override WebSocketCloseStatus? CloseStatus => null;
+    public override string? CloseStatusDescription => null;
+    public override WebSocketState State => WebSocketState.Open;
+    public override string? SubProtocol => null;
+    public override void Abort() { }
+    public override Task CloseAsync(WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken cancellationToken) => Task.CompletedTask;
+    public override Task CloseOutputAsync(WebSocketCloseStatus closeStatus, string? statusDescription, CancellationToken cancellationToken) => Task.CompletedTask;
+    public override void Dispose() { }
+    public override Task<WebSocketReceiveResult> ReceiveAsync(ArraySegment<byte> buffer, CancellationToken cancellationToken) => throw new NotSupportedException();
+    public override Task SendAsync(ArraySegment<byte> buffer, WebSocketMessageType messageType, bool endOfMessage, CancellationToken cancellationToken)
+    {
+        messages.Enqueue(System.Text.Encoding.UTF8.GetString(buffer));
+        return Task.CompletedTask;
+    }
+    public async Task WaitForCount(int count, CancellationToken cancellationToken)
+    {
+        while (messages.Count < count) await Task.Delay(10, cancellationToken);
+    }
+}

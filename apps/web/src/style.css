@@ -57,6 +57,8 @@ body.classic-cursors.in-world .item-cell{cursor:var(--cursor-default)}
 #auth-overlay input,#auth-overlay button{position:absolute;padding:0;border:0;background:transparent;color:#e8d6a0;font:12px SimSun,'Songti SC',serif;image-rendering:pixelated}
 #auth-overlay input{background:#1a1610;color:#fff}
 #auth-overlay #connection{position:absolute;left:8px;bottom:4px;margin:0;z-index:2;color:#e8d6a0;font:12px SimSun,'Songti SC',serif;text-shadow:1px 1px #000}
+#world-status{display:none}
+body.in-world #world-status{position:absolute;left:50%;top:8px;z-index:7;display:block;max-width:620px;min-height:20px;padding:3px 10px;transform:translateX(-50%);border:1px solid rgba(190,151,76,.72);background:rgba(18,12,8,.86);color:#f0d89b;font:12px/14px SimSun,'Songti SC',serif;text-align:center;text-shadow:1px 1px #000;pointer-events:none}
 .auth-slot{position:absolute;padding:0;border:0;background-color:transparent;background-repeat:no-repeat;image-rendering:pixelated;color:#fff;text-align:left}
 .auth-slot-name,.auth-slot-meta{position:absolute;left:107px;white-space:nowrap;text-shadow:1px 1px #000;pointer-events:none}
 .auth-slot-name{top:9px}
@@ -83,6 +85,11 @@ body.classic-play #classic-window .classic-window-tabs button{padding:2px 7px;bo
 body.classic-play #classic-window .classic-window-tabs button.active{border-color:#e9c866;background:#62451f;color:#fff0bb}
 body.classic-play #classic-window .classic-window-body{flex:1;min-height:0;padding:0 2px 0 0;color:#e8d6a0}
 body.classic-play #classic-window .classic-window-body>details,body.classic-play #classic-window .classic-window-body>.group-panel,body.classic-play #classic-window .classic-window-body>.chat-panel{margin:0;padding:0;border:0;background:transparent;color:#e8d6a0}
+body.classic-play #classic-window .classic-window-body>.chat-panel form{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:6px;padding:8px 0;border-top:1px solid #4b4433}
+body.classic-play #classic-window .classic-window-body>.chat-panel form label{display:flex;gap:4px;min-width:0}
+body.classic-play #classic-window .classic-window-body>.chat-panel form label:last-of-type{grid-column:1 / 3}
+body.classic-play #classic-window .classic-window-body>.chat-panel form input,body.classic-play #classic-window .classic-window-body>.chat-panel form select{min-width:0;height:24px}
+body.classic-play #classic-window .classic-window-body>.chat-panel form button{grid-column:3;grid-row:1 / 3;padding:3px 8px}
 body.classic-play #classic-window .classic-window-body ol{margin:4px 0;padding-left:18px}
 body.classic-play #classic-modal-layer .npc-dialog{width:416px!important;min-height:347px!important;height:347px!important;padding:38px 14px 12px!important;background-image:url('/ui-national/prguse/402.2b8c83a121142363.png')!important;color:#e8d6a0;font:12px SimSun,'Songti SC',serif}
 body.classic-play #classic-modal-layer .npc-dialog>div:first-child{min-height:20px;color:#f4d67c;text-shadow:1px 1px #000}

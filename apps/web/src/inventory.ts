@@ -45,6 +45,7 @@ export class InventoryView {
  update(item:InventoryItem){if(this.items.has(item.makeIndex)){this.items.set(item.makeIndex,item);this.render();}}
  remove(id:number){this.pending.delete(id);this.items.delete(id);this.render();}
  resolve(id:number,accepted:boolean,removeOnSuccess:boolean){this.pending.delete(id);if(accepted&&removeOnSuccess)this.items.delete(id);this.render();}
+ rejectPending(){if(!this.pending.size)return;this.pending.clear();this.render();}
  private begin(item:InventoryItem,action:()=>void){this.pending.add(item.makeIndex);this.render();action();}
  private render(){
   this.element.replaceChildren();this.element.classList.add('classic-bag');
@@ -105,6 +106,12 @@ export class EquipmentView {
  remove(slot:number){this.pending.delete(slot);this.slots.delete(slot);this.render();}
  update(item:InventoryItem){for(const [slot,current] of this.slots)if(current.makeIndex===item.makeIndex){this.slots.set(slot,item);this.render();break;}}
  resolve(slot:number,accepted:boolean){this.pending.delete(slot);if(accepted)this.slots.delete(slot);this.render();}
+ rejectPending(){if(!this.pending.size)return;this.pending.clear();this.render();}
+ preferredSlot(slot:number){
+  if(slot===5&&this.slots.has(5)&&!this.slots.has(6))return 6;
+  if(slot===7&&this.slots.has(7)&&!this.slots.has(8))return 8;
+  return slot;
+ }
  private render(){
   this.element.replaceChildren();this.element.classList.add('paperdoll');
   for(const cell of EQUIPMENT_CELLS){

@@ -14,12 +14,15 @@ import {MagicEffects} from './magic-effects';
 import {ClassicHud} from './classic-hud';
 import {ClassicAuth,type SelectCharacter} from './classic-auth';
 import {ClassicStage} from './classic-stage';
+import {movementInput,releasesMovement,type HeldMovement} from './movement-input';
 const connection=document.querySelector<HTMLElement>('#connection')!;
+const worldStatus=document.querySelector<HTMLOutputElement>('#world-status')!;
+new MutationObserver(()=>worldStatus.textContent=connection.textContent).observe(connection,{childList:true,characterData:true,subtree:true});
 const loginForm=document.querySelector<HTMLFormElement>('#login')!;
 const createCharacterForm=document.querySelector<HTMLFormElement>('#create-character')!;
 const combatStatus=document.querySelector<HTMLElement>('#combat-status')!;
 const targetsElement=document.querySelector<HTMLElement>('#nearby-targets')!;
-const chatLog=document.querySelector<HTMLOListElement>('#chat-log')!,chatForm=document.querySelector<HTMLFormElement>('#chat-form')!,chatChannel=document.querySelector<HTMLSelectElement>('#chat-channel')!,chatTargetWrap=document.querySelector<HTMLElement>('#chat-target-wrap')!,chatTarget=document.querySelector<HTMLInputElement>('#chat-target')!,chatInput=document.querySelector<HTMLInputElement>('#chat-input')!;
+const chatPanel=document.querySelector<HTMLElement>('.chat-panel')!,chatLog=document.querySelector<HTMLOListElement>('#chat-log')!,chatForm=document.querySelector<HTMLFormElement>('#chat-form')!,chatChannel=document.querySelector<HTMLSelectElement>('#chat-channel')!,chatTargetWrap=document.querySelector<HTMLElement>('#chat-target-wrap')!,chatTarget=document.querySelector<HTMLInputElement>('#chat-target')!,chatInput=document.querySelector<HTMLInputElement>('#chat-input')!;
 const groupStatus=document.querySelector<HTMLElement>('#group-status')!,groupTarget=document.querySelector<HTMLInputElement>('#group-target')!,groupMembers=document.querySelector<HTMLOListElement>('#group-members')!,groupMode=document.querySelector<HTMLButtonElement>('#group-mode')!,groupCreate=document.querySelector<HTMLButtonElement>('#group-create')!,groupAdd=document.querySelector<HTMLButtonElement>('#group-add')!,groupRemove=document.querySelector<HTMLButtonElement>('#group-remove')!;
 const attackModeSelect=document.querySelector<HTMLSelectElement>('#attack-mode')!,attackModeStatus=document.querySelector<HTMLElement>('#attack-mode-status')!;
 const guildStatus=document.querySelector<HTMLElement>('#guild-status')!,guildTarget=document.querySelector<HTMLInputElement>('#guild-target')!,guildNameInput=document.querySelector<HTMLInputElement>('#guild-name')!,guildMembers=document.querySelector<HTMLOListElement>('#guild-members')!,guildRanksElement=document.querySelector<HTMLElement>('#guild-ranks')!,guildRelations=document.querySelector<HTMLElement>('#guild-relations')!,guildWarTarget=document.querySelector<HTMLInputElement>('#guild-war-target')!,guildWarRequest=document.querySelector<HTMLButtonElement>('#guild-war-request')!,guildCastleDialogue=document.querySelector<HTMLButtonElement>('#guild-castle-dialogue')!,guildNoticeInput=document.querySelector<HTMLTextAreaElement>('#guild-notice')!,guildNoticeSave=document.querySelector<HTMLButtonElement>('#guild-notice-save')!,guildAllyTarget=document.querySelector<HTMLInputElement>('#guild-ally-target')!,guildAlly=document.querySelector<HTMLButtonElement>('#guild-ally')!,guildBreakAlly=document.querySelector<HTMLButtonElement>('#guild-break-ally')!,guildRanksInput=document.querySelector<HTMLTextAreaElement>('#guild-ranks-input')!,guildRanksSave=document.querySelector<HTMLButtonElement>('#guild-ranks-save')!,guildOpen=document.querySelector<HTMLButtonElement>('#guild-open')!,guildMembersRequest=document.querySelector<HTMLButtonElement>('#guild-members-request')!,guildCreate=document.querySelector<HTMLButtonElement>('#guild-create')!,guildAdd=document.querySelector<HTMLButtonElement>('#guild-add')!,guildRemove=document.querySelector<HTMLButtonElement>('#guild-remove')!;
@@ -166,7 +169,7 @@ let lastAttack=0;
 const directions=[[0,-1],[1,-1],[1,0],[1,1],[0,1],[-1,1],[-1,0],[-1,-1]];
 const inventory=new InventoryView(document.querySelector<HTMLElement>('#inventory-items')!,{
  drop:makeIndex=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'dropItem',makeIndex}));},
- equip:(makeIndex,slot)=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'equipItem',makeIndex,slot}));},
+ equip:(makeIndex,slot)=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'equipItem',makeIndex,slot:equipment.preferredSlot(slot)}));},
  use:makeIndex=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'useItem',makeIndex}));},
  trade:makeIndex=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'tradeAdd',makeIndex}));}
 });
@@ -183,14 +186,16 @@ const classicWindowSources=[
  {id:'quest',label:'任务日志',node:document.querySelector<HTMLElement>('#quest-panel')!},
  {id:'targets',label:'附近目标与 NPC',node:document.querySelector<HTMLElement>('#nearby-targets')!.parentElement as HTMLElement},
  {id:'ground',label:'地面物品',node:document.querySelector<HTMLElement>('#ground-items')!.parentElement as HTMLElement},
- {id:'chat',label:'聊天',node:document.querySelector<HTMLElement>('.chat-panel')!},
+ {id:'chat',label:'聊天',node:chatPanel},
  {id:'group',label:'队伍',node:document.querySelector<HTMLElement>('#group-panel')!},
  {id:'attack',label:'攻击模式',node:document.querySelector<HTMLElement>('#attack-mode-panel')!},
  {id:'guild',label:'行会',node:document.querySelector<HTMLElement>('#guild-panel')!},
  {id:'trade',label:'玩家交易',node:document.querySelector<HTMLElement>('#trade-panel')!},
 ];
+const hudChat=document.querySelector<HTMLElement>('[data-hud-chat]')!;
 for(const source of classicWindowSources){source.node.hidden=source.id!=='chat';if(source.id!=='chat')classicWindowBody.append(source.node);}
-document.querySelector<HTMLElement>('[data-hud-chat]')!.append(document.querySelector<HTMLElement>('.chat-panel')!);
+hudChat.append(chatPanel);
+function dockChat(){if(chatPanel.parentElement!==hudChat)hudChat.append(chatPanel);chatPanel.hidden=false;}
 function setCharacterPage(page:'paperdoll'|'status'|'state'|'skills'){
  hideClassicWindows('character');
  characterWindow.hidden=false;classicHud.skinWindow(characterWindow,'character');
@@ -202,7 +207,7 @@ function setCharacterPage(page:'paperdoll'|'status'|'state'|'skills'){
 function hideClassicWindows(except:'character'|'inventory'|'classic'|undefined=undefined){
  if(except!=='character')characterWindow.hidden=true;
  if(except!=='inventory')inventoryWindow.hidden=true;
- if(except!=='classic')classicWindow.hidden=true;
+ if(except!=='classic'){classicWindow.hidden=true;dockChat();}
 }
 function toggleClassicWindow(id:string){
  if(id==='character'||id==='equipment'){
@@ -222,9 +227,10 @@ function toggleClassicWindow(id:string){
 function showClassicWindow(id:string){
  const source=classicWindowSources.find(value=>value.id===id);if(!source)return;
  hideClassicWindows('classic');
+ if(id==='chat')classicWindowBody.append(chatPanel);else dockChat();
  for(const value of classicWindowSources)if(value.id!=='chat')value.node.hidden=value.node!==source.node;
+ source.node.hidden=false;
  classicWindowTitle.textContent=source.label;
- if(id==='chat'){classicWindow.hidden=true;return;}
  classicWindow.hidden=false;classicHud.skinWindow(classicWindow,id);
  document.querySelectorAll<HTMLButtonElement>('[data-window-tab]').forEach(button=>button.classList.toggle('active',button.dataset.windowTab===id));
 }
@@ -234,7 +240,7 @@ document.querySelectorAll<HTMLButtonElement>('[data-window-close]').forEach(butt
  if(id==='character')characterWindow.hidden=true;
  else if(id==='inventory')inventoryWindow.hidden=true;
 }));
-document.querySelector<HTMLButtonElement>('#classic-window-close')!.addEventListener('click',()=>{classicWindow.hidden=true;});
+document.querySelector<HTMLButtonElement>('#classic-window-close')!.addEventListener('click',()=>{classicWindow.hidden=true;dockChat();});
 characterWindow.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach(button=>button.addEventListener('click',()=>setCharacterPage((button.dataset.characterTab??'paperdoll') as 'paperdoll'|'status'|'state'|'skills')));
 const groundItems=new GroundItems(view.depth,(item:GroundItem)=>{
  ignoreCanvasPointerUntil=performance.now()+100;
@@ -245,12 +251,12 @@ const groundItems=new GroundItems(view.depth,(item:GroundItem)=>{
  socket.send(JSON.stringify({type:'pickup'}));connection.textContent=`正在拾取 ${item.name}…`;
 },document.querySelector<HTMLElement>('#ground-items')!);
 const entities=new Map<number,Entity>(),visuals=new Map<number,OnlineActor>();
-let socket:WebSocket|undefined,self:number|undefined,lastSequence=0,mapGeneration=0,currentMap='0',pending:{x:number;y:number;direction:number;run:boolean}|undefined,doorRetry:{x:number;y:number;direction:number;run:boolean}|undefined,held:{key:string;dx:number;dy:number;run:boolean}|undefined,rightPointer:{pointerId:number;clientX:number;clientY:number}|undefined,clickDestination:{x:number;y:number;run:boolean}|undefined,movementTimer:number|undefined,combatTimer:number|undefined,pursuitTarget:number|undefined,pursuitGroundItem:number|undefined,combatTarget:number|undefined,worldReady=true,initialSelfPending=true,suppressNpcDialogsUntil=0,reconnectTimer:number|undefined,reconnectAttempts=0,reconnectEnabled=false;
+let socket:WebSocket|undefined,self:number|undefined,lastSequence=0,mapGeneration=0,currentMap='0',pending:{x:number;y:number;direction:number;run:boolean}|undefined,doorRetry:{x:number;y:number;direction:number;run:boolean}|undefined,held:HeldMovement|undefined,rightPointer:{pointerId:number;clientX:number;clientY:number}|undefined,clickDestination:{x:number;y:number;run:boolean}|undefined,movementTimer:number|undefined,combatTimer:number|undefined,pursuitTarget:number|undefined,pursuitGroundItem:number|undefined,combatTarget:number|undefined,worldReady=true,initialSelfPending=true,suppressNpcDialogsUntil=0,reconnectTimer:number|undefined,reconnectAttempts=0,reconnectEnabled=false;
 let mapReady:Promise<void>=Promise.resolve();
 type Credentials={account:string;password:string};
 let credentials:Credentials|undefined,selectedCharacter:string|undefined;
 function appendChat(channel:string,text:string){const line=document.createElement('li');line.dataset.channel=channel;const labels:Record<string,string>={local:'附近',group:'组队',shout:'喊话',whisper:'私聊',guild:'行会',system:'系统'};line.textContent=`[${labels[channel]??channel}] ${text}`;chatLog.append(line);while(chatLog.children.length>100)chatLog.firstElementChild?.remove();chatLog.scrollTop=chatLog.scrollHeight;}
-function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;initialSelfPending=true;pursuitTarget=undefined;pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];castleWarStatus=undefined;dialogueNpcId=undefined;classicWindow.hidden=true;characterWindow.hidden=true;inventoryWindow.hidden=true;renderGroup();renderAttackMode();renderGuild();clearTrade();if(movementTimer!==undefined)clearTimeout(movementTimer);movementTimer=undefined;if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();equipment.clear();paperdoll.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}dialogueElement.hidden=true;revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();}
+function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;initialSelfPending=true;pursuitTarget=undefined;pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];castleWarStatus=undefined;dialogueNpcId=undefined;classicWindow.hidden=true;dockChat();characterWindow.hidden=true;inventoryWindow.hidden=true;renderGroup();renderAttackMode();renderGuild();clearTrade();if(movementTimer!==undefined)clearTimeout(movementTimer);movementTimer=undefined;if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();equipment.clear();paperdoll.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}dialogueElement.hidden=true;revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();}
 function update(entity:Entity){entities.set(entity.id,entity);let visual=visuals.get(entity.id);if(!visual){visual=new OnlineActor(entity,interact);visuals.set(entity.id,visual);view.depth.addChild(visual.container);}visual.update(entity);if(entity.self)paperdoll.setFeature(entity.feature);renderTargets();}
 function overlap(left:{x:number;y:number;width:number;height:number},right:{x:number;y:number;width:number;height:number}){return left.x<right.x+right.width&&left.x+left.width>right.x&&left.y<right.y+right.height&&left.y+left.height>right.y;}
 function layoutActorLabels(){
@@ -478,6 +484,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='tradeResult'){
    const labels:Record<string,string>={request:'发起交易',add:'放入物品',remove:'取回物品',gold:'设置金币'};
    if(message.action==='add'&&message.accepted&&message.item){tradeLocal.set(message.item.makeIndex,message.item);inventory.resolve(message.item.makeIndex,true,true);}
+   if(message.action==='add'&&!message.accepted)inventory.rejectPending();
    if(message.action==='remove'&&message.accepted&&message.item){tradeLocal.delete(message.item.makeIndex);inventory.add(message.item);}
    renderTrade();connection.textContent=message.accepted?`${labels[message.action]??'交易操作'}成功`:`${labels[message.action]??'交易操作'}失败 · 原因 ${message.reason}`;
   }
@@ -525,7 +532,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='entityRemoved'){if(pursuitTarget===message.id)pursuitTarget=undefined;if(combatTarget===message.id)stopCombat();entities.delete(message.id);visuals.get(message.id)?.destroy();visuals.delete(message.id);renderTargets();}
   else if(message.type==='legacy'&&pending){
    if(message.id===-1&&message.status?.startsWith('+GD/')){const accepted=pending,entity=self===undefined?undefined:entities.get(self);if(entity&&accepted){if(entity.x!==accepted.x||entity.y!==accepted.y)update({...entity,...accepted,action:accepted.run?'running':'walking'});classicHud.position(view.map,accepted.x,accepted.y);view.setMarker(accepted.x,accepted.y);view.moveCenter(accepted.x,accepted.y,accepted.run?400:600);audio.play('movement',.22);connection.textContent=`已连接 · ${entity.name} · ${accepted.x}, ${accepted.y}`;}pending=undefined;continueHeld();continuePointerRun();continueClickDestination();continuePursuit();continueGroundPursuit();}
-   else if(message.id===28){const blocked=pending;pending=undefined;held=undefined;rightPointer=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;if(blocked&&socket?.readyState===WebSocket.OPEN){doorRetry=blocked;socket.send(JSON.stringify({type:'openDoor',x:blocked.x,y:blocked.y}));connection.textContent=`尝试打开门 · ${blocked.x}, ${blocked.y}`;}else connection.textContent='该方向暂时无法通行';}
+   else if(message.id===28){const blocked=pending,entity=self===undefined?undefined:entities.get(self);pending=undefined;held=undefined;rightPointer=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;if(entity&&Number.isInteger(message.param)&&Number.isInteger(message.tag)){update({...entity,x:message.param,y:message.tag,action:'standing'});classicHud.position(view.map,message.param,message.tag);view.setMarker(message.param,message.tag);void view.setCenter(message.param,message.tag);}if(blocked&&socket?.readyState===WebSocket.OPEN){doorRetry=blocked;socket.send(JSON.stringify({type:'openDoor',x:blocked.x,y:blocked.y}));connection.textContent=`尝试打开门 · ${blocked.x}, ${blocked.y}`;}else connection.textContent='该方向暂时无法通行';}
   }
   else if(message.type==='inventory')inventory.replace(message.items);
   else if(message.type==='equipment')equipment.replace(message.slots);
@@ -544,7 +551,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   }
   else if(message.type==='groundItem'){groundItems.add(message);connection.textContent=`地面出现 ${message.name} · ${message.x}, ${message.y}`;}
   else if(message.type==='groundItemRemoved'){if(pursuitGroundItem===message.id)pursuitGroundItem=undefined;groundItems.remove(message.id);}
-  else if(message.type==='error'){selectedMagic=undefined;skillBar.resolve();connection.textContent=message.message;}
+  else if(message.type==='error'){selectedMagic=undefined;skillBar.resolve();inventory.rejectPending();equipment.rejectPending();connection.textContent=message.message;appendChat('system',`操作失败：${message.message}`);}
  });
   active.addEventListener('close',()=>{if(socket!==active)return;pending=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;stopCombat();if(reconnectEnabled&&credentials){scheduleReconnect();}else{document.body.classList.remove('in-world');classicAuth.showLogin();connection.textContent='连接已断开，请重新登录';}});
  active.addEventListener('error',()=>{if(socket===active)connection.textContent='无法连接游戏网关';});
@@ -601,7 +608,6 @@ const stopPointerRun=(event:PointerEvent)=>{if(rightPointer?.pointerId!==event.p
 view.app.canvas.addEventListener('pointerup',stopPointerRun);
 view.app.canvas.addEventListener('pointercancel',stopPointerRun);
 view.app.canvas.addEventListener('lostpointercapture',event=>{if(rightPointer?.pointerId===event.pointerId)rightPointer=undefined;});
-const movementKeys:Record<string,[number,number]>={ArrowUp:[0,-1],w:[0,-1],W:[0,-1],ArrowRight:[1,0],d:[1,0],D:[1,0],ArrowDown:[0,1],s:[0,1],S:[0,1],ArrowLeft:[-1,0],a:[-1,0],A:[-1,0]};
 function selectSkillSlot(index:number){activateSkillSlot(index);}
 function activateSkillSlot(index:number){
  const skill=skillBar.skillAt(index);if(!skill)return false;
@@ -625,5 +631,7 @@ function cycleAttackMode(){
  socket.send(JSON.stringify({type:'attackMode',mode}));
  connection.textContent='正在切换攻击模式…';
 }
-window.addEventListener('keydown',event=>{if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea'))return;if(event.ctrlKey&&event.key.toLowerCase()==='h'){event.preventDefault();if(!event.repeat)cycleAttackMode();return;}const classicWindowKey:Record<string,string>={F9:'inventory',F10:'character',F11:'skills'};const windowId=classicWindowKey[event.key];if(windowId){event.preventDefault();if(!event.repeat)toggleClassicWindow(windowId);return;}const functionKey=/^F([1-8])$/.exec(event.key);if(functionKey){event.preventDefault();if(!event.repeat)selectSkillSlot(Number(functionKey[1])-1);return;}const offset=movementKeys[event.key];if(!offset||event.repeat)return;event.preventDefault();rightPointer=undefined;stopCombat();doorRetry=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;held={key:event.key,dx:offset[0],dy:offset[1],run:event.shiftKey};const actor=self===undefined?undefined:entities.get(self);if(actor)sendMovement(actor,held.dx,held.dy,held.run);});
-window.addEventListener('keyup',event=>{if(held?.key===event.key)held=undefined;});
+window.addEventListener('keydown',event=>{if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea'))return;if(event.ctrlKey&&event.key.toLowerCase()==='h'){event.preventDefault();if(!event.repeat)cycleAttackMode();return;}const classicWindowKey:Record<string,string>={F9:'inventory',F10:'character',F11:'skills'};const windowId=classicWindowKey[event.key];if(windowId){event.preventDefault();if(!event.repeat)toggleClassicWindow(windowId);return;}const functionKey=/^F([1-8])$/.exec(event.key);if(functionKey){event.preventDefault();if(!event.repeat)selectSkillSlot(Number(functionKey[1])-1);return;}const movement=movementInput(event);if(!movement||event.repeat)return;event.preventDefault();rightPointer=undefined;stopCombat();doorRetry=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;held=movement;const actor=self===undefined?undefined:entities.get(self);if(actor)sendMovement(actor,held.dx,held.dy,held.run);});
+window.addEventListener('keyup',event=>{if(releasesMovement(held,event))held=undefined;});
+window.addEventListener('blur',()=>{held=undefined;rightPointer=undefined;});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){held=undefined;rightPointer=undefined;}});
