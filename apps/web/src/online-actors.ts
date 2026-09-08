@@ -48,7 +48,8 @@ export class OnlineActor {
   const toX=entity.x*48,toY=entity.y*32,moving=(entity.action==='walking'||entity.action==='running')&&(this.entity.x!==entity.x||this.entity.y!==entity.y),sameDestination=this.movement?.toX===toX&&this.movement?.toY===toY;
   // Keep interpolation aligned with the server cadence so consecutive
   // authoritative steps splice without a visible rubber-band.
-  if(moving){if(!sameDestination)this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start:performance.now(),duration:MOVEMENT_DURATION_MS};}else if(!sameDestination){this.movement=undefined;this.container.position.set(toX,toY);}
+  if(moving&&!sameDestination){const start=performance.now();this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start,duration:MOVEMENT_DURATION_MS};this.start=start;}
+  else if(!moving&&!sameDestination){this.movement=undefined;this.container.position.set(toX,toY);}
   this.entity=entity;this.container.zIndex=entity.y*10000+entity.x+.5;this.label.text=entity.name;this.label.style.fill=nameFill(entity.nameColor);this.labelOffsetY=0;this.applyLabelOffset();this.applyCursor();this.drawHealth();
   const status=(entity.status??0)>>>0;
   this.container.alpha=(status&0x00800000)!==0?.38:1;
@@ -77,13 +78,17 @@ export class OnlineActor {
   if(!bodyName)return;
   this.weapon.zIndex=[0,5,6,7].includes(poseDirection)?-1:2;
   void Promise.all([staticIndex===undefined?poses(bodyName,action,poseDirection,offset):staticPose(bodyName,staticIndex),weaponName?poses(weaponName,action,poseDirection,weaponOffset):Promise.resolve(undefined),hairName?poses(hairName,action,poseDirection,offset):Promise.resolve(undefined)]).then(([body,heldWeapon,hair])=>{
-   if(generation!==this.sequence)return;this.frames=body.frames;this.weaponFrames=heldWeapon?.frames??[];this.hairFrames=hair?.frames??[];this.interval=body.interval;this.start=performance.now();this.labelBaseY=Math.min(...body.frames.map(frame=>frame.y))-4;this.applyLabelOffset();if(staticIndex!==undefined)this.marker.clear();this.drawHealth();
+   if(generation!==this.sequence)return;this.frames=body.frames;this.weaponFrames=heldWeapon?.frames??[];this.hairFrames=hair?.frames??[];this.interval=body.interval;this.start=this.movement?.start??performance.now();this.labelBaseY=Math.min(...body.frames.map(frame=>frame.y))-4;this.applyLabelOffset();if(staticIndex!==undefined)this.marker.clear();this.drawHealth();
   }).catch(()=>{if(generation===this.sequence)this.label.text=`${entity.name} · 素材待补齐`;});
  }
  tick(time:number){
-  if(this.movement){const progress=Math.min(1,(time-this.movement.start)/this.movement.duration);this.container.position.set(this.movement.fromX+(this.movement.toX-this.movement.fromX)*progress,this.movement.fromY+(this.movement.toY-this.movement.fromY)*progress);if(progress===1)this.movement=undefined;}
+  const movement=this.movement;
+  const movementProgress=movement?Math.min(1,Math.max(0,(time-movement.start)/movement.duration)):undefined;
+  if(movement&&movementProgress!==undefined){this.container.position.set(movement.fromX+(movement.toX-movement.fromX)*movementProgress,movement.fromY+(movement.toY-movement.fromY)*movementProgress);if(movementProgress===1)this.movement=undefined;}
   if(!this.frames.length)return;
-  let frame=Math.floor((time-this.start)/this.interval);
+  const locomotion=this.entity.action==='walking'||this.entity.action==='running';
+  let frame=locomotion&&movementProgress!==undefined?Math.min(this.frames.length-1,Math.floor(movementProgress*this.frames.length)):Math.floor((time-this.start)/this.interval);
+  if(locomotion&&movementProgress===1){this.update({...this.entity,action:'standing'});return;}
   if(['walking','running','attack','harvest','struck','dying'].includes(this.entity.action)&&frame>=this.frames.length){this.update({...this.entity,action:this.entity.action==='dying'?'dead':'standing'});return;}
   frame%=this.frames.length;
   for(const [sprite,pose] of [[this.body,this.frames[frame]],[this.weapon,this.weaponFrames[frame]],[this.hair,this.hairFrames[frame]]] as const){sprite.texture=pose?.texture??Texture.EMPTY;if(pose)sprite.position.set(pose.x,pose.y);}

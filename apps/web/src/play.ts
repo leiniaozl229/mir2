@@ -432,7 +432,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   }
   else if(message.type==='entity'){
    const prior=entities.get(message.id);const entity={...prior,...message,name:message.name??prior?.name??'',feature:message.feature??prior?.feature??0,self:message.self||prior?.self||false,kind:message.kind??prior?.kind} as Entity;
-   update(entity);if(entity.self){self=entity.id;classicHud.position(currentMap,entity.x,entity.y);view.setMarker(entity.x,entity.y);if(initialSelfPending){initialSelfPending=false;void mapReady.then(()=>{const current=entities.get(entity.id);if(current)void view.setCenter(current.x,current.y);});}connection.textContent=`已连接 · ${entity.name} · ${entity.x}, ${entity.y}`;}if(message.self&&mapGeneration===1)active.send(JSON.stringify({type:'inventory'}));
+   update(entity);if(entity.self){self=entity.id;classicHud.position(currentMap,entity.x,entity.y);view.setMarker(entity.x,entity.y);if(initialSelfPending){initialSelfPending=false;void mapReady.then(()=>{const current=entities.get(entity.id);if(current)void view.setCenter(current.x,current.y);});}else if(entity.action==='walking'||entity.action==='running')view.moveCenter(entity.x,entity.y,MOVEMENT_DURATION_MS);connection.textContent=`已连接 · ${entity.name} · ${entity.x}, ${entity.y}`;}if(message.self&&mapGeneration===1)active.send(JSON.stringify({type:'inventory'}));
   }
   else if(message.type==='appearance'||message.type==='entityName'||message.type==='nameColor'||message.type==='entityDied'||message.type==='entityAlive'){
    const entity=entities.get(message.id);if(entity){const next={...entity,...(message.type==='appearance'?{feature:message.feature}:message.type==='entityName'?{name:message.name,nameColor:message.nameColor??entity.nameColor,kind:message.kind??entity.kind}:message.type==='nameColor'?{nameColor:message.color,kind:message.color===254?'slave':entity.kind}:message.type==='entityAlive'?{dead:false,action:'standing',x:message.x,y:message.y,direction:message.direction}:{dead:true,action:'dying',x:message.x,y:message.y,direction:message.direction,hp:0})};update(next);if(message.type==='entityDied'&&combatTarget===message.id)stopCombat();if(message.type==='entityDied'&&entity.self){held=undefined;pending=undefined;stopCombat();characterPanel.resources({hp:0});revivePanel.hidden=false;connection.textContent='角色已死亡';combatStatus.textContent='等待回城复活';}}
@@ -593,7 +593,7 @@ view.app.canvas.addEventListener('pointerdown',event=>{
  if(performance.now()<ignoreCanvasPointerUntil)return;
  const entity=self===undefined?undefined:entities.get(self);if(!entity||entity.dead||pending||socket?.readyState!==WebSocket.OPEN)return;
  const rect=view.app.canvas.getBoundingClientRect(),stageX=(event.clientX-rect.left)*800/rect.width,stageY=(event.clientY-rect.top)*600/rect.height;
- const clickedX=view.center.x+Math.floor((stageX-400)/48),clickedY=view.center.y+Math.floor((stageY-300)/32);
+ const clicked=view.cellAtScreen(stageX,stageY),clickedX=clicked.x,clickedY=clicked.y;
  const target=[...visuals.entries()].map(([id,visual])=>({entity:entities.get(id),visual})).filter((entry):entry is {entity:Entity;visual:OnlineActor}=>Boolean(entry.entity)&&entry.visual.hitTest(stageX,stageY)).sort((left,right)=>Math.max(Math.abs(left.entity.x-clickedX),Math.abs(left.entity.y-clickedY))-Math.max(Math.abs(right.entity.x-clickedX),Math.abs(right.entity.y-clickedY)))[0]?.entity;
  rightPointer=undefined;
  if(target){clickDestination=undefined;interact(target);return;}

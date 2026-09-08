@@ -223,7 +223,7 @@ try {
   const runLine = await findRuntimeLine(map, [...position], 2, 2)
     ?? await findRuntimeLine(map, [...position], 2, 1);
   if (!runLine) throw new Error(`No timed run line at ${position.join(',')}`);
-  report.timedRun = await replayTimedLine(map, [...position], runLine, 400);
+  report.timedRun = await replayTimedLine(map, [...position], runLine, 600);
   if (!report.timedRun.accepted || !report.timedRun.returnedToStart)
     throw new Error(`Timed run did not return to origin: ${JSON.stringify(report.timedRun)}`);
 

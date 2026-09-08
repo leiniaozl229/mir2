@@ -143,6 +143,9 @@ const scheduleRender=()=>{const task=renderTail.then(render,render);renderTail=t
 await scheduleRender();
 return {app,depth,frameBudget,get width(){return world.width;},get height(){return world.height;},get map(){return mapId;},
  get center(){return {x:centerX,y:centerY};},
+ cellAtScreen(x:number,y:number){
+  return {x:Math.floor((x-app.stage.position.x)/48),y:Math.floor((y-app.stage.position.y)/32)};
+ },
  async setCenter(x:number,y:number){
   cameraMotion=undefined;
   centerX=Math.max(0,Math.min(world.width-1,Math.round(x)));centerY=Math.max(0,Math.min(world.height-1,Math.round(y)));

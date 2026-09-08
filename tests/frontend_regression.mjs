@@ -44,6 +44,12 @@ if(movementVisualContext.exports.visualDirection(0)!==0||movementVisualContext.e
 if(movementVisualContext.exports.MOVEMENT_DURATION_MS!==600)throw new Error('movement interpolation differs from the OpenMir2 interval');
 console.log('PASS frontend movement visuals follow OpenMir2 direction and timing');
 
+const mapViewSource=fs.readFileSync(path.join(root,'apps/web/src/map-view.ts'),'utf8');
+if(!mapViewSource.includes('(x-app.stage.position.x)/48')||!mapViewSource.includes('(y-app.stage.position.y)/32'))throw new Error('screen clicks do not follow the interpolating camera');
+const onlineActorSource=fs.readFileSync(path.join(root,'apps/web/src/online-actors.ts'),'utf8');
+if(!onlineActorSource.includes('Math.floor(movementProgress*this.frames.length)')||!onlineActorSource.includes('this.start=this.movement?.start'))throw new Error('locomotion frames do not share the displacement clock');
+console.log('PASS frontend locomotion shares camera, displacement and frame timing');
+
 const actorSource=fs.readFileSync(path.join(root,'apps/web/src/online-actors.ts'),'utf8');
 const hitBody=actorSource.match(/export function actorHitTest[\s\S]*?\n\}/)?.[0];
 if(!hitBody)throw new Error('actor hit-test helper missing');
