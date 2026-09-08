@@ -1,6 +1,6 @@
 import {Assets,Container,Graphics,Sprite,Text,Texture} from 'pixi.js';
 import {resolveMonsterVisual} from './monster-visuals';
-import {MOVEMENT_DURATION_MS,visualDirection} from './movement-visual';
+import {MOVEMENT_DURATION_MS,MOVEMENT_SETTLE_MS,routeDirection,visualDirection} from './movement-visual';
 export type Entity={id:number;x:number;y:number;direction:number;feature:number;name:string;self:boolean;action:string;dead?:boolean;hp?:number;maxHp?:number;status?:number;hitSpeed?:number;nameColor?:number;kind?:string};
 export type PlayerLayers={bodyName:string;offset:number;hairName?:string;weaponName?:string;weaponOffset:number};
 
@@ -42,14 +42,15 @@ async function staticPose(name:string,index:number){
 export class OnlineActor {
  readonly container=new Container();
  private marker=new Graphics();private weapon=new Sprite();private body=new Sprite();private hair=new Sprite();private healthBack=new Graphics();private health=new Graphics();private label=new Text({text:'',style:{fontFamily:'SimSun, Songti SC, serif',fontSize:12,fill:0xffffff,stroke:{color:0x000000,width:3}}});
- private sequence=0;private key='';private start=0;private frames:Pose[]=[];private weaponFrames:Pose[]=[];private hairFrames:Pose[]=[];private interval=500;private entity:Entity;private movement:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;private labelBaseY=-64;private labelOffsetY=0;
+ private sequence=0;private key='';private start=0;private frames:Pose[]=[];private weaponFrames:Pose[]=[];private hairFrames:Pose[]=[];private interval=500;private entity:Entity;private movement:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;private movementEndedAt:number|undefined;private labelBaseY=-64;private labelOffsetY=0;
  constructor(entity:Entity,interact?:(entity:Entity)=>void){this.entity=entity;this.container.sortableChildren=true;this.marker.zIndex=-2;this.body.zIndex=0;this.hair.zIndex=1;this.healthBack.zIndex=this.health.zIndex=8;this.label.zIndex=9;this.container.addChild(this.marker,this.weapon,this.body,this.hair,this.healthBack,this.health,this.label);this.label.anchor.set(.5,1);this.label.position.set(24,this.labelBaseY);if(interact)this.container.eventMode='static';this.applyCursor();}
  update(entity:Entity){
   const toX=entity.x*48,toY=entity.y*32,moving=(entity.action==='walking'||entity.action==='running')&&(this.entity.x!==entity.x||this.entity.y!==entity.y),sameDestination=this.movement?.toX===toX&&this.movement?.toY===toY;
+  if(moving)entity={...entity,direction:routeDirection(this.entity.x,this.entity.y,entity.x,entity.y,entity.direction)};
   // Keep interpolation aligned with the server cadence so consecutive
   // authoritative steps splice without a visible rubber-band.
-  if(moving&&!sameDestination){const start=performance.now();this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start,duration:MOVEMENT_DURATION_MS};this.start=start;}
-  else if(!moving&&!sameDestination){this.movement=undefined;this.container.position.set(toX,toY);}
+  if(moving&&!sameDestination){const start=performance.now();this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start,duration:MOVEMENT_DURATION_MS};this.movementEndedAt=undefined;this.start=start;}
+  else if(!moving&&!sameDestination){this.movement=undefined;this.movementEndedAt=undefined;this.container.position.set(toX,toY);}
   this.entity=entity;this.container.zIndex=entity.y*10000+entity.x+.5;this.label.text=entity.name;this.label.style.fill=nameFill(entity.nameColor);this.labelOffsetY=0;this.applyLabelOffset();this.applyCursor();this.drawHealth();
   const status=(entity.status??0)>>>0;
   this.container.alpha=(status&0x00800000)!==0?.38:1;
@@ -84,11 +85,12 @@ export class OnlineActor {
  tick(time:number){
   const movement=this.movement;
   const movementProgress=movement?Math.min(1,Math.max(0,(time-movement.start)/movement.duration)):undefined;
-  if(movement&&movementProgress!==undefined){this.container.position.set(movement.fromX+(movement.toX-movement.fromX)*movementProgress,movement.fromY+(movement.toY-movement.fromY)*movementProgress);if(movementProgress===1)this.movement=undefined;}
+  if(movement&&movementProgress!==undefined){this.container.position.set(movement.fromX+(movement.toX-movement.fromX)*movementProgress,movement.fromY+(movement.toY-movement.fromY)*movementProgress);if(movementProgress===1){this.movement=undefined;this.movementEndedAt=time;}}
   if(!this.frames.length)return;
   const locomotion=this.entity.action==='walking'||this.entity.action==='running';
   let frame=locomotion&&movementProgress!==undefined?Math.min(this.frames.length-1,Math.floor(movementProgress*this.frames.length)):Math.floor((time-this.start)/this.interval);
-  if(locomotion&&movementProgress===1){this.update({...this.entity,action:'standing'});return;}
+  if(locomotion&&movementProgress===1)frame=this.frames.length-1;
+  if(locomotion&&movementProgress===undefined&&this.movementEndedAt!==undefined){if(time-this.movementEndedAt<MOVEMENT_SETTLE_MS)frame=this.frames.length-1;else{this.update({...this.entity,action:'standing'});return;}}
   if(['walking','running','attack','harvest','struck','dying'].includes(this.entity.action)&&frame>=this.frames.length){this.update({...this.entity,action:this.entity.action==='dying'?'dead':'standing'});return;}
   frame%=this.frames.length;
   for(const [sprite,pose] of [[this.body,this.frames[frame]],[this.weapon,this.weaponFrames[frame]],[this.hair,this.hairFrames[frame]]] as const){sprite.texture=pose?.texture??Texture.EMPTY;if(pose)sprite.position.set(pose.x,pose.y);}
