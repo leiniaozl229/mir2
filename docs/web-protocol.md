@@ -1,5 +1,7 @@
 # 浏览器网关协议 v1（实施中）
 
+2026-09-08 审查与修复记录见 [整体 review R01–R10](reviews/2026-09-08-review.md)。网关现在串行化攻击、移动和施法确认，移动拒绝会恢复服务端权威坐标；`command_rejected` 会解除前端物品等待态，国服 UI 已显示操作状态和完整聊天控件。真实服务复验范围仍按 review 的环境事件说明执行。
+
 本机入口 `ws://127.0.0.1:18800/ws`，健康检查 `/health`。网关使用 .NET 10，连接 Compose 内部 engine 的 7000、7100、7200 三个固定端口。客户端不能提交后端地址或登录票据。
 
 客户端每条 WebSocket 文本消息为一个 JSON 对象，最大 8 KiB。服务端响应为 `{sequence, mapGeneration, message}`：sequence 在连接内递增，mapGeneration 在收到新地图时递增。断线后创建新连接并重新登录，不重放先前操作。

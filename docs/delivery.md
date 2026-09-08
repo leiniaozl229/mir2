@@ -50,6 +50,10 @@ bash scripts/compose.sh stop
 
 ## 验收入口
 
+最新验收记录见 [2026-09-08 整体 review](reviews/2026-09-08-review.md)。R01–R10 已完成代码修复；前端 5 项交互回归、81 项 Python、CoreRegression 和 GatewayRegression 通过。试玩中出现 Colima 连接 / 挂载异常及引擎退出，真实服务复验仍需在环境恢复后完成。
+
+执行验收前需记录当前运行模式：本轮实际只有 `0 / D001`，570 张地图导出不等同于完整世界加载。任务审计现报告 `runtimeMode`、`expectedRuntimeEntries`、`skippedRuntimeEntries` 和 `missingRuntimeEntries`；经典路线缺少必需任务时返回失败。下表中的主动故障、停服与双行会夹具属于独立场景，本轮未重跑。
+
 | 检查 | 命令 |
 |---|---|
 | 内容引用闭合 | `python3 tools/content_audit.py` |

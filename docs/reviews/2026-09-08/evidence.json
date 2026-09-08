@@ -1,0 +1,504 @@
+{
+  "reviewDate": "2026-09-08",
+  "baseCommit": "3d52b2366feb1928b03051dcdbe967c2263c36b2",
+  "initialDirtyPaths": [
+    "content/classic-176/p0/cave-guide.txt",
+    "patches/openmir2/0015-seed-animal-harvest-meat.patch",
+    "scripts/prepare-runtime.py",
+    "vendor/openmir2"
+  ],
+  "runtimeMapIds": [
+    "0",
+    "D001"
+  ],
+  "playCharacter": "RvMage908",
+  "offline": {
+    "date": "2026-09-08",
+    "scope": "Offline build, unit tests, read-only asset/content audits, isolated .NET regressions. No service lifecycle or player sessions.",
+    "status": "passed-with-coverage-limitations",
+    "checks": [
+      {
+        "name": "web-build",
+        "command": "npm run build",
+        "result": "pass",
+        "details": "TypeScript validation and Vite production build; 698 transformed modules"
+      },
+      {
+        "name": "python-tests",
+        "command": "python3 -m unittest discover -s tests -p 'test_*.py'",
+        "result": "pass",
+        "count": 79
+      },
+      {
+        "name": "install-check",
+        "command": "python3 scripts/install-check.py --json .runtime/reports/review-2026-09-08/install-check.json",
+        "result": "pass"
+      },
+      {
+        "name": "content-audit-verified",
+        "command": "python3 tools/content_audit.py --verify-hashes --json .runtime/reports/review-2026-09-08/content-audit-verified.json --markdown .runtime/reports/review-2026-09-08/content-audit-verified.md",
+        "result": "pass",
+        "details": "570 expected/source/exported maps; asset source SHA-256 verification included"
+      },
+      {
+        "name": "world-catalog",
+        "result": "pass",
+        "details": "207 unique monsters, 2806 spawn rows; 47 mapped visuals, 160 missing visuals; 15 missing drop definitions; 3 declared SQL gaps"
+      },
+      {
+        "name": "skill-catalog",
+        "result": "pass",
+        "details": "15 expected skills; no missing records, duplicate IDs or rule mismatches"
+      },
+      {
+        "name": "skill-visual",
+        "result": "pass",
+        "details": "15 expected skills; no missing or invalid routes"
+      },
+      {
+        "name": "skill-combat",
+        "result": "pass",
+        "details": "15 expected skills; client routes/trainer levels/reagents consistent"
+      },
+      {
+        "name": "monster-visual-after-build",
+        "result": "pass",
+        "details": "22/22 covered, 4 candidate mappings"
+      },
+      {
+        "name": "quest-catalog",
+        "result": "pass-with-limitation",
+        "details": "sourceEntries=1, runtimeEntries=0, runtimeMaps=[0,d001]; success does not establish runtime quest completeness"
+      },
+      {
+        "name": "castle-regression",
+        "command": "bash scripts/run-castle-regression.sh",
+        "result": "pass",
+        "details": "Alliance persistence, first-war registration, castle capture flow; source generator nullable warnings"
+      },
+      {
+        "name": "gateway-regression",
+        "result": "pass",
+        "details": "Pinned .NET 10 SDK isolated container, network disabled; codec reference vectors, 1024 payload sizes, GBK, partial/coalesced TCP frames"
+      },
+      {
+        "name": "core-regression",
+        "result": "pass",
+        "details": "Pinned .NET 8 SDK isolated container, network disabled; encoding, map cells, save acknowledgement, harvest arithmetic, item codec, castle/memory guards"
+      }
+    ],
+    "reviewFindings": [
+      {
+        "priority": "P2",
+        "file": "tools/quest_catalog_audit.py",
+        "line": 120,
+        "title": "Runtime quest completeness is not checked",
+        "evidence": "quest-catalog.json contains sourceEntries=1, runtimeEntries=0 and ok=true; lines 100-111 validate only entries that are already present in runtime_rows."
+      },
+      {
+        "priority": "P3",
+        "file": "content/classic-176/version-profile.json",
+        "line": 708,
+        "title": "Declared unresolved UI import status is stale",
+        "evidence": "Version profile still says 2003 national UI Data awaits import; README documents completed 2756-frame import."
+      }
+    ],
+    "notes": [
+      "The first monster-visual run overlapped Vite rebuilding dist/web and temporarily observed missing library files. The dependent check was rerun after build and passed; retain the first report only as execution history.",
+      "Current runtime MapInfo contains only 0 and D001; MapQuest.txt has zero lines. Full exported map catalog checks do not establish active runtime route availability.",
+      "CoreRegression native-client-item.hex was written under core-sandbox/.runtime/reports to preserve earlier report files.",
+      "Root working tree status at the end matched the initial modified paths: cave-guide.txt, patch 0015, prepare-runtime.py and vendor/openmir2. No source or documentation changes made."
+    ]
+  },
+  "frontendProbe": {
+    "createdAt": "2026-09-08T02:56:06.489Z",
+    "method": "Actual TypeScript source transpiled in Node VM with minimal DOM/event doubles plus explicit source checks. No live server mutations.",
+    "results": [
+      {
+        "scenario": "Shift-click inventory item without an active trade",
+        "actual": {
+          "sent": [
+            {
+              "trade": 100
+            }
+          ],
+          "disabled": true,
+          "pending": [
+            100
+          ]
+        },
+        "evidence": [
+          "apps/web/src/inventory.ts:48",
+          "apps/web/src/inventory.ts:66",
+          "apps/web/src/play.ts:171",
+          "services/web-gateway/GatewaySession.cs:149",
+          "apps/web/src/play.ts:547"
+        ],
+        "limitation": "The handler is executed with a fake DOM. Gateway rejection and missing error cleanup are verified from source; browser reproduction is recorded separately."
+      },
+      {
+        "scenario": "Equip two rings consecutively",
+        "actual": {
+          "sent": [
+            {
+              "id": 100,
+              "slot": 7
+            },
+            {
+              "id": 101,
+              "slot": 7
+            }
+          ]
+        },
+        "expected": "The second ring can be equipped into free slot 8.",
+        "evidence": [
+          "apps/web/src/inventory.ts:130",
+          "services/web-gateway/GatewaySession.cs:1318"
+        ]
+      },
+      {
+        "scenario": "Shift+D, then release Shift before D",
+        "actual": {
+          "held": {
+            "key": "D",
+            "dx": 1,
+            "dy": 0,
+            "run": true
+          },
+          "registeredEvents": [
+            "keydown",
+            "keyup"
+          ]
+        },
+        "expected": "held is cleared after the movement key is released.",
+        "evidence": [
+          "apps/web/src/play.ts:628",
+          "apps/web/src/play.ts:629"
+        ],
+        "limitation": "Keyboard event payloads are supplied to actual handlers. This is not a native keyboard/browser trial."
+      },
+      {
+        "scenario": "Click inside a corpse bounding box",
+        "actual": {
+          "hit": false
+        },
+        "expected": "The corpse can be targeted for harvesting.",
+        "evidence": [
+          "apps/web/src/online-actors.ts:98",
+          "apps/web/src/play.ts:589",
+          "apps/web/src/play.ts:373"
+        ],
+        "workaround": "Use the nearby-targets harvest button."
+      },
+      {
+        "scenario": "Command errors after entering the world",
+        "actual": {
+          "connectionInsideAuthOverlay": true,
+          "inWorldHidesAuthOverlay": true,
+          "inWorldHidesDevChrome": true,
+          "errorHandlerOnlyUpdatesHiddenConnection": true
+        },
+        "evidence": [
+          "apps/web/play.html:110",
+          "apps/web/play.html:114",
+          "apps/web/src/style.css:19",
+          "apps/web/src/play.ts:547"
+        ],
+        "limitation": "DOM/CSS structure check; screenshot and accessibility-tree evidence are collected separately."
+      },
+      {
+        "scenario": "Chat channel selector in national UI",
+        "actual": {
+          "cssHidesNonContentLabels": true,
+          "chatTabClosesTheOnlyAlternateWindow": true
+        },
+        "evidence": [
+          "apps/web/src/style.css:67",
+          "apps/web/play.html:119",
+          "apps/web/src/play.ts:227",
+          "01-first-spawn-ax.txt"
+        ],
+        "limitation": "The initial live accessibility tree contains only the chat content input. This source check does not evaluate any legacy command-prefix workarounds."
+      }
+    ]
+  },
+  "frameNormal": {
+    "canvas": {
+      "width": 800,
+      "height": 600
+    },
+    "samples": 720,
+    "meanMs": 8.33,
+    "p50Ms": 8.3,
+    "p95Ms": 9.1,
+    "p99Ms": 9.3,
+    "fpsEstimate": 109.89,
+    "targetFps": 60,
+    "targetFrameMs": 16.67,
+    "map": "0",
+    "center": {
+      "x": 296,
+      "y": 624
+    },
+    "sampleMs": 8000,
+    "pressure": 0,
+    "passed": true
+  },
+  "framePressure100": {
+    "canvas": {
+      "width": 800,
+      "height": 600
+    },
+    "samples": 720,
+    "meanMs": 8.33,
+    "p50Ms": 8.3,
+    "p95Ms": 9.1,
+    "p99Ms": 9.3,
+    "fpsEstimate": 109.89,
+    "targetFps": 60,
+    "targetFrameMs": 16.67,
+    "map": "0",
+    "center": {
+      "x": 296,
+      "y": 624
+    },
+    "sampleMs": 8000,
+    "pressure": 100,
+    "passed": true
+  },
+  "responsiveLogin": {
+    "account": {
+      "bottom": 409.8125,
+      "height": 9.75,
+      "left": 169.16250610351562,
+      "right": 237.4125061035156,
+      "top": 400.0625,
+      "width": 68.25,
+      "x": 169.16250610351562,
+      "y": 400.0625
+    },
+    "scrollWidth": 390,
+    "stage": {
+      "bottom": 568.25,
+      "height": 292.5,
+      "left": 0,
+      "right": 390,
+      "top": 275.75,
+      "width": 390,
+      "x": 0,
+      "y": 275.75
+    },
+    "submit": {
+      "bottom": 456.6124877929687,
+      "height": 19.012481689453125,
+      "left": 204.75,
+      "right": 241.8000030517578,
+      "top": 437.6000061035156,
+      "width": 37.05000305175781,
+      "x": 204.75,
+      "y": 437.6000061035156
+    },
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  "environmentInterruption": {
+    "observedAt": "2026-09-08T11:03:00+08:00",
+    "hostDockerSocket": "unavailable",
+    "colimaVm": "running",
+    "guestDocker": "27.4.0",
+    "hostProjectMount": "unavailable through colima ssh from project cwd",
+    "engineState": "exited",
+    "engineExitCode": 1,
+    "engineOomKilled": false,
+    "engineFinishedAt": "2026-09-08T03:03:10.650797445Z",
+    "engineLog": [
+      "scripts/run-server.sh: line 112: 52 Bus error",
+      "additional child processes Aborted; final process Killed"
+    ],
+    "recoveryAttempt": "colima start returned already running, ignoring",
+    "cause": "Undetermined; no deliberate stop/restart/fault injection by this review",
+    "scope": "No VM restart or database restore performed; review did not resume live play after this interruption."
+  },
+  "mechanicalUiScan": {
+    "commandExitCode": 2,
+    "warningCount": 5,
+    "confirmedNewDefects": 0,
+    "scope": "Mechanical scan only; pinned classic 2003 UI aesthetics preserved",
+    "warnings": [
+      {
+        "type": "broken-image",
+        "count": 3,
+        "assessment": "Images receive runtime sources in classic-auth.ts and classic-hud.ts; static absence of src alone does not confirm a broken image."
+      },
+      {
+        "type": "layout-transition",
+        "count": 2,
+        "assessment": "HP/MP fill and experience widths use CSS transitions; this scan supplies no measured performance regression. Retain as performance inspection hints."
+      }
+    ]
+  },
+  "liveObservations": [
+    {
+      "action": "register / create mage / enter",
+      "result": "success; map 0, spawn 649,631"
+    },
+    {
+      "action": "equip wooden sword / male cloth",
+      "result": "both removed from bag and worn in world"
+    },
+    {
+      "action": "Shift-click candle without trade; reopen inventory",
+      "result": "candle remains disabled, including after map transition"
+    },
+    {
+      "action": "trainer approach",
+      "result": "649,631 -> 648,629; dialogue opened"
+    },
+    {
+      "action": "prepare cave combat",
+      "result": "level 30, lightning level 3, HP128, MP541, potions received"
+    },
+    {
+      "action": "enter cave / normal-monster test",
+      "result": "D001 152,362 -> 168,350; current modified fixture resets level to 1 and spawns chickens"
+    },
+    {
+      "action": "walk around obstruction and melee chicken",
+      "result": "168,350 -> 168,351 -> 169,351 -> 168,352; chicken 167,353 reached 0/5 HP; player level 2, exp490/15"
+    },
+    {
+      "action": "click visible chicken corpse",
+      "result": "move to 167,353 sent; no butch sent"
+    },
+    {
+      "action": "nearby list harvest",
+      "result": "entry clicked once; meat not observed before corpse disappeared; not passed"
+    },
+    {
+      "action": "normal Shift+S run / s walk",
+      "result": "168,353 -> 168,355 -> 168,356; one run command captured"
+    },
+    {
+      "action": "unplanned runtime outage",
+      "result": "automatic reconnect exhausted; subsequent live flows not run"
+    }
+  ],
+  "04-corpse-click-network": {
+    "cursor": 32,
+    "events": [
+      {
+        "sequence": 31,
+        "source": {
+          "tabId": 1
+        },
+        "method": "Network.webSocketFrameSent",
+        "params": {
+          "requestId": "88292.344",
+          "response": {
+            "mask": true,
+            "opcode": 1,
+            "payloadData": "{\"type\":\"move\",\"x\":167,\"y\":353,\"direction\":5,\"run\":false}"
+          },
+          "timestamp": 75722.148818
+        }
+      },
+      {
+        "sequence": 32,
+        "source": {
+          "tabId": 1
+        },
+        "method": "Network.webSocketFrameReceived",
+        "params": {
+          "requestId": "88292.344",
+          "response": {
+            "mask": false,
+            "opcode": 1,
+            "payloadData": "{\"sequence\":674,\"mapGeneration\":3,\"message\":{\"type\":\"legacy\",\"id\":-1,\"recog\":0,\"param\":0,\"tag\":0,\"series\":0,\"encodedBody\":\"\",\"status\":\"\\u002BGD/36345379\"}}"
+          },
+          "timestamp": 75722.179075
+        }
+      }
+    ],
+    "hasMore": false,
+    "truncated": false
+  },
+  "05-movement-network": {
+    "cursor": 56,
+    "events": [
+      {
+        "sequence": 54,
+        "source": {
+          "tabId": 1
+        },
+        "method": "Network.webSocketFrameReceived",
+        "params": {
+          "requestId": "88292.344",
+          "response": {
+            "mask": false,
+            "opcode": 1,
+            "payloadData": "{\"sequence\":692,\"mapGeneration\":3,\"message\":{\"type\":\"legacy\",\"id\":99,\"recog\":1227651396,\"param\":65535,\"tag\":0,\"series\":0,\"encodedBody\":\"QFd6TkxAQ0ZWTlpGQ0NWU1ZbYFFWQl5NW0BZR0A9SkNBVExFQkJdVUNNdFNBPzxLWkNnWVhaQktDQ3dMWEBSRFU8aVQ\\u002BQ1lVQVdJZ0NCe1I9V1g/Q0xQSlNadlZDVVFJPlRjVVZDZ1BAVFRLVlhcUkFdPw==\",\"status\":null}}"
+          },
+          "timestamp": 75792.0702
+        }
+      },
+      {
+        "sequence": 55,
+        "source": {
+          "tabId": 1
+        },
+        "method": "Network.webSocketFrameSent",
+        "params": {
+          "requestId": "88292.344",
+          "response": {
+            "mask": true,
+            "opcode": 1,
+            "payloadData": "{\"type\":\"move\",\"x\":168,\"y\":355,\"direction\":4,\"run\":true}"
+          },
+          "timestamp": 75800.22249
+        }
+      },
+      {
+        "sequence": 56,
+        "source": {
+          "tabId": 1
+        },
+        "method": "Network.webSocketFrameReceived",
+        "params": {
+          "requestId": "88292.344",
+          "response": {
+            "mask": false,
+            "opcode": 1,
+            "payloadData": "{\"sequence\":693,\"mapGeneration\":3,\"message\":{\"type\":\"legacy\",\"id\":-1,\"recog\":0,\"param\":0,\"tag\":0,\"series\":0,\"encodedBody\":\"\",\"status\":\"\\u002BGD/36423679\"}}"
+          },
+          "timestamp": 75800.468172
+        }
+      }
+    ],
+    "hasMore": false,
+    "truncated": false
+  },
+  "screenshots": [
+    {
+      "file": "01-first-spawn.png",
+      "sha256": "0575b713a2e9a0f13117f755b0ae9142ccc71a9e733b34fac2815cffca6751a8"
+    },
+    {
+      "file": "02-inventory-stuck.png",
+      "sha256": "b751df5a225f88e63b5f1d87815d5ddee251f0dc8422c727247d956acf322cae"
+    },
+    {
+      "file": "04-corpse-before.png",
+      "sha256": "e10cd4b83607be51f784fc02e11642884ee419cfa72736db23dbde2a82f91d3a"
+    },
+    {
+      "file": "06-reconnect-exhausted.png",
+      "sha256": "1b6aca69c1068cb8837d0566550ea39c1de2b4f3430121e6e327b03c47b4fb05"
+    },
+    {
+      "file": "07-login-390x844.png",
+      "sha256": "56077a07b086569a74337a02314c41b97b749e47dd3bbd1e9e1c34858b129d76"
+    }
+  ]
+}
