@@ -40,7 +40,7 @@ const movementVisualSource=fs.readFileSync(path.join(root,'apps/web/src/movement
 const movementVisualContext={exports:{}};
 vm.createContext(movementVisualContext);
 vm.runInContext(ts.transpileModule(movementVisualSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,movementVisualContext);
-if(movementVisualContext.exports.visualDirection(0)!==4||movementVisualContext.exports.visualDirection(2)!==6)throw new Error('server movement direction is not mapped to classic actor rows');
+if(movementVisualContext.exports.visualDirection(0)!==0||movementVisualContext.exports.visualDirection(2)!==2||movementVisualContext.exports.visualDirection(7)!==7)throw new Error('server movement direction differs from classic actor rows');
 if(movementVisualContext.exports.MOVEMENT_DURATION_MS!==600)throw new Error('movement interpolation differs from the OpenMir2 interval');
 console.log('PASS frontend movement visuals follow OpenMir2 direction and timing');
 
