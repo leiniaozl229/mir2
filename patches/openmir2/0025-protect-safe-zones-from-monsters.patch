@@ -1,0 +1,156 @@
+diff --git a/src/GameSrv/Word/WorldServer.MonGen.cs b/src/GameSrv/Word/WorldServer.MonGen.cs
+index b44eb71..8cdbe37 100644
+--- a/src/GameSrv/Word/WorldServer.MonGen.cs
++++ b/src/GameSrv/Word/WorldServer.MonGen.cs
+@@ -513 +513 @@ namespace GameSrv.Word
+-        private IMonsterActor CreateMonster(string sMapName, short nX, short nY, int nMonRace, string sMonName)
++        private IMonsterActor CreateMonster(string sMapName, short nX, short nY, int nMonRace, string sMonName, bool avoidSafeZone = false)
+@@ -520,0 +521,4 @@ namespace GameSrv.Word
++            if (avoidSafeZone && !MoveSpawnOutsideSafeZone(map, ref nX, ref nY))
++            {
++                return null;
++            }
+@@ -782 +786,2 @@ namespace GameSrv.Word
+-                    if (!cert.Envir.CanWalk(cert.CurrX, cert.CurrY, false))
++                    if (!cert.Envir.CanWalk(cert.CurrX, cert.CurrY, false) ||
++                        avoidSafeZone && M2Server.Actor.BaseObject.IsSafeZonePosition(cert.Envir, cert.CurrX, cert.CurrY))
+@@ -820,0 +826,35 @@ namespace GameSrv.Word
++        private static bool MoveSpawnOutsideSafeZone(SystemModule.Maps.IEnvirnoment map, ref short nX, ref short nY)
++        {
++            if (!M2Server.Actor.BaseObject.IsSafeZonePosition(map, nX, nY))
++            {
++                return true;
++            }
++            int searchRadius = SystemShare.Config.SafeZoneSize + 16;
++            for (int distance = 1; distance <= searchRadius; distance++)
++            {
++                for (int offset = -distance; offset <= distance; offset++)
++                {
++                    if (TryUseSpawnPosition(map, nX + offset, nY - distance, out short candidateX, out short candidateY) ||
++                        TryUseSpawnPosition(map, nX + distance, nY + offset, out candidateX, out candidateY) ||
++                        TryUseSpawnPosition(map, nX + offset, nY + distance, out candidateX, out candidateY) ||
++                        TryUseSpawnPosition(map, nX - distance, nY + offset, out candidateX, out candidateY))
++                    {
++                        nX = candidateX;
++                        nY = candidateY;
++                        return true;
++                    }
++                }
++            }
++            return false;
++        }
++
++        private static bool TryUseSpawnPosition(SystemModule.Maps.IEnvirnoment map, int nX, int nY,
++            out short candidateX, out short candidateY)
++        {
++            candidateX = (short)nX;
++            candidateY = (short)nY;
++            return nX >= 0 && nX < map.Width && nY >= 0 && nY < map.Height &&
++                   map.CanWalk(candidateX, candidateY, false) &&
++                   !M2Server.Actor.BaseObject.IsSafeZonePosition(map, candidateX, candidateY);
++        }
++
+@@ -844 +884 @@ namespace GameSrv.Word
+-                            cert = CreateMonster(monGen.MapName, (short)(nX - 10 + M2Share.RandomNumber.Random(20)), (short)(nY - 10 + M2Share.RandomNumber.Random(20)), monGen.Race, monGen.MonName);
++                            cert = CreateMonster(monGen.MapName, (short)(nX - 10 + M2Share.RandomNumber.Random(20)), (short)(nY - 10 + M2Share.RandomNumber.Random(20)), monGen.Race, monGen.MonName, M2Server.Actor.BaseObject.IsAggressiveMonsterRace(monGen.Race));
+@@ -866 +906 @@ namespace GameSrv.Word
+-                            cert = CreateMonster(monGen.MapName, nX, nY, monGen.Race, monGen.MonName);
++                            cert = CreateMonster(monGen.MapName, nX, nY, monGen.Race, monGen.MonName, M2Server.Actor.BaseObject.IsAggressiveMonsterRace(monGen.Race));
+diff --git a/src/M2Server/Actor/BaseObject.Base.cs b/src/M2Server/Actor/BaseObject.Base.cs
+index 6926ddb..6b68ed6 100644
+--- a/src/M2Server/Actor/BaseObject.Base.cs
++++ b/src/M2Server/Actor/BaseObject.Base.cs
+@@ -387,0 +388,4 @@ namespace M2Server.Actor
++            if (Race >= ActorRace.Animal && (InSafeZone() || targetObject.InSafeZone()))
++            {
++                return false;
++            }
+diff --git a/src/M2Server/Actor/BaseObject.cs b/src/M2Server/Actor/BaseObject.cs
+index 0c12a84..d6c9eb6 100644
+--- a/src/M2Server/Actor/BaseObject.cs
++++ b/src/M2Server/Actor/BaseObject.cs
+@@ -644,0 +645,4 @@ namespace M2Server.Actor
++                    if (Master == null && IsAggressiveMonsterRace(Race) && IsSafeZonePosition(Envir, newX, newY))
++                    {
++                        canWalk = false;
++                    }
+@@ -647 +651 @@ namespace M2Server.Actor
+-                        canWalk = !Envir.CanSafeWalk(newX, newY);
++                        canWalk = canWalk && !Envir.CanSafeWalk(newX, newY);
+@@ -1777,29 +1781 @@ namespace M2Server.Actor
+-            if (Envir == null)
+-            {
+-                return true;
+-            }
+-            bool result = Envir.Flag.SafeArea;
+-            if (result) //安全区
+-            {
+-                if ((Envir.MapName != SystemShare.Config.RedHomeMap) || (Math.Abs(CurrX - SystemShare.Config.RedHomeX) > SystemShare.Config.SafeZoneSize) || (Math.Abs(CurrY - SystemShare.Config.RedHomeY) > SystemShare.Config.SafeZoneSize))
+-                {
+-                    for (int i = 0; i < M2Share.StartPointList.Count; i++)
+-                    {
+-                        if (string.Compare(M2Share.StartPointList[i].MapName, Envir.MapName, StringComparison.OrdinalIgnoreCase) == 0)
+-                        {
+-                            short nSafeX = M2Share.StartPointList[i].CurrX;
+-                            short nSafeY = M2Share.StartPointList[i].CurrY;
+-                            if ((Math.Abs(CurrX - nSafeX) <= SystemShare.Config.SafeZoneSize) && (Math.Abs(CurrY - nSafeY) <= SystemShare.Config.SafeZoneSize))
+-                            {
+-                                result = true;
+-                                break;
+-                            }
+-                        }
+-                    }
+-                }
+-                else
+-                {
+-                    result = true;
+-                }
+-            }
+-            return result;
++            return IsSafeZonePosition(Envir, CurrX, CurrY);
+@@ -1810 +1786,6 @@ namespace M2Server.Actor
+-            if (Envir == null)
++            return IsSafeZonePosition(envir, nX, nY);
++        }
++
++        public static bool IsSafeZonePosition(IEnvirnoment envir, int nX, int nY)
++        {
++            if (envir == null)
+@@ -1814,2 +1795 @@ namespace M2Server.Actor
+-            bool result = Envir.Flag.SafeArea;
+-            if (result)
++            if (envir.Flag.SafeArea)
+@@ -1819,3 +1799,3 @@ namespace M2Server.Actor
+-            if ((envir.MapName != SystemShare.Config.RedHomeMap) ||
+-                (Math.Abs(nX - SystemShare.Config.RedHomeX) > SystemShare.Config.SafeZoneSize) ||
+-                (Math.Abs(nY - SystemShare.Config.RedHomeY) > SystemShare.Config.SafeZoneSize))
++            if (string.Equals(envir.MapName, SystemShare.Config.RedHomeMap, StringComparison.OrdinalIgnoreCase) &&
++                Math.Abs(nX - SystemShare.Config.RedHomeX) <= SystemShare.Config.SafeZoneSize &&
++                Math.Abs(nY - SystemShare.Config.RedHomeY) <= SystemShare.Config.SafeZoneSize)
+@@ -1823 +1803 @@ namespace M2Server.Actor
+-                result = false;
++                return true;
+@@ -1825 +1805 @@ namespace M2Server.Actor
+-            else
++            if (M2Share.StartPointList == null)
+@@ -1827 +1807 @@ namespace M2Server.Actor
+-                return true;
++                return false;
+@@ -1831 +1811 @@ namespace M2Server.Actor
+-                if (M2Share.StartPointList[i].MapName == envir.MapName)
++                if (string.Equals(M2Share.StartPointList[i].MapName, envir.MapName, StringComparison.OrdinalIgnoreCase))
+@@ -1837 +1817 @@ namespace M2Server.Actor
+-                        result = true;
++                        return true;
+@@ -1841 +1821,10 @@ namespace M2Server.Actor
+-            return result;
++            return false;
++        }
++
++        public static bool IsAggressiveMonsterRace(int race)
++        {
++            return race >= ActorRace.AnimalWolf &&
++                   race != ActorRace.Trainer &&
++                   race != ActorRace.SabukDoor &&
++                   race != ActorRace.SabukWall &&
++                   race != ActorRace.ArcherGuard;

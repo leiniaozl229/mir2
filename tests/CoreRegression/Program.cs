@@ -8,6 +8,7 @@ using System.Text;
 using M2Server.Maps;
 using OpenMir2;
 using OpenMir2.Common;
+using OpenMir2.Data;
 using Serilog;
 
 Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -29,6 +30,40 @@ try
             "equipment durability saturates when damage exceeds durability");
     Require(M2Server.Player.PlayObject.ReduceDurability(5, 4) == 1,
             "equipment durability preserves a positive remainder");
+    SystemModule.SystemShare.Config.SafeZoneSize = 10;
+    M2Share.StartPointList = new List<StartPoint> {
+        new StartPoint { MapName = "SAFE-TEST", CurrX = 20, CurrY = 20 }
+    };
+    string safeMapFile = Path.Combine(directory, "safe-zone.map");
+    using (BinaryWriter writer = new BinaryWriter(File.Create(safeMapFile)))
+    {
+        writer.Write((short)40);
+        writer.Write((short)40);
+        writer.Write(new byte[48]);
+        for (int i = 0; i < 40 * 40; ++i)
+        {
+            writer.Write((ushort)1);
+            writer.Write(new byte[10]);
+        }
+    }
+    using Envirnoment safeZoneMap = new Envirnoment();
+    Require(safeZoneMap.LoadMapData(safeMapFile), "load safe-zone regression map");
+    safeZoneMap.MapName = "safe-test";
+    Require(M2Server.Actor.BaseObject.IsSafeZonePosition(safeZoneMap, 30, 10),
+            "start point protects its configured radius case-insensitively");
+    Require(!M2Server.Actor.BaseObject.IsSafeZonePosition(safeZoneMap, 31, 20),
+            "safe-zone protection ends outside its configured radius");
+    Require(!M2Server.Actor.BaseObject.IsAggressiveMonsterRace(OpenMir2.Enums.ActorRace.AnimalChicken) &&
+            M2Server.Actor.BaseObject.IsAggressiveMonsterRace(OpenMir2.Enums.ActorRace.AnimalWolf),
+            "passive livestock can remain in safe zones while hostile wildlife is excluded");
+    MethodInfo relocateSpawn = typeof(GameSrv.Word.WorldServer).GetMethod(
+        "MoveSpawnOutsideSafeZone", BindingFlags.NonPublic | BindingFlags.Static)!;
+    object[] spawnArguments = { safeZoneMap, (short)20, (short)20 };
+    Require((bool)relocateSpawn.Invoke(null, spawnArguments)!,
+            "active monster spawn finds a walkable position outside the safe zone");
+    Require(!M2Server.Actor.BaseObject.IsSafeZonePosition(
+                safeZoneMap, (short)spawnArguments[1], (short)spawnArguments[2]),
+            "active monster spawn is relocated beyond the protected radius");
     SystemModule.SystemShare.Config.CastleDir = directory;
     SystemModule.SystemShare.MapMgr = DispatchProxy.Create<SystemModule.SubSystem.IMapSystem, MapIndexProxy>();
     var emptyCastle = new M2Server.Castle.UserCastle("empty-castle");
