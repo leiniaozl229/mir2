@@ -26,6 +26,31 @@ inventory.rejectPending();
 if(element.children[0].disabled)throw new Error('rejected action leaves the inventory item disabled');
 console.log('PASS frontend inventory rejection restores the item interaction state');
 
+const movedElement=new Element(),used=[];
+const movableInventory=new context.exports.InventoryView(movedElement,{drop(){},equip(){},use:id=>used.push(id)});
+const potion={name:'金创药(中量)',makeIndex:101,durability:1,maxDurability:1,stdMode:0,weight:1,looks:2,dc:{min:2,max:5},needLevel:7,price:1234};
+movableInventory.replace([candle,potion]);
+movedElement.children[0].onclick({preventDefault(){},shiftKey:false,clientX:20,clientY:20});
+if(movableInventory.debugState().selectedSlot!==0)throw new Error('left click does not pick up an inventory item');
+movedElement.children[7].onclick({preventDefault(){},shiftKey:false,clientX:20,clientY:20});
+if(movableInventory.debugState().items.find(item=>item.makeIndex===100)?.slot!==7||movableInventory.debugState().selectedSlot!==undefined)throw new Error('picked inventory item cannot move to an empty grid cell');
+const potionCell=movedElement.children.find(child=>child.dataset.itemId==='101');
+potionCell.ondblclick({preventDefault(){},stopPropagation(){}});
+if(used[0]!==101)throw new Error('double click does not use a consumable item');
+const details=context.exports.itemDetailRows(potion);
+if(!details.some(([name,value])=>name==='攻击'&&value==='2-5')||!details.some(([name,value])=>name==='价格'&&value==='1234'))throw new Error('inventory tooltip omits parsed item attributes');
+if(context.exports.NATIONAL_BAG_CELL.originX!==18||context.exports.NATIONAL_BAG_CELL.originY!==14||context.exports.NATIONAL_BAG_CELL.gapX!==0||context.exports.NATIONAL_BAG_CELL.gapY!==0)throw new Error('national inventory grid is not aligned to the imported frame');
+const nationalGrid=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-layout.json'),'utf8')).nationalInventoryGrid;
+if(nationalGrid.originX!==context.exports.NATIONAL_BAG_CELL.originX||nationalGrid.originY!==context.exports.NATIONAL_BAG_CELL.originY||nationalGrid.cellWidth!==context.exports.NATIONAL_BAG_CELL.width||nationalGrid.cellHeight!==context.exports.NATIONAL_BAG_CELL.height)throw new Error('frontend national inventory geometry diverges from the UI contract');
+console.log('PASS inventory supports pick, place, double-click use, detailed attributes and national grid calibration');
+
+const dragSource=fs.readFileSync(path.join(root,'apps/web/src/window-drag.ts'),'utf8').replace(/function dragHandle[\s\S]*/,'');
+const dragContext={exports:{}};vm.createContext(dragContext);
+vm.runInContext(ts.transpileModule(dragSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,dragContext);
+const clamped=dragContext.exports.clampWindowPosition(760,-12,336,270);
+if(clamped.left!==464||clamped.top!==0)throw new Error('movable classic windows can leave the 800 by 600 stage');
+console.log('PASS classic window dragging clamps persisted positions to the game stage');
+
 const movementSource=fs.readFileSync(path.join(root,'apps/web/src/movement-input.ts'),'utf8');
 const movementContext={exports:{},require:()=>({screenDirection:()=>undefined})};
 vm.createContext(movementContext);

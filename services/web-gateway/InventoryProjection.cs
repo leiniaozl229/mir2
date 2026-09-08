@@ -3,7 +3,11 @@ using System.Text;
 
 namespace Mir2.WebGateway;
 
-public record InventoryItem(string name, int makeIndex, ushort durability, ushort maxDurability, byte stdMode, byte weight, ushort looks);
+public record ItemRange(byte min, byte max);
+public record InventoryItem(string name, int makeIndex, ushort durability, ushort maxDurability, byte stdMode, byte weight, ushort looks,
+    byte shape, ushort baseDurability, ItemRange ac, ItemRange mac, ItemRange dc, ItemRange mc, ItemRange sc,
+    byte need, byte needLevel, int price, byte attackSpeed, byte agility, byte accuracy, byte magicAvoidance,
+    byte strong, byte undead, int hpAdd, int mpAdd, byte light);
 
 public static class InventoryProjection
 {
@@ -12,7 +16,11 @@ public static class InventoryProjection
         if (body.Length != 124 || body[0] > 14) throw new InvalidDataException("Invalid ClientItem layout");
         return new(LegacyCodec.Gbk.GetString(body.Slice(1, body[0])),
             BinaryPrimitives.ReadInt32LittleEndian(body[100..]), BinaryPrimitives.ReadUInt16LittleEndian(body[104..]),
-            BinaryPrimitives.ReadUInt16LittleEndian(body[106..]), body[15], body[17], BinaryPrimitives.ReadUInt16LittleEndian(body[22..]));
+            BinaryPrimitives.ReadUInt16LittleEndian(body[106..]), body[15], body[17], BinaryPrimitives.ReadUInt16LittleEndian(body[22..]),
+            body[16], BinaryPrimitives.ReadUInt16LittleEndian(body[24..]), Range(body, 26), Range(body, 28), Range(body, 30),
+            Range(body, 32), Range(body, 34), body[36], body[37], BinaryPrimitives.ReadInt32LittleEndian(body[40..]),
+            body[48], body[49], body[50], body[51], body[52], body[53], BinaryPrimitives.ReadInt32LittleEndian(body[56..]),
+            BinaryPrimitives.ReadInt32LittleEndian(body[60..]), body[79]);
     }
 
     public static object? Project(LegacyPacket packet)
@@ -61,5 +69,11 @@ public static class InventoryProjection
         if (result.Values.Select(item => item.makeIndex).Distinct().Count() != result.Count)
             throw new InvalidDataException("Duplicate equipped item identity");
         return result;
+    }
+
+    private static ItemRange Range(ReadOnlySpan<byte> body, int offset)
+    {
+        ushort value = BinaryPrimitives.ReadUInt16LittleEndian(body[offset..]);
+        return new((byte)(value & 255), (byte)(value >> 8));
     }
 }

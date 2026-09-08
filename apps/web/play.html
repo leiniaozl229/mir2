@@ -48,7 +48,7 @@
       </div>
     </div>
     <section id="character-window" class="classic-window character-window" hidden aria-label="角色窗口">
-      <strong class="classic-char-name" data-character-name></strong>
+      <strong class="classic-char-name" data-character-name data-window-drag-handle></strong>
       <button type="button" class="classic-window-close" data-window-close="character" aria-label="关闭"></button>
       <button type="button" data-character-tab="paperdoll" aria-label="装备"></button>
       <button type="button" data-character-tab="status" aria-label="属性"></button>
@@ -62,11 +62,14 @@
       <div id="equipment-items" class="equipment-grid paperdoll"></div>
     </section>
     <section id="inventory-window" class="classic-window inventory-window" hidden aria-label="背包">
+      <div class="classic-window-drag-region" data-window-drag-handle aria-hidden="true"></div>
       <button type="button" class="classic-window-close" data-window-close="inventory" aria-label="关闭"></button>
       <div id="inventory-items" class="inventory-grid classic-bag"></div>
+      <output class="inventory-gold" data-inventory-gold aria-label="金币">0</output>
+      <aside id="inventory-item-tooltip" class="inventory-item-tooltip" role="tooltip" hidden></aside>
     </section>
     <section id="classic-window" class="classic-window" hidden aria-label="经典窗口">
-      <div class="classic-window-heading"><strong id="classic-window-title">角色状态</strong><button id="classic-window-close" type="button">关闭</button></div>
+      <div class="classic-window-heading" data-window-drag-handle><strong id="classic-window-title">角色状态</strong><button id="classic-window-close" type="button">关闭</button></div>
       <nav class="classic-window-tabs" aria-label="经典窗口标签"><button type="button" data-window-tab="quest">任务</button><button type="button" data-window-tab="targets">目标</button><button type="button" data-window-tab="ground">地面</button><button type="button" data-window-tab="chat">聊天</button><button type="button" data-window-tab="group">队伍</button><button type="button" data-window-tab="attack">攻击</button><button type="button" data-window-tab="guild">行会</button><button type="button" data-window-tab="trade">交易</button></nav>
       <div id="classic-window-body" class="classic-window-body"></div>
     </section>
@@ -124,7 +127,7 @@
   <section id="attack-mode-panel" class="group-panel" aria-label="攻击模式"><strong>攻击模式</strong><label>模式 <select id="attack-mode"><option value="0">全体攻击</option><option value="1">和平攻击</option><option value="2">夫妻攻击</option><option value="3">师徒攻击</option><option value="4">编组攻击</option><option value="5">行会攻击</option><option value="6">红名攻击</option></select></label><span id="attack-mode-status">服务端状态：全体攻击</span></section>
   <section id="guild-panel" class="group-panel" aria-label="行会"><strong>行会</strong><span id="guild-status">未加入行会</span><div><button id="guild-open" type="button">打开行会</button><button id="guild-members-request" type="button">成员列表</button></div><div><label>行会名 <input id="guild-name" maxlength="10" autocomplete="off" placeholder="与当前行会 NPC 对话后创建"></label><button id="guild-create" type="button" disabled>创建行会</button></div><label>对象 <input id="guild-target" maxlength="10" autocomplete="off" placeholder="邀请或移除对象"></label><button id="guild-add" type="button">邀请入会</button><button id="guild-remove" type="button">移除成员</button><div class="guild-management"><label>宣战对象 <input id="guild-war-target" maxlength="10" autocomplete="off" placeholder="目标行会名"></label><button id="guild-war-request" type="button" disabled>请求行会战</button><button id="guild-castle-dialogue" type="button" disabled>申请攻城</button><label>行会公告 <textarea id="guild-notice" maxlength="500" rows="2" placeholder="掌门人可编辑公告"></textarea></label><button id="guild-notice-save" type="button">保存公告</button><label>联盟对象 <input id="guild-ally-target" maxlength="10" autocomplete="off" placeholder="对方掌门人需与自己相邻"></label><button id="guild-ally" type="button">请求结盟</button><button id="guild-break-ally" type="button">解除联盟</button><label>封号配置 <textarea id="guild-ranks-input" maxlength="3000" rows="4" placeholder="每行：编号|封号|成员1,成员2"></textarea></label><button id="guild-ranks-save" type="button">保存封号配置</button></div><span id="guild-relations">暂无行会公告或联盟</span><ol id="guild-members"></ol><div id="guild-ranks"></div></section>
   <section id="trade-panel" class="trade-panel" aria-label="玩家交易"><div class="trade-heading"><strong>玩家交易</strong><span id="trade-status">未打开</span></div><form id="trade-request-form"><label>对象 <input id="trade-target" maxlength="10" autocomplete="off" placeholder="角色名" required></label><button type="submit">发起交易</button></form><div class="trade-columns"><div><strong>我方物品</strong><ol id="trade-local-items"></ol></div><div><strong>对方物品</strong><ol id="trade-remote-items"></ol></div></div><div class="trade-controls"><label>金币 <input id="trade-gold" type="number" min="0" step="1" value="0"></label><button id="trade-set-gold" type="button">设置金币</button><button id="trade-accept" type="button">确认交易</button><button id="trade-cancel" type="button">取消交易</button></div></section>
-  <section id="npc-dialog" class="npc-dialog" hidden><div><strong id="npc-title">NPC</strong><button id="close-dialogue" type="button">关闭</button></div><p id="npc-text"></p><div id="npc-options"></div></section>
+  <section id="npc-dialog" class="npc-dialog" hidden><div data-window-drag-handle><strong id="npc-title">NPC</strong><button id="close-dialogue" type="button">关闭</button></div><p id="npc-text"></p><div id="npc-options"></div></section>
   <section id="shop-panel" class="shop-panel" aria-label="商店" hidden></section>
   <section id="repair-panel" class="shop-panel" aria-label="修理" hidden></section>
   <section id="storage-panel" class="storage-panel" aria-label="仓库" hidden></section>

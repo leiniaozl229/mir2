@@ -42,6 +42,20 @@ body.classic-play .item-cell{position:absolute;width:36px;height:32px;padding:0;
 body.classic-play .item-cell img{position:absolute;left:50%;top:50%;width:auto;height:auto;max-width:36px;max-height:32px;transform:translate(-50%,-50%);object-fit:contain;image-rendering:pixelated;display:block}
 body.classic-play .item-cell .missing-item-icon{width:34px;height:30px;image-rendering:pixelated;display:block}
 body.classic-play .item-cell:hover{outline:1px solid #ffe27a}
+body.classic-play .item-cell.selected{z-index:3;outline:1px solid #fff0a6;filter:brightness(1.25)}
+body.classic-play .inventory-window{--bag-origin-x:9px;--bag-origin-y:37px;--bag-step-x:37px;--bag-step-y:33px}
+body.classic-play .inventory-window.national-window{--bag-origin-x:18px;--bag-origin-y:14px;--bag-step-x:36px;--bag-step-y:32px;overflow:visible}
+body.classic-play [data-window-drag-handle]{cursor:move;touch-action:none;user-select:none}body.classic-play .window-dragging{z-index:35!important}body.classic-play .classic-window-drag-region{position:absolute;left:0;top:0;width:100%;height:14px;z-index:1}
+body.classic-play .inventory-gold{position:absolute;left:40px;top:212px;width:111px;height:14px;z-index:2;color:#f0dda4;text-align:right;font:12px/14px SimSun,'Songti SC',serif;text-shadow:1px 1px #000;pointer-events:none}
+body.classic-play .inventory-window.national-window .inventory-gold{left:65px;top:190px;width:136px;height:16px;font-size:12px;line-height:16px}
+body.classic-play .inventory-item-tooltip{position:absolute;z-index:30;width:180px;padding:8px 9px;border:1px solid #94783f;background:rgba(12,9,7,.96);color:#e7d5a2;box-shadow:2px 3px 8px rgba(0,0,0,.72);font:12px/17px SimSun,'Songti SC',serif;pointer-events:none;image-rendering:auto}
+body.classic-play .inventory-item-tooltip[hidden]{display:none}
+body.classic-play .inventory-item-tooltip strong{display:block;margin-bottom:4px;color:#f6d77f;font-weight:normal}
+body.classic-play .inventory-item-tooltip span{display:flex;justify-content:space-between;gap:12px}
+body.classic-play .inventory-item-tooltip em{color:#a99972;font-style:normal}
+body.classic-play .inventory-item-tooltip b{color:#eee1bd;font-weight:normal;font-variant-numeric:tabular-nums}
+.inventory-held-item{position:fixed;z-index:1000;width:36px;height:32px;overflow:visible;pointer-events:none;filter:drop-shadow(2px 3px 2px #000)}
+.inventory-held-item[hidden]{display:none}.inventory-held-item img{position:absolute;left:50%;top:50%;max-width:36px;max-height:32px;transform:translate(-50%,-50%);image-rendering:pixelated}.inventory-held-item .missing-item-icon{width:34px;height:30px}
 body.classic-play .equipment-appearance{position:absolute;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:auto}
 body.classic-play .equipment-appearance img{position:absolute;inset:0;width:100%;height:100%;max-width:none;image-rendering:pixelated}
 body.classic-play .equipment-appearance:hover{filter:drop-shadow(0 0 2px #ffe27a)}

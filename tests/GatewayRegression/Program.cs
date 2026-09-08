@@ -219,6 +219,11 @@ byte[] nativeItem = Convert.FromHexString(File.ReadAllText("tests/fixtures/nativ
 var item = InventoryProjection.Parse(nativeItem);
 Require(item.name == "鸡肉" && item.makeIndex == 0x12345678 && item.durability == 1234 && item.maxDurability == 4000,
     "native ClientItem identity and durability projection");
+byte[] statsItem = (byte[])nativeItem.Clone();
+statsItem[26] = 2; statsItem[27] = 5; statsItem[37] = 7; BitConverter.GetBytes(1234).CopyTo(statsItem, 40); statsItem[50] = 3;
+var detailedItem = InventoryProjection.Parse(statsItem);
+Require(detailedItem.ac.min == 2 && detailedItem.ac.max == 5 && detailedItem.needLevel == 7
+    && detailedItem.price == 1234 && detailedItem.accuracy == 3, "native ClientItem tooltip attributes projection");
 byte[] secondItem = (byte[])nativeItem.Clone();
 BitConverter.GetBytes(99).CopyTo(secondItem, 100);
 var bagPacket = new LegacyPacket(201, 0, 0, 0, 2, [..LegacyCodec.Encode(nativeItem), (byte)'/', ..LegacyCodec.Encode(secondItem), (byte)'/']);

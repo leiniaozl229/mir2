@@ -19,6 +19,7 @@ import {DIRECTIONS as directions,MOVEMENT_DURATION_MS,directionIndex,findGridPat
 import {AgentObserver,agentObservationEnabled,type AgentDebugApi} from './agent-observer';
 import {MiniMapController,type MiniMapMarker} from './minimap';
 import {requestsHarvest} from './harvest-input';
+import {makeClassicWindowDraggable} from './window-drag';
 const connection=document.querySelector<HTMLElement>('#connection')!;
 const worldStatus=document.querySelector<HTMLOutputElement>('#world-status')!;
 new MutationObserver(()=>worldStatus.textContent=connection.textContent).observe(connection,{childList:true,characterData:true,subtree:true});
@@ -176,7 +177,8 @@ const inventory=new InventoryView(document.querySelector<HTMLElement>('#inventor
  drop:makeIndex=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'dropItem',makeIndex}));},
  equip:(makeIndex,slot)=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'equipItem',makeIndex,slot:equipment.preferredSlot(slot)}));},
  use:makeIndex=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'useItem',makeIndex}));},
- trade:makeIndex=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'tradeAdd',makeIndex}));}
+ trade:makeIndex=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'tradeAdd',makeIndex}));},
+ layoutKey:()=>selectedCharacter?`mir2.inventory-layout.${selectedCharacter}`:undefined
 });
 const equipment=new EquipmentView(document.querySelector<HTMLElement>('#equipment-items')!,slot=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'takeOffItem',slot}));});
 const paperdoll=new PaperdollView(document.querySelector<HTMLElement>('#paperdoll-actor')!);
@@ -186,7 +188,10 @@ const classicWindow=document.querySelector<HTMLElement>('#classic-window')!;
 const classicWindowTitle=document.querySelector<HTMLElement>('#classic-window-title')!;
 const classicWindowBody=document.querySelector<HTMLElement>('#classic-window-body')!;
 const classicModalLayer=document.querySelector<HTMLElement>('#classic-modal-layer')!;
+function updateCurrency(values:{gold?:number;gameGold?:number}){characterPanel.currency(values);classicHud.currency(values);if(values.gold!==undefined)inventory.currency(values.gold);}
 for(const panel of [dialogueElement,document.querySelector<HTMLElement>('#shop-panel')!,document.querySelector<HTMLElement>('#repair-panel')!,document.querySelector<HTMLElement>('#storage-panel')!,revivePanel])classicModalLayer.append(panel);
+const classicSurface=document.querySelector<HTMLElement>('#viewport-shell')!;
+for(const panel of [characterWindow,inventoryWindow,classicWindow,dialogueElement,document.querySelector<HTMLElement>('#shop-panel')!,document.querySelector<HTMLElement>('#repair-panel')!,document.querySelector<HTMLElement>('#storage-panel')!])makeClassicWindowDraggable(panel,classicSurface);
 const classicWindowSources=[
  {id:'quest',label:'任务日志',node:document.querySelector<HTMLElement>('#quest-panel')!},
  {id:'targets',label:'附近目标与 NPC',node:document.querySelector<HTMLElement>('#nearby-targets')!.parentElement as HTMLElement},
@@ -503,12 +508,12 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   }
   else if(message.type==='entityAction'){const entity=entities.get(message.id);if(entity){update({...entity,x:message.x,y:message.y,direction:message.direction,action:message.action});if(message.action==='attack'&&!entity.self&&((entity.feature>>>16)&0xffff)===20)audio.play('skeletonAttack');}}
   else if(message.type==='health'){const entity=entities.get(message.id);if(entity){update({...entity,hp:message.hp,maxHp:message.maxHp,action:entity.dead?'dead':'struck'});if(message.damage>0)audio.play('struck');if(entity.self)characterPanel.resources({hp:message.hp,maxHp:message.maxHp});if(combatTarget===message.id&&message.hp<=0)stopCombat();combatStatus.textContent=`${entity.name||'目标'} ${message.hp}/${message.maxHp} HP`;}}
-  else if(message.type==='attributes'){characterPanel.replace(message);classicHud.replaceAttributes(message);const entity=self===undefined?undefined:entities.get(self);if(entity)update({...entity,hp:message.hp,maxHp:message.maxHp});}
+  else if(message.type==='attributes'){characterPanel.replace(message);classicHud.replaceAttributes(message);inventory.currency(message.gold);const entity=self===undefined?undefined:entities.get(self);if(entity)update({...entity,hp:message.hp,maxHp:message.maxHp});}
   else if(message.type==='resources'){const entity=entities.get(message.id);if(entity){update({...entity,hp:message.hp,maxHp:message.maxHp});if(entity.self){characterPanel.resources({hp:message.hp,mp:message.mp,maxHp:message.maxHp});classicHud.resource({hp:message.hp,mp:message.mp,maxHp:message.maxHp});}}}
   else if(message.type==='characterStatus'){const entity=entities.get(message.id);if(entity)update({...entity,status:message.status,hitSpeed:message.hitSpeed});if(self===message.id)classicHud.status(message.status);}
   else if(message.type==='myStatus')classicHud.hungerStatus(message.status);
   else if(message.type==='weights')characterPanel.weights(message);
-  else if(message.type==='currency')characterPanel.currency(message);
+  else if(message.type==='currency')updateCurrency(message);
   else if(message.type==='levelUp'){audio.play('levelUp',.45);characterPanel.level(message.level,message.experience);classicHud.level(message.level,message.experience);combatStatus.textContent=`升级至 ${message.level} 级`;}
   else if(message.type==='experience'){characterPanel.experience(message.total);classicHud.experience(message.total);combatStatus.textContent=`经验 +${message.gained} · 当前 ${message.total}`;}
   else if(message.type==='skills'){skillBar.replace(message.skills);classicHud.replaceSkills(message.skills);}
@@ -545,7 +550,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='tradeRemoteItemAdded'){tradeRemote.set(message.item.makeIndex,message.item);renderTrade();}
   else if(message.type==='tradeRemoteItemRemoved'){tradeRemote.delete(message.item.makeIndex);renderTrade();}
   else if(message.type==='tradeRemoteGold'){tradeRemoteGold=message.gold;renderTrade();}
-  else if(message.type==='tradeGold'){tradeGold=message.gold;tradeGoldInput.value=String(message.gold);renderTrade();characterPanel.currency({gold:message.availableGold});connection.textContent=`交易金币已设置为 ${message.gold}`;}
+  else if(message.type==='tradeGold'){tradeGold=message.gold;tradeGoldInput.value=String(message.gold);renderTrade();updateCurrency({gold:message.availableGold});connection.textContent=`交易金币已设置为 ${message.gold}`;}
   else if(message.type==='tradeResult'){
    const labels:Record<string,string>={request:'发起交易',add:'放入物品',remove:'取回物品',gold:'设置金币'};
    if(message.action==='add'&&message.accepted&&message.item){tradeLocal.set(message.item.makeIndex,message.item);inventory.resolve(message.item.makeIndex,true,true);}
@@ -553,8 +558,8 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
    if(message.action==='remove'&&message.accepted&&message.item){tradeLocal.delete(message.item.makeIndex);inventory.add(message.item);}
    renderTrade();connection.textContent=message.accepted?`${labels[message.action]??'交易操作'}成功`:`${labels[message.action]??'交易操作'}失败 · 原因 ${message.reason}`;
   }
-  else if(message.type==='tradeClosed'){for(const item of tradeLocal.values())inventory.add(item);tradeOpen=false;tradeLocal.clear();tradeRemote.clear();tradeGold=0;tradeRemoteGold=0;renderTrade();characterPanel.currency({gold:message.gold});connection.textContent='交易已取消，物品和金币已退回';}
-  else if(message.type==='tradeSuccess'){tradeOpen=false;tradeLocal.clear();tradeRemote.clear();tradeGold=0;tradeRemoteGold=0;renderTrade();characterPanel.currency({gold:message.gold});connection.textContent='交易成功';}
+  else if(message.type==='tradeClosed'){for(const item of tradeLocal.values())inventory.add(item);tradeOpen=false;tradeLocal.clear();tradeRemote.clear();tradeGold=0;tradeRemoteGold=0;renderTrade();updateCurrency({gold:message.gold});connection.textContent='交易已取消，物品和金币已退回';}
+  else if(message.type==='tradeSuccess'){tradeOpen=false;tradeLocal.clear();tradeRemote.clear();tradeGold=0;tradeRemoteGold=0;renderTrade();updateCurrency({gold:message.gold});connection.textContent='交易成功';}
   else if(message.type==='door'){
    void view.setDoor(message.x,message.y,message.open);
    if(message.open&&doorRetry&&doorRetry.x===message.x&&doorRetry.y===message.y){
@@ -574,18 +579,18 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='shopSell'){dialogueElement.hidden=true;storage.clear();repair.clear();hideClassicWindows();shop.openSell(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent='请选择要出售的背包物品';}
   else if(message.type==='shopDetails'){shop.showDetails(message.npcId,message.items);connection.textContent=`已载入 ${message.items.length} 件具体商品`;}
   else if(message.type==='shopPurchaseResult'){
-   shop.resolve(message.name,message.makeIndex,message.accepted);if(message.accepted&&message.gold!==null)characterPanel.currency({gold:message.gold});
+   shop.resolve(message.name,message.makeIndex,message.accepted);if(message.accepted&&message.gold!==null)updateCurrency({gold:message.gold});
    const reasons:Record<number,string>={1:'商品已售罄',2:'背包空间或负重不足',3:'金币不足',4:'缺少必需物品'};
    connection.textContent=message.accepted?`购买 ${message.name} 成功 · 剩余 ${message.gold} 金币`:`购买失败 · ${reasons[message.reason]??`原因 ${message.reason}`}`;
   }
   else if(message.type==='shopSellQuote'){shop.showSellQuote(message.npcId,message.item,message.price);connection.textContent=message.price>0?`${message.item.name} 可卖 ${message.price} 金币`:`${message.item.name} 无法出售`;}
   else if(message.type==='shopSellResult'){
-   shop.resolveSale(message.item,message.accepted);if(message.accepted){inventory.remove(message.item.makeIndex);if(message.gold!==null)characterPanel.currency({gold:message.gold});}
+   shop.resolveSale(message.item,message.accepted);if(message.accepted){inventory.remove(message.item.makeIndex);if(message.gold!==null)updateCurrency({gold:message.gold});}
    connection.textContent=message.accepted?`已卖出 ${message.item.name} · 当前 ${message.gold} 金币`:`出售 ${message.item.name} 失败`;
   }
   else if(message.type==='repairItems'){dialogueElement.hidden=true;shop.clear();storage.clear();hideClassicWindows();repair.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#repair-panel')!,'repair');connection.textContent='请选择要修理的背包物品';}
   else if(message.type==='repairQuote'){repair.showQuote(message.npcId,message.item,message.price);connection.textContent=message.price>=0?`${message.item.name} 修理需要 ${message.price} 金币`:`${message.item.name} 无需或无法修理`;}
-  else if(message.type==='repairResult'){repair.resolve(message.item,message.accepted);if(message.accepted){inventory.update(message.item);if(message.gold!==null)characterPanel.currency({gold:message.gold});}connection.textContent=message.accepted?`${message.item.name} 修理完成 · 当前 ${message.gold} 金币`:`${message.item.name} 修理失败`;}
+  else if(message.type==='repairResult'){repair.resolve(message.item,message.accepted);if(message.accepted){inventory.update(message.item);if(message.gold!==null)updateCurrency({gold:message.gold});}connection.textContent=message.accepted?`${message.item.name} 修理完成 · 当前 ${message.gold} 金币`:`${message.item.name} 修理失败`;}
   else if(message.type==='storageDeposit'){dialogueElement.hidden=true;shop.clear();repair.clear();hideClassicWindows();storage.openDeposit(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent='请选择要存入仓库的物品';}
   else if(message.type==='storageItems'){dialogueElement.hidden=true;shop.clear();repair.clear();hideClassicWindows();storage.openItems(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent=`仓库共 ${message.items.length} 件物品`;}
   else if(message.type==='storageResult'){

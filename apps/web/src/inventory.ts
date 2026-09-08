@@ -1,14 +1,16 @@
 import {loadNationalUiLibrary} from './classic-ui';
 import itemAssets from '../../../content/classic-176/item-assets.json';
 
-export type InventoryItem={name:string;makeIndex:number;durability:number;maxDurability:number;stdMode:number;weight:number;looks:number};
+export type ItemRange={min:number;max:number};
+export type InventoryItem={name:string;makeIndex:number;durability:number;maxDurability:number;stdMode:number;weight:number;looks:number;shape?:number;baseDurability?:number;ac?:ItemRange;mac?:ItemRange;dc?:ItemRange;mc?:ItemRange;sc?:ItemRange;need?:number;needLevel?:number;price?:number;attackSpeed?:number;agility?:number;accuracy?:number;magicAvoidance?:number;strong?:number;undead?:number;hpAdd?:number;mpAdd?:number;light?:number};
 type IconFrame={file:string;width:number;height:number;offsetX:number;offsetY:number};
 type Icons={frames:Record<string,IconFrame>};
-type InventoryActions={drop:(makeIndex:number)=>void;equip:(makeIndex:number,slot:number)=>void;use:(makeIndex:number)=>void;trade?:(makeIndex:number)=>void};
+type InventoryActions={drop:(makeIndex:number)=>void;equip:(makeIndex:number,slot:number)=>void;use:(makeIndex:number)=>void;trade?:(makeIndex:number)=>void;layoutKey?:()=>string|undefined};
 
 export const BAG_COLUMNS=8;
 export const BAG_VISIBLE=40;
 export const BAG_CELL={width:36,height:32,originX:9,originY:37,gapX:1,gapY:1};
+export const NATIONAL_BAG_CELL={width:36,height:32,originX:18,originY:14,gapX:0,gapY:0};
 export const EQUIPMENT_PAGE={x:44,y:72};
 export const EQUIPMENT_CELLS:{slot:number;name:string;x:number;y:number}[]=[
  {slot:3,name:'项链',x:131,y:36},
@@ -33,46 +35,95 @@ export function bagCellPosition(index:number){
  return {left:x*(BAG_CELL.width+BAG_CELL.gapX)+BAG_CELL.originX,top:y*(BAG_CELL.height+BAG_CELL.gapY)+BAG_CELL.originY};
 }
 
+export function itemDetailRows(item:InventoryItem){
+ const rows:[string,string][]=[['类型',itemTypeName(item.stdMode)],['重量',String(item.weight)]];
+ if(item.maxDurability>0)rows.push(['持久',`${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`]);
+ if(item.needLevel)rows.push(['需要等级',String(item.needLevel)]);
+ for(const [name,value] of [['防御',item.ac],['魔御',item.mac],['攻击',item.dc],['魔法',item.mc],['道术',item.sc]] as [string,ItemRange|undefined][]){if(value&&(value.min||value.max))rows.push([name,`${value.min}-${value.max}`]);}
+ for(const [name,value] of [['攻击速度',item.attackSpeed],['敏捷',item.agility],['准确',item.accuracy],['魔法躲避',item.magicAvoidance],['强度',item.strong],['生命',item.hpAdd],['魔法值',item.mpAdd],['光照',item.light]] as [string,number|undefined][]){if(value)rows.push([name,String(value)]);}
+ if(item.price)rows.push(['价格',String(item.price)]);
+ return rows;
+}
+
 export class InventoryView {
- private items=new Map<number,InventoryItem>();private pending=new Set<number>();private known=false;private icons:Icons|undefined;private nationalIcons:Icons|undefined;
+ private items=new Map<number,InventoryItem>();private placements=new Map<number,number>();private pending=new Set<number>();private known=false;private icons:Icons|undefined;private nationalIcons:Icons|undefined;private selectedSlot:number|undefined;private activeLayoutKey:string|undefined;private gold=0;private readonly tooltip:HTMLElement|undefined;private readonly heldPreview:HTMLElement|undefined;
  constructor(private element:HTMLElement,private actions:InventoryActions){
   this.element.classList.add('classic-bag');
+  this.tooltip=this.element.parentElement?.querySelector<HTMLElement>('[data-inventory-tooltip]')??undefined;
+  const body=this.element.ownerDocument?.body;
+  if(body){this.heldPreview=this.element.ownerDocument.createElement('div');this.heldPreview.className='inventory-held-item';this.heldPreview.hidden=true;body.append(this.heldPreview);}
+  this.element.onpointermove=event=>{if(this.selectedSlot!==undefined&&this.heldPreview){this.heldPreview.style.left=`${event.clientX+10}px`;this.heldPreview.style.top=`${event.clientY+10}px`;}};
   void loadFallbackItemIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});
   void loadNationalUiLibrary('items').then(icons=>{this.nationalIcons=icons;this.render();}).catch(()=>{});
  }
- clear(){this.known=false;this.items.clear();this.pending.clear();this.render();}
- replace(items:InventoryItem[]){this.known=true;this.items=new Map(items.map(item=>[item.makeIndex,item]));this.pending.clear();this.render();}
- add(item:InventoryItem){this.items.set(item.makeIndex,item);this.render();}
- update(item:InventoryItem){if(this.items.has(item.makeIndex)){this.items.set(item.makeIndex,item);this.render();}}
- remove(id:number){this.pending.delete(id);this.items.delete(id);this.render();}
- resolve(id:number,accepted:boolean,removeOnSuccess:boolean){this.pending.delete(id);if(accepted&&removeOnSuccess)this.items.delete(id);this.render();}
- rejectPending(){if(!this.pending.size)return;this.pending.clear();this.render();}
- debugState(){return {known:this.known,items:[...this.items.values()].map(item=>({...item})),pending:[...this.pending]};}
- private begin(item:InventoryItem,action:()=>void){this.pending.add(item.makeIndex);this.render();action();}
- private render(){
-  this.element.replaceChildren();this.element.classList.add('classic-bag');
-  const bag=[...this.items.values()];
+ clear(){this.known=false;this.items.clear();this.placements.clear();this.activeLayoutKey=undefined;this.pending.clear();this.clearSelection();this.render();}
+ replace(items:InventoryItem[]){this.loadPlacements();this.known=true;this.items=new Map(items.map(item=>[item.makeIndex,item]));this.pending.clear();this.assignPlacements();this.render();}
+ add(item:InventoryItem){this.items.set(item.makeIndex,item);this.assignPlacements();this.render();}
+  update(item:InventoryItem){if(this.items.has(item.makeIndex)){this.items.set(item.makeIndex,item);this.render();}}
+ remove(id:number){this.pending.delete(id);this.items.delete(id);this.placements.delete(id);this.render();}
+ resolve(id:number,accepted:boolean,removeOnSuccess:boolean){this.pending.delete(id);if(accepted&&removeOnSuccess){this.items.delete(id);this.placements.delete(id);}this.render();}
+  rejectPending(){if(!this.pending.size)return;this.pending.clear();this.render();}
+ currency(gold:number){this.gold=gold;const output=this.element.parentElement?.querySelector<HTMLElement>('[data-inventory-gold]');if(output)output.textContent=gold.toLocaleString('zh-CN');}
+ cancelSelection(){this.clearSelection();}
+ debugState(){return {known:this.known,items:[...this.items.values()].map(item=>({...item,slot:this.placements.get(item.makeIndex)})),pending:[...this.pending],selectedSlot:this.selectedSlot,gold:this.gold};}
+  private begin(item:InventoryItem,action:()=>void){this.pending.add(item.makeIndex);this.render();action();}
+ private loadPlacements(){
+  const key=this.actions.layoutKey?.();if(key===this.activeLayoutKey)return;this.activeLayoutKey=key;this.placements.clear();
+  if(!key||typeof localStorage==='undefined')return;
+  try{const saved=JSON.parse(localStorage.getItem(key)??'{}') as Record<string,number>;for(const [id,slot] of Object.entries(saved))if(Number.isInteger(slot)&&slot>=0&&slot<BAG_VISIBLE)this.placements.set(Number(id),slot);}catch{}
+ }
+ private savePlacements(){
+  const key=this.activeLayoutKey;if(!key||typeof localStorage==='undefined')return;
+  try{localStorage.setItem(key,JSON.stringify(Object.fromEntries(this.placements)));}catch{}
+ }
+ private assignPlacements(){
+  for(const id of [...this.placements.keys()])if(!this.items.has(id))this.placements.delete(id);
+  const used=new Set([...this.placements.values()].filter(slot=>slot>=0&&slot<BAG_VISIBLE));
+  for(const item of this.items.values())if(!this.placements.has(item.makeIndex)){const slot=Array.from({length:BAG_VISIBLE},(_,index)=>index).find(index=>!used.has(index));if(slot===undefined)break;this.placements.set(item.makeIndex,slot);used.add(slot);}
+  this.savePlacements();
+ }
+ private clearSelection(render=false){
+  this.selectedSlot=undefined;if(this.heldPreview){this.heldPreview.hidden=true;this.heldPreview.replaceChildren();}
+  this.element.querySelectorAll?.('.item-cell.selected').forEach(cell=>{cell.classList.remove('selected');cell.setAttribute('aria-pressed','false');});
+  if(render)this.render();
+ }
+ private select(index:number,item:InventoryItem,cell:HTMLButtonElement,event:MouseEvent){
+  if(this.selectedSlot===index){this.clearSelection();return;}
+  if(this.selectedSlot!==undefined){
+   const from=this.selectedSlot,fromEntry=[...this.placements].find(([,slot])=>slot===from),toEntry=[...this.placements].find(([,slot])=>slot===index);
+   if(fromEntry){this.placements.set(fromEntry[0],index);if(toEntry)this.placements.set(toEntry[0],from);this.savePlacements();}
+   this.clearSelection();this.render();return;
+  }
+  this.selectedSlot=index;cell.classList.add('selected');cell.setAttribute('aria-pressed','true');
+  if(this.heldPreview){const iconIndex=iconIndexOf(item),nationalIcon=usableIcon(this.nationalIcons?.frames[iconIndex]),icon=nationalIcon??usableIcon(this.icons?.frames[iconIndex]);this.heldPreview.replaceChildren(imageOrEmpty(icon,item,nationalIcon?`/ui-national/items/${nationalIcon.file}`:undefined));this.heldPreview.hidden=false;this.heldPreview.style.left=`${event.clientX+10}px`;this.heldPreview.style.top=`${event.clientY+10}px`;}
+ }
+ private activate(item:InventoryItem){const slot=defaultSlot(item.stdMode);this.clearSelection();if(slot>=0)this.begin(item,()=>this.actions.equip(item.makeIndex,slot));else if(item.stdMode<=4||item.stdMode===31)this.begin(item,()=>this.actions.use(item.makeIndex));}
+ private showTooltip(item:InventoryItem,cell:HTMLButtonElement){
+  if(!this.tooltip)return;this.tooltip.replaceChildren();const document=this.element.ownerDocument;const heading=document.createElement('strong');heading.textContent=item.name;this.tooltip.append(heading);
+  for(const [label,value] of itemDetailRows(item)){const row=document.createElement('span'),name=document.createElement('em'),amount=document.createElement('b');name.textContent=label;amount.textContent=value;row.append(name,amount);this.tooltip.append(row);}
+  this.tooltip.style.left=`${cell.offsetLeft+(cell.offsetLeft>160?-184:38)}px`;this.tooltip.style.top=`${Math.max(6,Math.min(150,cell.offsetTop))}px`;this.tooltip.hidden=false;
+ }
+ private hideTooltip(){if(this.tooltip)this.tooltip.hidden=true;}
+  private render(){
+  this.element.replaceChildren();this.element.classList.add('classic-bag');this.hideTooltip();
+  const bag=new Map<number,InventoryItem>();for(const item of this.items.values()){const slot=this.placements.get(item.makeIndex);if(slot!==undefined)bag.set(slot,item);}
   for(let index=0;index<BAG_VISIBLE;index++){
-   const item=bag[index],cell=document.createElement('button');
-   const position=bagCellPosition(index);
-   cell.type='button';cell.className='item-cell';cell.style.left=`${position.left}px`;cell.style.top=`${position.top}px`;
-   cell.dataset.slot=String(index);
+   const item=bag.get(index),cell=document.createElement('button'),column=index%BAG_COLUMNS,row=Math.floor(index/BAG_COLUMNS)%5;
+   const position=bagCellPosition(index);cell.type='button';cell.className='item-cell';cell.style.left=`calc(var(--bag-origin-x, ${position.left-column*(BAG_CELL.width+BAG_CELL.gapX)}px) + ${column} * var(--bag-step-x, ${BAG_CELL.width+BAG_CELL.gapX}px))`;cell.style.top=`calc(var(--bag-origin-y, ${position.top-row*(BAG_CELL.height+BAG_CELL.gapY)}px) + ${row} * var(--bag-step-y, ${BAG_CELL.height+BAG_CELL.gapY}px))`;
+   cell.dataset.slot=String(index);cell.setAttribute('aria-pressed',String(this.selectedSlot===index));if(this.selectedSlot===index)cell.classList.add('selected');
    if(!this.known){cell.disabled=true;cell.title='等待服务端背包数据…';}
    else if(item){
     const pending=this.pending.has(item.makeIndex);
-    cell.dataset.itemId=String(item.makeIndex);cell.disabled=pending;
-    cell.title=`${item.name}\n持久 ${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`;
+    cell.dataset.itemId=String(item.makeIndex);cell.disabled=pending;cell.setAttribute('aria-label',item.name);cell.setAttribute('aria-describedby','inventory-item-tooltip');
     const iconIndex=iconIndexOf(item),nationalIcon=usableIcon(this.nationalIcons?.frames[iconIndex]),icon=nationalIcon??usableIcon(this.icons?.frames[iconIndex]);
     cell.append(imageOrEmpty(icon,item,nationalIcon?`/ui-national/items/${nationalIcon.file}`:undefined));
     cell.onclick=event=>{
      event.preventDefault();
      if(event.shiftKey&&this.actions.trade)this.begin(item,()=>this.actions.trade!(item.makeIndex));
-     else{
-      const slot=defaultSlot(item.stdMode);
-      if(slot>=0)this.begin(item,()=>this.actions.equip(item.makeIndex,slot));
-      else if(item.stdMode<=4||item.stdMode===31)this.begin(item,()=>this.actions.use(item.makeIndex));
-     }
+     else this.select(index,item,cell,event);
     };
+    cell.ondblclick=event=>{event.preventDefault();event.stopPropagation();this.activate(item);};
+    cell.onmouseenter=()=>this.showTooltip(item,cell);cell.onmouseleave=()=>this.hideTooltip();
     cell.draggable=true;
     cell.ondragstart=event=>{
      event.dataTransfer?.setData('text/plain',String(item.makeIndex));
@@ -84,12 +135,10 @@ export class InventoryView {
      if(outside)this.begin(item,()=>this.actions.drop(item.makeIndex));
     };
     cell.oncontextmenu=event=>{
-     event.preventDefault();
-     const slot=defaultSlot(item.stdMode);
-     if(slot>=0)this.begin(item,()=>this.actions.equip(item.makeIndex,slot));
-     else if(item.stdMode<=4||item.stdMode===31)this.begin(item,()=>this.actions.use(item.makeIndex));
+     event.preventDefault();this.activate(item);
     };
-   }else cell.title=this.known?'空':'等待服务端背包数据…';
+   }else{cell.title=this.known?'空':'等待服务端背包数据…';cell.setAttribute('aria-label',`空格 ${index+1}`);cell.onclick=event=>{event.preventDefault();if(this.selectedSlot!==undefined){const selected=[...this.items.values()].find(value=>this.placements.get(value.makeIndex)===this.selectedSlot);if(selected)this.select(index,selected,cell,event);}};}
+   cell.ondragover=event=>{event.preventDefault();if(event.dataTransfer)event.dataTransfer.dropEffect='move';};cell.ondrop=event=>{event.preventDefault();const id=Number(event.dataTransfer?.getData('text/plain')),from=this.placements.get(id);if(from===undefined||from===index)return;this.selectedSlot=from;const selected=this.items.get(id);if(selected)this.select(index,selected,cell,event as unknown as MouseEvent);};
    this.element.append(cell);
   }
  }
@@ -157,3 +206,4 @@ function imageOrEmpty(icon:IconFrame|undefined,item:InventoryItem,url?:string){
  const empty=document.createElement('span');empty.className='missing-item-icon';empty.setAttribute('aria-label',`${item.name} 图标待校准`);return empty;
 }
 function usableIcon(icon:IconFrame|undefined){return icon&&icon.width>4&&icon.height>1?icon:undefined;}
+function itemTypeName(mode:number){if(mode<=4||mode===31)return '可使用物品';if(mode===5||mode===6)return '武器';if(mode===10||mode===11)return '衣服';if(mode===15)return '头盔';if([19,20,21].includes(mode))return '项链';if([22,23].includes(mode))return '戒指';if([24,26].includes(mode))return '手镯';if([28,29,30].includes(mode))return '蜡烛/护身符';if(mode===40)return '肉类';return `物品 ${mode}`;}

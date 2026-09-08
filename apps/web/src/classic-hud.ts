@@ -149,7 +149,8 @@ export class ClassicHud {
   }[kind==='skills'||kind==='equipment'?'character':kind==='quest'?'character':kind]??{library:'Title',index:504,x:268,y:80,closeX:241,closeY:3};
   const library=this.libraries.get(specs.library)!;
   const frame=uiFrame(library, specs.index);
-  element.style.left=`${specs.x}px`;element.style.top=`${specs.y}px`;element.style.right='auto';element.style.bottom='auto';
+  if(element.dataset.windowMoved!=='true'){element.style.left=`${specs.x}px`;element.style.top=`${specs.y}px`;}
+  element.style.right='auto';element.style.bottom='auto';
   applyUiFrame(element, specs.library, frame);
   if(kind==='character'||kind==='equipment'||kind==='skills'){
    const page=element.querySelector<HTMLElement>('[data-character-page="paperdoll"]');
@@ -185,7 +186,7 @@ export class ClassicHud {
   };
   const spec=specs[kind];
   if(!prguse||!spec)return false;
-  element.classList.add('national-window');element.classList.toggle('national-panel',['shop','repair','storage'].includes(kind));element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;element.style.right='auto';element.style.bottom='auto';
+  element.classList.add('national-window');element.classList.toggle('national-panel',['shop','repair','storage'].includes(kind));if(element.dataset.windowMoved!=='true'){element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;}element.style.right='auto';element.style.bottom='auto';
   applyNationalUiFrame(element,'prguse',uiFrame(prguse,spec.index));
   if(kind==='character'){
    const paper=element.querySelector<HTMLElement>('[data-character-page="paperdoll"]');
@@ -214,6 +215,7 @@ export class ClassicHud {
 
  clear(){this.attributes=undefined;this.skills=[];this.selected=-1;this.statusMask=0;this.hunger=0;this.resources={hp:0,mp:0,maxHp:0,maxMp:0,experience:0,maxExperience:0};this.render();}
  replaceAttributes(attributes:CharacterAttributes){this.attributes=attributes;this.resources={...this.resources,hp:attributes.hp,mp:attributes.mp,maxHp:attributes.maxHp,maxMp:attributes.maxMp,experience:attributes.experience,maxExperience:attributes.maxExperience};this.render();}
+ currency(values:{gold?:number;gameGold?:number}){if(!this.attributes)return;this.attributes={...this.attributes,...values};this.gold.textContent=String(this.attributes.gold);}
  resource(values:Partial<ResourceState>){this.resources={...this.resources,...values};this.renderBars();}
  experience(total:number){this.resources.experience=total;this.renderBars();}
  level(level:number,total:number){if(this.attributes)this.attributes={...this.attributes,level,experience:total};this.resources.experience=total;this.render();}

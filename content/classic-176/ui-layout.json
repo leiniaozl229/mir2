@@ -99,6 +99,28 @@
     "gapX": 1,
     "gapY": 1
   },
+  "nationalInventoryGrid": {
+    "source": "2003 client Prguse#3 pixel boundaries",
+    "columns": 8,
+    "visible": 40,
+    "cellWidth": 36,
+    "cellHeight": 32,
+    "originX": 18,
+    "originY": 14,
+    "gapX": 0,
+    "gapY": 0,
+    "gold": {"x": 65, "y": 190, "width": 136, "height": 16}
+  },
+  "inventoryInteraction": {
+    "source": "Crystal InventoryDialog and MirItemCell behavior reference",
+    "leftClick": "pick-or-place",
+    "doubleClick": "use-or-equip",
+    "rightClick": "use-or-equip",
+    "hover": "show-attributes",
+    "movable": true,
+    "persistGridOrder": true,
+    "persistWindowPosition": true
+  },
   "characterPage": {"library": "Prguse", "index": 340, "x": 8, "y": 90},
   "nationalCharacterPage": {"library": "prguse", "index": 378, "x": 44, "y": 72},
   "paperdollActor": {"x": 70, "y": 150, "direction": 4},
