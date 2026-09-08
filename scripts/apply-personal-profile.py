@@ -61,6 +61,21 @@ def scale_mon_items(directory: Path, multiplier: float, apply: bool) -> int:
     return changed
 
 
+def ensure_monster_spawns(path: Path, spawns: list[str], apply: bool) -> int:
+    if not spawns:
+        return 0
+    if not path.exists():
+        raise FileNotFoundError(f"prepared runtime is missing: {path}")
+    text, encoding = decode(path)
+    existing = {line.strip() for line in text.splitlines() if line.strip()}
+    additions = [line for line in spawns if line not in existing]
+    if additions and apply:
+        separator = "" if not text or text.endswith(("\n", "\r")) else "\n"
+        updated = text + separator + "\n".join(additions) + "\n"
+        path.write_bytes(updated.encode("utf-8-sig" if encoding == "utf-8-sig" else encoding))
+    return len(additions)
+
+
 def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     exp = profile.get("experienceMultiplier", 1)
@@ -74,9 +89,17 @@ def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
     exps = mir / "exps.conf"
     server = mir / "server.conf"
     mon_items = mir / "Envir/MonItems"
+    mon_gen = mir / "Envir/MonGen.txt"
     admin = mir / "Envir/AdminList.txt"
     if not all(path.exists() for path in (exps, server, mon_items)):
         raise FileNotFoundError(f"prepared runtime is missing: {mir}")
+    active_profile_path = runtime / "personal-profile.json"
+    previous_drop = 1.0
+    if active_profile_path.exists():
+        active_profile = json.loads(active_profile_path.read_text(encoding="utf-8"))
+        previous_drop = float(active_profile.get("dropMultiplier", 1.0))
+        if not 0.1 <= previous_drop <= 100:
+            raise ValueError("active dropMultiplier must be between 0.1 and 100")
     changes = {
         "experienceMultiplier": {"file": str(exps), "key": "KillMonExpMultiple", "value": int(exp)},
         "spawnDelayMultiplier": {"file": str(server), "key": "RegenMonstersTime", "value": max(10, math.floor(200 * spawn + 0.5))},
@@ -84,7 +107,12 @@ def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
     if apply:
         replace_key(exps, "KillMonExpMultiple", int(exp))
         replace_key(server, "RegenMonstersTime", changes["spawnDelayMultiplier"]["value"])
-    changed_monsters = scale_mon_items(mon_items, drop, apply)
+    effective_drop_scale = drop / previous_drop
+    changed_monsters = scale_mon_items(mon_items, effective_drop_scale, apply)
+    monster_spawns = profile.get("monsterSpawns", [])
+    if not isinstance(monster_spawns, list) or any(not isinstance(line, str) or len(line.split()) < 7 for line in monster_spawns):
+        raise ValueError("monsterSpawns must contain complete MonGen lines")
+    added_spawns = ensure_monster_spawns(mon_gen, [line.strip() for line in monster_spawns], apply)
     gm = profile.get("gm", {})
     gm_enabled = bool(gm.get("enabled", False))
     gm_character = str(gm.get("character", "")).strip()
@@ -99,9 +127,15 @@ def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
             lines = [line for line in existing.splitlines() if not line.strip().endswith(f" {gm_ip}") and gm_character.casefold() not in line.casefold()]
             lines.append(f"*{gm_character} {gm_ip}")
             admin.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    changes["dropMultiplier"] = {"files": changed_monsters, "value": drop}
+    changes["dropMultiplier"] = {
+        "files": changed_monsters,
+        "previousValue": previous_drop,
+        "value": drop,
+        "effectiveScale": effective_drop_scale,
+    }
+    changes["monsterSpawns"] = {"file": str(mon_gen), "added": added_spawns, "values": monster_spawns}
     if apply:
-        (runtime / "personal-profile.json").write_text(json.dumps(profile, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        active_profile_path.write_text(json.dumps(profile, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return {"ok": True, "applied": apply, "profile": profile.get("id", profile_path.stem), "changes": changes}
 
 

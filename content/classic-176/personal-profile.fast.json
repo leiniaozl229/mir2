@@ -1,0 +1,16 @@
+{
+  "id": "solo-fast",
+  "label": "个人加速档",
+  "experienceMultiplier": 3,
+  "dropMultiplier": 2.0,
+  "spawnDelayMultiplier": 1.0,
+  "monsterSpawns": [
+    "0 644 638 鸡 3 6 1",
+    "0 658 638 鹿 3 4 1"
+  ],
+  "gm": {
+    "enabled": false,
+    "character": "",
+    "ip": "127.0.0.1"
+  }
+}

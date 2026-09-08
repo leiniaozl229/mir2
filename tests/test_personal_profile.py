@@ -16,12 +16,14 @@ class PersonalProfileTests(unittest.TestCase):
             (mir / "exps.conf").write_text("\ufeff[Exp]\nKillMonExpMultiple=1\n", encoding="utf-8")
             (mir / "server.conf").write_text("\ufeff[Server]\nRegenMonstersTime=200\n", encoding="utf-8")
             (mir / "Envir/MonItems/鸡.txt").write_bytes("1/10 鸡肉\n".encode("gb18030"))
+            (mir / "Envir/MonGen.txt").write_bytes("0 10 10 鸡 2 1 1\n".encode("gb18030"))
             profile = runtime / "profile.json"
             profile.write_text(json.dumps({
                 "id": "test",
                 "experienceMultiplier": 2,
                 "dropMultiplier": 2,
                 "spawnDelayMultiplier": 0.5,
+                "monsterSpawns": ["0 20 20 鹿 2 1 1"],
                 "gm": {"enabled": True, "character": "SoloGM", "ip": "127.0.0.1"},
             }, ensure_ascii=False), encoding="utf-8")
             subprocess.run([
@@ -31,8 +33,28 @@ class PersonalProfileTests(unittest.TestCase):
             self.assertIn("KillMonExpMultiple=2", (mir / "exps.conf").read_text(encoding="utf-8-sig"))
             self.assertIn("RegenMonstersTime=100", (mir / "server.conf").read_text(encoding="utf-8-sig"))
             self.assertEqual((mir / "Envir/MonItems/鸡.txt").read_bytes().decode("gb18030").split()[0], "2/10")
+            self.assertEqual((mir / "Envir/MonGen.txt").read_bytes().decode("gb18030").count("0 20 20 鹿 2 1 1"), 1)
             self.assertEqual((mir / "Envir/AdminList.txt").read_text(encoding="utf-8").strip(), "*SoloGM 127.0.0.1")
             self.assertTrue((runtime / "personal-profile.json").exists())
+            subprocess.run([
+                "python3", str(ROOT / "scripts/apply-personal-profile.py"),
+                "--profile", str(profile), "--runtime", str(runtime), "--apply",
+            ], check=True, cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual((mir / "Envir/MonItems/鸡.txt").read_bytes().decode("gb18030").split()[0], "2/10")
+            self.assertEqual((mir / "Envir/MonGen.txt").read_bytes().decode("gb18030").count("0 20 20 鹿 2 1 1"), 1)
+
+            classic = runtime / "classic.json"
+            classic.write_text(json.dumps({
+                "id": "classic",
+                "experienceMultiplier": 1,
+                "dropMultiplier": 1,
+                "spawnDelayMultiplier": 1,
+            }), encoding="utf-8")
+            subprocess.run([
+                "python3", str(ROOT / "scripts/apply-personal-profile.py"),
+                "--profile", str(classic), "--runtime", str(runtime), "--apply",
+            ], check=True, cwd=ROOT, capture_output=True, text=True)
+            self.assertEqual((mir / "Envir/MonItems/鸡.txt").read_bytes().decode("gb18030").split()[0], "1/10")
 
 
 if __name__ == "__main__":

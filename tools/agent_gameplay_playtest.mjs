@@ -3,7 +3,7 @@
 // through the real browser UI. A disposable account keeps persistent fixtures clean.
 import {spawn} from 'node:child_process';
 import {existsSync} from 'node:fs';
-import {mkdir,rm,writeFile} from 'node:fs/promises';
+import {mkdir,readFile,rm,writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import {setTimeout as sleep} from 'node:timers/promises';
 
@@ -11,11 +11,14 @@ const root=path.resolve(new URL('..',import.meta.url).pathname);
 const pageUrl=process.env.MIR2_AGENT_PLAY_URL??'http://127.0.0.1:5173/play.html?agent=1';
 const runId=new Date().toISOString().replaceAll(':','-').replace(/\.\d{3}Z$/,'Z');
 const outputDir=path.join(root,'.runtime/reports/agent-gameplay-playtest',runId);
-const latestPath=path.join(root,'.runtime/reports/agent-gameplay-playtest/latest.json');
+const freshOnly=process.env.MIR2_AGENT_FRESH_ONLY==='1';
+const latestPath=path.join(root,'.runtime/reports/agent-gameplay-playtest',freshOnly?'latest-fresh.json':'latest.json');
+const activeProfilePath=path.join(root,'.runtime/personal-profile.json');
 const suffix=`${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`.slice(-8);
 const fixture={account:`a${suffix}`.slice(0,10),password:`p${suffix}`.slice(0,10),warrior:`W${suffix}`.slice(0,10),character:`A${suffix}`.slice(0,10)};
-const report={version:1,runId,pageUrl,scenario:'level-dungeon-boss-drops',passed:false,checks:[],stages:[],console:[],webSocket:[],artifacts:{},fixture:{character:fixture.character,disposable:true}};
+const report={version:1,runId,pageUrl,scenario:freshOnly?'fresh-character-leveling':'level-dungeon-boss-drops',passed:false,checks:[],stages:[],console:[],webSocket:[],artifacts:{},fixture:{character:fixture.character,disposable:true}};
 let chrome,session;
+let activeProfile={experienceMultiplier:1,dropMultiplier:1};
 
 function chromePath(){
  if(process.env.CHROME_PATH&&existsSync(process.env.CHROME_PATH))return process.env.CHROME_PATH;
@@ -122,6 +125,8 @@ const equipmentNames=['轻型盔甲(男)','乌木剑','青铜头盔','金项链'
 
 try{
  await mkdir(outputDir,{recursive:true});
+ if(existsSync(activeProfilePath))activeProfile=JSON.parse(await readFile(activeProfilePath,'utf8'));
+ report.profile={id:activeProfile.id??'runtime-default',experienceMultiplier:Number(activeProfile.experienceMultiplier??1),dropMultiplier:Number(activeProfile.dropMultiplier??1)};
  const ready=await fetch(pageUrl).then(response=>response.ok).catch(()=>false);if(!ready)throw new Error(`Vite page unavailable: ${pageUrl}`);
  const binary=chromePath();if(!binary)throw new Error('Chrome, Chromium or Edge is required');
  const port=Number(process.env.MIR2_AGENT_GAMEPLAY_CHROME_PORT??19318),profile=path.join('/tmp',`mir2-agent-gameplay-${process.pid}`);
@@ -174,6 +179,35 @@ try{
  await pressTab();requireCheck((await snapshot()).minimap.mode==='hidden','Tab hides the map after expanded mode');await pressTab();requireCheck((await snapshot()).minimap.mode==='compact','Tab restores compact mode after hidden mode');
  await capture('02-entered-world.png');
 
+ const freshStart=recordStage('fresh-character-start',await snapshot());
+ requireCheck(freshStart.attributes.level===1&&freshStart.attributes.experience===0&&freshStart.attributes.maxExperience===10,'fresh character starts at level 1 with the classic 0/10 experience requirement',{level:freshStart.attributes.level,experience:freshStart.attributes.experience,maxExperience:freshStart.attributes.maxExperience});
+ const starterNames=['木剑','布衣(男)'];
+ requireCheck(starterNames.every(name=>freshStart.inventory.items.some(item=>item.name===name)),'fresh character receives the starter weapon and clothing',{items:freshStart.inventory.items.map(item=>item.name)});
+ await evaluate("(()=>{document.querySelector('[data-window-open=\"inventory\"]').click();return true})()");
+ for(const name of starterNames){
+  const state=await snapshot(),item=state.inventory.items.find(value=>value.name===name);
+  if(!item)throw new Error(`Starter item ${name} was not present`);
+  const clicked=await evaluate(`(()=>{const button=document.querySelector('[data-item-id="${item.makeIndex}"]');if(!button||button.disabled)return false;button.click();return true})()`);
+  if(!clicked)throw new Error(`Starter item ${name} could not be equipped`);
+  await waitFor(`window.__mir2Agent?.snapshot().equipment.slots.some(value=>value.item.makeIndex===${item.makeIndex})`,10000);
+ }
+ await evaluate("(()=>{document.querySelector('[data-window-close=\"inventory\"]').click();return true})()");
+ const freshTargetState=await waitFor("(()=>{const s=window.__mir2Agent?.snapshot();return s?.nearby?.some(value=>value.name==='鸡'&&!value.dead)&&s})()",20000);
+ const freshChicken=freshTargetState.nearby.find(value=>value.name==='鸡'&&!value.dead),freshEventOffset=(await events()).length;
+ await waitAndClickTarget('鸡',freshChicken.id);
+ await waitFor(`window.__mir2Agent?.events().slice(${freshEventOffset}).some(value=>value.type==='gateway-in'&&value.data.type==='entityDied'&&value.data.id===${freshChicken.id})`,60000);
+ const freshLeveled=recordStage('fresh-character-first-kill',await snapshot());
+ const freshEvents=(await events()).slice(freshEventOffset),freshExperienceEvent=freshEvents.find(value=>value.type==='gateway-in'&&value.data.type==='experience'&&Number(value.data.gained)>0);
+ const expectedFreshExperience=5*report.profile.experienceMultiplier;
+ requireCheck(freshExperienceEvent?.data.gained===expectedFreshExperience,'fresh character receives the configured experience multiplier from a normal chicken kill',{baseExperience:5,multiplier:report.profile.experienceMultiplier,gained:freshExperienceEvent?.data.gained});
+ requireCheck(freshLeveled.attributes.level>=2,'fresh character can reach level 2 through normal melee combat',{level:freshLeveled.attributes.level,experience:freshLeveled.attributes.experience});
+ await capture('02c-fresh-level-up.png');
+
+ if(freshOnly){
+  requireCheck(!report.console.some(value=>value.level==='exception'||value.level==='error'),'fresh leveling browser run produced no runtime errors',{entries:report.console});
+  report.passed=true;
+  console.log(`PASS fresh character leveling ${report.checks.filter(value=>value.passed===true).length} checks, ${freshExperienceEvent.data.gained} experience`);
+ }else{
  await walkNearTrainer();await waitAndClickTarget('导师');
  await waitFor("window.__mir2Agent?.snapshot().dialogue?.npc?.endsWith('导师')",30000);
  const dialogueClose=await evaluate("(()=>{const dialog=document.querySelector('#npc-dialog').getBoundingClientRect(),close=document.querySelector('#close-dialogue').getBoundingClientRect();return {offsetX:close.left-dialog.left,offsetY:close.top-dialog.top,width:close.width,height:close.height,dialogWidth:dialog.width,dialogHeight:dialog.height}})()");
@@ -227,7 +261,7 @@ try{
  await waitFor("window.__mir2Agent?.snapshot().dialogue?.npc==='古墓向导'",20000);
  await clickDialogue('@mobtest');
  const levelingStart=recordStage('leveling-start',await waitFor("(()=>{const s=window.__mir2Agent?.snapshot();return s?.map==='D001'&&s.attributes?.level===1&&s.nearby?.some(value=>value.name==='鸡'&&!value.dead)&&s})()",30000));
- const chicken=levelingStart.nearby.find(value=>value.name==='鸡'&&!value.dead),levelBefore=levelingStart.attributes.level,experienceBefore=levelingStart.attributes.experience;
+ const chicken=levelingStart.nearby.find(value=>value.name==='鸡'&&!value.dead),levelBefore=levelingStart.attributes.level,experienceBefore=levelingStart.attributes.experience,levelingEventOffset=(await events()).length;
  let levelingCasts=0;
  while(levelingCasts<12){
   if((await events()).some(value=>value.type==='gateway-in'&&value.data.type==='entityDied'&&value.data.id===chicken.id))break;
@@ -238,7 +272,7 @@ try{
  }
  await waitFor(`window.__mir2Agent?.events().some(value=>value.type==='gateway-in'&&value.data.type==='entityDied'&&value.data.id===${chicken.id})`,30000);
  const leveled=recordStage('leveling-complete',await snapshot());
- const experienceEvent=(await events()).find(value=>value.type==='gateway-in'&&value.data.type==='experience'&&Number(value.data.gained)>0);
+ const experienceEvent=(await events()).slice(levelingEventOffset).find(value=>value.type==='gateway-in'&&value.data.type==='experience'&&Number(value.data.gained)>0);
  requireCheck(Boolean(experienceEvent),'monster kill produces an authoritative experience event',{casts:levelingCasts,gained:experienceEvent?.data.gained,total:experienceEvent?.data.total});
  requireCheck(leveled.attributes.level>levelBefore||leveled.attributes.experience!==experienceBefore,'monster kill changes level or experience',{before:{level:levelBefore,experience:experienceBefore},after:{level:leveled.attributes.level,experience:leveled.attributes.experience}});
  await capture('04-level-up.png');
@@ -299,6 +333,7 @@ try{
  requireCheck(!report.console.some(value=>value.level==='exception'||value.level==='error'),'browser produced no runtime errors',{entries:report.console});
  await capture('08-loot-picked-up.png');report.passed=true;
  console.log(`PASS agent gameplay playtest ${report.checks.filter(value=>value.passed===true).length} checks, ${casts} boss casts, ${dropped.length} drops`);
+ }
 }catch(error){
  report.error=error instanceof Error?error.message:String(error);process.exitCode=1;console.error(`FAIL agent gameplay playtest: ${report.error}`);
  if(session)try{await capture('99-failure.png');report.failureSnapshot=await snapshot();report.timeline=await events();}catch{}
