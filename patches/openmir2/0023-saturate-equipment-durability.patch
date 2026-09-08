@@ -1,0 +1,27 @@
+diff --git a/src/M2Server/Player/PlayObject.Attack.cs b/src/M2Server/Player/PlayObject.Attack.cs
+index 9abd212..9023b72 100644
+--- a/src/M2Server/Player/PlayObject.Attack.cs
++++ b/src/M2Server/Player/PlayObject.Attack.cs
+@@ -1444 +1444 @@ namespace M2Server.Player
+-            nDura -= nWeaponDamage;
++            nDura = ReduceDurability(nDura, nWeaponDamage);
+@@ -1472 +1472 @@ namespace M2Server.Player
+-}
+\ No newline at end of file
++}
+diff --git a/src/M2Server/Player/PlayObject.cs b/src/M2Server/Player/PlayObject.cs
+index dde29f9..1b26c7f 100644
+--- a/src/M2Server/Player/PlayObject.cs
++++ b/src/M2Server/Player/PlayObject.cs
+@@ -2949 +2949 @@ namespace M2Server.Player
+-                nDura -= nDam;
++                nDura = ReduceDurability(nDura, nDam);
+@@ -2984 +2984 @@ namespace M2Server.Player
+-                    nDura -= nDam;
++                    nDura = ReduceDurability(nDura, nDam);
+@@ -3017,0 +3018,5 @@ namespace M2Server.Player
++        public static ushort ReduceDurability(ushort durability, ushort damage)
++        {
++            return damage >= durability ? (ushort)0 : (ushort)(durability - damage);
++        }
++

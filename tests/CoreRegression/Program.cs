@@ -25,6 +25,10 @@ try
     SystemModule.SystemShare.Config.ShowRankLevelName = false;
     Require(OpenMir2.Base.ServerEnvironment.VirtualMemoryLoad == 0,
             "unavailable virtual memory does not crash statistics");
+    Require(M2Server.Player.PlayObject.ReduceDurability(4, 5) == 0,
+            "equipment durability saturates when damage exceeds durability");
+    Require(M2Server.Player.PlayObject.ReduceDurability(5, 4) == 1,
+            "equipment durability preserves a positive remainder");
     SystemModule.SystemShare.Config.CastleDir = directory;
     SystemModule.SystemShare.MapMgr = DispatchProxy.Create<SystemModule.SubSystem.IMapSystem, MapIndexProxy>();
     var emptyCastle = new M2Server.Castle.UserCastle("empty-castle");
