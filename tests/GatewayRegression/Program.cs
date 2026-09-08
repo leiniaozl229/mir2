@@ -439,24 +439,30 @@ using (var actionTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10))
     Set("phase", "world");
     Set("confirmedPosition", ((ushort)10, (ushort)10));
     Set("pendingAttack", true);
-    Set("pendingPosition", ((ushort)11, (ushort)10));
+    Set("pendingActionId", (long?)41);
+    Set("pendingActionKind", "attack");
     Set("playerActorId", 7);
     var reading = (Task)sessionType.GetMethod("ReadGame", flags)!.Invoke(actionSession, [actionTimeout])!;
 
     await peer.GetStream().WriteAsync("#+GD/1!"u8.ToArray(), actionTimeout.Token);
-    await actionSocket.WaitForCount(1, actionTimeout.Token);
+    await actionSocket.WaitForCount(2, actionTimeout.Token);
     Require((ValueTuple<ushort, ushort>?)Get("confirmedPosition") == ((ushort)10, (ushort)10),
-        "attack acknowledgement does not confirm a later movement");
-    Require((ValueTuple<ushort, ushort>?)Get("pendingPosition") == ((ushort)11, (ushort)10),
-        "movement remains pending after attack acknowledgement");
+        "attack acknowledgement does not alter movement coordinates");
     Require(!(bool)Get("pendingAttack")!, "attack acknowledgement clears the attack action");
+    Require(actionSocket.Contains("\"type\":\"actionResult\"", "\"actionId\":41", "\"kind\":\"attack\"", "\"accepted\":true"),
+        "attack acknowledgement carries its browser action identity");
 
+    Set("pendingPosition", ((ushort)11, (ushort)10));
+    Set("pendingActionId", (long?)42);
+    Set("pendingActionKind", "move");
     byte[] rejected = [(byte)'#', ..LegacyCodec.Header(28, recog: 7, param: 10, tag: 10, series: 2), (byte)'!'];
     await peer.GetStream().WriteAsync(rejected, actionTimeout.Token);
-    await actionSocket.WaitForCount(2, actionTimeout.Token);
+    await actionSocket.WaitForCount(4, actionTimeout.Token);
     Require((ValueTuple<ushort, ushort>?)Get("confirmedPosition") == ((ushort)10, (ushort)10),
         "movement rejection restores the authoritative position");
     Require(Get("pendingPosition") is null, "movement rejection clears the pending position");
+    Require(actionSocket.Contains("\"type\":\"actionResult\"", "\"actionId\":42", "\"kind\":\"move\"", "\"accepted\":false"),
+        "movement rejection carries its browser action identity");
 
     await actionTimeout.CancelAsync();
     try { await reading; } catch (OperationCanceledException) { }
@@ -484,4 +490,5 @@ sealed class RecorderSocket : WebSocket
     {
         while (messages.Count < count) await Task.Delay(10, cancellationToken);
     }
+    public bool Contains(params string[] fragments) => messages.Any(message => fragments.All(message.Contains));
 }

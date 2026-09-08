@@ -13,11 +13,11 @@
 | 登录 | `{type: "login", account, password}` | `{type: "characters", characters: [{name,job,hair,level,sex}]}` |
 | 角色列表 | `{type:"createCharacter",name,job,sex,hair}` | `characterCreationResult`，成功后返回新的 `characters` 快照；网关会等待旧选角服务的 1 秒防刷窗口，避免 `NEWCHR` 被丢弃 |
 | 选角 | `{type: "selectCharacter", name}` | 地图及原生游戏事件 |
-| 入图后 | `{type: "move", x, y, direction, run?}` | 原生走/跑接受或拒绝事件 |
+| 入图后 | `{type:"move",x,y,direction,run?,actionId,mapGeneration}` | `actionResult`，`kind:"move"`，并携带确认或校正坐标 |
 | 入图后 | `{type: "inventory"}` | `{type:"inventory",items:[...]}` |
 | 入图后 | `{type:"dropItem",makeIndex}` | `{type:"dropResult",makeIndex,accepted}` 及地面事件 |
 | 入图后 | `{type:"pickup"}` | `itemAdded` 与 `groundItemRemoved` |
-| 入图后 | `{type:"attack",direction}` | `entityAction`、`health`、`entityDied`、`experience`；目标可以是相邻怪物或其他玩家，PK/行会战是否生效由旧服攻击模式与关系规则裁决 |
+| 入图后 | `{type:"attack",direction,actionId,mapGeneration}` | `actionResult`，`kind:"attack"`；另有 `entityAction`、`health`、`entityDied`、`experience` |
 | 入图后 | `{type:"openDoor",x,y}` | `door`，服务端确认后开门或自动关门 |
 | 入图后 | `{type:"butch",targetId}` | 挖肉动作及成功后的 `itemAdded` |
 | 入图后 | `{type:"equipItem",makeIndex,slot}` | `itemActionResult` 与 `equipment` 状态 |
@@ -28,7 +28,7 @@
 | 商店购买 | `{type:"shopDetails",npcId,name,page}` / `{type:"buyShopItem",npcId,name,makeIndex?}` | `shopDetails` / `shopPurchaseResult` |
 | 商店出售 | `{type:"querySellItem",npcId,makeIndex}` / `{type:"sellShopItem",npcId,makeIndex}` | `shopSellQuote` / `shopSellResult` |
 | 仓库存取 | `{type:"storeItem",npcId,makeIndex}` / `{type:"takeStorageItem",npcId,makeIndex}` | `storageDeposit` / `storageItems` / `storageResult` |
-| 施法 | `{type:"castMagic",magicId,targetId?}` | `spellResult`、`magicEffect`、`spellCast`、`magicFailed`、`warriorSkill` 及资源/熟练度更新 |
+| 施法 | `{type:"castMagic",magicId,targetId?,actionId,mapGeneration}` | `actionResult`，`kind:"spell"`；另有 `spellResult`、`magicEffect`、`spellCast`、`magicFailed`、`warriorSkill` 及资源/熟练度更新 |
 | 组队 | `{type:"groupMode",enabled}`、`groupCreate`、`groupAdd`、`groupRemove`（后三者带 `target`） | `groupMode`、`groupResult`、`groupMembers`、`groupCancel` |
 | 玩家交易 | `tradeRequest`、`tradeAdd`、`tradeRemove`、`tradeGold`、`tradeAccept`、`tradeCancel` | `tradeOpened`、`tradeResult`、`tradeGold`、`tradeClosed`、`tradeSuccess` 及双方物品状态 |
 | 攻击模式 | `{type:"attackMode",mode}`，`mode` 为 0–6 | `attackMode`，值来自旧服 213 的 `Recog` 字段 |
@@ -42,7 +42,7 @@
 
 同时暂用 `{type:"legacy", id, recog, param, tag, series, encodedBody, status}` 保留原字段；encodedBody 是旧编码字节的 Base64，不能直接当作文本。含多段独立编码的消息按消息定义分别解码。已投影事件和 legacy 事件不可重复应用同一状态变更。
 
-SM_LOGON 50 表示角色入图，随后允许移动。原生状态帧通过 id=-1、status 传递，`+GD/` 表示服务端接受操作；28 表示拒绝。浏览器需关联待确认动作，并限制并发移动请求，位置最终以服务端确认和同步结果为准。网关按已确认位置重新计算合法目标：走路必须相邻一格，跑步必须沿同方向前进两格；提交的目标坐标不匹配时会拒绝请求。
+SM_LOGON 50 表示角色入图，随后允许移动。原生状态帧通过 id=-1、status 传递，`+GD/` 表示服务端接受操作；28 表示拒绝。网关把三类待确认动作投影为 `{type:"actionResult",actionId,kind,accepted,x,y,reason,mapGeneration}`，其中 `kind` 为 `move`、`attack` 或 `spell`；可预期的本地命令拒绝使用 `error`，并携带相同 `actionId` 与 `kind`。浏览器只消费与当前待决动作完全匹配的结果，每个连接同时只允许一个需要 GOOD/FAIL 的动作；5 秒未确认会断线重连并重新同步。移动位置最终以服务端确认和同步结果为准。网关按已确认位置重新计算合法目标：走路必须相邻一格，跑步必须沿同方向前进两格；提交的目标坐标不匹配时会拒绝请求。
 
 基础近战由旧服继续结算。网关使用已确认的角色坐标组合 CM_HIT，浏览器仅提供八方向；点击活体目标后客户端保留目标状态，按攻击节奏重复提交，目标移动时重新走向目标，手动移动或死亡事件会清除状态。挖肉时，网关要求目标仍在当前视野、已有死亡事件、与角色相邻，并使用网关记录的尸体坐标计算方向。`entityAction` 表示攻击或挖肉动作，`health` 携带当前/最大 HP 和本次伤害，`entityDied` 携带尸体位置，`experience` 携带本次增加量与当前经验。
 

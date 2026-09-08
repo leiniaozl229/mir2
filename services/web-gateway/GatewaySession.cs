@@ -23,6 +23,8 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
     private (ushort x, ushort y)? confirmedPosition;
     private (ushort x, ushort y)? pendingPosition;
     private bool pendingAttack;
+    private long? pendingActionId;
+    private string? pendingActionKind;
     private ItemAction? pendingItemAction;
     private int? activeNpc;
     private int? activeShopNpc;
@@ -230,17 +232,20 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                 else if (type == "attack" && phase == "world")
                 {
                     int direction = root.GetProperty("direction").GetInt32();
+                    long actionId = ReadActionId(root);
                     (ushort x, ushort y) position;
                     lock (worldStateLock)
                     {
                         if (direction < 0 || direction > 7) throw new InvalidOperationException("Invalid attack direction");
+                        ValidateActionMap(root);
                         if (pendingAttack || pendingPosition is not null || pendingSpell is not null)
                             throw new InvalidOperationException("Action confirmation pending");
                         position = confirmedPosition ?? throw new InvalidOperationException("Player position is not ready");
                         pendingAttack = true;
+                        SetPendingAction(actionId, "attack");
                     }
                     try { await game.Send(3014, cancellation, recog: position.x | position.y << 16, tag: (ushort)direction); }
-                    catch { lock (worldStateLock) pendingAttack = false; throw; }
+                    catch { lock (worldStateLock) { pendingAttack = false; ClearPendingAction(); } throw; }
                 }
                 else if (type == "butch" && phase == "world")
                 {
@@ -275,21 +280,25 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     int x = root.GetProperty("x").GetInt32(), y = root.GetProperty("y").GetInt32();
                     int direction = root.GetProperty("direction").GetInt32();
                     bool running = root.TryGetProperty("run", out var runValue) && runValue.ValueKind == JsonValueKind.True;
+                    long actionId = ReadActionId(root);
+                    int commandMapGeneration = root.TryGetProperty("mapGeneration", out var generationValue) ? generationValue.GetInt32() : mapGeneration;
                     if (x < 0 || x > 32767 || y < 0 || y > 32767 || direction < 0 || direction > 7)
                         throw new InvalidDataException("Invalid movement coordinates");
                     lock (worldStateLock)
                     {
                         if (pendingAttack || pendingPosition is not null || pendingSpell is not null)
                             throw new InvalidOperationException("Action confirmation pending");
+                        if (commandMapGeneration != mapGeneration) throw new InvalidOperationException("Movement belongs to an inactive map");
                         var current = confirmedPosition ?? throw new InvalidOperationException("Player position is not ready");
                         var offset = DirectionOffset(direction);
                         int distance = running ? 2 : 1;
                         if (x != current.x + offset.x * distance || y != current.y + offset.y * distance)
                             throw new InvalidOperationException("Movement target does not match confirmed position");
                         pendingPosition = ((ushort)x, (ushort)y);
+                        SetPendingAction(actionId, "move");
                     }
                     try { await game.Send(running ? (ushort)3013 : (ushort)3011, cancellation, recog: x | y << 16, tag: (ushort)direction); }
-                    catch { lock (worldStateLock) pendingPosition = null; throw; }
+                    catch { lock (worldStateLock) { pendingPosition = null; ClearPendingAction(); } throw; }
                 }
                     else throw new InvalidOperationException("Command unavailable in current session phase");
                 }
@@ -300,7 +309,9 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     {
                         type = "error",
                         code = "command_rejected",
-                        message = error is InvalidOperationException ? error.Message : "Invalid command"
+                        message = error is InvalidOperationException ? error.Message : "Invalid command",
+                        actionId = TryActionId(command.RootElement),
+                        kind = TryActionKind(command.RootElement)
                     }, cancellation);
                 }
             }
@@ -441,6 +452,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                         confirmedPosition = null;
                         pendingPosition = null;
                         pendingAttack = false;
+                        ClearPendingAction();
                         pendingItemAction = null;
                         pendingSpell = null;
                         playerActorId = null;
@@ -463,6 +475,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     {
                         pendingPosition = null;
                         pendingAttack = false;
+                        ClearPendingAction();
                         pendingSpell = null;
                         activeNpc = null;
                         ClearShop();
@@ -480,6 +493,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                         confirmedPosition = (packet.Param, packet.Tag);
                         pendingPosition = null;
                         pendingAttack = false;
+                        ClearPendingAction();
                         pendingItemAction = null;
                         pendingSpell = null;
                         playerActorId = packet.Recog;
@@ -501,31 +515,33 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                     phase = "world";
                 }
                 object? commandResult = null;
+                object? actionResult = null;
                 object? warriorSkill = null;
                 if (packet.Id == -1 && packet.Status is string status)
                     lock (worldStateLock)
                     {
                         if (status.StartsWith("+GD/", StringComparison.Ordinal))
                         {
-                            if (pendingAttack) pendingAttack = false;
-                            else if (pendingPosition is { } next) { confirmedPosition = next; pendingPosition = null; }
-                            else if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = true }; }
+                            if (pendingAttack) { pendingAttack = false; actionResult = CompletePendingAction(true); }
+                            else if (pendingPosition is { } next) { confirmedPosition = next; pendingPosition = null; actionResult = CompletePendingAction(true, next.x, next.y); }
+                            else if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = true }; actionResult = CompletePendingAction(true); }
                         }
                         else if (WarriorSkillStatus(status) is { } warrior)
                         {
                             warriorSkill = warrior;
-                            if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = true }; }
+                            if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = true }; actionResult = CompletePendingAction(true); }
                         }
                     }
                 else if (packet.Id == 28) lock (worldStateLock)
                 {
-                    if (pendingAttack) pendingAttack = false;
+                    if (pendingAttack) { pendingAttack = false; actionResult = CompletePendingAction(false, packet.Param, packet.Tag, packet.Id); }
                     else if (pendingPosition is not null)
                     {
                         pendingPosition = null;
                         confirmedPosition = (packet.Param, packet.Tag);
+                        actionResult = CompletePendingAction(false, packet.Param, packet.Tag, packet.Id);
                     }
-                    else if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = false }; }
+                    else if (pendingSpell is { } spell) { pendingSpell = null; commandResult = new { type = "spellResult", magicId = spell.magicId, name = spell.name, accepted = false }; actionResult = CompletePendingAction(false, packet.Param, packet.Tag, packet.Id); }
                 }
                 UpdateEntities(packet);
                 string? knownName = null;
@@ -560,6 +576,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                 object? storageResult;
                 lock (worldStateLock) storageResult = UpdateStorageState(packet);
                 if (storageResult is not null) await Send(storageResult, lifetime.Token);
+                if (actionResult is not null) await Send(actionResult, lifetime.Token);
                 if (commandResult is not null) await Send(commandResult, lifetime.Token);
                 if (warriorSkill is not null) await Send(warriorSkill, lifetime.Token);
                 // Preserve per-record encoding until each legacy message has a typed projection.
@@ -1076,12 +1093,14 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
     private async Task CastMagic(JsonElement command, CancellationToken cancellation)
     {
         int requestedMagicId = command.GetProperty("magicId").GetInt32();
+        long actionId = ReadActionId(command);
         int targetId = command.TryGetProperty("targetId", out var targetElement) && targetElement.ValueKind == JsonValueKind.Number
             ? targetElement.GetInt32() : 0;
         MagicSkill skill;
         ushort targetX, targetY;
         lock (worldStateLock)
         {
+            ValidateActionMap(command);
             if (requestedMagicId is < 1 or > ushort.MaxValue || !skills.TryGetValue((ushort)requestedMagicId, out skill!))
                 throw new InvalidOperationException("Skill is unavailable");
             if (pendingAttack || pendingSpell is not null || pendingPosition is not null)
@@ -1099,6 +1118,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
                 (targetX, targetY) = (target.x, target.y);
             }
             pendingSpell = (skill.magicId, skill.name);
+            SetPendingAction(actionId, "spell");
         }
         try
         {
@@ -1106,7 +1126,46 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
             await game.Send(3017, cancellation, recog: packedPosition, param: (ushort)targetId,
                 tag: skill.magicId, series: (ushort)((uint)targetId >> 16));
         }
-        catch { lock (worldStateLock) pendingSpell = null; throw; }
+        catch { lock (worldStateLock) { pendingSpell = null; ClearPendingAction(); } throw; }
+    }
+
+    private static long ReadActionId(JsonElement command)
+    {
+        if (!command.TryGetProperty("actionId", out var value)) return 0;
+        if (!value.TryGetInt64(out long actionId) || actionId <= 0 || actionId > 9_007_199_254_740_991)
+            throw new InvalidDataException("Invalid action id");
+        return actionId;
+    }
+
+    private void ValidateActionMap(JsonElement command)
+    {
+        if (command.TryGetProperty("mapGeneration", out var value) && (!value.TryGetInt32(out int generation) || generation != mapGeneration))
+            throw new InvalidOperationException("Action belongs to an inactive map");
+    }
+
+    private static long? TryActionId(JsonElement command)
+        => command.TryGetProperty("actionId", out var value) && value.TryGetInt64(out long actionId) ? actionId : null;
+
+    private static string? TryActionKind(JsonElement command)
+        => command.TryGetProperty("type", out var value) ? value.GetString() switch { "move" => "move", "attack" => "attack", "castMagic" => "spell", _ => null } : null;
+
+    private void SetPendingAction(long actionId, string kind)
+    {
+        pendingActionId = actionId;
+        pendingActionKind = kind;
+    }
+
+    private void ClearPendingAction()
+    {
+        pendingActionId = null;
+        pendingActionKind = null;
+    }
+
+    private object? CompletePendingAction(bool accepted, ushort? x = null, ushort? y = null, int reason = 0)
+    {
+        if (pendingActionId is not long actionId || pendingActionKind is not string kind) return null;
+        ClearPendingAction();
+        return new { type = "actionResult", actionId, kind, accepted, x, y, reason, mapGeneration };
     }
 
     private static object? WarriorSkillStatus(string status) => status switch

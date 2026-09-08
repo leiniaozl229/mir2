@@ -152,11 +152,11 @@ return {app,depth,frameBudget,get width(){return world.width;},get height(){retu
   app.stage.position.set(400-centerX*48,300-centerY*32);
   await scheduleRender();
  },
- moveCenter(x:number,y:number,duration=600){
+ moveCenter(x:number,y:number,duration=600,start=performance.now()){
   const nextX=Math.max(0,Math.min(world.width-1,Math.round(x))),nextY=Math.max(0,Math.min(world.height-1,Math.round(y)));
   if(nextX===centerX&&nextY===centerY)return;
   const targetX=400-nextX*48,targetY=300-nextY*32;
-  cameraMotion={fromX:app.stage.position.x,fromY:app.stage.position.y,toX:targetX,toY:targetY,start:performance.now(),duration};
+  cameraMotion={fromX:app.stage.position.x,fromY:app.stage.position.y,toX:targetX,toY:targetY,start,duration};
   centerX=nextX;centerY=nextY;
   const window=renderWindow;
   if(!window||window.map!==mapId||nextX<window.left+6||nextX>window.right-6||nextY<window.top+6||nextY>window.bottom-6)void scheduleRender();

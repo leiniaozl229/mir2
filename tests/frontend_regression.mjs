@@ -27,7 +27,7 @@ if(element.children[0].disabled)throw new Error('rejected action leaves the inve
 console.log('PASS frontend inventory rejection restores the item interaction state');
 
 const movementSource=fs.readFileSync(path.join(root,'apps/web/src/movement-input.ts'),'utf8');
-const movementContext={exports:{}};
+const movementContext={exports:{},require:()=>({screenDirection:()=>undefined})};
 vm.createContext(movementContext);
 vm.runInContext(ts.transpileModule(movementSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,movementContext);
 const held=movementContext.exports.movementInput({code:'KeyD',key:'D',shiftKey:true});
@@ -36,19 +36,31 @@ if(movementContext.exports.releasesMovement(held,{code:'ShiftLeft',key:'Shift'})
 if(!movementContext.exports.releasesMovement(held,{code:'KeyD',key:'d'}))throw new Error('releasing D after Shift leaves movement held');
 console.log('PASS frontend movement release uses a modifier-stable key code');
 
+const movementModelSource=fs.readFileSync(path.join(root,'apps/web/src/movement-model.ts'),'utf8');
+const movementModelContext={exports:{}};
+vm.createContext(movementModelContext);
+vm.runInContext(ts.transpileModule(movementModelSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,movementModelContext);
+const movement=movementModelContext.exports;
+if(movement.MOVEMENT_DURATION_MS!==600)throw new Error('movement animation no longer uses the six-frame cadence');
+if(movement.routeDirection(10,10,11,10,0)!==2||movement.routeDirection(10,10,9,11,0)!==5)throw new Error('route direction does not follow actual coordinate displacement');
+if(movement.screenDirection(250,1)!==2)throw new Error('nearly horizontal pointer movement resolves diagonally');
+const straight=movement.findGridPath({x:10,y:10},{x:16,y:10},()=>true,()=>false);
+if(straight.length!==6||straight.some((point,index)=>point.x!==11+index||point.y!==10))throw new Error('open-field path does not preserve a straight route');
+const step={actionId:1,fromX:10,fromY:10,x:11,y:10,direction:2,run:false,startedAt:100,acknowledged:true};
+if(movement.movementCanFinish(step,699)||!movement.movementCanFinish(step,700)||movement.movementCanFinish({...step,acknowledged:false},900))throw new Error('movement does not wait for both animation and acknowledgement');
 const movementVisualSource=fs.readFileSync(path.join(root,'apps/web/src/movement-visual.ts'),'utf8');
-const movementVisualContext={exports:{}};
+const movementVisualContext={exports:{},require:()=>movement};
 vm.createContext(movementVisualContext);
 vm.runInContext(ts.transpileModule(movementVisualSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,movementVisualContext);
-if(movementVisualContext.exports.visualDirection(0)!==4||movementVisualContext.exports.visualDirection(2)!==6||movementVisualContext.exports.visualDirection(7)!==3)throw new Error('server movement direction is not rotated to the classic actor rows');
-if(movementVisualContext.exports.MOVEMENT_DURATION_MS!==600)throw new Error('movement interpolation differs from the OpenMir2 interval');
-if(movementVisualContext.exports.routeDirection(10,10,11,10,0)!==2||movementVisualContext.exports.routeDirection(10,10,9,11,0)!==5)throw new Error('route direction does not follow actual coordinate displacement');
-console.log('PASS frontend movement visuals follow OpenMir2 direction and timing');
+if(movementVisualContext.exports.visualDirection(0)!==0||movementVisualContext.exports.visualDirection(2)!==2||movementVisualContext.exports.visualDirection(7)!==7)throw new Error('Crystal actor directions are globally rotated');
+console.log('PASS frontend movement model preserves direction, paths and action cadence');
 
 const mapViewSource=fs.readFileSync(path.join(root,'apps/web/src/map-view.ts'),'utf8');
-if(!mapViewSource.includes('(x-app.stage.position.x)/48')||!mapViewSource.includes('(y-app.stage.position.y)/32'))throw new Error('screen clicks do not follow the interpolating camera');
+if(!mapViewSource.includes('(x-app.stage.position.x)/48')||!mapViewSource.includes('(y-app.stage.position.y)/32')||!mapViewSource.includes('start=performance.now()'))throw new Error('screen clicks or camera do not follow the shared movement timeline');
 const onlineActorSource=fs.readFileSync(path.join(root,'apps/web/src/online-actors.ts'),'utf8');
-if(!onlineActorSource.includes('Math.floor(movementProgress*this.frames.length)')||!onlineActorSource.includes('this.start=this.movement?.start'))throw new Error('locomotion frames do not share the displacement clock');
+if(!onlineActorSource.includes('Math.floor(movementProgress*this.frames.length)')||!onlineActorSource.includes('preloadPlayerLocomotion')||onlineActorSource.includes('this.body.texture=this.weapon.texture=this.hair.texture=Texture.EMPTY')||!onlineActorSource.includes('this.movementQueue.push(entity)')||!onlineActorSource.includes('this.update(next,time,true)')||!onlineActorSource.includes('stepDistance>maximumStep||this.movementQueue.length>=8'))throw new Error('locomotion frames do not load atomically on the displacement clock or remote movement lacks queue and resync handling');
+const movementPlaySource=fs.readFileSync(path.join(root,'apps/web/src/play.ts'),'utf8');
+if(!movementPlaySource.includes("message.type==='actionResult'")||movementPlaySource.includes("message.type==='legacy'&&pending")||!movementPlaySource.includes('movementCanFinish(pending,time)'))throw new Error('movement still consumes untyped acknowledgements or bypasses the animation gate');
 console.log('PASS frontend locomotion shares camera, displacement and frame timing');
 
 const actorSource=fs.readFileSync(path.join(root,'apps/web/src/online-actors.ts'),'utf8');
@@ -81,3 +93,8 @@ console.log('PASS national character assets redraw existing slots');
 
 if(!authSource.includes("paintNationalButton(selectSprite,nationalPrguse"))throw new Error('national character slots mix fallback frame metadata with national images');
 console.log('PASS national character slots use matching frame metadata');
+
+const actorsPage=fs.readFileSync(path.join(root,'apps/web/actors.html'),'utf8');
+const actorsSource=fs.readFileSync(path.join(root,'apps/web/src/actors.ts'),'utf8');
+if(!actorsPage.includes('<option value="running">跑步</option>')||!actorsSource.includes("running:{start:80,count:6")||!actorsSource.includes("running:'2'")||!actorsSource.includes('visualDirection(direction)'))throw new Error('actor validation page cannot inspect the corrected running rows and direction mapping');
+console.log('PASS actor validation page exposes the six-frame running rows');

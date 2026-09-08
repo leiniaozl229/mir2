@@ -1,4 +1,5 @@
 export type HeldMovement={code:string;dx:number;dy:number;run:boolean};
+export {screenDirection} from './movement-model';
 
 const movementCodes:Record<string,[number,number]>={
  ArrowUp:[0,-1],KeyW:[0,-1],ArrowRight:[1,0],KeyD:[1,0],

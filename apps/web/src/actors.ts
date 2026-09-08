@@ -1,4 +1,5 @@
 import './style.css';
+import {visualDirection} from './movement-visual';
 type Frame={file:string;offsetX:number;offsetY:number;width:number;height:number};
 type Action={start:number;count:number;skip:number;interval:number;reverse:number};
 type Library={frames:Record<string,Frame>;empty:number[];actions:Record<string,Action>};
@@ -12,17 +13,17 @@ const cells=['北','东北','东','东南','南','西南','西','西北'].map(di
  const body=document.createElement('img'),hair=document.createElement('img');body.alt='';hair.alt='';cell.append(body,hair);
  document.querySelector('#directions')!.append(cell);return {body,hair};
 });
-const playerActions:Record<string,Action>={standing:{start:0,count:4,skip:0,interval:500,reverse:0},walking:{start:32,count:6,skip:0,interval:100,reverse:0},attack:{start:136,count:6,skip:0,interval:100,reverse:0}};
+const playerActions:Record<string,Action>={standing:{start:0,count:4,skip:0,interval:500,reverse:0},walking:{start:32,count:6,skip:0,interval:100,reverse:0},running:{start:80,count:6,skip:0,interval:100,reverse:0},attack:{start:136,count:6,skip:0,interval:100,reverse:0}};
 let generation=0,start=performance.now(),currentAction=playerActions.standing;
 let chosen=0,genderOffset=0,ready=false;
 async function load(){
  const mine=++generation;ready=false;
  chosen=({monster:2,chicken:3,deer:4,'cave-maggot':5,skeleton:6,'axe-skeleton':7,'bone-warrior':8,'bone-elite':9,'wooma-soldier':10,'wooma-hero':11,'red-boar':12,'black-boar':13,'zombie-1':14,'zombie-2':14,'zombie-3':15,'zuma-archer':16,'zuma-statue':17,'zuma-guard':18,'hooking-cat':19,'cave-bat':20,sheep:21,'tiger-snake':22,'poison-spider':17,'armour-insect':5} as Record<string,number>)[actor.value]??0;genderOffset=actor.value==='female'?808:0;
- currentAction=chosen>=2?libraries[chosen].actions[{standing:'0',walking:'1',attack:'9'}[action.value]!]:playerActions[action.value];
+ currentAction=chosen>=2?libraries[chosen].actions[{standing:'0',walking:'1',running:'2',attack:'9'}[action.value]!]:playerActions[action.value];
  status.textContent='正在加载全部方向…';
  const loads:Promise<void>[]=[];
  for(let direction=0;direction<8;direction++)for(let frame=0;frame<currentAction.count;frame++)for(const lib of chosen>=2?[chosen]:[0,1]){
-  const index=genderOffset+currentAction.start+direction*(currentAction.count+currentAction.skip)+frame;
+  const poseDirection=visualDirection(direction),index=genderOffset+currentAction.start+poseDirection*(currentAction.count+currentAction.skip)+frame;
   const image=libraries[lib].frames[index];
   if(!image){if(!libraries[lib].empty.includes(index))throw new Error(`缺少 ${paths[lib]}:${index}`);continue;}
   const preload=new Image();preload.src=`/actors/${paths[lib]}/${image.file}`;loads.push(preload.decode());
@@ -33,7 +34,7 @@ async function load(){
 function draw(time:number){
  if(ready){let frame=Math.floor((time-start)/currentAction.interval)%currentAction.count;if(currentAction.reverse)frame=currentAction.count-1-frame;
  cells.forEach((cell,direction)=>{
-  const index=genderOffset+currentAction.start+direction*(currentAction.count+currentAction.skip)+frame;
+  const poseDirection=visualDirection(direction),index=genderOffset+currentAction.start+poseDirection*(currentAction.count+currentAction.skip)+frame;
   for(const [element,lib] of [[cell.body,chosen],[cell.hair,1]] as const){
    const image=libraries[lib].frames[index];const visible=!!image&&!(element===cell.hair&&chosen>=2);element.hidden=!visible;
    if(!visible)continue;const url=`/actors/${paths[lib]}/${image.file}`;if(element.getAttribute('src')!==url)element.src=url;

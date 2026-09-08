@@ -60,7 +60,9 @@ class WebGatewayContractTests(unittest.TestCase):
         self.assertIn("timedRun", source)
         self.assertIn("replayTimedLine", source)
         self.assertIn("600", source)
-        self.assertIn("400", source)
+        self.assertIn("actionResult", source)
+        self.assertIn("actionId", source)
+        self.assertIn("sentAt + intervalMs - Date.now()", source)
 
     def test_power_loss_probe_requires_recovery_and_saved_position(self):
         source = (ROOT / "tools/power_loss_probe.mjs").read_text()

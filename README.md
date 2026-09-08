@@ -96,7 +96,7 @@ python3 tools/protocol_probe.py --drop-pickup
 
 `tools/skill_combat_probe.mjs` 会注册三个临时职业账号，走到边界技能导师领取对应技能组，再按 `skill-combat.json` 逐项施法；道士还会装备护身符并检查 `变异骷髅` 召唤物出现与跟随。结果写入 `.runtime/reports/skill-combat.json`。运行前需让引擎加载最新 `content/classic-176/p0/skill-trainer.txt`（`python3 scripts/prepare-runtime.py --refresh-p0` 或 `--refresh-classic-route` 后重启）。
 
-`tools/movement_replay.mjs` 在当前地图执行可回退的走/跑时序回放，记录服务端接受/阻挡、方向、WebSocket 序列号和地图世代；走路和跑步都按服务端配置的 600ms 周期连续往返并记录发送间隔；结果写入 `.runtime/reports/movement-replay.json`。
+`tools/movement_replay.mjs` 在当前地图执行可回退的走/跑协议回放，记录服务端接受/阻挡、方向、WebSocket 序列号、地图世代和动作启动间隔；每一步同时等待对应 `actionResult` 与 600ms 动作截止点，调度规则与浏览器一致，结果写入 `.runtime/reports/movement-replay.json`。2026-09-08 最新回放完成 22 次走跑、0 次拒绝并回到起点，相邻动作启动间隔为 600–602ms。`node tools/movement_architecture_audit.mjs` 会执行生产移动模型，检查方向、路径、ACK/动画门控及协议集成边界。实现与待完成的人工观感验收见 [移动机制审计与修复](docs/movement-architecture-review-2026-09-08.md)。
 
 本机旧协议入口为 `127.0.0.1:17000`、`17100`、`17200`，WebSocket 入口为 `127.0.0.1:18800/ws`。启动后选角网关连接数据库可能需要约 20 秒，可在 `.runtime/logs/DBSrv.log` 确认“角色网关…已打开”再运行探针。数据库未暴露宿主端口。
 

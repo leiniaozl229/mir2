@@ -23,6 +23,7 @@ const queue = [], waiters = [];
 const entities = new Map();
 let currentMap;
 let position;
+let nextActionId = 1;
 
 socket.addEventListener('message', event => {
   const envelope = JSON.parse(event.data);
@@ -140,7 +141,7 @@ async function replayTimedLine(map, origin, line, intervalMs) {
   const samples = [];
   let sentAt;
   for (const step of line.steps) {
-    if (sentAt !== undefined) await sleep(intervalMs);
+    if (sentAt !== undefined) await sleep(Math.max(0, sentAt + intervalMs - Date.now()));
     const beforeSend = Date.now();
     if (!await move(step)) return { accepted: false, samples };
     if (sentAt !== undefined) samples.push(beforeSend - sentAt);
@@ -148,7 +149,7 @@ async function replayTimedLine(map, origin, line, intervalMs) {
   }
   const reverseTargets = [...line.steps.slice(0, -1).reverse(), { x: origin[0], y: origin[1] }];
   for (const target of reverseTargets) {
-    await sleep(intervalMs);
+    await sleep(Math.max(0, sentAt + intervalMs - Date.now()));
     const beforeSend = Date.now();
     const step = { direction: (line.direction + 4) % 8, run: line.steps[0].run, x: target.x, y: target.y };
     if (!await move(step)) return { accepted: false, samples };
@@ -166,9 +167,10 @@ async function replayTimedLine(map, origin, line, intervalMs) {
 }
 
 async function move(step, allowDoor = true) {
-  send({ type: 'move', x: step.x, y: step.y, direction: step.direction, run: step.run });
-  const result = await until(message => message.type === 'legacy' && (message.id === -1 || message.id === 28));
-  if (result.id === 28) {
+  const actionId = nextActionId++;
+  send({ type: 'move', actionId, mapGeneration, x: step.x, y: step.y, direction: step.direction, run: step.run });
+  const result = await until(message => message.type === 'actionResult' && message.actionId === actionId && message.kind === 'move');
+  if (!result.accepted) {
     report.rejected++;
     // The static .map file does not encode the server's current door state.
     // Follow the browser's real recovery path before declaring the step blocked.

@@ -25,7 +25,7 @@ const libraryCache=new Map<string,Promise<Library>>(),textureCache=new Map<strin
 const playerActions:Record<string,Action>={standing:{start:0,count:4,skip:0,interval:500},walking:{start:32,count:6,skip:0,interval:100},running:{start:80,count:6,skip:0,interval:100},attack:{start:136,count:6,skip:0,interval:100},spell:{start:296,count:6,skip:0,interval:100},harvest:{start:344,count:2,skip:0,interval:300},struck:{start:360,count:3,skip:0,interval:100},dying:{start:384,count:4,skip:0,interval:100},dead:{start:387,count:1,skip:3,interval:1000}};
 async function library(name:string){let task=libraryCache.get(name);if(!task){task=fetch(`/actors/${name}/library.json`).then(async response=>{if(!response.ok)throw new Error(`缺少素材 ${name}`);return response.json();});libraryCache.set(name,task);}return task;}
 async function poses(name:string,action:string,direction:number,offset:number){
- const lib=await library(name),definition=lib.actions[{standing:'0',walking:'1',running:'1',attack:'9',struck:'18',dying:'21',dead:'22'}[action]!]??playerActions[action];
+ const lib=await library(name),definition=lib.actions[{standing:'0',walking:'1',running:'2',attack:'9',struck:'18',dying:'21',dead:'22'}[action]!]??playerActions[action];
  if(!definition)throw new Error(`缺少动作 ${name}/${action}`);
  return {interval:definition.interval,frames:await Promise.all(Array.from({length:definition.count},async(_,frame)=>{
   const index=offset+definition.start+direction*(definition.count+definition.skip)+frame,entry=lib.frames[index];
@@ -33,6 +33,22 @@ async function poses(name:string,action:string,direction:number,offset:number){
   const url=`/actors/${name}/${entry.file}`;let task=textureCache.get(url);if(!task){task=Assets.load<Texture>(url).then(texture=>{texture.source.scaleMode='nearest';return texture;});textureCache.set(url,task);}
   return {texture:await task,x:entry.offsetX,y:entry.offsetY};
  }))};
+}
+const locomotionPreloads=new Map<string,Promise<void>>();
+export function preloadPlayerLocomotion(feature:number){
+ const layers=playerLayers(feature);if(!layers)return Promise.resolve();
+ const key=`${layers.bodyName}/${layers.offset}/${layers.hairName}/${layers.weaponName}/${layers.weaponOffset}`;
+ let task=locomotionPreloads.get(key);
+ if(!task){
+  const jobs:Promise<unknown>[]=[];
+  for(const action of ['standing','walking','running'])for(let direction=0;direction<8;direction++){
+   jobs.push(poses(layers.bodyName,action,direction,layers.offset));
+   if(layers.weaponName)jobs.push(poses(layers.weaponName,action,direction,layers.weaponOffset));
+   if(layers.hairName)jobs.push(poses(layers.hairName,action,direction,layers.offset));
+  }
+  task=Promise.all(jobs).then(()=>{},()=>{});locomotionPreloads.set(key,task);
+ }
+ return task;
 }
 async function staticPose(name:string,index:number){
  const lib=await library(name),entry=lib.frames[index];if(!entry)throw new Error(`缺少静态帧 ${name}/${index}`);
@@ -42,14 +58,24 @@ async function staticPose(name:string,index:number){
 export class OnlineActor {
  readonly container=new Container();
  private marker=new Graphics();private weapon=new Sprite();private body=new Sprite();private hair=new Sprite();private healthBack=new Graphics();private health=new Graphics();private label=new Text({text:'',style:{fontFamily:'SimSun, Songti SC, serif',fontSize:12,fill:0xffffff,stroke:{color:0x000000,width:3}}});
- private sequence=0;private key='';private start=0;private frames:Pose[]=[];private weaponFrames:Pose[]=[];private hairFrames:Pose[]=[];private interval=500;private entity:Entity;private movement:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;private movementEndedAt:number|undefined;private labelBaseY=-64;private labelOffsetY=0;
+ private sequence=0;private key='';private start=0;private frames:Pose[]=[];private weaponFrames:Pose[]=[];private hairFrames:Pose[]=[];private interval=500;private entity:Entity;private movement:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;private movementQueue:Entity[]=[];private movementEndedAt:number|undefined;private labelBaseY=-64;private labelOffsetY=0;
  constructor(entity:Entity,interact?:(entity:Entity)=>void){this.entity=entity;this.container.sortableChildren=true;this.marker.zIndex=-2;this.body.zIndex=0;this.hair.zIndex=1;this.healthBack.zIndex=this.health.zIndex=8;this.label.zIndex=9;this.container.addChild(this.marker,this.weapon,this.body,this.hair,this.healthBack,this.health,this.label);this.label.anchor.set(.5,1);this.label.position.set(24,this.labelBaseY);if(interact)this.container.eventMode='static';this.applyCursor();}
- update(entity:Entity){
-  const toX=entity.x*48,toY=entity.y*32,moving=(entity.action==='walking'||entity.action==='running')&&(this.entity.x!==entity.x||this.entity.y!==entity.y),sameDestination=this.movement?.toX===toX&&this.movement?.toY===toY;
-  if(moving)entity={...entity,direction:routeDirection(this.entity.x,this.entity.y,entity.x,entity.y,entity.direction)};
-  // Keep interpolation aligned with the server cadence so consecutive
-  // authoritative steps splice without a visible rubber-band.
-  if(moving&&!sameDestination){const start=performance.now();this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start,duration:MOVEMENT_DURATION_MS};this.movementEndedAt=undefined;this.start=start;}
+ update(entity:Entity,movementStart=performance.now(),fromQueue=false){
+  const origin=!fromQueue&&!entity.self&&this.movementQueue.length?this.movementQueue[this.movementQueue.length-1]:this.entity;
+  const toX=entity.x*48,toY=entity.y*32;let moving=(entity.action==='walking'||entity.action==='running')&&(origin.x!==entity.x||origin.y!==entity.y);const sameDestination=this.movement?.toX===toX&&this.movement?.toY===toY;
+  if(moving)entity={...entity,direction:routeDirection(origin.x,origin.y,entity.x,entity.y,entity.direction)};
+  const stepDistance=Math.max(Math.abs(entity.x-origin.x),Math.abs(entity.y-origin.y)),maximumStep=entity.action==='running'?2:1;
+  if(!entity.self&&moving&&(stepDistance>maximumStep||this.movementQueue.length>=8)){
+   this.movementQueue=[];this.movement=undefined;this.movementEndedAt=undefined;this.container.position.set(toX,toY);moving=false;entity={...entity,action:entity.dead?'dead':'standing'};
+  }
+  if(!fromQueue&&!entity.self&&moving&&(this.movement!==undefined||this.movementQueue.length>0)){
+   const destination=this.movementQueue[this.movementQueue.length-1]??this.entity;
+   if(destination.x!==entity.x||destination.y!==entity.y)this.movementQueue.push(entity);
+   return;
+  }
+  // A step owns its full visual interval. Remote follow-up steps wait in
+  // arrival order instead of replacing the active interpolation.
+  if(moving&&!sameDestination){this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start:movementStart,duration:MOVEMENT_DURATION_MS};this.movementEndedAt=undefined;this.start=movementStart;}
   else if(!moving&&!sameDestination){this.movement=undefined;this.movementEndedAt=undefined;this.container.position.set(toX,toY);}
   this.entity=entity;this.container.zIndex=entity.y*10000+entity.x+.5;this.label.text=entity.name;this.label.style.fill=nameFill(entity.nameColor);this.labelOffsetY=0;this.applyLabelOffset();this.applyCursor();this.drawHealth();
   const status=(entity.status??0)>>>0;
@@ -63,6 +89,7 @@ export class OnlineActor {
   const layers=playerLayers(entity.feature);
   if(layers){
    bodyName=layers.bodyName;offset=layers.offset;hairName=layers.hairName;weaponName=layers.weaponName;weaponOffset=layers.weaponOffset;
+   if(entity.self)void preloadPlayerLocomotion(entity.feature);
   }
   else if(race===50){bodyName='NPC00';staticIndex=entity.feature>>>16;}
   else{
@@ -75,7 +102,7 @@ export class OnlineActor {
   }
   const action=entity.action==='dying'?'dying':entity.dead?'dead':entity.action,poseDirection=visualDirection(entity.direction),key=`${bodyName}/${hairName}/${action}/${poseDirection}/${offset}`;
   const visualKey=`${key}/${armourShapeKey(dress)}/${weaponName}/${weaponOffset}/${staticIndex}`;
-  if(visualKey===this.key)return;this.key=visualKey;const generation=++this.sequence;this.frames=[];this.weaponFrames=[];this.hairFrames=[];this.body.texture=this.weapon.texture=this.hair.texture=Texture.EMPTY;
+  if(visualKey===this.key)return;this.key=visualKey;const generation=++this.sequence;
   if(!bodyName)return;
   this.weapon.zIndex=[0,5,6,7].includes(poseDirection)?-1:2;
   void Promise.all([staticIndex===undefined?poses(bodyName,action,poseDirection,offset):staticPose(bodyName,staticIndex),weaponName?poses(weaponName,action,poseDirection,weaponOffset):Promise.resolve(undefined),hairName?poses(hairName,action,poseDirection,offset):Promise.resolve(undefined)]).then(([body,heldWeapon,hair])=>{
@@ -85,12 +112,12 @@ export class OnlineActor {
  tick(time:number){
   const movement=this.movement;
   const movementProgress=movement?Math.min(1,Math.max(0,(time-movement.start)/movement.duration)):undefined;
-  if(movement&&movementProgress!==undefined){this.container.position.set(movement.fromX+(movement.toX-movement.fromX)*movementProgress,movement.fromY+(movement.toY-movement.fromY)*movementProgress);if(movementProgress===1){this.movement=undefined;this.movementEndedAt=time;}}
+  if(movement&&movementProgress!==undefined){this.container.position.set(movement.fromX+(movement.toX-movement.fromX)*movementProgress,movement.fromY+(movement.toY-movement.fromY)*movementProgress);if(movementProgress===1){this.movement=undefined;this.movementEndedAt=time;const next=this.movementQueue.shift();if(next){this.update(next,time,true);return;}}}
   if(!this.frames.length)return;
   const locomotion=this.entity.action==='walking'||this.entity.action==='running';
   let frame=locomotion&&movementProgress!==undefined?Math.min(this.frames.length-1,Math.floor(movementProgress*this.frames.length)):Math.floor((time-this.start)/this.interval);
   if(locomotion&&movementProgress===1)frame=this.frames.length-1;
-  if(locomotion&&movementProgress===undefined&&this.movementEndedAt!==undefined){if(time-this.movementEndedAt<MOVEMENT_SETTLE_MS)frame=this.frames.length-1;else{this.update({...this.entity,action:'standing'});return;}}
+  if(locomotion&&movementProgress===undefined&&this.movementEndedAt!==undefined){if(this.entity.self||time-this.movementEndedAt<MOVEMENT_SETTLE_MS)frame=this.frames.length-1;else{this.update({...this.entity,action:'standing'});return;}}
   if(['walking','running','attack','harvest','struck','dying'].includes(this.entity.action)&&frame>=this.frames.length){this.update({...this.entity,action:this.entity.action==='dying'?'dead':'standing'});return;}
   frame%=this.frames.length;
   for(const [sprite,pose] of [[this.body,this.frames[frame]],[this.weapon,this.weaponFrames[frame]],[this.hair,this.hairFrames[frame]]] as const){sprite.texture=pose?.texture??Texture.EMPTY;if(pose)sprite.position.set(pose.x,pose.y);}
@@ -109,7 +136,7 @@ export class OnlineActor {
   const race=this.entity.feature&255;
   this.container.cursor=race===50?'url("/ui/Cursors/Cursor_Npc.CUR") 0 0, pointer':this.entity.dead?'url("/ui/Cursors/Cursor_Default.CUR") 0 0, auto':'url("/ui/Cursors/Cursor_Normal_Atk.CUR") 0 0, crosshair';
  }
- destroy(){this.sequence++;this.container.destroy({children:true});}
+ destroy(){this.sequence++;this.movementQueue=[];this.container.destroy({children:true});}
 }
 
 export function actorHitTest(self:boolean,bounds:{x:number;y:number;width:number;height:number},x:number,y:number){
