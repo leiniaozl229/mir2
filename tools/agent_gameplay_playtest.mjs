@@ -192,16 +192,22 @@ try{
   await waitFor(`window.__mir2Agent?.snapshot().equipment.slots.some(value=>value.item.makeIndex===${item.makeIndex})`,10000);
  }
  await evaluate("(()=>{document.querySelector('[data-window-close=\"inventory\"]').click();return true})()");
- const freshTargetState=await waitFor("(()=>{const s=window.__mir2Agent?.snapshot();return s?.nearby?.some(value=>value.name==='鸡'&&!value.dead)&&s})()",20000);
- const freshChicken=freshTargetState.nearby.find(value=>value.name==='鸡'&&!value.dead),freshEventOffset=(await events()).length;
- await waitAndClickTarget('鸡',freshChicken.id);
- await waitFor(`window.__mir2Agent?.events().slice(${freshEventOffset}).some(value=>value.type==='gateway-in'&&value.data.type==='entityDied'&&value.data.id===${freshChicken.id})`,60000);
+ await waitFor("(()=>{const s=window.__mir2Agent?.snapshot();return s?.nearby?.some(value=>value.name==='鸡'&&!value.dead)&&s})()",20000);
+ const freshEventOffset=(await events()).length;
+ await waitAndClickTarget('鸡');
+ const freshChickenId=await waitFor("(()=>{const i=window.__mir2Agent?.snapshot().intentions;return i?.combatTarget??i?.pursuitTarget})()",10000);
+ await waitFor(`window.__mir2Agent?.events().slice(${freshEventOffset}).some(value=>value.type==='gateway-in'&&value.data.type==='entityDied'&&value.data.id===${freshChickenId})`,60000);
  const freshLeveled=recordStage('fresh-character-first-kill',await snapshot());
  const freshEvents=(await events()).slice(freshEventOffset),freshExperienceEvent=freshEvents.find(value=>value.type==='gateway-in'&&value.data.type==='experience'&&Number(value.data.gained)>0);
  const expectedFreshExperience=5*report.profile.experienceMultiplier;
  requireCheck(freshExperienceEvent?.data.gained===expectedFreshExperience,'fresh character receives the configured experience multiplier from a normal chicken kill',{baseExperience:5,multiplier:report.profile.experienceMultiplier,gained:freshExperienceEvent?.data.gained});
  requireCheck(freshLeveled.attributes.level>=2,'fresh character can reach level 2 through normal melee combat',{level:freshLeveled.attributes.level,experience:freshLeveled.attributes.experience});
  await capture('02c-fresh-level-up.png');
+ const strawZone=freshStart.self.x>500?{x:648,y:645}:{x:304,y:631};
+ if(!(await snapshot()).nearby.some(value=>value.name==='稻草人'&&!value.dead))try{await walkNear(strawZone.x,strawZone.y,8);}catch{}
+ const nextTier=await waitFor("(()=>{const s=window.__mir2Agent?.snapshot();return s?.nearby?.some(value=>value.name==='稻草人'&&!value.dead)&&s})()",20000);
+ const strawMan=nextTier.nearby.find(value=>value.name==='稻草人'&&!value.dead);
+ requireCheck(Boolean(strawMan),'fresh character can reach the next-tier straw-man hunting zone',{spawnArea:freshStart.self.x>500?'ginkgo':'bichon',target:{name:strawMan?.name,x:strawMan?.x,y:strawMan?.y}});
 
  if(freshOnly){
   requireCheck(!report.console.some(value=>value.level==='exception'||value.level==='error'),'fresh leveling browser run produced no runtime errors',{entries:report.console});

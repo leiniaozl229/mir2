@@ -61,19 +61,24 @@ def scale_mon_items(directory: Path, multiplier: float, apply: bool) -> int:
     return changed
 
 
-def ensure_monster_spawns(path: Path, spawns: list[str], apply: bool) -> int:
-    if not spawns:
-        return 0
+def reconcile_monster_spawns(path: Path, previous: list[str], current: list[str], apply: bool) -> tuple[int, int]:
+    if not previous and not current:
+        return 0, 0
     if not path.exists():
         raise FileNotFoundError(f"prepared runtime is missing: {path}")
     text, encoding = decode(path)
-    existing = {line.strip() for line in text.splitlines() if line.strip()}
-    additions = [line for line in spawns if line not in existing]
-    if additions and apply:
-        separator = "" if not text or text.endswith(("\n", "\r")) else "\n"
-        updated = text + separator + "\n".join(additions) + "\n"
+    original = text.splitlines()
+    original_set = {line.strip() for line in original if line.strip()}
+    previous_set, current_set = set(previous), set(current)
+    managed = previous_set | current_set
+    retained = [line for line in original if line.strip() not in managed]
+    desired = current + retained
+    additions = [line for line in current if line not in original_set]
+    removed = sum(line.strip() in previous_set - current_set for line in original)
+    if apply and desired != original:
+        updated = "\n".join(desired) + "\n"
         path.write_bytes(updated.encode("utf-8-sig" if encoding == "utf-8-sig" else encoding))
-    return len(additions)
+    return len(additions), removed
 
 
 def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
@@ -95,9 +100,11 @@ def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
         raise FileNotFoundError(f"prepared runtime is missing: {mir}")
     active_profile_path = runtime / "personal-profile.json"
     previous_drop = 1.0
+    previous_monster_spawns: list[str] = []
     if active_profile_path.exists():
         active_profile = json.loads(active_profile_path.read_text(encoding="utf-8"))
         previous_drop = float(active_profile.get("dropMultiplier", 1.0))
+        previous_monster_spawns = [str(line).strip() for line in active_profile.get("monsterSpawns", [])]
         if not 0.1 <= previous_drop <= 100:
             raise ValueError("active dropMultiplier must be between 0.1 and 100")
     changes = {
@@ -112,7 +119,8 @@ def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
     monster_spawns = profile.get("monsterSpawns", [])
     if not isinstance(monster_spawns, list) or any(not isinstance(line, str) or len(line.split()) < 7 for line in monster_spawns):
         raise ValueError("monsterSpawns must contain complete MonGen lines")
-    added_spawns = ensure_monster_spawns(mon_gen, [line.strip() for line in monster_spawns], apply)
+    normalized_spawns = [line.strip() for line in monster_spawns]
+    added_spawns, removed_spawns = reconcile_monster_spawns(mon_gen, previous_monster_spawns, normalized_spawns, apply)
     gm = profile.get("gm", {})
     gm_enabled = bool(gm.get("enabled", False))
     gm_character = str(gm.get("character", "")).strip()
@@ -133,7 +141,7 @@ def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
         "value": drop,
         "effectiveScale": effective_drop_scale,
     }
-    changes["monsterSpawns"] = {"file": str(mon_gen), "added": added_spawns, "values": monster_spawns}
+    changes["monsterSpawns"] = {"file": str(mon_gen), "added": added_spawns, "removed": removed_spawns, "values": monster_spawns}
     if apply:
         active_profile_path.write_text(json.dumps(profile, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return {"ok": True, "applied": apply, "profile": profile.get("id", profile_path.stem), "changes": changes}

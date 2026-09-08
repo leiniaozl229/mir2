@@ -33,7 +33,9 @@ class PersonalProfileTests(unittest.TestCase):
             self.assertIn("KillMonExpMultiple=2", (mir / "exps.conf").read_text(encoding="utf-8-sig"))
             self.assertIn("RegenMonstersTime=100", (mir / "server.conf").read_text(encoding="utf-8-sig"))
             self.assertEqual((mir / "Envir/MonItems/鸡.txt").read_bytes().decode("gb18030").split()[0], "2/10")
-            self.assertEqual((mir / "Envir/MonGen.txt").read_bytes().decode("gb18030").count("0 20 20 鹿 2 1 1"), 1)
+            mon_gen = (mir / "Envir/MonGen.txt").read_bytes().decode("gb18030")
+            self.assertEqual(mon_gen.count("0 20 20 鹿 2 1 1"), 1)
+            self.assertEqual(mon_gen.splitlines()[0], "0 20 20 鹿 2 1 1")
             self.assertEqual((mir / "Envir/AdminList.txt").read_text(encoding="utf-8").strip(), "*SoloGM 127.0.0.1")
             self.assertTrue((runtime / "personal-profile.json").exists())
             subprocess.run([
@@ -55,6 +57,7 @@ class PersonalProfileTests(unittest.TestCase):
                 "--profile", str(classic), "--runtime", str(runtime), "--apply",
             ], check=True, cwd=ROOT, capture_output=True, text=True)
             self.assertEqual((mir / "Envir/MonItems/鸡.txt").read_bytes().decode("gb18030").split()[0], "1/10")
+            self.assertNotIn("0 20 20 鹿 2 1 1", (mir / "Envir/MonGen.txt").read_bytes().decode("gb18030"))
 
 
 if __name__ == "__main__":
