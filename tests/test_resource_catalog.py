@@ -28,6 +28,8 @@ class ResourceCatalogTests(unittest.TestCase):
         self.assertEqual(summary["maps"], 570)
         self.assertGreater(summary["spawns"], 2800)
         self.assertGreater(summary["dropRows"], 7000)
+        self.assertEqual(summary["itemIcons"], 991)
+        self.assertEqual(summary["skillIcons"], 106)
 
     def test_cross_links_include_spawn_drop_and_assets(self):
         skeleton = next(value for value in self.catalog["monsters"] if value["name"] == "骷髅")
@@ -39,6 +41,15 @@ class ResourceCatalogTests(unittest.TestCase):
         self.assertIn("骷髅", bronze_sword["droppedBy"])
         self.assertEqual(lightning["use"], "hostile")
         self.assertEqual(grave["minimapFrame"], 0)
+
+    def test_extended_asset_fallbacks_and_skill_id_health(self):
+        ground_fallback = next(value for value in self.catalog["items"] if value["name"] == "祖玛井中月")
+        group_poison = next(value for value in self.catalog["skills"] if value["name"] == "群体施毒术")
+        self.assertIn("/items/DnItems/", ground_fallback["iconUrl"])
+        self.assertEqual(group_poison["magicId"], 104)
+        self.assertEqual(group_poison["iconIndex"], 38)
+        self.assertEqual(self.catalog["diagnostics"]["duplicateMagicIds"], [])
+        self.assertEqual(len(self.catalog["diagnostics"]["magicIdAliases"]), 12)
 
     def test_catalog_validation_and_templates(self):
         self.assertEqual(self.module.validate(self.catalog), [])

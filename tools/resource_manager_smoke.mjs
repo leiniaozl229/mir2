@@ -84,18 +84,24 @@ try{
  await session.send('Page.navigate',{url:pageUrl});
  const summary=await waitFor("(()=>{const cards=[...document.querySelectorAll('.summary-card strong')];return cards.length===8&&cards.every(node=>node.textContent)&&cards.map(node=>node.textContent)})()",30000);
  check(summary[0]==='1,000'&&summary[1]==='108'&&summary[2]==='705'&&summary[3]==='570','summary exposes generated catalog counts',{summary});
- check((await evaluate("document.querySelector('#resource-detail').textContent.includes('576 个物品缺少国服背包图标')")),'overview exposes unresolved asset coverage');
+ check((await evaluate("document.querySelector('#resource-detail').textContent.includes('9 个物品仍缺背包图标')")),'overview exposes unresolved asset coverage');
 
  await chooseSection('items');await searchAndSelect('青铜剑');
  await waitFor("(()=>{const image=document.querySelector('#resource-detail img');return image?.complete&&image.naturalWidth>0})()");
  const item=await evaluate("(()=>{const node=document.querySelector('#resource-detail');const image=node.querySelector('img');return {text:node.textContent,imageReady:image?.complete&&image.naturalWidth>0}})()");
  check(item.imageReady&&item.text.includes('武器')&&item.text.includes('掉落来源')&&item.text.includes('骷髅精灵'),'item detail links mechanics, icon and drop sources');
  await capture('01-item-drop-sources.png');
+ await searchAndSelect('祖玛井中月');
+ const groundFallback=await waitFor("(()=>{const image=document.querySelector('#resource-detail img');return image?.complete&&image.naturalWidth>0&&image.src.includes('/items/DnItems/')&&image.src})()");
+ check(Boolean(groundFallback),'item detail uses the ground-art fallback when the inventory frame is empty',{src:groundFallback});
 
  await chooseSection('skills');await searchAndSelect('雷电术');
  await waitFor("(()=>{const image=document.querySelector('#resource-detail img');return image?.complete&&image.naturalWidth>0})()");
  const skill=await evaluate("(()=>{const node=document.querySelector('#resource-detail');const image=node.querySelector('img');return {text:node.textContent,imageReady:image?.complete&&image.naturalWidth>0}})()");
  check(skill.imageReady&&skill.text.includes('目标攻击')&&skill.text.includes('17 / 20 / 23')&&skill.text.includes('耗蓝公式'),'skill detail links icon, progression and execution rules',{detail:skill});
+ await searchAndSelect('四级雷电术');
+ const extendedSkillIcon=await waitFor("(()=>{const image=document.querySelector('#resource-detail img');return image?.complete&&image.naturalWidth>0&&image.src.includes('/ui/MagIcon/')&&image.src})()");
+ check(Boolean(extendedSkillIcon),'extended skill detail falls back to MagIcon.Lib',{src:extendedSkillIcon});
 
  await chooseSection('monsters');await searchAndSelect('骷髅精灵');
  await waitFor("(()=>{const image=document.querySelector('#monster-preview img');return image?.complete&&image.naturalWidth>0})()");
@@ -119,7 +125,7 @@ try{
 
  await chooseSection('items');
  await evaluate("(()=>{const box=document.querySelector('#missing-only');box.checked=true;box.dispatchEvent(new Event('change',{bubbles:true}));return true})()");
- const missingCount=await waitFor("(()=>{const text=document.querySelector('#resource-list-meta').textContent;return text.startsWith('576 条')&&text})()");
+ const missingCount=await waitFor("(()=>{const text=document.querySelector('#resource-list-meta').textContent;return text.startsWith('9 条')&&text})()");
  check(Boolean(missingCount),'missing-resource filter produces the repair queue',{meta:missingCount});
  check(!report.console.some(value=>value.level==='exception'||value.level==='error'),'resource manager produced no browser errors',{entries:report.console});
  await capture('04-missing-resource-queue.png');report.passed=true;

@@ -16,6 +16,7 @@ SQL = ROOT / ".runtime/sql/02-mir2_data.sql"
 PROFILE = ROOT / "content/classic-176/version-profile.json"
 RULES = ROOT / "content/classic-176/skill-rules.json"
 COMBAT = ROOT / "content/classic-176/skill-combat.json"
+SKILL_ASSETS = ROOT / "content/classic-176/skill-assets.json"
 MONGEN = ROOT / "vendor/mirserver-data/Mir200/Envir/MonGen.txt"
 MONITEMS = ROOT / "vendor/mirserver-data/Mir200/Envir/MonItems"
 MAPINFO = ROOT / "vendor/mirserver-data/Mir200/Envir/MapInfo.txt"
@@ -159,25 +160,36 @@ def build() -> dict[str, Any]:
     baseline_maps = {str(value) for value in profile["p0Baseline"]["maps"]}
     skill_rules = json.loads(RULES.read_text(encoding="utf-8"))["skills"]
     combat = json.loads(COMBAT.read_text(encoding="utf-8"))["skills"]
-    item_icons = library("ui-national/items") or library("items/Items") or {"frames":{}}
+    skill_assets = json.loads(SKILL_ASSETS.read_text(encoding="utf-8"))["iconIndexByName"]
+    national_item_icons = library("ui-national/items") or {"frames":{}}
+    fallback_item_icons = library("items/Items") or {"frames":{}}
+    ground_item_icons = library("items/DnItems") or {"frames":{}}
     state_icons = library("ui-national/stateitem") or {"frames":{}}
-    skill_icons = library("ui-national/magic-icons") or library("ui/MagIcon") or {"frames":{}}
+    national_skill_icons = library("ui-national/magic-icons") or {"frames":{}}
+    fallback_skill_icons = library("ui/MagIcon") or {"frames":{}}
     visuals = parse_visual_rules()
 
     items = sql_rows("stditems", ITEM_COLUMNS)
     for item in items:
         item["category"] = ITEM_TYPES.get(item["stdMode"], f"StdMode {item['stdMode']}")
         item["baseline"] = item["name"] in baseline_items
-        frame = item_icons.get("frames", {}).get(str(item["imgIndex"]))
+        national_frame = national_item_icons.get("frames", {}).get(str(item["imgIndex"]))
+        fallback_frame = fallback_item_icons.get("frames", {}).get(str(item["imgIndex"]))
+        ground_frame = ground_item_icons.get("frames", {}).get(str(item["imgIndex"]))
+        frame = national_frame or fallback_frame or ground_frame
         state = state_icons.get("frames", {}).get(str(item["imgIndex"]))
-        item["iconUrl"] = f"/ui-national/items/{frame['file']}" if frame else None
+        item["iconUrl"] = f"/{'ui-national/items' if national_frame else 'items/Items' if fallback_frame else 'items/DnItems'}/{frame['file']}" if frame else None
+        item["iconSource"] = "国服 Items.wil" if national_frame else "扩展 Items.Lib" if fallback_frame else "扩展 DnItems.Lib 地面图" if ground_frame else None
         item["stateIconUrl"] = f"/ui-national/stateitem/{state['file']}" if state else None
 
     skills = sql_rows("magics", SKILL_COLUMNS)
     for skill in skills:
         rule = skill_rules.get(skill["name"], {})
         behavior = combat.get(skill["name"], {})
-        icon = skill_icons.get("frames", {}).get(str(skill["magicId"]))
+        icon_index = skill_assets.get(skill["name"], skill["magicId"])
+        national_icon = national_skill_icons.get("frames", {}).get(str(icon_index))
+        fallback_icon = fallback_skill_icons.get("frames", {}).get(str(icon_index))
+        icon = national_icon or fallback_icon
         skill.update({
             "jobName": JOBS.get(skill["job"], f"职业 {skill['job']}"),
             "needLevels":[skill.pop("needLevel1"), skill.pop("needLevel2"), skill.pop("needLevel3")],
@@ -185,7 +197,10 @@ def build() -> dict[str, Any]:
             "baseline":skill["name"] in baseline_skills,
             "use":behavior.get("use"), "useName":USES.get(behavior.get("use"), "规则未接入"),
             "reagent":behavior.get("reagent"), "status":behavior.get("status"), "statusBit":behavior.get("statusBit"), "summon":behavior.get("summon", False),
-            "rulePinned":bool(rule), "iconUrl":f"/ui-national/magic-icons/{icon['file']}" if icon else None,
+            "rulePinned":bool(rule),
+            "iconIndex":icon_index,
+            "iconUrl":f"/{'ui-national/magic-icons' if national_icon else 'ui/MagIcon'}/{icon['file']}" if icon else None,
+            "iconSource":"国服 MagIcon.wil" if national_icon else "扩展 MagIcon.Lib" if fallback_icon else None,
         })
 
     map_names = parse_map_names()
@@ -230,7 +245,21 @@ def build() -> dict[str, Any]:
         assets.append({"id":relative,"source":data.get("source"),"format":data.get("format"),"frames":len(data.get("frames", {})),"sourceFrames":data.get("sourceFrameCount"),"missing":len(data.get("missing", [])),"empty":len(data.get("empty", [])),"sourceSha256":data.get("sourceSha256")})
 
     item_names = {item["name"] for item in items}
-    duplicate_magic_ids = sorted({value for value in [skill["magicId"] for skill in skills] if sum(row["magicId"] == value for row in skills) > 1})
+    skills_by_magic_id: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    for skill in skills:
+        skills_by_magic_id[skill["magicId"]].append(skill)
+    alias_groups = []
+    conflicting_magic_ids = []
+    for magic_id, group in sorted(skills_by_magic_id.items()):
+        if len(group) < 2:
+            continue
+        signatures = {(value["effectType"], value["effect"]) for value in group}
+        if len(signatures) == 1:
+            alias_groups.append({"magicId":magic_id,"names":[value["name"] for value in group]})
+            for skill in group:
+                skill["aliases"] = [value["name"] for value in group if value is not skill]
+        else:
+            conflicting_magic_ids.append(magic_id)
     orphan_spawn_maps = sorted({spawn["mapId"] for spawn in spawns} - baseline_maps)
     monster_names = {monster["name"] for monster in monsters}
     unknown_drop_items = sorted({drop["item"] for monster in monsters for drop in monster["drops"] if drop["item"] != "金币" and drop["item"] not in item_names})
@@ -239,9 +268,9 @@ def build() -> dict[str, Any]:
     drop_rows = {(monster["dropSource"], drop["sourceLine"]) for monster in monsters for drop in monster["drops"] if monster["dropSource"]}
     return {
         "schemaVersion":1,
-        "source":{"sql":str(SQL.relative_to(ROOT)),"profile":str(PROFILE.relative_to(ROOT)),"skillRules":str(RULES.relative_to(ROOT)),"skillCombat":str(COMBAT.relative_to(ROOT)),"monsterVisuals":"apps/web/src/monster-visuals.ts","spawns":str(MONGEN.relative_to(ROOT)),"drops":str(MONITEMS.relative_to(ROOT)),"mapInfo":str(MAPINFO.relative_to(ROOT)),"assets":str(WEB.relative_to(ROOT))},
+        "source":{"sql":str(SQL.relative_to(ROOT)),"profile":str(PROFILE.relative_to(ROOT)),"skillRules":str(RULES.relative_to(ROOT)),"skillCombat":str(COMBAT.relative_to(ROOT)),"skillAssets":str(SKILL_ASSETS.relative_to(ROOT)),"monsterVisuals":"apps/web/src/monster-visuals.ts","spawns":str(MONGEN.relative_to(ROOT)),"drops":str(MONITEMS.relative_to(ROOT)),"mapInfo":str(MAPINFO.relative_to(ROOT)),"assets":str(WEB.relative_to(ROOT))},
         "summary":{"items":len(items),"skills":len(skills),"monsters":len(monsters),"maps":len(maps),"spawns":len(spawns),"dropTables":len(drop_sources),"dropRows":len(drop_rows),"assetLibraries":len(assets),"itemIcons":sum(bool(value["iconUrl"]) for value in items),"skillIcons":sum(bool(value["iconUrl"]) for value in skills),"monsterVisuals":sum(bool(value["visual"]) for value in monsters)},
-        "diagnostics":{"duplicateMagicIds":duplicate_magic_ids,"orphanSpawnMaps":orphan_spawn_maps,"unknownSpawnMonsters":unknown_spawn_monsters,"unknownDropItems":unknown_drop_items,"itemsMissingIcons":sum(not value["iconUrl"] for value in items),"skillsMissingIcons":sum(not value["iconUrl"] for value in skills),"monstersMissingVisuals":sum(not value["visual"] for value in monsters)},
+        "diagnostics":{"duplicateMagicIds":conflicting_magic_ids,"magicIdAliases":alias_groups,"orphanSpawnMaps":orphan_spawn_maps,"unknownSpawnMonsters":unknown_spawn_monsters,"unknownDropItems":unknown_drop_items,"itemsMissingIcons":sum(not value["iconUrl"] for value in items),"skillsMissingIcons":sum(not value["iconUrl"] for value in skills),"monstersMissingVisuals":sum(not value["visual"] for value in monsters)},
         "mechanics":mechanics(),"items":items,"skills":skills,"monsters":monsters,"maps":maps,"spawns":spawns,"assets":assets,
         "templates":{"item":dict.fromkeys(ITEM_COLUMNS, 0)|{"id":max(item["id"] for item in items)+1,"name":"新装备","stdMode":5,"weight":1,"duraMax":10000,"need":0,"needLevel":1,"price":100,"stock":1,"reference":None},"skill":dict.fromkeys(SKILL_COLUMNS, 0)|{"idx":max(skill["idx"] for skill in skills)+1,"magicId":max(skill["magicId"] for skill in skills)+1,"name":"新技能","job":0,"needLevel1":1,"train1":200,"needLevel2":3,"train2":300,"needLevel3":5,"train3":500,"description":""}},
     }

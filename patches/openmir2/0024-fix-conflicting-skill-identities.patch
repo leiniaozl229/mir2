@@ -1,0 +1,24 @@
+diff --git a/sql/mir2_data.sql b/sql/mir2_data.sql
+index 23449a5..9e62f4d 100644
+--- a/sql/mir2_data.sql
++++ b/sql/mir2_data.sql
+@@ -106 +106 @@ INSERT INTO `magics` VALUES (37, 37, '雷神之怒', 7, 26, 12, 14, 28, 6, 10,
+-INSERT INTO `magics` VALUES (38, 48, '群体施毒术', 2, 27, 12, 10, 10, 30, 4, 4, 2, 48, 200, 50, 300, 52, 500, 40, '');
++INSERT INTO `magics` VALUES (38, 104, '群体施毒术', 2, 27, 12, 10, 10, 30, 4, 4, 2, 48, 200, 50, 300, 52, 500, 40, '');
+diff --git a/src/M2Server/Player/PlayObject.cs b/src/M2Server/Player/PlayObject.cs
+index dde29f9..8c84b80 100644
+--- a/src/M2Server/Player/PlayObject.cs
++++ b/src/M2Server/Player/PlayObject.cs
+@@ -1042 +1042 @@ namespace M2Server.Player
+-            MagicArr = new UserMagic[50];
++            MagicArr = new UserMagic[1024];
+diff --git a/src/Modules/SystemModule/Const/MagicConst.cs b/src/Modules/SystemModule/Const/MagicConst.cs
+index ecb65e7..bd57464 100644
+--- a/src/Modules/SystemModule/Const/MagicConst.cs
++++ b/src/Modules/SystemModule/Const/MagicConst.cs
+@@ -154 +154 @@ namespace SystemModule.Const
+-        public const byte SKILL_GROUPAMYOUNSUL = 48;
++        public const byte SKILL_GROUPAMYOUNSUL = 104;
+@@ -183 +183 @@ namespace SystemModule.Const
+-        public const byte SKILL_ENERGYREPULSOR = 37;
++        public const byte SKILL_ENERGYREPULSOR = 48;

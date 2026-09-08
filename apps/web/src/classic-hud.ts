@@ -1,6 +1,7 @@
 import type {CharacterAttributes} from './character-panel';
 import {arrangeSkills,type MagicSkill} from './skills';
 import {applyNationalUiFrame,applyUiFrame,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
+import skillAssets from '../../../content/classic-176/skill-assets.json';
 
 type ResourceState={hp:number;mp:number;maxHp:number;maxMp:number;experience:number;maxExperience:number};
 type UiButton={library:string;index:number;hover:number;pressed:number;x:number;y:number;window:string};
@@ -274,8 +275,9 @@ export class ClassicHud {
    button.title=skill?`${skill.name} · ${skill.level}级`:`F${index+1}`;
    if(index===this.selected)button.classList.add('selected');
    if(skill&&(nationalIcons||icons)){
-    const nationalFrame=nationalIcons?.frames[String(skill.magicId)]??nationalIcons?.frames[String(Math.max(0,skill.magicId-1))];
-    const frame=nationalFrame??icons?.frames[String(skill.magicId)]??icons?.frames[String(Math.max(0,skill.magicId-1))]??icons?.frames['1'];
+    const iconIndex=(skillAssets.iconIndexByName as Record<string,number>)[skill.name]??skill.magicId;
+    const nationalFrame=nationalIcons?.frames[String(iconIndex)]??nationalIcons?.frames[String(Math.max(0,iconIndex-1))];
+    const frame=nationalFrame??icons?.frames[String(iconIndex)]??icons?.frames[String(Math.max(0,iconIndex-1))]??icons?.frames['1'];
     if(frame){const image=new Image();image.src=nationalFrame?`/ui-national/magic-icons/${nationalFrame.file}`:uiUrl('MagIcon', frame);image.alt=skill.name;button.append(image);}
     else button.textContent=skill.name.slice(0,1);
    }

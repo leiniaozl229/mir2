@@ -1,4 +1,5 @@
 import {loadNationalUiLibrary,loadUiLibrary,nationalUiUrl,uiUrl,type Frame} from './classic-ui';
+import skillAssets from '../../../content/classic-176/skill-assets.json';
 
 export type MagicSkill={key:number;level:number;currentTrain:number;magicId:number;name:string;effectType:number;effect:number;spell:number;power:number;trainLevels:number[];maxTrain:number[];job:number;delay:number;defSpell:number;defPower:number;maxPower:number;defMaxPower:number;description:string};
 export type SkillUse='hostile'|'self'|'toggle'|'charge'|'passive';
@@ -8,6 +9,7 @@ export const skillUse:Record<number,SkillUse>={
  25:'toggle',26:'charge',31:'self'
 };
 export function skillUseOf(magicId:number):SkillUse{return skillUse[magicId]??'hostile';}
+function iconIndexOf(skill:MagicSkill){return (skillAssets.iconIndexByName as Record<string,number>)[skill.name]??skill.magicId;}
 export function spellCost(skill:Pick<MagicSkill,'spell'|'defSpell'|'level'>){
  return Math.round(skill.spell/4*(skill.level+1))+skill.defSpell;
 }
@@ -46,8 +48,8 @@ export class SkillBar {
   let slot=0;for(const skill of arrangeSkills(this.skills.values())){
    const use=skillUseOf(skill.magicId);
    const row=document.createElement('div');row.className='skill-item';row.dataset.magicId=String(skill.magicId);row.dataset.use=use;
-   const nationalFrame=this.nationalIcons?.frames[String(skill.magicId)];
-   const frame=nationalFrame??this.icons?.frames[String(skill.magicId)]??this.icons?.frames[String(Math.max(0,skill.magicId-1))];
+   const iconIndex=iconIndexOf(skill),nationalFrame=this.nationalIcons?.frames[String(iconIndex)];
+   const frame=nationalFrame??this.icons?.frames[String(iconIndex)]??this.icons?.frames[String(Math.max(0,iconIndex-1))];
    if(frame){const icon=document.createElement('img');icon.className='skill-icon';icon.dataset.magicId=String(skill.magicId);icon.src=nationalFrame?nationalUiUrl('magic-icons',nationalFrame):uiUrl('MagIcon',frame);icon.alt='';icon.width=frame.width;icon.height=frame.height;row.append(icon);}
    const description=document.createElement('span'),name=document.createElement('strong'),key=document.createElement('kbd'),detail=document.createElement('small');
    key.textContent=slot<8?`F${slot+1}`:'';name.append(key,skill.name);slot++;
