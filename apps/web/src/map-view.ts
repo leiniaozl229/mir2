@@ -18,14 +18,12 @@ const names=['Tiles','SmTiles','Objects'];
 const libraries=await Promise.all(names.map(name=>getJSON<Library>(`/libraries/${name}/library.json`)));
 const chunkCache=new Map<string,Promise<DataView>>();
 const textureCache=new Map<string,Promise<Texture>>();
-let centerX=296,centerY=624,markerX=centerX,markerY=centerY,generation=0,current:Container|undefined,showCollision=false;
+let centerX=296,centerY=624,generation=0,current:Container|undefined,showCollision=false;
 let renderWindow:{map:string;left:number;right:number;top:number;bottom:number}|undefined;
 let cameraMotion:{fromX:number;fromY:number;toX:number;toY:number;start:number;duration:number}|undefined;
 const doorStates=new Map<string,boolean>();
 const collisionCells=new Map<string,boolean>();
 const depth=new Container();depth.sortableChildren=true;app.stage.addChild(depth);let mapSprites:Container[]=[];
-const miniMap=viewport.parentElement?.querySelector<HTMLCanvasElement>('#mini-map');
-let redrawMiniMap:()=>void=()=>{};
 type Animation={sprite:Sprite;textures:Texture[];tick:number};
 let animations:Animation[]=[];
 app.ticker.add(()=>{
@@ -108,31 +106,6 @@ async function render(){
  current=next;animations=nextAnimations;app.stage.addChildAt(next,0);
  renderWindow={map:id,left,right,top,bottom};
  if(!cameraMotion)app.stage.position.set(400-cx*48,300-cy*32);
- if(miniMap){
-  const context=miniMap.getContext('2d');
-  if(context){
-   const cellWidth=6,cellHeight=3;
-   redrawMiniMap=()=>{
-    context.imageSmoothingEnabled=false;
-    context.fillStyle='#11170f';context.fillRect(0,0,miniMap.width,miniMap.height);
-    for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
-     const chunkIndex=chunks.findIndex(chunk=>x>=chunk.x&&y>=chunk.y&&x<chunk.x+chunk.width&&y<chunk.y+chunk.height);
-     if(chunkIndex<0)continue;
-     const chunk=chunks[chunkIndex],data=buffers[chunkIndex],offset=((x-chunk.x)*chunk.height+y-chunk.y)*12;
-     const tile=data.getUint16(offset,true)&0x7fff,smTile=data.getUint16(offset+2,true)&0x7fff;
-     const blocked=((data.getUint16(offset,true)|data.getUint16(offset+4,true))&0x8000)!==0;
-     context.fillStyle=blocked?'#4d3027':smTile?'#697047':tile?'#465c3d':'#263322';
-     context.fillRect((x-left)*cellWidth,(y-top)*cellHeight,cellWidth,cellHeight);
-    }
-    const markerLeft=(markerX-left)*cellWidth,markerTop=(markerY-top)*cellHeight;
-    if(markerLeft>=0&&markerLeft<miniMap.width&&markerTop>=0&&markerTop<miniMap.height){
-     context.fillStyle='#f4d66d';context.fillRect(markerLeft-2,markerTop-2,5,5);
-     context.strokeStyle='#3b1b12';context.lineWidth=1;context.strokeRect(markerLeft-2.5,markerTop-2.5,6,6);
-    }
-   };
-   redrawMiniMap();
-  }
- }
  status.textContent=`地图 ${id} · ${cx}, ${cy} · ${visible} 个图块 · ${unresolved} 个未解析引用`;
 }
 
@@ -161,7 +134,6 @@ return {app,depth,frameBudget,get width(){return world.width;},get height(){retu
   const window=renderWindow;
   if(!window||window.map!==mapId||nextX<window.left+6||nextX>window.right-6||nextY<window.top+6||nextY>window.bottom-6)void scheduleRender();
  },
- setMarker(x:number,y:number){markerX=Math.round(x);markerY=Math.round(y);redrawMiniMap();},
  async setMap(id:string){
   if(!/^[A-Za-z0-9]{1,10}$/.test(id))throw new Error('地图编号无效');
   const next=await getJSON<World>(`/maps/${encodeURIComponent(id)}/map.json`);

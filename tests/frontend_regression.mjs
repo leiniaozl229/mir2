@@ -119,3 +119,18 @@ observer.attach(debugTarget,()=>({ready:true}));observer.event('first',{value:1}
 if(!observerContext.exports.agentObservationEnabled('http://localhost/play.html?agent=1')||observerContext.exports.agentObservationEnabled('http://localhost/play.html')||debugTarget.__mir2Agent.version!==1||debugTarget.__mir2Agent.events().length!==2||debugTarget.__mir2Agent.snapshot().ready!==true)throw new Error('agent observer is unavailable, unbounded or enabled outside explicit debug mode');
 debugTarget.__mir2Agent.clear();if(debugTarget.__mir2Agent.events().length)throw new Error('agent observer timeline cannot be reset between scenarios');
 console.log('PASS agent observer is explicit, bounded and resettable');
+
+const minimapProfileSource=fs.readFileSync(path.join(root,'apps/web/src/minimap-profile.ts'),'utf8');
+const minimapProfileContext={exports:{}};vm.createContext(minimapProfileContext);
+vm.runInContext(ts.transpileModule(minimapProfileSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,minimapProfileContext);
+if(minimapProfileContext.exports.minimapFrameByMap['0']!==100||minimapProfileContext.exports.minimapFrameByMap.D001!==0||minimapProfileContext.exports.minimapName('D001')!=='兽人古墓一层')throw new Error('minimap profile does not follow the one-based MiniMap.txt mapping');
+const minimapSource=fs.readFileSync(path.join(root,'apps/web/src/minimap.ts'),'utf8');
+const minimapHelpers=`const modes=['compact','expanded','hidden'];\n${minimapSource.match(/export function nextMiniMapMode[\s\S]*?\n\}/)?.[0]}\n${minimapSource.match(/export function mapPointFromClient[\s\S]*?\n\}/)?.[0]}`;
+if(!minimapHelpers.includes('mapPointFromClient'))throw new Error('minimap coordinate helpers missing');
+const minimapContext={exports:{}};vm.createContext(minimapContext);
+vm.runInContext(ts.transpileModule(minimapHelpers,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,minimapContext);
+const helper=minimapContext.exports;
+if(helper.nextMiniMapMode('compact')!=='expanded'||helper.nextMiniMapMode('expanded')!=='hidden'||helper.nextMiniMapMode('hidden')!=='compact')throw new Error('Tab map modes do not form the expected three-state cycle');
+const mapped=helper.mapPointFromClient(85,65,{left:10,top:20,width:150,height:100},{left:0,top:0,width:150,height:100},{width:700,height:700});
+if(mapped.x!==350||mapped.y!==315||helper.mapPointFromClient(5,5,{left:10,top:20,width:150,height:100},{left:0,top:0,width:150,height:100},{width:700,height:700})!==undefined)throw new Error('minimap pointer coordinates do not map or reject letterbox clicks correctly');
+console.log('PASS minimap profile, pointer mapping and Tab modes are deterministic');

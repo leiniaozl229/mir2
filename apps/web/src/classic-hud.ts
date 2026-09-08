@@ -57,7 +57,6 @@ export class ClassicHud {
   const [prguse,prguse2,title,icons]=await Promise.all(['Prguse','Prguse2','Title','MagIcon'].map(loadUiLibrary));
   this.libraries.set('Prguse',prguse);this.libraries.set('Prguse2',prguse2);this.libraries.set('Title',title);this.libraries.set('MagIcon',icons);
   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-main]')!, 'Prguse', uiFrame(prguse, 0));
-  applyUiFrame(root.querySelector<HTMLElement>('[data-hud-minimap-frame]')!, 'Prguse', uiFrame(prguse, 2090));
   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-chat]')!, 'Prguse', uiFrame(prguse, 2201));
   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-chatbar]')!, 'Prguse', uiFrame(prguse, 2035));
   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-skillbar]')!, 'Prguse', uiFrame(prguse, 2190));
@@ -109,8 +108,6 @@ export class ClassicHud {
   const orb=uiFrame(prguse,4);
   this.hpFill.replaceChildren(orbImage(orb,0,true));
   this.mpFill.replaceChildren(orbImage(orb,-46,true));
-  const mini=root.querySelector<HTMLElement>('[data-hud-minimap-frame]');
-  if(mini){mini.style.left='688px';mini.style.top='400px';mini.style.width='100px';mini.style.height='108px';}
   const windowButtons=Array.from(root.querySelectorAll<HTMLButtonElement>('.hud-window-buttons button'));
   const nationalButtons=[
    {index:8,hover:24,pressed:24,x:640,y:410,width:32,height:32,backgroundX:3,backgroundY:0},

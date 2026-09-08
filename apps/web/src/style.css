@@ -136,3 +136,25 @@ body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clr
 body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clblue{color:#8ab5e8}
 body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clgreen{color:#8fc77b}
 body.classic-play #viewport-shell:has(#classic-modal-layer>section:not([hidden])) #character-window,body.classic-play #viewport-shell:has(#classic-modal-layer>section:not([hidden])) #inventory-window{display:none!important}
+/* The mmap.wil view is a standalone map panel. Its three modes intentionally override legacy HUD frame guesses. */
+body.classic-play #classic-hud .hud-minimap-frame{position:absolute;left:614px!important;top:12px!important;right:auto;width:174px!important;height:148px!important;display:block;padding:5px;background:linear-gradient(145deg,rgba(43,35,25,.97),rgba(8,11,10,.98))!important;border:1px solid #a98a4c;outline:1px solid #20180e;box-shadow:0 2px 10px #000;opacity:1;z-index:16;pointer-events:auto;color:#e7d6a4;text-shadow:1px 1px #000;image-rendering:pixelated}
+body.classic-play #classic-hud .minimap-heading{position:relative;display:grid;grid-template-columns:1fr auto 20px;align-items:center;gap:5px;width:auto;max-width:none;height:22px;min-height:0;padding:0 1px 3px;border-bottom:1px solid #66522c;font:11px SimSun,'Songti SC',serif}
+body.classic-play #classic-hud .minimap-heading strong{overflow:hidden;color:#f0d48d;font-weight:normal;white-space:nowrap;text-overflow:ellipsis}
+body.classic-play #classic-hud .hud-minimap-frame [data-hud-coords]{position:static!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;display:block;color:#cdbb8c;font:10px ui-monospace,monospace;letter-spacing:0}
+body.classic-play #classic-hud .minimap-heading button{position:static;width:20px;height:18px;padding:0;border:1px solid #92763d;background:#271e12;color:#f0d48d;font:11px/16px SimSun,serif}
+body.classic-play #classic-hud .minimap-heading button:hover{border-color:#e0bd65;color:#fff2bc}
+body.classic-play #classic-hud .minimap-viewport{position:relative;width:162px;height:108px;margin-top:4px;overflow:hidden;border:1px solid #5c4d2f;background:#070a08;cursor:crosshair}
+body.classic-play #classic-hud .hud-minimap-frame canvas,body.classic-play #viewport-shell #classic-hud #mini-map{position:static!important;left:auto!important;top:auto!important;right:auto!important;display:block;width:100%!important;height:100%!important;border:0;background:#070a08;box-shadow:none;opacity:1;pointer-events:auto}
+body.classic-play #classic-hud [data-minimap-status]{position:absolute;left:4px;right:4px;top:50%;transform:translateY(-50%);color:#a99670;text-align:center;font:10px SimSun,serif;pointer-events:none}
+body.classic-play #classic-hud .minimap-legend{display:none;width:auto;max-width:none;height:18px;padding:3px 1px 0;color:#aa9a75;font:10px SimSun,serif}
+body.classic-play #classic-hud .minimap-legend span{align-items:center;gap:3px}
+body.classic-play #classic-hud .minimap-legend i{display:inline-block;width:6px;height:6px;border:1px solid #111;border-radius:50%}.minimap-legend i.self{background:#fff07a}.minimap-legend i.npc{background:#64e4b0}.minimap-legend i.monster{background:#f06b54}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="expanded"]{left:90px!important;top:22px!important;width:620px!important;height:430px!important;padding:7px;z-index:24}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="expanded"] .minimap-heading{height:26px;padding:0 3px 5px;font-size:13px}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="expanded"] .minimap-viewport{width:604px;height:370px;margin-top:5px}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="expanded"] .minimap-legend{display:flex;gap:12px}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="expanded"] .minimap-help{margin-left:auto}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"]{left:758px!important;top:12px!important;width:30px!important;height:30px!important;padding:4px;background:rgba(28,22,15,.92)!important}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-heading{display:block;width:20px;height:20px;padding:0;border:0}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-heading>*:not(button),body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-viewport,body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-legend{display:none}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-heading button{display:block}

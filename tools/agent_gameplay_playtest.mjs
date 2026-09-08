@@ -103,6 +103,16 @@ async function walkNear(x,y,distance=7){
  throw new Error(`Could not walk near ${x},${y}`);
 }
 async function walkNearTrainer(){const state=await snapshot();return state.self.x>500?walkNear(648,628):walkNear(284,609);}
+async function pressTab(){
+ await session.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Tab',code:'Tab',windowsVirtualKeyCode:9,nativeVirtualKeyCode:9});
+ await session.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Tab',code:'Tab',windowsVirtualKeyCode:9,nativeVirtualKeyCode:9});
+ await sleep(100);
+}
+async function clickMiniMapCell(x,y,shift=false){
+ const point=await evaluate(`(()=>{const state=window.__mir2Agent.snapshot().minimap,canvas=document.querySelector('#mini-map'),rect=canvas.getBoundingClientRect(),draw=state.drawRect;return {x:rect.left+draw.left+(${x}+.5)/state.world.width*draw.width,y:rect.top+draw.top+(${y}+.5)/state.world.height*draw.height}})()`);
+ await session.send('Input.dispatchMouseEvent',{type:'mousePressed',x:point.x,y:point.y,button:'left',buttons:1,clickCount:1,modifiers:shift?8:0});
+ await session.send('Input.dispatchMouseEvent',{type:'mouseReleased',x:point.x,y:point.y,button:'left',buttons:0,clickCount:1,modifiers:shift?8:0});
+}
 async function selectLightning(){
  return evaluate(`(()=>{const row=[...document.querySelectorAll('#skills .skill-item')].find(value=>value.textContent.includes('雷电术'));const button=row?.querySelector('button');if(!button||button.disabled)return false;button.click();return true})()`);
 }
@@ -148,6 +158,18 @@ try{
  await evaluate("(()=>{document.querySelector('[data-auth-start]').click();return true})()");
  const entered=recordStage('entered-world',await waitFor("(()=>{const s=window.__mir2Agent?.snapshot();return s?.inWorld&&s.worldReady&&s.self&&s.render?.framesReady&&s.attributes&&s.inventory?.known&&s})()",45000));
  requireCheck(entered.map==='0','disposable character enters Bichon',{map:entered.map,position:[entered.self.x,entered.self.y]});
+ requireCheck(entered.minimap?.imageReady&&entered.minimap.frameIndex===100&&/\/100\.[^/]+\.png$/.test(entered.minimap.imageUrl),'Bichon minimap uses the mapped mmap.wil frame',{minimap:entered.minimap});
+ const compactMapGeometry=await evaluate("(()=>{const shell=document.querySelector('#viewport-shell').getBoundingClientRect(),panel=document.querySelector('[data-hud-minimap-frame]').getBoundingClientRect();return {within:panel.left>=shell.left&&panel.top>=shell.top&&panel.right<=shell.right&&panel.bottom<shell.top+349,panel:{left:panel.left-shell.left,top:panel.top-shell.top,width:panel.width,height:panel.height}}})()");
+ requireCheck(compactMapGeometry.within,'compact minimap stays inside the world viewport above the bottom HUD',{geometry:compactMapGeometry.panel});
+ await pressTab();const expandedMap=await waitFor("(()=>{const s=window.__mir2Agent.snapshot();return s.minimap.mode==='expanded'&&s.minimap.drawRect.width>500&&s})()");
+ requireCheck(expandedMap.minimap.mode==='expanded','Tab expands the minimap');await capture('02a-minimap-expanded.png');
+ const routeDirection=expandedMap.directions.find(value=>value.clearSteps>0);requireCheck(Boolean(routeDirection),'minimap route fixture has an adjacent walkable cell',{directions:expandedMap.directions});
+ const routeTarget={x:expandedMap.self.x+routeDirection.dx,y:expandedMap.self.y+routeDirection.dy};
+ await clickMiniMapCell(routeTarget.x,routeTarget.y);
+ await waitFor("window.__mir2Agent.events().some(value=>value.type==='minimap-route')",5000);
+ const routed=await waitFor(`(()=>{const s=window.__mir2Agent.snapshot();return !s.pendingAction&&!s.intentions.clickDestination&&s.self.x===${routeTarget.x}&&s.self.y===${routeTarget.y}&&s})()`,10000);
+ requireCheck(routed.self.x===routeTarget.x&&routed.self.y===routeTarget.y,'clicking the expanded minimap enters the shared movement route',{target:routeTarget,position:[routed.self.x,routed.self.y]});
+ await pressTab();requireCheck((await snapshot()).minimap.mode==='hidden','Tab hides the map after expanded mode');await pressTab();requireCheck((await snapshot()).minimap.mode==='compact','Tab restores compact mode after hidden mode');
  await capture('02-entered-world.png');
 
  await walkNearTrainer();await waitAndClickTarget('导师');
@@ -187,6 +209,7 @@ try{
  await clickDialogue('@orcgrave');
  const graveEntry=recordStage('entered-orc-grave',await waitFor("(()=>{const s=window.__mir2Agent?.snapshot();return s?.map==='D001'&&s.self&&Math.max(Math.abs(s.self.x-152),Math.abs(s.self.y-362))<=1&&s})()",45000));
  requireCheck(graveEntry.map==='D001','NPC route enters the Orc Grave',{position:[graveEntry.self.x,graveEntry.self.y]});
+ requireCheck(graveEntry.minimap?.imageReady&&graveEntry.minimap.frameIndex===0&&/\/0\.[^/]+\.png$/.test(graveEntry.minimap.imageUrl),'Orc Grave minimap switches to its dungeon frame',{minimap:graveEntry.minimap});
  await capture('03-orc-grave.png');
 
  await evaluate("(()=>{document.querySelector('[data-window-open=\"skills\"]').click();return true})()");

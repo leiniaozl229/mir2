@@ -17,10 +17,11 @@
   <section id="viewport-shell" aria-label="经典游戏画面">
     <section id="viewport"></section>
     <div id="classic-hud" aria-label="经典界面">
-      <div class="hud-minimap-frame" data-hud-minimap-frame>
-        <canvas id="mini-map" width="120" height="110" aria-label="小地图"></canvas>
-        <span data-hud-coords>0:0</span>
-      </div>
+      <section class="hud-minimap-frame" data-hud-minimap-frame data-map-mode="compact" aria-label="小地图">
+        <header class="minimap-heading"><strong data-minimap-name>比奇省</strong><span data-hud-coords>0:0</span><button type="button" data-minimap-toggle aria-label="切换到大地图">大</button></header>
+        <div class="minimap-viewport"><canvas id="mini-map" width="168" height="112" aria-label="地图画布，点击自动寻路"></canvas><span data-minimap-status></span></div>
+        <footer class="minimap-legend"><span><i class="self"></i>自己</span><span><i class="npc"></i>NPC</span><span><i class="monster"></i>怪物</span><span class="minimap-help">Tab 切换 · 点击寻路</span></footer>
+      </section>
       <div class="hud-skillbar" data-hud-skillbar><div class="hud-hotbar" data-hud-hotbar aria-label="快捷技能栏"></div></div>
       <div class="hud-chatbar" data-hud-chatbar></div>
       <div class="hud-chat" data-hud-chat></div>
