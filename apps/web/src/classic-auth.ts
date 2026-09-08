@@ -220,6 +220,7 @@ export class ClassicAuth {
   if(!chrSel||!title||!prguse)return;
   this.charactersElement.replaceChildren();
   const spec=select.slot;
+  const nationalPrguse=this.nationalLibraries.get('prguse');
   for(let index=0;index<spec.count;index++){
    const character=this.characters[index];
   const button=document.createElement('button');
@@ -230,7 +231,8 @@ export class ClassicAuth {
     const x=index===0?44:618;place(button,x,448,184,128);button.style.backgroundImage='none';
     const selectSprite=document.createElement('span');selectSprite.className='auth-slot-select';
     const selectX=index===0?89:67,selectY=index===0?4:5;place(selectSprite,selectX,selectY,76,33);
-    const paintSelect=(frameIndex:number)=>paintNationalButton(selectSprite,prguse,frameIndex,0,0,'');
+    if(!nationalPrguse)continue;
+    const paintSelect=(frameIndex:number)=>paintNationalButton(selectSprite,nationalPrguse,frameIndex,0,0,'');
     paintSelect(index===this.selected?67:66);
     button.onmouseenter=()=>paintSelect(67);
     button.onmouseleave=()=>paintSelect(index===this.selected?67:66);
@@ -243,7 +245,7 @@ export class ClassicAuth {
     applyUiFrame(button, character?'Title':'Prguse', filled);
    }
    if(character){
-    const name=document.createElement('span');name.className='auth-slot-name';name.textContent=character.name;
+   const name=document.createElement('span');name.className='auth-slot-name';name.textContent=character.name;
     const meta=document.createElement('span');meta.className='auth-slot-meta';
     const job=document.createElement('span');job.className='auth-slot-job';
     if(this.nationalReady){
@@ -256,6 +258,7 @@ export class ClassicAuth {
     }
     button.onclick=()=>{this.selected=index;this.renderSlots();};
     button.ondblclick=()=>this.onStart(character.name);
+    button.setAttribute('aria-label',`${character.name}，${character.level}级${['战士','法师','道士'][character.job]??''}`);
    }
    this.charactersElement.append(button);
   }

@@ -71,3 +71,6 @@ const authSource=fs.readFileSync(path.join(root,'apps/web/src/classic-auth.ts'),
 const nationalMount=authSource.indexOf('this.mountNationalAuth();');
 if(nationalMount<0||authSource.indexOf('this.renderSlots();',nationalMount)<nationalMount)throw new Error('national auth assets do not redraw existing character slots');
 console.log('PASS national character assets redraw existing slots');
+
+if(!authSource.includes("paintNationalButton(selectSprite,nationalPrguse"))throw new Error('national character slots mix fallback frame metadata with national images');
+console.log('PASS national character slots use matching frame metadata');
