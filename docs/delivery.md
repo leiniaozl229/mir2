@@ -28,7 +28,7 @@ npm run dev
 
 2003 国服 UI 基准入口：http://127.0.0.1:5173/ui-calibration.html 。页面会优先加载 `assets/web/ui-national` 中的国服原始帧，缺少导入产物时回退到 Crystal 候选帧；加载国服参考截图后，可在固定 800×600 画布上切换登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话，使用透明度、网格和坐标尺完成逐窗口校准。导入客户端前运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data`，确认必需素材族齐全；WIL/WIX 或 WZL/WZX 可直接运行 `python3 tools/import-national-ui.py --data-dir /path/to/Data` 导出到隔离的 `assets/web/ui-national`。当前 2003 客户端包实测导出 8 组核心素材、2,756 帧，NewopUI、Prguse3、ui1、ui3 在包内缺失并按版本契约作为可选族处理。
 
-当前联机页的商店、修理和仓库会使用国服 `Prguse#402` 窗口框，并在物品实例数据到达后显示 `Items` 图标；`stateitem` 大尺寸装备帧的真实 `Image` 映射仍需结合服务端物品字段继续校准。
+当前联机页的商店、修理和仓库会使用国服 `Prguse#402` 窗口框，并在物品实例数据到达后显示 `Items` 图标；角色装备页会按 `Looks` 使用同编号 `stateitem` 帧及其锚点，并以 `Prguse#378` 的六个首饰/蜡烛槽作为交互热区。
 
 ## 存档
 

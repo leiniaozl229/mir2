@@ -100,7 +100,9 @@
     "gapY": 1
   },
   "characterPage": {"library": "Prguse", "index": 340, "x": 8, "y": 90},
+  "nationalCharacterPage": {"library": "prguse", "index": 378, "x": 44, "y": 72},
   "paperdollActor": {"x": 70, "y": 150, "direction": 4},
+  "nationalPaperdollActor": {"x": 128, "y": 184, "direction": 4, "scale": 1},
   "characterTabs": [
     {"id": "paperdoll", "library": "Title", "index": 500, "x": 8, "y": 70, "width": 64, "height": 20},
     {"id": "status", "library": "Title", "index": 501, "x": 70, "y": 70, "width": 64, "height": 20},
@@ -121,6 +123,19 @@
     {"slot": 11, "name": "靴子", "x": 48, "y": 242},
     {"slot": 10, "name": "腰带", "x": 88, "y": 242},
     {"slot": 12, "name": "宝石", "x": 128, "y": 242}
+  ],
+  "nationalEquipmentAppearance": [
+    {"slot": 0, "name": "衣服", "layer": "clothes", "z": 1},
+    {"slot": 1, "name": "武器", "layer": "weapon", "z": 3},
+    {"slot": 4, "name": "头盔", "layer": "helmet", "z": 4}
+  ],
+  "nationalEquipmentCells": [
+    {"slot": 3, "name": "项链", "x": 131, "y": 36},
+    {"slot": 2, "name": "蜡烛", "x": 131, "y": 72},
+    {"slot": 5, "name": "左手镯", "x": 4, "y": 125},
+    {"slot": 6, "name": "右手镯", "x": 131, "y": 125},
+    {"slot": 7, "name": "左戒指", "x": 4, "y": 161},
+    {"slot": 8, "name": "右戒指", "x": 131, "y": 161}
   ],
   "cursors": {
     "default": "Cursor_Default.CUR",

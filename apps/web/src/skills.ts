@@ -1,3 +1,5 @@
+import {loadNationalUiLibrary,loadUiLibrary,nationalUiUrl,uiUrl,type Frame} from './classic-ui';
+
 export type MagicSkill={key:number;level:number;currentTrain:number;magicId:number;name:string;effectType:number;effect:number;spell:number;power:number;trainLevels:number[];maxTrain:number[];job:number;delay:number;defSpell:number;defPower:number;maxPower:number;defMaxPower:number;description:string};
 export type SkillUse='hostile'|'self'|'toggle'|'charge'|'passive';
 export const skillUse:Record<number,SkillUse>={
@@ -22,14 +24,18 @@ export function arrangeSkills(skills:Iterable<MagicSkill>){
 type SkillActions={select:(skill:MagicSkill|undefined)=>void;self:(skill:MagicSkill)=>void};
 
 export class SkillBar {
- private skills=new Map<number,MagicSkill>();private selected:number|undefined;private pending:number|undefined;private known=false;
- constructor(private element:HTMLElement,private actions:SkillActions){this.render();}
+ private skills=new Map<number,MagicSkill>();private selected:number|undefined;private pending:number|undefined;private known=false;private icons?:{frames:Record<string,Frame>};private nationalIcons?:{frames:Record<string,Frame>};
+ constructor(private element:HTMLElement,private actions:SkillActions){
+  this.render();
+  void loadUiLibrary('MagIcon').then(icons=>{this.icons=icons;this.render();}).catch(()=>{});
+  void loadNationalUiLibrary('magic-icons').then(icons=>{this.nationalIcons=icons;this.render();}).catch(()=>{});
+ }
  clear(){this.skills.clear();this.selected=undefined;this.pending=undefined;this.known=false;this.render();}
  replace(skills:MagicSkill[]){this.skills=new Map(skills.map(skill=>[skill.magicId,skill]));this.selected=undefined;this.pending=undefined;this.known=true;this.render();}
  add(skill:MagicSkill){this.known=true;this.skills.set(skill.magicId,skill);this.render();}
  remove(magicId:number){this.skills.delete(magicId);if(this.selected===magicId){this.selected=undefined;this.actions.select(undefined);}this.render();}
  progress(magicId:number,level:number,currentTrain:number){const skill=this.skills.get(magicId);if(skill){this.skills.set(magicId,{...skill,level,currentTrain});this.render();}}
- debugState(){return {known:this.known,selected:this.selected,pending:this.pending,skills:arrangeSkills(this.skills.values()).map(skill=>({...skill,use:skillUseOf(skill.magicId)}))};}
+ debugState(){return {known:this.known,selected:this.selected,pending:this.pending,skills:arrangeSkills(this.skills.values()).map(skill=>({...skill,use:skillUseOf(skill.magicId)})),icons:Array.from(this.element.querySelectorAll<HTMLImageElement>('.skill-icon')).map(image=>({magicId:Number(image.dataset.magicId),src:image.src,loaded:image.complete&&image.naturalWidth>0}))};}
  skillAt(index:number){return arrangeSkills(this.skills.values())[index];}
  selectSlot(index:number){const skill=this.skillAt(index);if(!skill||this.pending!==undefined)return false;this.selected=skill.magicId;this.actions.select(skill);this.render();return true;}
  castSelf(skill:MagicSkill){if(this.pending!==undefined)return false;this.selected=undefined;this.pending=skill.magicId;this.actions.self(skill);this.render();return true;}
@@ -40,6 +46,9 @@ export class SkillBar {
   let slot=0;for(const skill of arrangeSkills(this.skills.values())){
    const use=skillUseOf(skill.magicId);
    const row=document.createElement('div');row.className='skill-item';row.dataset.magicId=String(skill.magicId);row.dataset.use=use;
+   const nationalFrame=this.nationalIcons?.frames[String(skill.magicId)];
+   const frame=nationalFrame??this.icons?.frames[String(skill.magicId)]??this.icons?.frames[String(Math.max(0,skill.magicId-1))];
+   if(frame){const icon=document.createElement('img');icon.className='skill-icon';icon.dataset.magicId=String(skill.magicId);icon.src=nationalFrame?nationalUiUrl('magic-icons',nationalFrame):uiUrl('MagIcon',frame);icon.alt='';icon.width=frame.width;icon.height=frame.height;row.append(icon);}
    const description=document.createElement('span'),name=document.createElement('strong'),key=document.createElement('kbd'),detail=document.createElement('small');
    key.textContent=slot<8?`F${slot+1}`:'';name.append(key,skill.name);slot++;
    const next=Math.min(3,skill.level);detail.textContent=`${skill.level} 级 · 修炼 ${skill.currentTrain}/${skill.maxTrain[next]??0} · MP ${spellCost(skill)}`;

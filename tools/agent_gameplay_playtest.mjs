@@ -160,6 +160,8 @@ try{
  await evaluate("(()=>{document.querySelector('[data-window-open=\"inventory\"]').click();return true})()");
  await waitFor(`(()=>${JSON.stringify(equipmentIds)}.every(id=>{const image=document.querySelector('[data-item-id="'+id+'"] img');return image?.complete&&image.naturalWidth>0}))()`,20000);
  requireCheck(true,'representative equipment icons load in the browser',{names:equipmentNames});
+ const bagGeometry=await evaluate(`(()=>[...document.querySelectorAll('#inventory-items [data-item-id]')].map(cell=>{const image=cell.querySelector('img'),c=cell.getBoundingClientRect(),i=image.getBoundingClientRect();return {slot:Number(cell.dataset.slot),name:image.alt,cell:{x:c.x,y:c.y,width:c.width,height:c.height},image:{x:i.x,y:i.y,width:i.width,height:i.height,naturalWidth:image.naturalWidth,naturalHeight:image.naturalHeight},centerError:{x:Math.abs((i.left+i.width/2)-(c.left+c.width/2)),y:Math.abs((i.top+i.height/2)-(c.top+c.height/2))},aspectError:Math.abs(i.width/i.height-image.naturalWidth/image.naturalHeight)}}))()`);
+ requireCheck(bagGeometry.every(value=>value.image.width<=value.cell.width+.5&&value.image.height<=value.cell.height+.5&&value.centerError.x<=.5&&value.centerError.y<=.5&&value.aspectError<=.02),'bag icons retain their aspect ratio and stay centered in each cell',{items:bagGeometry});
  await capture('02a-equipment-icons.png');
  for(const id of equipmentIds){
   const clicked=await evaluate(`(()=>{const button=document.querySelector('[data-item-id="${id}"]');if(!button||button.disabled)return false;button.click();return true})()`);
@@ -171,6 +173,10 @@ try{
  await evaluate("(()=>{document.querySelector('[data-window-open=\"character\"]').click();return true})()");
  await waitFor("(()=>{const images=[...document.querySelectorAll('#equipment-items img,#paperdoll-actor img')];return images.length>=8&&images.every(image=>image.complete&&image.naturalWidth>0)})()",20000);
  requireCheck(true,'equipment slots and paperdoll images load after equipping',{slots:equipped.equipment.slots.map(value=>({slot:value.slot,name:value.item.name}))});
+ const equipmentGeometry=await evaluate(`(()=>({paperdollVisibility:getComputedStyle(document.querySelector('#paperdoll-actor')).visibility,items:[...document.querySelectorAll('#equipment-items [data-slot]')].map(node=>({slot:Number(node.dataset.slot),kind:node.classList.contains('equipment-appearance')?'appearance':'cell',left:node.style.left,top:node.style.top,width:node.style.width,height:node.style.height,src:node.querySelector('img')?.src}))}))()`);
+ const expectedEquipment={0:['92px','91px'],1:['74px','59px'],4:['124px','55px'],3:['175px','108px'],2:['175px','144px'],5:['48px','197px'],6:['175px','197px'],7:['48px','233px'],8:['175px','233px']};
+ requireCheck(equipmentGeometry.items.every(value=>expectedEquipment[value.slot]?.[0]===value.left&&expectedEquipment[value.slot]?.[1]===value.top),'equipment art follows the measured 2003 character-panel anchors',{items:equipmentGeometry.items});
+ requireCheck(equipmentGeometry.paperdollVisibility==='hidden'&&equipmentGeometry.items.filter(value=>value.kind==='appearance').every(value=>value.src?.includes('/ui-national/stateitem/')),'equipped clothing, weapon and helmet use StateItem layers without a duplicate actor',{paperdollVisibility:equipmentGeometry.paperdollVisibility});
  await capture('02b-equipment-paperdoll.png');
  await evaluate("(()=>{document.querySelector('[data-window-close=\"character\"]').click();return true})()");
  await waitAndClickTarget('导师');await waitFor("window.__mir2Agent?.snapshot().dialogue?.npc?.endsWith('导师')&&window.__mir2Agent?.snapshot().dialogue?.visible",30000);
@@ -182,6 +188,13 @@ try{
  const graveEntry=recordStage('entered-orc-grave',await waitFor("(()=>{const s=window.__mir2Agent?.snapshot();return s?.map==='D001'&&s.self&&Math.max(Math.abs(s.self.x-152),Math.abs(s.self.y-362))<=1&&s})()",45000));
  requireCheck(graveEntry.map==='D001','NPC route enters the Orc Grave',{position:[graveEntry.self.x,graveEntry.self.y]});
  await capture('03-orc-grave.png');
+
+ await evaluate("(()=>{document.querySelector('[data-window-open=\"skills\"]').click();return true})()");
+ const skillGeometry=await waitFor("(()=>{const rows=[...document.querySelectorAll('#skills .skill-item')],icons=[...document.querySelectorAll('#skills .skill-icon')];if(!rows.length||icons.length!==rows.length||icons.some(image=>!image.complete||!image.naturalWidth))return false;return {equipmentDisplay:getComputedStyle(document.querySelector('#equipment-items')).display,icons:icons.map(image=>({magicId:Number(image.dataset.magicId),src:image.src,width:image.getBoundingClientRect().width,height:image.getBoundingClientRect().height}))}})()",20000);
+ requireCheck(skillGeometry.equipmentDisplay==='none','skill page hides every equipment layer',{display:skillGeometry.equipmentDisplay});
+ requireCheck(skillGeometry.icons.every(value=>new URL(value.src).pathname.split('/').at(-1).startsWith(String(value.magicId)+'.')&&value.width===32&&value.height===30),'skill rows load the matching MagicId icons at native size',{icons:skillGeometry.icons});
+ await capture('03a-skill-icons.png');
+ await evaluate("(()=>{document.querySelector('[data-window-close=\"character\"]').click();return true})()");
 
  await waitAndClickTarget('古墓向导');
  await waitFor("window.__mir2Agent?.snapshot().dialogue?.npc==='古墓向导'",20000);

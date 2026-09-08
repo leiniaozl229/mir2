@@ -24,7 +24,7 @@ npm run dev
 
 2003 国服 UI 基准页：http://127.0.0.1:5173/ui-calibration.html 。页面固定 800×600 设计坐标，提供登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话场景；检测到已导入的国服原始素材时优先显示对应帧，缺少本地 Data 时回退到 Crystal 候选帧。截图叠加、16px 网格、坐标尺和设计坐标读数用于逐窗口校准，联机页也会按同一设计坐标整体缩放，不改变游戏内控件位置。先运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data`，通过校验再运行 `python3 tools/import-national-ui.py --data-dir /path/to/Data` 导出隔离的国服 PNG/帧表。
 
-商店、修理和仓库窗口也会复用国服 `Prguse#402` 窗口框；服务端返回的成色详情、出售/修理物品和仓库实例会显示 `Items` 国服物品图标。`stateitem` 中的大尺寸武器、衣服和头盔帧已完成分段确认，待服务端 `Image` 字段映射接入角色纸娃娃叠层。
+商店、修理和仓库窗口也会复用国服 `Prguse#402` 窗口框；服务端返回的成色详情、出售/修理物品和仓库实例会显示 `Items` 国服物品图标。角色装备页按物品 `Looks` 读取同编号 `stateitem` 帧：衣服、武器和头盔使用素材自带锚点叠入角色区，项链、蜡烛、手镯和戒指落入 `Prguse#378` 的原始槽位。
 
 本机已用 `mir2setup2003.exe` 完成只读解包和格式校验，安装包 SHA-256 为 `46e6cf029bd33f32b9977a4184b95d056a24ac32b60d03210a50e5251dcf4d42`。该包的 `Data` 目录已成功解出 `Prguse`、`Prguse2`、`ChrSel`、`mmap`、`stateitem`、`MagIcon`、`Items`、`DnItems` 八组核心 WIL/WIX 素材，共 2,756 帧；`NewopUI`、`Prguse3`、`ui1`、`ui3` 在这个客户端包中未提供，已按该版本标记为可选。导出结果位于 `assets/web/ui-national`，该目录属于可重建产物并被 Git 忽略；干净目录需重新准备解出的 `Data` 后执行上述两条命令。
 

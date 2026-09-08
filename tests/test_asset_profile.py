@@ -274,6 +274,8 @@ class ActorAssetProfileTests(unittest.TestCase):
                                 'originX': 9, 'originY': 37, 'gapX': 1, 'gapY': 1})
         self.assertEqual(layout['characterPage'], {'library': 'Prguse', 'index': 340, 'x': 8, 'y': 90})
         self.assertEqual(layout['paperdollActor'], {'x': 70, 'y': 150, 'direction': 4})
+        self.assertEqual(layout['nationalCharacterPage'], {'library': 'prguse', 'index': 378, 'x': 44, 'y': 72})
+        self.assertEqual(layout['nationalPaperdollActor'], {'x': 128, 'y': 184, 'direction': 4, 'scale': 1})
         self.assertEqual(layout['windows']['inventory']['index'], 196)
         self.assertEqual(layout['windows']['character']['index'], 504)
         slots = {cell['slot']: (cell['x'], cell['y']) for cell in layout['equipmentCells']}
@@ -282,6 +284,10 @@ class ActorAssetProfileTests(unittest.TestCase):
         self.assertEqual(slots[4], (203, 7))
         self.assertEqual(slots[9], (8, 242))
         self.assertEqual(len(layout['equipmentCells']), 13)
+        national_slots = {cell['slot']: (cell['x'], cell['y']) for cell in layout['nationalEquipmentCells']}
+        self.assertEqual(national_slots, {3: (131, 36), 2: (131, 72), 5: (4, 125),
+                                          6: (131, 125), 7: (4, 161), 8: (131, 161)})
+        self.assertEqual([cell['slot'] for cell in layout['nationalEquipmentAppearance']], [0, 1, 4])
         paperdoll = (ROOT / 'apps/web/src/paperdoll.ts').read_text()
         self.assertIn("playerLayers", paperdoll)
         self.assertIn("SOUTH=4", paperdoll)

@@ -35,14 +35,21 @@ body.classic-play #character-panel,body.classic-play #character-state{margin:0;p
 body.classic-play .classic-stat,body.classic-play .classic-stat-value{position:absolute;font:12px SimSun,'Songti SC',serif;color:#e8d6a0;white-space:nowrap;text-shadow:1px 1px #000}
 body.classic-play .classic-bag,body.classic-play .paperdoll{position:absolute;inset:0;margin:0;padding:0;display:block;background:transparent}
 body.classic-play .paperdoll{pointer-events:none}
+body.classic-play .paperdoll[hidden],body.classic-play #paperdoll-actor[hidden]{display:none!important}
 body.classic-play #paperdoll-actor{position:absolute;left:70px;top:150px;width:1px;height:1px;pointer-events:none;z-index:1;overflow:visible}
 body.classic-play #paperdoll-actor img{position:absolute;image-rendering:pixelated;max-width:none}
 body.classic-play .item-cell{position:absolute;width:36px;height:32px;padding:0;border:0;background:transparent;overflow:hidden;pointer-events:auto}
-body.classic-play .item-cell img,body.classic-play .item-cell .missing-item-icon{width:36px;height:32px;object-fit:contain;image-rendering:pixelated;display:block}
+body.classic-play .item-cell img{position:absolute;left:50%;top:50%;width:auto;height:auto;max-width:36px;max-height:32px;transform:translate(-50%,-50%);object-fit:contain;image-rendering:pixelated;display:block}
+body.classic-play .item-cell .missing-item-icon{width:34px;height:30px;image-rendering:pixelated;display:block}
 body.classic-play .item-cell:hover{outline:1px solid #ffe27a}
+body.classic-play .equipment-appearance{position:absolute;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:auto}
+body.classic-play .equipment-appearance img{position:absolute;inset:0;width:100%;height:100%;max-width:none;image-rendering:pixelated}
+body.classic-play .equipment-appearance:hover{filter:drop-shadow(0 0 2px #ffe27a)}
+body.classic-play #character-window:has(#equipment-items .equipment-appearance--clothes) #paperdoll-actor{visibility:hidden}
 body.classic-play .character-window [data-character-page=skills]{overflow:auto;pointer-events:auto}
 body.classic-play .character-window .skill-grid{display:flex;flex-direction:column;gap:2px;padding:8px;max-height:268px}
 body.classic-play .character-window .skill-item{min-height:33px;padding:2px 6px;border:0;background:transparent;gap:4px}
+body.classic-play .character-window .skill-icon{flex:none;width:32px;height:30px;object-fit:contain;image-rendering:pixelated}
 body.classic-play .inventory-window .classic-window-close,body.classic-play .character-window .classic-window-close{position:absolute;z-index:2}
 body.classic-cursors.in-world #viewport{cursor:var(--cursor-default)}
 body.classic-cursors.in-world input,body.classic-cursors.in-world textarea{cursor:var(--cursor-text)}
@@ -94,7 +101,7 @@ body.classic-play #classic-window .classic-window-body ol{margin:4px 0;padding-l
 body.classic-play #classic-modal-layer .npc-dialog{width:416px!important;min-height:347px!important;height:347px!important;padding:38px 14px 12px!important;background-image:url('/ui-national/prguse/402.2b8c83a121142363.png')!important;color:#e8d6a0;font:12px SimSun,'Songti SC',serif}
 body.classic-play #classic-modal-layer .npc-dialog>div:first-child{min-height:20px;color:#f4d67c;text-shadow:1px 1px #000}
 body.classic-play #classic-modal-layer .npc-dialog #close-dialogue{top:2px;right:2px;width:22px;height:22px;background-image:none!important;color:transparent;font-size:0}
-body.classic-play .character-window.national-window #paperdoll-actor{transform:scale(1.7);transform-origin:0 0}
+body.classic-play .character-window.national-window #paperdoll-actor{left:128px;top:184px;transform:none}
 body.classic-play .character-window.national-window #character-panel{left:12px!important;top:52px!important;width:232px!important;height:325px!important;overflow:hidden}
 body.classic-play .character-window.national-window #character-panel .classic-stat{display:none}
 body.classic-play .character-window.national-window #character-panel .classic-stat-value{left:104px!important;width:76px;text-align:center}
@@ -108,7 +115,7 @@ body.classic-play .character-window.national-window #character-panel .classic-st
 body.classic-play .character-window.national-window [data-character-page=skills]{left:12px!important;top:52px!important;width:232px!important;height:295px!important;overflow:auto}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-grid{width:100%;max-height:none;padding:8px 6px;box-sizing:border-box;overflow:visible}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-item{width:100%;min-width:0;min-height:40px;padding:4px 2px;box-sizing:border-box;align-items:center;gap:4px;overflow:hidden}
-body.classic-play .character-window.national-window [data-character-page=skills] .skill-item>span:first-child{min-width:0;flex:1;overflow:hidden}
+body.classic-play .character-window.national-window [data-character-page=skills] .skill-item>span:first-of-type{min-width:0;flex:1;overflow:hidden}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-item strong,body.classic-play .character-window.national-window [data-character-page=skills] .skill-item small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-item small{font-size:10px}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-item button{flex:none;padding:2px 4px;border:1px solid #8a6c39;background:#2b1d11;color:#f0d286;font:11px SimSun,serif;white-space:nowrap}
