@@ -58,3 +58,8 @@ const playSource=fs.readFileSync(path.join(root,'apps/web/src/play.ts'),'utf8');
 if(playSource.includes("if(id==='chat'){classicWindow.hidden=true;return;}"))throw new Error('chat tab still closes the classic window');
 if(!playSource.includes("if(id==='chat')classicWindowBody.append(chatPanel)"))throw new Error('chat tab does not expose the complete chat form');
 console.log('PASS frontend chat tab exposes the channel and recipient controls');
+
+const authSource=fs.readFileSync(path.join(root,'apps/web/src/classic-auth.ts'),'utf8');
+const nationalMount=authSource.indexOf('this.mountNationalAuth();');
+if(nationalMount<0||authSource.indexOf('this.renderSlots();',nationalMount)<nationalMount)throw new Error('national auth assets do not redraw existing character slots');
+console.log('PASS national character assets redraw existing slots');

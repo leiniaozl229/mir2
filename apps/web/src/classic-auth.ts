@@ -127,6 +127,7 @@ export class ClassicAuth {
    const [prguse,chrsel]=await Promise.all([loadNationalUiLibrary('prguse'),loadNationalUiLibrary('chrsel')]);
    this.nationalLibraries.set('prguse',prguse);this.nationalLibraries.set('chrsel',chrsel);this.nationalReady=true;
    this.mountNationalAuth();
+   this.renderSlots();
   }catch{
    this.nationalReady=false;
   }
