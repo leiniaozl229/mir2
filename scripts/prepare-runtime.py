@@ -530,6 +530,9 @@ def main():
         if name == "String.conf":
             text = re.sub(r"(?m)^JoinGroupMsg=%s(.*)$", r"JoinGroupMsg={0}\1", text)
         write_new(SERVER / "Mir200" / name.lower(), text)
+    string_target = SERVER / "Mir200/string.conf"
+    string_target.write_text(_localize_string_config(read_text(string_target)), encoding="utf-8-sig")
+    _write_local_notices()
     configure("Mir200", "Server.conf", "server.conf", {
         "DataBase": {"ConnctionString": connection("mir2_data")},
         "Server": {"ServerName": "热血传奇", "DBAddr": "127.0.0.1", "IDSAddr": "127.0.0.1",
