@@ -5,7 +5,7 @@ import ts from 'typescript';
 import {fileURLToPath} from 'node:url';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const source=fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8').replace(/^import .*;\n/,'');
+const source=`const itemAssets={iconIndexByName:{'祖玛井中月':48},fallbackIconIndexBySourceIndex:{1144:0,1582:0}};\n`+fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8').replace(/^import .*;\n/gm,'');
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 class Element{
  constructor(tag='div'){this.tag=tag;this.children=[];this.style={};this.dataset={};this.classList={add(){}};this.disabled=false;}

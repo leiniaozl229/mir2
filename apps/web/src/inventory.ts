@@ -1,4 +1,5 @@
 import {loadNationalUiLibrary} from './classic-ui';
+import itemAssets from '../../../content/classic-176/item-assets.json';
 
 export type InventoryItem={name:string;makeIndex:number;durability:number;maxDurability:number;stdMode:number;weight:number;looks:number};
 type IconFrame={file:string;width:number;height:number;offsetX:number;offsetY:number};
@@ -22,10 +23,10 @@ export const EQUIPMENT_APPEARANCE:{slot:number;name:string;layer:string;z:number
  {slot:1,name:'武器',layer:'weapon',z:3},
  {slot:4,name:'头盔',layer:'helmet',z:4}
 ];
+function iconIndexOf(item:InventoryItem){return (itemAssets.iconIndexByName as Record<string,number>)[item.name]??(itemAssets.fallbackIconIndexBySourceIndex as Record<string,number>)[item.looks]??item.looks;}
 
-let iconsPromise:Promise<Icons>|undefined,dnIconsPromise:Promise<Icons>|undefined;
+let iconsPromise:Promise<Icons>|undefined;
 export function loadFallbackItemIcons(){return iconsPromise??=fetch('/items/Items/library.json').then(async response=>{if(!response.ok)throw new Error('缺少物品素材');return response.json();});}
-export function loadFallbackGroundItemIcons(){return dnIconsPromise??=fetch('/items/DnItems/library.json').then(async response=>{if(!response.ok)throw new Error('缺少地面物品素材');return response.json();});}
 
 export function bagCellPosition(index:number){
  const x=index%BAG_COLUMNS,y=Math.floor(index/BAG_COLUMNS)%5;
@@ -33,11 +34,10 @@ export function bagCellPosition(index:number){
 }
 
 export class InventoryView {
- private items=new Map<number,InventoryItem>();private pending=new Set<number>();private known=false;private icons:Icons|undefined;private dnIcons:Icons|undefined;private nationalIcons:Icons|undefined;
+ private items=new Map<number,InventoryItem>();private pending=new Set<number>();private known=false;private icons:Icons|undefined;private nationalIcons:Icons|undefined;
  constructor(private element:HTMLElement,private actions:InventoryActions){
   this.element.classList.add('classic-bag');
   void loadFallbackItemIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});
-  void loadFallbackGroundItemIcons().then(icons=>{this.dnIcons=icons;this.render();}).catch(()=>{});
   void loadNationalUiLibrary('items').then(icons=>{this.nationalIcons=icons;this.render();}).catch(()=>{});
  }
  clear(){this.known=false;this.items.clear();this.pending.clear();this.render();}
@@ -62,8 +62,8 @@ export class InventoryView {
     const pending=this.pending.has(item.makeIndex);
     cell.dataset.itemId=String(item.makeIndex);cell.disabled=pending;
     cell.title=`${item.name}\n持久 ${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`;
-    const nationalIcon=this.nationalIcons?.frames[item.looks],itemIcon=this.icons?.frames[item.looks],dnIcon=this.dnIcons?.frames[item.looks],icon=nationalIcon??itemIcon??dnIcon;
-    cell.append(imageOrEmpty(icon,item,nationalIcon?`/ui-national/items/${nationalIcon.file}`:dnIcon&&!itemIcon?`/items/DnItems/${dnIcon.file}`:undefined));
+    const iconIndex=iconIndexOf(item),nationalIcon=usableIcon(this.nationalIcons?.frames[iconIndex]),icon=nationalIcon??usableIcon(this.icons?.frames[iconIndex]);
+    cell.append(imageOrEmpty(icon,item,nationalIcon?`/ui-national/items/${nationalIcon.file}`:undefined));
     cell.onclick=event=>{
      event.preventDefault();
      if(event.shiftKey&&this.actions.trade)this.begin(item,()=>this.actions.trade!(item.makeIndex));
@@ -96,11 +96,10 @@ export class InventoryView {
 }
 
 export class EquipmentView {
- private slots=new Map<number,InventoryItem>();private pending=new Set<number>();private icons:Icons|undefined;private dnIcons:Icons|undefined;private stateIcons:Icons|undefined;
+ private slots=new Map<number,InventoryItem>();private pending=new Set<number>();private icons:Icons|undefined;private stateIcons:Icons|undefined;
  constructor(private element:HTMLElement,private takeOff:(slot:number)=>void){
   this.element.classList.add('paperdoll');
   void loadFallbackItemIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});this.render();
-  void loadFallbackGroundItemIcons().then(icons=>{this.dnIcons=icons;this.render();}).catch(()=>{});
   void loadNationalUiLibrary('stateitem').then(icons=>{this.stateIcons=icons;this.render();}).catch(()=>{});
  }
  clear(){this.slots.clear();this.pending.clear();this.render();}
@@ -119,7 +118,7 @@ export class EquipmentView {
  private render(){
   this.element.replaceChildren();this.element.classList.add('paperdoll');
   for(const appearance of EQUIPMENT_APPEARANCE){
-   const item=this.slots.get(appearance.slot),frame=item&&this.stateIcons?.frames[String(item.looks)];
+   const item=this.slots.get(appearance.slot),frame=item&&this.stateIcons?.frames[String(iconIndexOf(item))];
    if(!item||!frame)continue;
    const button=document.createElement('button');button.type='button';button.className=`equipment-appearance equipment-appearance--${appearance.layer}`;
    button.style.left=`${EQUIPMENT_PAGE.x+frame.offsetX}px`;button.style.top=`${EQUIPMENT_PAGE.y+frame.offsetY}px`;
@@ -140,8 +139,8 @@ export class EquipmentView {
     button.dataset.durability=String(item.durability);button.dataset.maxDurability=String(item.maxDurability);
     button.title=`${cell.name}：${item.name}\n持久 ${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`;
     button.disabled=this.pending.has(cell.slot);
-    const stateIcon=this.stateIcons?.frames[String(item.looks)],itemIcon=this.icons?.frames[String(item.looks)],dnIcon=this.dnIcons?.frames[String(item.looks)],icon=stateIcon??itemIcon??dnIcon;
-    button.append(imageOrEmpty(icon,item,stateIcon?`/ui-national/stateitem/${stateIcon.file}`:dnIcon&&!itemIcon?`/items/DnItems/${dnIcon.file}`:undefined));
+    const iconIndex=iconIndexOf(item),stateIcon=usableIcon(this.stateIcons?.frames[String(iconIndex)]),icon=stateIcon??usableIcon(this.icons?.frames[String(iconIndex)]);
+    button.append(imageOrEmpty(icon,item,stateIcon?`/ui-national/stateitem/${stateIcon.file}`:undefined));
     button.onclick=()=>{this.pending.add(cell.slot);this.render();this.takeOff(cell.slot);};
    }else{button.title=`${cell.name}：空`;button.disabled=true;}
    this.element.append(button);
@@ -157,3 +156,4 @@ function imageOrEmpty(icon:IconFrame|undefined,item:InventoryItem,url?:string){
  if(icon){const image=document.createElement('img');image.src=url??`/items/Items/${icon.file}`;image.alt=item.name;image.width=icon.width;image.height=icon.height;return image;}
  const empty=document.createElement('span');empty.className='missing-item-icon';empty.setAttribute('aria-label',`${item.name} 图标待校准`);return empty;
 }
+function usableIcon(icon:IconFrame|undefined){return icon&&icon.width>4&&icon.height>1?icon:undefined;}

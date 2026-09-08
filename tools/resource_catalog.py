@@ -16,6 +16,7 @@ SQL = ROOT / ".runtime/sql/02-mir2_data.sql"
 PROFILE = ROOT / "content/classic-176/version-profile.json"
 RULES = ROOT / "content/classic-176/skill-rules.json"
 COMBAT = ROOT / "content/classic-176/skill-combat.json"
+ITEM_ASSETS = ROOT / "content/classic-176/item-assets.json"
 SKILL_ASSETS = ROOT / "content/classic-176/skill-assets.json"
 MONGEN = ROOT / "vendor/mirserver-data/Mir200/Envir/MonGen.txt"
 MONITEMS = ROOT / "vendor/mirserver-data/Mir200/Envir/MonItems"
@@ -76,6 +77,11 @@ def frame_url(relative: str, index: int) -> str | None:
     data = library(relative)
     frame = data.get("frames", {}).get(str(index)) if data else None
     return f"/{relative}/{frame['file']}" if frame else None
+
+
+def usable_frame(frame: dict[str, Any] | None) -> bool:
+    """Reject tiny decoder artifacts that contain no usable item or skill art."""
+    return bool(frame and frame.get("width", 0) > 4 and frame.get("height", 0) > 1)
 
 
 def parse_visual_rules() -> dict[tuple[int, int], dict[str, Any]]:
@@ -160,10 +166,12 @@ def build() -> dict[str, Any]:
     baseline_maps = {str(value) for value in profile["p0Baseline"]["maps"]}
     skill_rules = json.loads(RULES.read_text(encoding="utf-8"))["skills"]
     combat = json.loads(COMBAT.read_text(encoding="utf-8"))["skills"]
+    item_asset_config = json.loads(ITEM_ASSETS.read_text(encoding="utf-8"))
+    item_assets = item_asset_config["iconIndexByName"]
+    item_fallbacks = item_asset_config["fallbackIconIndexBySourceIndex"]
     skill_assets = json.loads(SKILL_ASSETS.read_text(encoding="utf-8"))["iconIndexByName"]
     national_item_icons = library("ui-national/items") or {"frames":{}}
     fallback_item_icons = library("items/Items") or {"frames":{}}
-    ground_item_icons = library("items/DnItems") or {"frames":{}}
     state_icons = library("ui-national/stateitem") or {"frames":{}}
     national_skill_icons = library("ui-national/magic-icons") or {"frames":{}}
     fallback_skill_icons = library("ui/MagIcon") or {"frames":{}}
@@ -173,13 +181,17 @@ def build() -> dict[str, Any]:
     for item in items:
         item["category"] = ITEM_TYPES.get(item["stdMode"], f"StdMode {item['stdMode']}")
         item["baseline"] = item["name"] in baseline_items
-        national_frame = national_item_icons.get("frames", {}).get(str(item["imgIndex"]))
-        fallback_frame = fallback_item_icons.get("frames", {}).get(str(item["imgIndex"]))
-        ground_frame = ground_item_icons.get("frames", {}).get(str(item["imgIndex"]))
-        frame = national_frame or fallback_frame or ground_frame
-        state = state_icons.get("frames", {}).get(str(item["imgIndex"]))
-        item["iconUrl"] = f"/{'ui-national/items' if national_frame else 'items/Items' if fallback_frame else 'items/DnItems'}/{frame['file']}" if frame else None
-        item["iconSource"] = "国服 Items.wil" if national_frame else "扩展 Items.Lib" if fallback_frame else "扩展 DnItems.Lib 地面图" if ground_frame else None
+        icon_index = item_assets.get(item["name"], item_fallbacks.get(str(item["imgIndex"]), item["imgIndex"]))
+        national_frame = national_item_icons.get("frames", {}).get(str(icon_index))
+        fallback_frame = fallback_item_icons.get("frames", {}).get(str(icon_index))
+        national_frame = national_frame if usable_frame(national_frame) else None
+        fallback_frame = fallback_frame if usable_frame(fallback_frame) else None
+        frame = national_frame or fallback_frame
+        state = state_icons.get("frames", {}).get(str(icon_index))
+        state = state if usable_frame(state) else None
+        item["iconUrl"] = f"/{'ui-national/items' if national_frame else 'items/Items'}/{frame['file']}" if frame else None
+        item["iconIndex"] = icon_index
+        item["iconSource"] = "国服 Items.wil" if national_frame else "扩展 Items.Lib" if fallback_frame else None
         item["stateIconUrl"] = f"/ui-national/stateitem/{state['file']}" if state else None
 
     skills = sql_rows("magics", SKILL_COLUMNS)
@@ -189,6 +201,8 @@ def build() -> dict[str, Any]:
         icon_index = skill_assets.get(skill["name"], skill["magicId"])
         national_icon = national_skill_icons.get("frames", {}).get(str(icon_index))
         fallback_icon = fallback_skill_icons.get("frames", {}).get(str(icon_index))
+        national_icon = national_icon if usable_frame(national_icon) else None
+        fallback_icon = fallback_icon if usable_frame(fallback_icon) else None
         icon = national_icon or fallback_icon
         skill.update({
             "jobName": JOBS.get(skill["job"], f"职业 {skill['job']}"),
@@ -268,7 +282,7 @@ def build() -> dict[str, Any]:
     drop_rows = {(monster["dropSource"], drop["sourceLine"]) for monster in monsters for drop in monster["drops"] if monster["dropSource"]}
     return {
         "schemaVersion":1,
-        "source":{"sql":str(SQL.relative_to(ROOT)),"profile":str(PROFILE.relative_to(ROOT)),"skillRules":str(RULES.relative_to(ROOT)),"skillCombat":str(COMBAT.relative_to(ROOT)),"skillAssets":str(SKILL_ASSETS.relative_to(ROOT)),"monsterVisuals":"apps/web/src/monster-visuals.ts","spawns":str(MONGEN.relative_to(ROOT)),"drops":str(MONITEMS.relative_to(ROOT)),"mapInfo":str(MAPINFO.relative_to(ROOT)),"assets":str(WEB.relative_to(ROOT))},
+        "source":{"sql":str(SQL.relative_to(ROOT)),"profile":str(PROFILE.relative_to(ROOT)),"itemAssets":str(ITEM_ASSETS.relative_to(ROOT)),"skillRules":str(RULES.relative_to(ROOT)),"skillCombat":str(COMBAT.relative_to(ROOT)),"skillAssets":str(SKILL_ASSETS.relative_to(ROOT)),"monsterVisuals":"apps/web/src/monster-visuals.ts","spawns":str(MONGEN.relative_to(ROOT)),"drops":str(MONITEMS.relative_to(ROOT)),"mapInfo":str(MAPINFO.relative_to(ROOT)),"assets":str(WEB.relative_to(ROOT))},
         "summary":{"items":len(items),"skills":len(skills),"monsters":len(monsters),"maps":len(maps),"spawns":len(spawns),"dropTables":len(drop_sources),"dropRows":len(drop_rows),"assetLibraries":len(assets),"itemIcons":sum(bool(value["iconUrl"]) for value in items),"skillIcons":sum(bool(value["iconUrl"]) for value in skills),"monsterVisuals":sum(bool(value["visual"]) for value in monsters)},
         "diagnostics":{"duplicateMagicIds":conflicting_magic_ids,"magicIdAliases":alias_groups,"orphanSpawnMaps":orphan_spawn_maps,"unknownSpawnMonsters":unknown_spawn_monsters,"unknownDropItems":unknown_drop_items,"itemsMissingIcons":sum(not value["iconUrl"] for value in items),"skillsMissingIcons":sum(not value["iconUrl"] for value in skills),"monstersMissingVisuals":sum(not value["visual"] for value in monsters)},
         "mechanics":mechanics(),"items":items,"skills":skills,"monsters":monsters,"maps":maps,"spawns":spawns,"assets":assets,
@@ -299,6 +313,18 @@ def validate(data: dict[str, Any]) -> list[str]:
     spawn_ids = {value["id"] for value in data["spawns"]}
     if any(number not in spawn_ids for value in data["maps"] for number in value["spawnIds"]):
         errors.append("map references an unknown spawn")
+    item_config = json.loads(ITEM_ASSETS.read_text(encoding="utf-8"))
+    items_by_name = {value["name"]: value for value in data["items"]}
+    for name, icon_index in item_config["iconIndexByName"].items():
+        item = items_by_name.get(name)
+        if item is None:
+            errors.append(f"item icon override references an unknown item: {name}")
+        elif item["iconIndex"] != icon_index or not item["iconUrl"]:
+            errors.append(f"item icon override is unusable: {name} -> {icon_index}")
+    fallback_indices = {int(value) for value in item_config["fallbackIconIndexBySourceIndex"]}
+    for source_index in fallback_indices:
+        if not any(value["imgIndex"] == source_index and value["iconUrl"] for value in data["items"]):
+            errors.append(f"item icon fallback is unused or unusable: {source_index}")
     return errors
 
 

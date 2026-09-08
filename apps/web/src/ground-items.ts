@@ -1,5 +1,6 @@
 import {Assets,Container,Sprite,Text,Texture} from 'pixi.js';
 import {loadNationalUiLibrary} from './classic-ui';
+import itemAssets from '../../../content/classic-176/item-assets.json';
 
 export type GroundItem={id:number;x:number;y:number;looks:number;name:string};
 type Frame={file:string;width:number;height:number};
@@ -27,9 +28,10 @@ export class GroundItems {
   const generation=this.generation;
   void this.loadNationalLibrary().catch(()=>undefined).then(async national=>{
    const fallback=await this.loadLibrary();
-   const frame=national?.frames[item.looks]??fallback.frames[item.looks];
+   const iconIndex=(itemAssets.iconIndexByName as Record<string,number>)[item.name]??(itemAssets.fallbackIconIndexBySourceIndex as Record<string,number>)[item.looks]??item.looks;
+   const nationalFrame=usableFrame(national?.frames[iconIndex]),fallbackFrame=usableFrame(fallback.frames[iconIndex]),frame=nationalFrame??fallbackFrame;
    if(!frame||generation!==this.generation||this.items.get(item.id)!==item)return;
-   const texture=await Assets.load<Texture>(national?.frames[item.looks]?`/ui-national/dnitems/${frame.file}`:`/items/DnItems/${frame.file}`);texture.source.scaleMode='nearest';
+   const texture=await Assets.load<Texture>(nationalFrame?`/ui-national/dnitems/${frame.file}`:`/items/DnItems/${frame.file}`);texture.source.scaleMode='nearest';
    if(generation!==this.generation||this.items.get(item.id)!==item)return;
    sprite.texture=texture;sprite.anchor.set(.5);sprite.position.set(24,16);
   }).catch(()=>{if(this.items.get(item.id)===item)label.text=`${item.name} · 地面图待校准`;});
@@ -54,3 +56,4 @@ export class GroundItems {
   return this.nationalLibrary;
  }
 }
+function usableFrame(frame:Frame|undefined){return frame&&frame.width>4&&frame.height>1?frame:undefined;}

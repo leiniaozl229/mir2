@@ -28,7 +28,7 @@ class ResourceCatalogTests(unittest.TestCase):
         self.assertEqual(summary["maps"], 570)
         self.assertGreater(summary["spawns"], 2800)
         self.assertGreater(summary["dropRows"], 7000)
-        self.assertEqual(summary["itemIcons"], 991)
+        self.assertEqual(summary["itemIcons"], 796)
         self.assertEqual(summary["skillIcons"], 106)
 
     def test_cross_links_include_spawn_drop_and_assets(self):
@@ -43,9 +43,18 @@ class ResourceCatalogTests(unittest.TestCase):
         self.assertEqual(grave["minimapFrame"], 0)
 
     def test_extended_asset_fallbacks_and_skill_id_health(self):
-        ground_fallback = next(value for value in self.catalog["items"] if value["name"] == "祖玛井中月")
+        extended_fallback = next(value for value in self.catalog["items"] if value["name"] == "雷霆战甲(男)")
+        named_variant = next(value for value in self.catalog["items"] if value["name"] == "祖玛井中月")
+        decoder_artifact = next(value for value in self.catalog["items"] if value["name"] == "狂雷战甲(男)")
+        extended_book = next(value for value in self.catalog["items"] if value["name"] == "白日门雷电术")
+        extended_potion = next(value for value in self.catalog["items"] if value["name"] == "金创药(特量)")
         group_poison = next(value for value in self.catalog["skills"] if value["name"] == "群体施毒术")
-        self.assertIn("/items/DnItems/", ground_fallback["iconUrl"])
+        self.assertIn("/items/Items/", extended_fallback["iconUrl"])
+        self.assertEqual(named_variant["iconIndex"], 48)
+        self.assertIn("/ui-national/items/", named_variant["iconUrl"])
+        self.assertEqual(extended_book["iconIndex"], 0)
+        self.assertEqual(extended_potion["iconIndex"], 813)
+        self.assertIsNone(decoder_artifact["iconUrl"])
         self.assertEqual(group_poison["magicId"], 104)
         self.assertEqual(group_poison["iconIndex"], 38)
         self.assertEqual(self.catalog["diagnostics"]["duplicateMagicIds"], [])
