@@ -9,8 +9,8 @@ export function routeDirection(fromX:number,fromY:number,toX:number,toY:number,f
  return direction<0?fallback&7:direction;
 }
 
-// OpenMir2 and the classic Hum/Mon WIL rows share the same clockwise order:
-// 0=up, 2=right, 4=down and 6=left.
+// OpenMir2 uses 0=up, 2=right, 4=down and 6=left. The imported classic
+// Hum WIL rows start at down, so rotate the logical route direction by 180°.
 export function visualDirection(serverDirection:number){
- return serverDirection&7;
+ return (serverDirection+4)&7;
 }
