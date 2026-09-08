@@ -73,6 +73,14 @@ if(!hitContext.exports.actorHitTest(false,{x:10,y:20,width:30,height:40},20,30))
 if(hitContext.exports.actorHitTest(true,{x:10,y:20,width:30,height:40},20,30))throw new Error('the local player can select itself');
 console.log('PASS frontend actor hit testing includes non-player corpses');
 
+const harvestInputSource=fs.readFileSync(path.join(root,'apps/web/src/harvest-input.ts'),'utf8');
+const harvestInputContext={exports:{}};
+vm.createContext(harvestInputContext);
+vm.runInContext(ts.transpileModule(harvestInputSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,harvestInputContext);
+const requestsHarvest=harvestInputContext.exports.requestsHarvest;
+if(requestsHarvest({altKey:false,button:0})||requestsHarvest({altKey:true,button:2})||!requestsHarvest({altKey:true,button:0}))throw new Error('corpse harvesting does not require Alt plus the left mouse button');
+console.log('PASS corpse harvesting requires Alt plus left click');
+
 const equipmentElement=new Element();
 const equipment=new context.exports.EquipmentView(equipmentElement,()=>{});
 equipment.replace([{slot:7,item:{...candle,stdMode:22}}]);
@@ -87,6 +95,9 @@ if(!playSource.includes("if(id==='chat')classicWindowBody.append(chatPanel)"))th
 if(playSource.includes('suppressNpcDialogsUntil'))throw new Error('valid NPC dialogue is discarded during the first seconds after map entry');
 if(!playSource.includes('function targetApproachStep(')||!playSource.includes('pursuitRejectedCells.add(`${movement.x},${movement.y}`)')||!playSource.includes('pursuitTarget=retryTarget'))throw new Error('target pursuit does not reroute after a transient blocked move');
 console.log('PASS target pursuit reroutes after a transient blocked move');
+if(!playSource.includes("entity.dead?'Alt+左键挖肉'")||!playSource.includes('interact(target,requestsHarvest(event))')||!playSource.includes('if(target.dead&&!harvest)')||!playSource.includes("if(target.dead&&harvest){socket.send(JSON.stringify({type:'butch'"))throw new Error('corpse interaction can still harvest without Alt plus left click');
+if(!playSource.includes('pursuitHarvest=retryHarvest')||!playSource.includes('interact(target,pursuitHarvest)'))throw new Error('automatic corpse approach loses the harvest modifier intent');
+console.log('PASS corpse harvest intent survives automatic approach and blocked-cell retries');
 if(!playSource.includes('.filter(value=>value.distance<=8)')||!playSource.includes('if(distance>8){connection.textContent=`${target.name||\'目标\'} 超出施法距离`'))throw new Error('the interaction list and spell distance exceed the server range');
 console.log('PASS interaction targets match the server spell range');
 console.log('PASS frontend chat tab exposes the channel and recipient controls');

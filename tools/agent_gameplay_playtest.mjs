@@ -78,9 +78,9 @@ async function capture(name){
  const result=await session.send('Page.captureScreenshot',{format:'png'}),file=path.join(outputDir,name);
  await writeFile(file,Buffer.from(result.data,'base64'));report.artifacts[name]=path.relative(root,file);return file;
 }
-async function clickTarget(name,id){
+async function clickTarget(name,id,alt=false){
  const nameLiteral=JSON.stringify(name),idLiteral=id===undefined?'undefined':String(id);
- return evaluate(`(()=>{const buttons=[...document.querySelectorAll('#nearby-targets [data-entity-id]')];const button=buttons.find(value=>(${idLiteral}===undefined||Number(value.dataset.entityId)===${idLiteral})&&value.textContent.includes(${nameLiteral}));if(!button)return false;button.click();return true})()`);
+ return evaluate(`(()=>{const buttons=[...document.querySelectorAll('#nearby-targets [data-entity-id]')];const button=buttons.find(value=>(${idLiteral}===undefined||Number(value.dataset.entityId)===${idLiteral})&&value.textContent.includes(${nameLiteral}));if(!button)return false;button.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,button:0,altKey:${alt}}));return true})()`);
 }
 async function waitAndClickTarget(name,id,timeout=30000){
  const deadline=Date.now()+timeout;
@@ -283,10 +283,15 @@ try{
  requireCheck(leveled.attributes.level>levelBefore||leveled.attributes.experience!==experienceBefore,'monster kill changes level or experience',{before:{level:levelBefore,experience:experienceBefore},after:{level:leveled.attributes.level,experience:leveled.attributes.experience}});
  await capture('04-level-up.png');
 
- const meatBefore=itemCount(leveled,'鸡肉');let harvestAttempts=0;
+ const meatBefore=itemCount(leveled,'鸡肉');
+ if(!await clickTarget('鸡',chicken.id))throw new Error('Dead chicken left the browser interaction list');
+ await sleep(500);
+ const plainCorpseClick=await snapshot();
+ requireCheck(itemCount(plainCorpseClick,'鸡肉')===meatBefore&&plainCorpseClick.connection==='按住 Alt 并左键点击尸体挖肉','plain corpse click only shows the Alt plus left-click hint',{connection:plainCorpseClick.connection});
+ let harvestAttempts=0;
  while(harvestAttempts<12){
   harvestAttempts++;
-  if(!await clickTarget('鸡',chicken.id))break;
+  if(!await clickTarget('鸡',chicken.id,true))break;
   await sleep(900);
   const current=await snapshot();
   if(itemCount(current,'鸡肉')>meatBefore)break;

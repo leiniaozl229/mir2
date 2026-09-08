@@ -18,6 +18,7 @@ import {movementInput,releasesMovement,screenDirection,type HeldMovement} from '
 import {DIRECTIONS as directions,MOVEMENT_DURATION_MS,directionIndex,findGridPath,movementCanFinish,type MovementStep} from './movement-model';
 import {AgentObserver,agentObservationEnabled,type AgentDebugApi} from './agent-observer';
 import {MiniMapController,type MiniMapMarker} from './minimap';
+import {requestsHarvest} from './harvest-input';
 const connection=document.querySelector<HTMLElement>('#connection')!;
 const worldStatus=document.querySelector<HTMLOutputElement>('#world-status')!;
 new MutationObserver(()=>worldStatus.textContent=connection.textContent).observe(connection,{childList:true,characterData:true,subtree:true});
@@ -256,7 +257,7 @@ const groundItems=new GroundItems(view.depth,(item:GroundItem)=>{
 },document.querySelector<HTMLElement>('#ground-items')!);
 const entities=new Map<number,Entity>(),visuals=new Map<number,OnlineActor>();
 type PendingAction={actionId:number;kind:'move'|'attack'|'spell';startedAt:number;duration:number;acknowledged:boolean};
-let socket:WebSocket|undefined,self:number|undefined,lastSequence=0,mapGeneration=0,currentMap='0',pending:MovementStep|undefined,pendingAction:PendingAction|undefined,nextActionId=1,doorRetry:{x:number;y:number;direction:number;run:boolean}|undefined,held:HeldMovement|undefined,rightPointer:{pointerId:number;clientX:number;clientY:number;direction?:number}|undefined,clickDestination:{x:number;y:number;run:boolean}|undefined,combatTimer:number|undefined,pursuitTarget:number|undefined,pursuitRejectedCells=new Set<string>(),pursuitGroundItem:number|undefined,combatTarget:number|undefined,worldReady=true,initialSelfPending=true,reconnectTimer:number|undefined,reconnectAttempts=0,reconnectEnabled=false;
+let socket:WebSocket|undefined,self:number|undefined,lastSequence=0,mapGeneration=0,currentMap='0',pending:MovementStep|undefined,pendingAction:PendingAction|undefined,nextActionId=1,doorRetry:{x:number;y:number;direction:number;run:boolean}|undefined,held:HeldMovement|undefined,rightPointer:{pointerId:number;clientX:number;clientY:number;direction?:number}|undefined,clickDestination:{x:number;y:number;run:boolean}|undefined,combatTimer:number|undefined,pursuitTarget:number|undefined,pursuitHarvest=false,pursuitRejectedCells=new Set<string>(),pursuitGroundItem:number|undefined,combatTarget:number|undefined,worldReady=true,initialSelfPending=true,reconnectTimer:number|undefined,reconnectAttempts=0,reconnectEnabled=false;
 let mapReady:Promise<void>=Promise.resolve();
 type Credentials={account:string;password:string};
 let credentials:Credentials|undefined,selectedCharacter:string|undefined;
@@ -278,7 +279,7 @@ function agentSnapshot(){
   confirmedCell:pending?{x:pending.acknowledged?pending.x:pending.fromX,y:pending.acknowledged?pending.y:pending.fromY}:{x:entity?.x,y:entity?.y},
   render:visualState?{...visualState,grid:{x:visualState.pixel.x/48,y:visualState.pixel.y/32},screen:{x:visualState.pixel.x+view.app.stage.position.x,y:visualState.pixel.y+view.app.stage.position.y}}:undefined,
   camera:{x:view.app.stage.position.x,y:view.app.stage.position.y},pending:pending?{...pending}:undefined,pendingAction:pendingAction?{...pendingAction}:undefined,
-  intentions:{held:held?{...held}:undefined,rightPointer:Boolean(rightPointer),clickDestination:clickDestination?{...clickDestination}:undefined,pursuitTarget,pursuitGroundItem,combatTarget},
+  intentions:{held:held?{...held}:undefined,rightPointer:Boolean(rightPointer),clickDestination:clickDestination?{...clickDestination}:undefined,pursuitTarget,pursuitHarvest,pursuitGroundItem,combatTarget},
   attributes:characterPanel.debugState(),inventory:inventory.debugState(),equipment:equipment.debugState(),paperdoll:paperdoll.debugState(),groundItems:groundItems.debugState(),skills:skillBar.debugState(),minimap:minimap.debugState(),
   dialogue:{visible:!dialogueElement.hidden,npc:dialogueTitle.textContent,text:dialogueText.textContent,options:Array.from(dialogueOptions.querySelectorAll<HTMLButtonElement>('button')).map(button=>({text:button.textContent,command:button.dataset.dialogueCommand}))},
   combatStatus:combatStatus.textContent,nearby, directions:directionsAvailable,entityCount:entities.size,
@@ -286,7 +287,7 @@ function agentSnapshot(){
 }
 agentObserver.attach(window as Window&{__mir2Agent?:AgentDebugApi},agentSnapshot);
 function appendChat(channel:string,text:string){const line=document.createElement('li');line.dataset.channel=channel;const labels:Record<string,string>={local:'附近',group:'组队',shout:'喊话',whisper:'私聊',guild:'行会',system:'系统'};line.textContent=`[${labels[channel]??channel}] ${text}`;chatLog.append(line);while(chatLog.children.length>100)chatLog.firstElementChild?.remove();chatLog.scrollTop=chatLog.scrollHeight;}
-function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;pendingAction=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;initialSelfPending=true;pursuitTarget=undefined;pursuitRejectedCells.clear();pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];castleWarStatus=undefined;dialogueNpcId=undefined;classicWindow.hidden=true;dockChat();characterWindow.hidden=true;inventoryWindow.hidden=true;renderGroup();renderAttackMode();renderGuild();clearTrade();if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();equipment.clear();paperdoll.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}dialogueElement.hidden=true;revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();refreshMiniMapMarkers();}
+function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;pendingAction=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;initialSelfPending=true;pursuitTarget=undefined;pursuitHarvest=false;pursuitRejectedCells.clear();pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];castleWarStatus=undefined;dialogueNpcId=undefined;classicWindow.hidden=true;dockChat();characterWindow.hidden=true;inventoryWindow.hidden=true;renderGroup();renderAttackMode();renderGuild();clearTrade();if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();equipment.clear();paperdoll.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}dialogueElement.hidden=true;revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();refreshMiniMapMarkers();}
 function update(entity:Entity,movementStart?:number){entities.set(entity.id,entity);let visual=visuals.get(entity.id);if(!visual){visual=new OnlineActor(entity,interact);visuals.set(entity.id,visual);view.depth.addChild(visual.container);}visual.update(entity,movementStart);if(entity.self)paperdoll.setFeature(entity.feature);renderTargets();refreshMiniMapMarkers();}
 function refreshMiniMapMarkers(){
  const markers:MiniMapMarker[]=[...entities.values()].map(entity=>{const race=entity.feature&255;return {id:`entity-${entity.id}`,x:entity.x,y:entity.y,kind:entity.self?'self':race===50?'npc':race===0?'player':'monster'} as MiniMapMarker;});
@@ -314,7 +315,7 @@ function renderTargets(){
  targetsElement.replaceChildren();const actor=self===undefined?undefined:entities.get(self);if(!actor){targetsElement.textContent='等待附近对象…';return;}
  const targets=[...entities.values()].filter(entity=>{const race=entity.feature&255;return !entity.self&&(race!==0||Boolean(entity.name));}).map(entity=>({entity,distance:Math.max(Math.abs(entity.x-actor.x),Math.abs(entity.y-actor.y))})).filter(value=>value.distance<=8).sort((a,b)=>a.distance-b.distance||a.entity.id-b.entity.id);
  if(!targets.length){targetsElement.textContent='附近没有可交互对象';return;}
- for(const {entity,distance} of targets){const button=document.createElement('button');button.type='button';button.dataset.entityId=String(entity.id);const race=entity.feature&255,npc=race===50,player=race===0,slave=entity.kind==='slave'||entity.nameColor===254,health=entity.hp===undefined?'':` · ${entity.hp}/${entity.maxHp} HP`;button.textContent=`${slave?'召唤 · ':''}${entity.name||(npc?'NPC':'怪物')} · ${entity.x},${entity.y} · ${distance} 格${health} · ${npc?(distance===1?'对话':'接近'):player?(distance===1?'PK/行会战':'接近'):entity.dead?'挖肉':distance===1?'攻击':'接近'}`;button.onclick=()=>interact(entities.get(entity.id)??entity);targetsElement.append(button);}
+ for(const {entity,distance} of targets){const button=document.createElement('button');button.type='button';button.dataset.entityId=String(entity.id);const race=entity.feature&255,npc=race===50,player=race===0,slave=entity.kind==='slave'||entity.nameColor===254,health=entity.hp===undefined?'':` · ${entity.hp}/${entity.maxHp} HP`;button.textContent=`${slave?'召唤 · ':''}${entity.name||(npc?'NPC':'怪物')} · ${entity.x},${entity.y} · ${distance} 格${health} · ${npc?(distance===1?'对话':'接近'):player?(distance===1?'PK/行会战':'接近'):entity.dead?'Alt+左键挖肉':distance===1?'攻击':'接近'}`;button.onclick=event=>interact(entities.get(entity.id)??entity,requestsHarvest(event));targetsElement.append(button);}
 }
 function clickPath(actor:Entity,destination:{x:number;y:number}){
  const start={x:actor.x,y:actor.y},goal={x:Math.round(destination.x),y:Math.round(destination.y)};
@@ -378,14 +379,14 @@ function continueClickDestination(){
 function startMapRoute(point:{x:number;y:number},run:boolean){
  const actor=self===undefined?undefined:entities.get(self);
  if(!actor||actor.dead||socket?.readyState!==WebSocket.OPEN)return;
- rightPointer=undefined;stopCombat();doorRetry=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;held=undefined;
+ rightPointer=undefined;stopCombat();doorRetry=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;held=undefined;
  clickDestination={x:point.x,y:point.y,run};connection.textContent=`地图寻路 · ${point.x}, ${point.y}`;agentObserver.event('minimap-route',{...point,run});continueClickDestination();
 }
 function continuePursuit(){
  if(pursuitTarget===undefined||pendingAction)return;
  const target=entities.get(pursuitTarget),actor=self===undefined?undefined:entities.get(self);
- if(!target||target.self||!actor||actor.dead){pursuitTarget=undefined;return;}
- interact(target);
+ if(!target||target.self||!actor||actor.dead){pursuitTarget=undefined;pursuitHarvest=false;return;}
+ interact(target,pursuitHarvest);
 }
 function continueGroundPursuit(){
  if(pursuitGroundItem===undefined||pendingAction)return;
@@ -413,31 +414,32 @@ function continueCombat(){
  const target=entities.get(combatTarget),actor=self===undefined?undefined:entities.get(self);
  if(!target||target.dead||(target.hp!==undefined&&target.hp<=0)||!actor||actor.dead||socket?.readyState!==WebSocket.OPEN){stopCombat();return;}
  const dx=Math.sign(target.x-actor.x),dy=Math.sign(target.y-actor.y),distance=Math.max(Math.abs(target.x-actor.x),Math.abs(target.y-actor.y));
- if(distance>1){const id=target.id;combatTarget=undefined;pursuitTarget=id;interact(target);return;}
+ if(distance>1){const id=target.id;combatTarget=undefined;pursuitTarget=id;pursuitHarvest=false;interact(target);return;}
  if(distance!==1){stopCombat();return;}
  const direction=directions.findIndex(([x,y])=>x===dx&&y===dy);if(direction<0){stopCombat();return;}
  if(pendingAction){scheduleCombat();return;}
  if(performance.now()-lastAttack<550){scheduleCombat();return;}
  lastAttack=performance.now();const action=createAction('attack');socket.send(JSON.stringify({type:'attack',direction,actionId:action.actionId,mapGeneration}));audio.play('swing');update({...actor,direction,action:'attack'});connection.textContent=`攻击 ${target.name}`;scheduleCombat();
 }
-function interact(target:Entity){
+function interact(target:Entity,harvest=false){
  ignoreCanvasPointerUntil=performance.now()+100;
  stopCombat();pursuitGroundItem=undefined;const actor=self===undefined?undefined:entities.get(self);if(!actor||actor.dead||target.self||socket?.readyState!==WebSocket.OPEN)return;
- if(selectedMagic&&(target.feature&255)!==50){if(pendingAction){connection.textContent='当前动作完成后再施放技能';return;}pursuitTarget=undefined;const distance=Math.max(Math.abs(target.x-actor.x),Math.abs(target.y-actor.y));if(distance>8){connection.textContent=`${target.name||'目标'} 超出施法距离`;return;}const skill=selectedMagic;selectedMagic=undefined;skillBar.setPending(skill.magicId);const action=createAction('spell');socket.send(JSON.stringify({type:'castMagic',magicId:skill.magicId,targetId:target.id,actionId:action.actionId,mapGeneration}));update({...actor,direction:directions.findIndex(([x,y])=>x===Math.sign(target.x-actor.x)&&y===Math.sign(target.y-actor.y)),action:'spell'});connection.textContent=`正在对 ${target.name||'目标'} 施放 ${skill.name}…`;return;}
- const race=target.feature&255,player=race===0&&Boolean(target.name);if(race===0&&!player){pursuitTarget=undefined;connection.textContent=`${target.name||'该对象'} 暂不支持交互`;return;}
+ if(selectedMagic&&(target.feature&255)!==50){if(pendingAction){connection.textContent='当前动作完成后再施放技能';return;}pursuitTarget=undefined;pursuitHarvest=false;const distance=Math.max(Math.abs(target.x-actor.x),Math.abs(target.y-actor.y));if(distance>8){connection.textContent=`${target.name||'目标'} 超出施法距离`;return;}const skill=selectedMagic;selectedMagic=undefined;skillBar.setPending(skill.magicId);const action=createAction('spell');socket.send(JSON.stringify({type:'castMagic',magicId:skill.magicId,targetId:target.id,actionId:action.actionId,mapGeneration}));update({...actor,direction:directions.findIndex(([x,y])=>x===Math.sign(target.x-actor.x)&&y===Math.sign(target.y-actor.y)),action:'spell'});connection.textContent=`正在对 ${target.name||'目标'} 施放 ${skill.name}…`;return;}
+ const race=target.feature&255,player=race===0&&Boolean(target.name);if(race===0&&!player){pursuitTarget=undefined;pursuitHarvest=false;connection.textContent=`${target.name||'该对象'} 暂不支持交互`;return;}
+ if(target.dead&&!harvest){pursuitTarget=undefined;pursuitHarvest=false;pursuitRejectedCells.clear();connection.textContent='按住 Alt 并左键点击尸体挖肉';return;}
  const dx=Math.sign(target.x-actor.x),dy=Math.sign(target.y-actor.y),distance=Math.max(Math.abs(target.x-actor.x),Math.abs(target.y-actor.y));
  if(distance>1){
-  held=undefined;clickDestination=undefined;if(pursuitTarget!==target.id)pursuitRejectedCells.clear();pursuitTarget=target.id;
+  held=undefined;clickDestination=undefined;if(pursuitTarget!==target.id)pursuitRejectedCells.clear();pursuitTarget=target.id;pursuitHarvest=Boolean(target.dead&&harvest);
   const step=targetApproachStep(actor,target);
   if(step&&sendMovement(actor,step.x-actor.x,step.y-actor.y))connection.textContent=`正在自动接近 ${target.name||'目标'}…`;
-  else{pursuitTarget=undefined;pursuitRejectedCells.clear();connection.textContent=`无法接近 ${target.name||'目标'}`;}
+  else{pursuitTarget=undefined;pursuitHarvest=false;pursuitRejectedCells.clear();connection.textContent=`无法接近 ${target.name||'目标'}`;}
   return;
  }
  if(distance!==1)return;
- pursuitTarget=undefined;pursuitRejectedCells.clear();
+ pursuitTarget=undefined;pursuitHarvest=false;pursuitRejectedCells.clear();
  if(race===50){socket.send(JSON.stringify({type:'npc',targetId:target.id}));connection.textContent=`正在与 ${target.name} 交谈…`;return;}
  const direction=directions.findIndex(([x,y])=>x===dx&&y===dy);if(direction<0)return;
- if(target.dead){socket.send(JSON.stringify({type:'butch',targetId:target.id}));update({...actor,direction,action:'harvest'});connection.textContent=`正在挖取 ${target.name}…`;return;}
+ if(target.dead&&harvest){socket.send(JSON.stringify({type:'butch',targetId:target.id}));update({...actor,direction,action:'harvest'});connection.textContent=`正在挖取 ${target.name}…`;return;}
  combatTarget=target.id;continueCombat();
 }
 view.app.ticker.add(()=>{const time=performance.now();for(const visual of visuals.values())visual.tick(time);finishMovement(time);finishNonMovementAction(time);if(pendingAction&&time-pendingAction.startedAt>5000){connection.textContent='动作确认超时，正在重新同步位置…';socket?.close();}layoutActorLabels();});
@@ -592,7 +594,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   }
   else if(message.type==='chat')appendChat(message.channel,message.text);
   else if(message.type==='systemMessage'){combatStatus.textContent=message.text;appendChat('system',message.text);if(message.castleWar){castleWarStatus=message.castleWar;renderGuild();}}
-  else if(message.type==='entityRemoved'){if(pursuitTarget===message.id)pursuitTarget=undefined;if(combatTarget===message.id)stopCombat();entities.delete(message.id);visuals.get(message.id)?.destroy();visuals.delete(message.id);renderTargets();}
+  else if(message.type==='entityRemoved'){if(pursuitTarget===message.id){pursuitTarget=undefined;pursuitHarvest=false;}if(combatTarget===message.id)stopCombat();entities.delete(message.id);visuals.get(message.id)?.destroy();visuals.delete(message.id);renderTargets();}
   else if(message.type==='actionResult'){
    if(!pendingAction||message.actionId!==pendingAction.actionId||message.kind!==pendingAction.kind)return;
    if(message.kind==='move'&&!pending){pendingAction=undefined;return;}
@@ -601,10 +603,10 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
     if(message.accepted&&message.mapGeneration===mapGeneration&&message.x===movement.x&&message.y===movement.y){
      movement.acknowledged=true;agentObserver.event('action-ack',{actionId:movement.actionId,kind:'move',accepted:true,x:message.x,y:message.y});classicHud.position(view.map,movement.x,movement.y);minimap.setPosition(movement.x,movement.y);audio.play('movement',.22);connection.textContent=`已连接 · ${entities.get(self!)?.name??''} · ${movement.x}, ${movement.y}`;finishMovement(performance.now());
     }else{
-     const retryTarget=pursuitTarget;agentObserver.event('action-rollback',{actionId:movement.actionId,kind:'move',accepted:false,x:message.x,y:message.y,reason:message.reason});pending=undefined;pendingAction=undefined;held=undefined;rightPointer=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;
+     const retryTarget=pursuitTarget,retryHarvest=pursuitHarvest;agentObserver.event('action-rollback',{actionId:movement.actionId,kind:'move',accepted:false,x:message.x,y:message.y,reason:message.reason});pending=undefined;pendingAction=undefined;held=undefined;rightPointer=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;
      const entity=self===undefined?undefined:entities.get(self),x=Number.isInteger(message.x)?message.x:movement.fromX,y=Number.isInteger(message.y)?message.y:movement.fromY;
      if(entity){update({...entity,x,y,action:'standing'});classicHud.position(view.map,x,y);minimap.setPosition(x,y);void view.setCenter(x,y);}
-     if(retryTarget!==undefined&&message.reason===28){pursuitRejectedCells.add(`${movement.x},${movement.y}`);pursuitTarget=retryTarget;connection.textContent='目标移动，正在重新接近…';window.setTimeout(()=>{if(pursuitTarget===retryTarget&&!pendingAction)continuePursuit();},350);}
+     if(retryTarget!==undefined&&message.reason===28){pursuitRejectedCells.add(`${movement.x},${movement.y}`);pursuitTarget=retryTarget;pursuitHarvest=retryHarvest;connection.textContent='目标移动，正在重新接近…';window.setTimeout(()=>{if(pursuitTarget===retryTarget&&!pendingAction)continuePursuit();},350);}
      else if(message.reason===28&&socket?.readyState===WebSocket.OPEN){const retry={x:movement.x,y:movement.y,direction:movement.direction,run:movement.run};doorRetry=retry;socket.send(JSON.stringify({type:'openDoor',x:movement.x,y:movement.y}));connection.textContent=`尝试打开门 · ${movement.x}, ${movement.y}`;window.setTimeout(()=>{if(doorRetry===retry&&!pendingAction){doorRetry=undefined;clickDestination=undefined;connection.textContent='该方向暂时无法通行';}},350);}else{clickDestination=undefined;connection.textContent='该方向暂时无法通行';}
     }
    }else if(message.accepted){pendingAction.acknowledged=true;agentObserver.event('action-ack',{actionId:pendingAction.actionId,kind:pendingAction.kind,accepted:true});finishNonMovementAction(performance.now());}else{agentObserver.event('action-rollback',{actionId:pendingAction.actionId,kind:pendingAction.kind,accepted:false,reason:message.reason});pendingAction=undefined;continueMovementIntent();}
@@ -629,13 +631,13 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='error'){
    if(message.actionId!==undefined&&pendingAction?.actionId===message.actionId){
     const failed=pendingAction!;pendingAction=undefined;
-    if(failed.kind==='move'&&pending){const movement=pending;pending=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;const entity=self===undefined?undefined:entities.get(self);if(entity){update({...entity,x:movement.fromX,y:movement.fromY,action:'standing'});classicHud.position(view.map,movement.fromX,movement.fromY);minimap.setPosition(movement.fromX,movement.fromY);void view.setCenter(movement.fromX,movement.fromY);}}
+    if(failed.kind==='move'&&pending){const movement=pending;pending=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;const entity=self===undefined?undefined:entities.get(self);if(entity){update({...entity,x:movement.fromX,y:movement.fromY,action:'standing'});classicHud.position(view.map,movement.fromX,movement.fromY);minimap.setPosition(movement.fromX,movement.fromY);void view.setCenter(movement.fromX,movement.fromY);}}
     else continueMovementIntent();
    }
    selectedMagic=undefined;skillBar.resolve();inventory.rejectPending();equipment.rejectPending();connection.textContent=message.message;appendChat('system',`操作失败：${message.message}`);
   }
  });
-  active.addEventListener('close',()=>{if(socket!==active)return;pending=undefined;pendingAction=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;stopCombat();if(reconnectEnabled&&credentials){scheduleReconnect();}else{document.body.classList.remove('in-world');classicAuth.showLogin();connection.textContent='连接已断开，请重新登录';}});
+  active.addEventListener('close',()=>{if(socket!==active)return;pending=undefined;pendingAction=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;stopCombat();if(reconnectEnabled&&credentials){scheduleReconnect();}else{document.body.classList.remove('in-world');classicAuth.showLogin();connection.textContent='连接已断开，请重新登录';}});
  active.addEventListener('error',()=>{if(socket===active)connection.textContent='无法连接游戏网关';});
 }
 loginForm.addEventListener('submit',event=>{event.preventDefault();connect('login');});
@@ -677,11 +679,11 @@ view.app.canvas.addEventListener('pointerdown',event=>{
  const clicked=view.cellAtScreen(stageX,stageY),clickedX=clicked.x,clickedY=clicked.y;
  const target=[...visuals.entries()].map(([id,visual])=>({entity:entities.get(id),visual})).filter((entry):entry is {entity:Entity;visual:OnlineActor}=>Boolean(entry.entity)&&entry.visual.hitTest(stageX,stageY)).sort((left,right)=>Math.max(Math.abs(left.entity.x-clickedX),Math.abs(left.entity.y-clickedY))-Math.max(Math.abs(right.entity.x-clickedX),Math.abs(right.entity.y-clickedY)))[0]?.entity;
  rightPointer=undefined;
- if(target){clickDestination=undefined;interact(target);return;}
+ if(target){clickDestination=undefined;interact(target,requestsHarvest(event));return;}
  const clickedItem=groundItems.hitTest(stageX,stageY);
  if(clickedItem){clickDestination=undefined;groundItems.requestPickup(clickedItem);return;}
  if(clickedX===entity.x&&clickedY===entity.y){const item=groundItems.at(entity.x,entity.y);if(item){groundItems.requestPickup(item);}return;}
- stopCombat();doorRetry=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;held=undefined;
+ stopCombat();doorRetry=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;held=undefined;
  if(event.button===2){rightPointer={pointerId:event.pointerId,clientX:event.clientX,clientY:event.clientY};try{view.app.canvas.setPointerCapture(event.pointerId);}catch{}continuePointerRun();return;}
  clickDestination={x:clickedX,y:clickedY,run:event.shiftKey};continueClickDestination();
 });
@@ -713,7 +715,7 @@ function cycleAttackMode(){
  socket.send(JSON.stringify({type:'attackMode',mode}));
  connection.textContent='正在切换攻击模式…';
 }
-window.addEventListener('keydown',event=>{if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea'))return;if(event.key==='Tab'){event.preventDefault();if(!event.repeat)minimap.cycle();return;}if(event.ctrlKey&&event.key.toLowerCase()==='h'){event.preventDefault();if(!event.repeat)cycleAttackMode();return;}const classicWindowKey:Record<string,string>={F9:'inventory',F10:'character',F11:'skills'};const windowId=classicWindowKey[event.key];if(windowId){event.preventDefault();if(!event.repeat)toggleClassicWindow(windowId);return;}const functionKey=/^F([1-8])$/.exec(event.key);if(functionKey){event.preventDefault();if(!event.repeat)selectSkillSlot(Number(functionKey[1])-1);return;}const movement=movementInput(event);if(!movement||event.repeat)return;event.preventDefault();rightPointer=undefined;stopCombat();doorRetry=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;held=movement;const actor=self===undefined?undefined:entities.get(self);if(actor)sendMovement(actor,held.dx,held.dy,held.run);});
+window.addEventListener('keydown',event=>{if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea'))return;if(event.key==='Tab'){event.preventDefault();if(!event.repeat)minimap.cycle();return;}if(event.ctrlKey&&event.key.toLowerCase()==='h'){event.preventDefault();if(!event.repeat)cycleAttackMode();return;}const classicWindowKey:Record<string,string>={F9:'inventory',F10:'character',F11:'skills'};const windowId=classicWindowKey[event.key];if(windowId){event.preventDefault();if(!event.repeat)toggleClassicWindow(windowId);return;}const functionKey=/^F([1-8])$/.exec(event.key);if(functionKey){event.preventDefault();if(!event.repeat)selectSkillSlot(Number(functionKey[1])-1);return;}const movement=movementInput(event);if(!movement||event.repeat)return;event.preventDefault();rightPointer=undefined;stopCombat();doorRetry=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;held=movement;const actor=self===undefined?undefined:entities.get(self);if(actor)sendMovement(actor,held.dx,held.dy,held.run);});
 window.addEventListener('keyup',event=>{if(releasesMovement(held,event))held=undefined;});
 window.addEventListener('blur',()=>{held=undefined;rightPointer=undefined;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){held=undefined;rightPointer=undefined;}});
