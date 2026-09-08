@@ -176,6 +176,8 @@ try{
 
  await walkNearTrainer();await waitAndClickTarget('导师');
  await waitFor("window.__mir2Agent?.snapshot().dialogue?.npc?.endsWith('导师')",30000);
+ const dialogueClose=await evaluate("(()=>{const dialog=document.querySelector('#npc-dialog').getBoundingClientRect(),close=document.querySelector('#close-dialogue').getBoundingClientRect();return {offsetX:close.left-dialog.left,offsetY:close.top-dialog.top,width:close.width,height:close.height,dialogWidth:dialog.width,dialogHeight:dialog.height}})()");
+ requireCheck(Math.abs(dialogueClose.offsetX/dialogueClose.dialogWidth-399/416)<.002&&Math.abs(dialogueClose.offsetY/dialogueClose.dialogHeight-1/347)<.002&&Math.abs(dialogueClose.width/dialogueClose.dialogWidth-17/416)<.002,'dialogue close target matches the baked close button',{geometry:dialogueClose});
  await clickDialogue('@equipmentset');
  const equipmentBag=recordStage('equipment-set-received',await waitFor(`(()=>{const s=window.__mir2Agent?.snapshot();return ${JSON.stringify(equipmentNames)}.every(name=>s?.inventory?.items.some(item=>item.name===name))&&s})()`,20000));
  const equipmentIds=equipmentNames.map(name=>equipmentBag.inventory.items.find(item=>item.name===name).makeIndex);

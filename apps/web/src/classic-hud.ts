@@ -175,13 +175,13 @@ export class ClassicHud {
 
  private skinNationalWindow(element:HTMLElement,kind:string){
   const prguse=this.nationalLibraries.get('prguse');
-  const specs:Record<string,{index:number;x:number;y:number;closeX:number;closeY:number}>={
-   character:{index:380,x:272,y:80,closeX:232,closeY:2},
-   inventory:{index:3,x:232,y:165,closeX:308,closeY:204},
-   npc:{index:402,x:192,y:126,closeX:390,closeY:2},
-   shop:{index:402,x:192,y:126,closeX:390,closeY:2},
-   repair:{index:402,x:192,y:126,closeX:390,closeY:2},
-   storage:{index:402,x:192,y:126,closeX:390,closeY:2}
+  const specs:Record<string,{index:number;x:number;y:number;closeX:number;closeY:number;closeWidth:number;closeHeight:number;paintClose?:boolean}>={
+   character:{index:380,x:272,y:80,closeX:240,closeY:0,closeWidth:16,closeHeight:23,paintClose:true},
+   inventory:{index:3,x:232,y:165,closeX:310,closeY:203,closeWidth:16,closeHeight:23},
+   npc:{index:402,x:192,y:126,closeX:385,closeY:-37,closeWidth:17,closeHeight:23},
+   shop:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   repair:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   storage:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23}
   };
   const spec=specs[kind];
   if(!prguse||!spec)return false;
@@ -198,7 +198,7 @@ export class ClassicHud {
    });
   }
   const close=element.querySelector<HTMLButtonElement>('#classic-window-close, [data-window-close], #close-dialogue, .classic-window-close');
-  if(close){clearSkin(close);close.style.left=`${spec.closeX}px`;close.style.top=`${spec.closeY}px`;close.style.width='22px';close.style.height='22px';}
+  if(close)skinNationalClose(close,prguse,spec);
   return true;
  }
 
@@ -312,6 +312,10 @@ async function punchNationalHudChat(main:HTMLElement,prguse:NationalLibrary){
  main.style.backgroundImage=`url(${canvas.toDataURL('image/png')})`;
 }
 function clearSkin(element:HTMLElement){element.style.backgroundImage='none';element.style.backgroundColor='transparent';}
+function skinNationalClose(button:HTMLButtonElement,library:NationalLibrary,spec:{closeX:number;closeY:number;closeWidth:number;closeHeight:number;paintClose?:boolean}){
+ clearSkin(button);button.style.left=`${spec.closeX}px`;button.style.top=`${spec.closeY}px`;button.style.right='auto';button.style.width=`${spec.closeWidth}px`;button.style.height=`${spec.closeHeight}px`;button.style.padding='0';button.style.border='0';button.textContent='';
+ if(spec.paintClose){const frame=uiFrame(library,371);button.style.setProperty('background-image',`url(${nationalUiUrl('prguse',frame)})`,'important');button.style.backgroundRepeat='no-repeat';}
+}
 function skinNationalHudButton(button:HTMLButtonElement,library:NationalLibrary,spec:{index:number;hover:number;pressed:number;x:number;y:number;width:number;height:number;backgroundX:number;backgroundY:number}){
  button.style.left=`${spec.x}px`;button.style.top=`${spec.y}px`;button.style.width=`${spec.width}px`;button.style.height=`${spec.height}px`;
  const paint=(index:number,filter:string)=>{
