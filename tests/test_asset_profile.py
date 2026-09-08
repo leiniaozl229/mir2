@@ -88,6 +88,23 @@ class ActorAssetProfileTests(unittest.TestCase):
                 name,
             )
 
+    def test_viper_valley_guide_does_not_overlap_source_merchants(self):
+        spec = importlib.util.spec_from_file_location(
+            'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        helper = (ROOT / 'scripts/prepare-runtime.py').read_text(encoding='utf-8')
+        match = re.search(r'测试/世界向导 2 (\d+) (\d+) 世界向导', helper)
+        self.assertIsNotNone(match)
+        guide = tuple(map(int, match.groups()))
+        source_merchants = module._filtered_route_definitions(
+            ROOT / 'vendor/mirserver-data/Mir200/Envir/Merchant.txt', 1, {'2'})
+        occupied = {(int(line.split()[2]), int(line.split()[3])) for line in source_merchants}
+        self.assertNotIn(guide, occupied)
+        self.assertGreaterEqual(min(max(abs(guide[0] - x), abs(guide[1] - y)) for x, y in occupied), 5)
+        world = module.ClassicMap(module._source_map_paths()['2'].read_bytes())
+        self.assertFalse(world.blocked(*guide))
+
     def test_classic_route_imports_all_source_market_definitions(self):
         spec = importlib.util.spec_from_file_location(
             'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')

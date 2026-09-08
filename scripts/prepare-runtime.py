@@ -749,7 +749,7 @@ def main():
             fixtures["Merchant.txt"] += "测试/世界向导 0 326 270 世界向导 0 5 0\n"
             fixtures["Merchant.txt"] += "测试/扩展向导 0 295 610 扩展路线向导 0 5 0\n"
             fixtures["Merchant.txt"] += "测试/世界向导 1 235 305 世界向导 0 5 0\n"
-            fixtures["Merchant.txt"] += "测试/世界向导 2 505 479 世界向导 0 5 0\n"
+            fixtures["Merchant.txt"] += "测试/世界向导 2 507 468 世界向导 0 5 0\n"
             fixtures["Merchant.txt"] += "测试/世界向导 3 327 327 世界向导 0 5 0\n"
             fixtures["Merchant.txt"] += "测试/世界向导 D021 51 50 沃玛向导 0 5 0\n"
             fixtures["Merchant.txt"] += "测试/世界向导 D022 339 356 沃玛一层向导 0 5 0\n"
