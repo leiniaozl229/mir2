@@ -450,6 +450,30 @@ def schema_only(text):
     return text
 
 
+def _localize_string_config(text):
+    replacements = {
+        "StartChangeAttackModeHelp": "欢迎进入热血传奇本地测试服",
+        "StartNoticeMsg": "本服用于本地功能验证，数据可能随测试重置",
+        "WebSite": "localhost",
+        "BbsSite": "localhost",
+        "ClientDownload": "localhost",
+        "QQ": "0",
+    }
+    for key, value in replacements.items():
+        text = re.sub(rf"(?m)^{re.escape(key)}=.*$", f"{key}={value}", text)
+    return text
+
+
+def _write_local_notices():
+    notice_dir = SERVER / "Mir200/Notice"
+    notice_dir.mkdir(parents=True, exist_ok=True)
+    (notice_dir / "Notice.txt").write_bytes(
+        "欢迎进入热血传奇本地测试服\r\n"
+        "当前环境用于功能验证，角色和世界数据可能随测试重置。\r\n".encode("gb18030"))
+    (notice_dir / "linenotice.txt").write_bytes(
+        "[公告]本地测试环境已启动，请通过游戏内问题记录反馈异常。\r\n".encode("gb18030"))
+
+
 _expand_classic_routes(CLASSIC_EXTRA_ROUTES)
 
 

@@ -12,6 +12,26 @@ from monster_visual_audit import audit as audit_monster_visuals
 
 
 class ActorAssetProfileTests(unittest.TestCase):
+    def test_runtime_notices_and_login_messages_are_localized(self):
+        spec = importlib.util.spec_from_file_location(
+            'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        source = '\n'.join([
+            'StartChangeAttackModeHelp=www.old.example',
+            'StartNoticeMsg=客服QQ：123456',
+            'WebSite=http://old.example',
+            'BbsSite=www.old.example',
+            'ClientDownload=https://old.example',
+            'QQ=123456',
+        ])
+        localized = module._localize_string_config(source)
+        self.assertIn('StartNoticeMsg=本服用于本地功能验证', localized)
+        self.assertNotRegex(localized.lower(), r'https?://|www\.|qq：123456')
+        notice_writer = (ROOT / 'scripts/prepare-runtime.py').read_text(encoding='utf-8')
+        self.assertIn('_write_local_notices()', notice_writer)
+        self.assertIn('write_bytes(', notice_writer)
+
     def test_profile_covers_every_supported_source_map(self):
         spec = importlib.util.spec_from_file_location(
             'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')

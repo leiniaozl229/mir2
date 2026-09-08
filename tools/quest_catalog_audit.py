@@ -86,11 +86,22 @@ def _quest_trigger_scripts(envir: Path, quest_id: str) -> list[str]:
     return matches
 
 
-def audit(root: Path = ROOT, runtime: Path | None = None) -> dict:
+def _runtime_mode(root: Path, runtime_envir: Path, requested: str) -> str:
+    if requested != "auto":
+        return requested
+    marker = root / ".runtime/p0-world.json"
+    try:
+        return "classic-route" if json.loads(marker.read_text(encoding="utf-8")).get("classicRoute") else "p0"
+    except (OSError, ValueError):
+        return "classic-route" if parse_map_quests(runtime_envir / "MapQuest.txt") else "p0"
+
+
+def audit(root: Path = ROOT, runtime: Path | None = None, runtime_mode: str = "auto") -> dict:
     source = root / "vendor/mirserver-data/Mir200/Envir"
     runtime_envir = runtime or (root / ".runtime/server/Mir200/Envir")
     source_rows = parse_map_quests(source / "MapQuest.txt")
     runtime_rows = parse_map_quests(runtime_envir / "MapQuest.txt")
+    runtime_mode = _runtime_mode(root, runtime_envir, runtime_mode)
     source_maps = _map_ids(source)
     runtime_maps = _map_ids(runtime_envir)
     source_bindings = _quest_bindings(source)
@@ -116,10 +127,21 @@ def audit(root: Path = ROOT, runtime: Path | None = None) -> dict:
     missing_runtime_triggers = sorted(
         quest_id for quest_id in quest_ids if not runtime_triggers.get(quest_id)
     )
+    source_quest_ids = {row["map"] for row in source_rows if "map" in row}
+    runtime_quest_ids = {row["map"] for row in runtime_rows if "map" in row}
+    missing_runtime_entries = sorted(source_quest_ids - runtime_quest_ids) if runtime_mode == "classic-route" else []
+    skipped_runtime_entries = sorted(source_quest_ids) if runtime_mode == "p0" else []
+    source_errors = malformed or missing_source_maps or missing_source_scripts or missing_source_bindings
+    runtime_errors = (missing_runtime_maps or missing_runtime_scripts or missing_runtime_bindings
+                      or missing_runtime_triggers or missing_runtime_entries)
     return {
-        "ok": not (malformed or missing_source_maps or missing_runtime_maps or missing_source_scripts or missing_runtime_scripts or missing_source_bindings or missing_runtime_bindings or missing_runtime_triggers),
+        "ok": not source_errors and (runtime_mode == "p0" or not runtime_errors),
+        "runtimeMode": runtime_mode,
         "sourceEntries": len(source_rows),
         "runtimeEntries": len(runtime_rows),
+        "expectedRuntimeEntries": 0 if runtime_mode == "p0" else len(source_rows),
+        "skippedRuntimeEntries": skipped_runtime_entries,
+        "missingRuntimeEntries": missing_runtime_entries,
         "sourceMaps": sorted(source_maps),
         "runtimeMaps": sorted(runtime_maps),
         "missingSourceMaps": missing_source_maps,
@@ -139,8 +161,10 @@ def audit(root: Path = ROOT, runtime: Path | None = None) -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--json", nargs="?", const="-", help="write JSON report to a file, or stdout")
+    parser.add_argument("--runtime-mode", choices=("auto", "p0", "classic-route"), default="auto",
+                        help="validate the selected P0 or classic-route runtime contract")
     args = parser.parse_args()
-    report = audit()
+    report = audit(runtime_mode=args.runtime_mode)
     payload = json.dumps(report, ensure_ascii=False, indent=2)
     if args.json and args.json != "-":
         Path(args.json).parent.mkdir(parents=True, exist_ok=True)

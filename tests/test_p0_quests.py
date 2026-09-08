@@ -13,9 +13,19 @@ class P0QuestContentTests(unittest.TestCase):
         report = audit()
         self.assertTrue(report["ok"], report)
         self.assertEqual(report["sourceEntries"], 1)
+        self.assertEqual(report["runtimeMode"], "p0")
+        self.assertEqual(report["expectedRuntimeEntries"], 0)
+        self.assertEqual(report["skippedRuntimeEntries"], ["Q001"])
+        self.assertEqual(report["missingRuntimeEntries"], [])
         self.assertEqual(report["entries"][0]["map"], "Q001")
         self.assertEqual(report["entries"][0]["npc"], "Q002")
         self.assertEqual(report["sourceTriggerScripts"]["Q001"], ["任务NPC/老人-1.txt"])
+
+    def test_classic_route_reports_source_quest_missing_from_runtime(self):
+        report = audit(runtime_mode="classic-route")
+        self.assertFalse(report["ok"], report)
+        self.assertEqual(report["expectedRuntimeEntries"], 1)
+        self.assertEqual(report["missingRuntimeEntries"], ["Q001"])
 
     def test_quest_scripts_keep_persistent_accept_and_complete_flags(self):
         specs = {
