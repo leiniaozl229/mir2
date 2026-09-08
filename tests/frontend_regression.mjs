@@ -36,6 +36,14 @@ if(movementContext.exports.releasesMovement(held,{code:'ShiftLeft',key:'Shift'})
 if(!movementContext.exports.releasesMovement(held,{code:'KeyD',key:'d'}))throw new Error('releasing D after Shift leaves movement held');
 console.log('PASS frontend movement release uses a modifier-stable key code');
 
+const movementVisualSource=fs.readFileSync(path.join(root,'apps/web/src/movement-visual.ts'),'utf8');
+const movementVisualContext={exports:{}};
+vm.createContext(movementVisualContext);
+vm.runInContext(ts.transpileModule(movementVisualSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,movementVisualContext);
+if(movementVisualContext.exports.visualDirection(0)!==4||movementVisualContext.exports.visualDirection(2)!==6)throw new Error('server movement direction is not mapped to classic actor rows');
+if(movementVisualContext.exports.MOVEMENT_DURATION_MS!==600)throw new Error('movement interpolation differs from the OpenMir2 interval');
+console.log('PASS frontend movement visuals follow OpenMir2 direction and timing');
+
 const actorSource=fs.readFileSync(path.join(root,'apps/web/src/online-actors.ts'),'utf8');
 const hitBody=actorSource.match(/export function actorHitTest[\s\S]*?\n\}/)?.[0];
 if(!hitBody)throw new Error('actor hit-test helper missing');

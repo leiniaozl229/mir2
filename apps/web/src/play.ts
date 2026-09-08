@@ -15,6 +15,7 @@ import {ClassicHud} from './classic-hud';
 import {ClassicAuth,type SelectCharacter} from './classic-auth';
 import {ClassicStage} from './classic-stage';
 import {movementInput,releasesMovement,type HeldMovement} from './movement-input';
+import {MOVEMENT_DURATION_MS} from './movement-visual';
 const connection=document.querySelector<HTMLElement>('#connection')!;
 const worldStatus=document.querySelector<HTMLOutputElement>('#world-status')!;
 new MutationObserver(()=>worldStatus.textContent=connection.textContent).observe(connection,{childList:true,characterData:true,subtree:true});
@@ -531,7 +532,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='systemMessage'){combatStatus.textContent=message.text;appendChat('system',message.text);if(message.castleWar){castleWarStatus=message.castleWar;renderGuild();}}
   else if(message.type==='entityRemoved'){if(pursuitTarget===message.id)pursuitTarget=undefined;if(combatTarget===message.id)stopCombat();entities.delete(message.id);visuals.get(message.id)?.destroy();visuals.delete(message.id);renderTargets();}
   else if(message.type==='legacy'&&pending){
-   if(message.id===-1&&message.status?.startsWith('+GD/')){const accepted=pending,entity=self===undefined?undefined:entities.get(self);if(entity&&accepted){if(entity.x!==accepted.x||entity.y!==accepted.y)update({...entity,...accepted,action:accepted.run?'running':'walking'});classicHud.position(view.map,accepted.x,accepted.y);view.setMarker(accepted.x,accepted.y);view.moveCenter(accepted.x,accepted.y,accepted.run?400:600);audio.play('movement',.22);connection.textContent=`已连接 · ${entity.name} · ${accepted.x}, ${accepted.y}`;}pending=undefined;continueHeld();continuePointerRun();continueClickDestination();continuePursuit();continueGroundPursuit();}
+   if(message.id===-1&&message.status?.startsWith('+GD/')){const accepted=pending,entity=self===undefined?undefined:entities.get(self);if(entity&&accepted){if(entity.x!==accepted.x||entity.y!==accepted.y)update({...entity,...accepted,action:accepted.run?'running':'walking'});classicHud.position(view.map,accepted.x,accepted.y);view.setMarker(accepted.x,accepted.y);view.moveCenter(accepted.x,accepted.y,MOVEMENT_DURATION_MS);audio.play('movement',.22);connection.textContent=`已连接 · ${entity.name} · ${accepted.x}, ${accepted.y}`;}pending=undefined;continueHeld();continuePointerRun();continueClickDestination();continuePursuit();continueGroundPursuit();}
    else if(message.id===28){const blocked=pending,entity=self===undefined?undefined:entities.get(self);pending=undefined;held=undefined;rightPointer=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;if(entity&&Number.isInteger(message.param)&&Number.isInteger(message.tag)){update({...entity,x:message.param,y:message.tag,action:'standing'});classicHud.position(view.map,message.param,message.tag);view.setMarker(message.param,message.tag);void view.setCenter(message.param,message.tag);}if(blocked&&socket?.readyState===WebSocket.OPEN){doorRetry=blocked;socket.send(JSON.stringify({type:'openDoor',x:blocked.x,y:blocked.y}));connection.textContent=`尝试打开门 · ${blocked.x}, ${blocked.y}`;}else connection.textContent='该方向暂时无法通行';}
   }
   else if(message.type==='inventory')inventory.replace(message.items);

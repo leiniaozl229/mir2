@@ -1,5 +1,6 @@
 import {Assets,Container,Graphics,Sprite,Text,Texture} from 'pixi.js';
 import {resolveMonsterVisual} from './monster-visuals';
+import {MOVEMENT_DURATION_MS,visualDirection} from './movement-visual';
 export type Entity={id:number;x:number;y:number;direction:number;feature:number;name:string;self:boolean;action:string;dead?:boolean;hp?:number;maxHp?:number;status?:number;hitSpeed?:number;nameColor?:number;kind?:string};
 export type PlayerLayers={bodyName:string;offset:number;hairName?:string;weaponName?:string;weaponOffset:number};
 
@@ -47,7 +48,7 @@ export class OnlineActor {
   const toX=entity.x*48,toY=entity.y*32,moving=(entity.action==='walking'||entity.action==='running')&&(this.entity.x!==entity.x||this.entity.y!==entity.y),sameDestination=this.movement?.toX===toX&&this.movement?.toY===toY;
   // Keep interpolation aligned with the server cadence so consecutive
   // authoritative steps splice without a visible rubber-band.
-  if(moving){if(!sameDestination)this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start:performance.now(),duration:entity.action==='running'?400:600};}else if(!sameDestination){this.movement=undefined;this.container.position.set(toX,toY);}
+  if(moving){if(!sameDestination)this.movement={fromX:this.container.x,fromY:this.container.y,toX,toY,start:performance.now(),duration:MOVEMENT_DURATION_MS};}else if(!sameDestination){this.movement=undefined;this.container.position.set(toX,toY);}
   this.entity=entity;this.container.zIndex=entity.y*10000+entity.x+.5;this.label.text=entity.name;this.label.style.fill=nameFill(entity.nameColor);this.labelOffsetY=0;this.applyLabelOffset();this.applyCursor();this.drawHealth();
   const status=(entity.status??0)>>>0;
   this.container.alpha=(status&0x00800000)!==0?.38:1;
@@ -70,12 +71,12 @@ export class OnlineActor {
     this.marker.circle(24,-22,4).fill(0x241d18);
    }
   }
-  const action=entity.action==='dying'?'dying':entity.dead?'dead':entity.action,key=`${bodyName}/${hairName}/${action}/${entity.direction}/${offset}`;
+  const action=entity.action==='dying'?'dying':entity.dead?'dead':entity.action,poseDirection=visualDirection(entity.direction),key=`${bodyName}/${hairName}/${action}/${poseDirection}/${offset}`;
   const visualKey=`${key}/${armourShapeKey(dress)}/${weaponName}/${weaponOffset}/${staticIndex}`;
   if(visualKey===this.key)return;this.key=visualKey;const generation=++this.sequence;this.frames=[];this.weaponFrames=[];this.hairFrames=[];this.body.texture=this.weapon.texture=this.hair.texture=Texture.EMPTY;
   if(!bodyName)return;
-  this.weapon.zIndex=[0,5,6,7].includes(entity.direction)?-1:2;
-  void Promise.all([staticIndex===undefined?poses(bodyName,action,entity.direction,offset):staticPose(bodyName,staticIndex),weaponName?poses(weaponName,action,entity.direction,weaponOffset):Promise.resolve(undefined),hairName?poses(hairName,action,entity.direction,offset):Promise.resolve(undefined)]).then(([body,heldWeapon,hair])=>{
+  this.weapon.zIndex=[0,5,6,7].includes(poseDirection)?-1:2;
+  void Promise.all([staticIndex===undefined?poses(bodyName,action,poseDirection,offset):staticPose(bodyName,staticIndex),weaponName?poses(weaponName,action,poseDirection,weaponOffset):Promise.resolve(undefined),hairName?poses(hairName,action,poseDirection,offset):Promise.resolve(undefined)]).then(([body,heldWeapon,hair])=>{
    if(generation!==this.sequence)return;this.frames=body.frames;this.weaponFrames=heldWeapon?.frames??[];this.hairFrames=hair?.frames??[];this.interval=body.interval;this.start=performance.now();this.labelBaseY=Math.min(...body.frames.map(frame=>frame.y))-4;this.applyLabelOffset();if(staticIndex!==undefined)this.marker.clear();this.drawHealth();
   }).catch(()=>{if(generation===this.sequence)this.label.text=`${entity.name} · 素材待补齐`;});
  }
