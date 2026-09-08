@@ -400,8 +400,15 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
         await Send(new { type = "characterCreationResult", accepted = result.Id == 521, reason = result.Id == 521 ? 0 : result.Recog, name }, cancellation);
         if (result.Id == 521)
         {
-            await selection.Send(100, cancellation, $"{account}/{ticket}");
-            await Send(CharacterList(await selection.Expect(520, cancellation)), cancellation);
+            object? refreshed = null;
+            for (int attempt = 0; attempt < 5; attempt++)
+            {
+                if (attempt > 0) await Task.Delay(TimeSpan.FromMilliseconds(150 * attempt), cancellation);
+                await selection.Send(100, cancellation, $"{account}/{ticket}");
+                refreshed = CharacterList(await selection.Expect(520, cancellation));
+                if (characters.Contains(name)) break;
+            }
+            await Send(refreshed!, cancellation);
         }
     }
 
