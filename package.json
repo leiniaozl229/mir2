@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "scripts": {"dev": "vite --config apps/web/vite.config.ts", "build": "tsc --noEmit && vite build --config apps/web/vite.config.ts", "test:web": "node tests/frontend_regression.mjs"},
+  "scripts": {"dev": "vite --config apps/web/vite.config.ts", "build": "tsc --noEmit && vite build --config apps/web/vite.config.ts", "catalog:build": "python3 tools/resource_catalog.py build", "catalog:validate": "python3 tools/resource_catalog.py validate", "test:resources": "node tools/resource_manager_smoke.mjs", "test:web": "node tests/frontend_regression.mjs"},
   "dependencies": {"pixi.js": "8.13.2"},
   "devDependencies": {"typescript": "5.9.3", "vite": "7.1.5"}
 }

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>传奇 2 · 游戏资源管理器</title></head>
+<body class="resource-page">
+<main>
+  <header class="resource-header">
+    <div><span class="eyebrow">CLASSIC 1.76 · RESOURCE CATALOG</span><h1>游戏资源管理器</h1><p>从服务端规则追到客户端素材，集中查看物品、技能、怪物、掉落、刷新地图与资源完整度。</p></div>
+    <div class="header-actions"><a href="/play.html">进入游戏</a><button id="open-template" type="button">新增资源模板</button></div>
+  </header>
+  <section id="resource-summary" class="resource-summary" aria-label="资源统计"></section>
+  <section class="resource-workbench">
+    <nav id="resource-tabs" class="resource-tabs" aria-label="资源类型"></nav>
+    <section class="resource-browser">
+      <header class="resource-toolbar">
+        <label class="resource-search"><span>搜索</span><input id="resource-search" type="search" autocomplete="off" placeholder="名称、编号、地图或属性"></label>
+        <label><span>分类</span><select id="resource-filter"><option value="">全部</option></select></label>
+        <label class="check-filter"><input id="baseline-only" type="checkbox"> 1.76 基线</label>
+        <label class="check-filter"><input id="missing-only" type="checkbox"> 缺失素材/关联</label>
+      </header>
+      <div class="resource-columns">
+        <section class="resource-list-pane"><div id="resource-list-meta" class="resource-list-meta"></div><div id="resource-list" class="resource-list"></div><nav id="resource-pages" class="resource-pages" aria-label="分页"></nav></section>
+        <aside id="resource-detail" class="resource-detail"><div class="empty-detail"><strong>选择一项资源</strong><p>右侧会显示机制属性、素材、掉落来源和地图分布。</p></div></aside>
+      </div>
+    </section>
+  </section>
+</main>
+<dialog id="resource-template">
+  <form method="dialog" class="template-dialog">
+    <header><div><span class="eyebrow">SCAFFOLD</span><h2>新增资源模板</h2></div><button value="cancel" aria-label="关闭">×</button></header>
+    <div class="template-fields"><label>类型<select id="template-kind"><option value="item">装备 / 物品</option><option value="skill">技能</option></select></label><label>名称<input id="template-name" value="新装备" maxlength="20"></label><label>职业<select id="template-job"><option value="0">战士</option><option value="1">法师</option><option value="2">道士</option></select></label><label>素材索引 / MagicId<input id="template-index" type="number" value="0" min="0"></label></div>
+    <p class="template-note">模板会列出 SQL、规则文件和素材清单。写入前运行资源目录校验，重复编号与缺图会直接显示在管理器中。</p>
+    <textarea id="template-output" rows="14" readonly></textarea>
+    <footer><button id="copy-template" type="button">复制模板</button><button value="cancel">完成</button></footer>
+  </form>
+</dialog>
+<script type="module" src="/src/resource-manager.ts"></script>
+</body></html>
