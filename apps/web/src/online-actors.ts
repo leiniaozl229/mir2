@@ -89,6 +89,7 @@ export class OnlineActor {
   const layers=playerLayers(entity.feature);
   if(layers){
    bodyName=layers.bodyName;offset=layers.offset;hairName=layers.hairName;weaponName=layers.weaponName;weaponOffset=layers.weaponOffset;
+   if(!this.frames.length)this.marker.circle(24,-22,11).fill({color:0xbda36a,alpha:.85}).stroke({color:0xf4df9b,width:2});
    if(entity.self)void preloadPlayerLocomotion(entity.feature);
   }
   else if(race===50){bodyName='NPC00';staticIndex=entity.feature>>>16;}
@@ -106,7 +107,7 @@ export class OnlineActor {
   if(!bodyName)return;
   this.weapon.zIndex=[0,5,6,7].includes(poseDirection)?-1:2;
   void Promise.all([staticIndex===undefined?poses(bodyName,action,poseDirection,offset):staticPose(bodyName,staticIndex),weaponName?poses(weaponName,action,poseDirection,weaponOffset):Promise.resolve(undefined),hairName?poses(hairName,action,poseDirection,offset):Promise.resolve(undefined)]).then(([body,heldWeapon,hair])=>{
-   if(generation!==this.sequence)return;this.frames=body.frames;this.weaponFrames=heldWeapon?.frames??[];this.hairFrames=hair?.frames??[];this.interval=body.interval;this.start=this.movement?.start??performance.now();this.labelBaseY=Math.min(...body.frames.map(frame=>frame.y))-4;this.applyLabelOffset();if(staticIndex!==undefined)this.marker.clear();this.drawHealth();
+   if(generation!==this.sequence)return;this.frames=body.frames;this.weaponFrames=heldWeapon?.frames??[];this.hairFrames=hair?.frames??[];this.interval=body.interval;this.start=this.movement?.start??performance.now();this.labelBaseY=Math.min(...body.frames.map(frame=>frame.y))-4;this.applyLabelOffset();if(layers||staticIndex!==undefined)this.marker.clear();this.drawHealth();
   }).catch(()=>{if(generation===this.sequence)this.label.text=`${entity.name} · 素材待补齐`;});
  }
  tick(time:number){
@@ -130,6 +131,7 @@ export class OnlineActor {
  }
  setLabelOffset(offset:number){if(offset===this.labelOffsetY)return;this.labelOffsetY=offset;this.applyLabelOffset();this.drawHealth();}
  labelBounds(){return this.label.getBounds();}
+ debugState(){return {pixel:{x:this.container.x,y:this.container.y},movement:this.movement?{...this.movement}:undefined,queuedMovements:this.movementQueue.length,action:this.entity.action,direction:this.entity.direction,framesReady:this.frames.length>0,poseKey:this.key};}
  hitTest(x:number,y:number){return actorHitTest(this.entity.self,this.container.getBounds(),x,y);}
  private applyLabelOffset(){this.label.y=this.labelBaseY+this.labelOffsetY;}
  private applyCursor(){

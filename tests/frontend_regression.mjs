@@ -93,8 +93,22 @@ console.log('PASS national character assets redraw existing slots');
 
 if(!authSource.includes("paintNationalButton(selectSprite,nationalPrguse"))throw new Error('national character slots mix fallback frame metadata with national images');
 console.log('PASS national character slots use matching frame metadata');
+if(!authSource.includes('nationalCreateJobs.find')||!authSource.includes('nationalCreateSexes.find')||authSource.includes('paintNationalButton(button,national,this.job===spec.job?spec.active:spec.index'))throw new Error('national character creation repaints with unavailable legacy frame indexes');
+console.log('PASS national character creation keeps its own frame index space');
 
 const actorsPage=fs.readFileSync(path.join(root,'apps/web/actors.html'),'utf8');
 const actorsSource=fs.readFileSync(path.join(root,'apps/web/src/actors.ts'),'utf8');
 if(!actorsPage.includes('<option value="running">跑步</option>')||!actorsSource.includes("running:{start:80,count:6")||!actorsSource.includes("running:'2'")||!actorsSource.includes('visualDirection(direction)'))throw new Error('actor validation page cannot inspect the corrected running rows and direction mapping');
 console.log('PASS actor validation page exposes the six-frame running rows');
+if(!onlineActorSource.includes('if(!this.frames.length)this.marker.circle')||!onlineActorSource.includes('if(layers||staticIndex!==undefined)this.marker.clear()'))throw new Error('player has no visible fallback while its initial pose loads');
+console.log('PASS player remains visible while its initial pose loads');
+
+const observerSource=fs.readFileSync(path.join(root,'apps/web/src/agent-observer.ts'),'utf8');
+const observerContext={exports:{},URL,structuredClone};
+vm.createContext(observerContext);
+vm.runInContext(ts.transpileModule(observerSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,observerContext);
+let now=0;const observer=new observerContext.exports.AgentObserver(true,()=>++now,2),debugTarget={};
+observer.attach(debugTarget,()=>({ready:true}));observer.event('first',{value:1});observer.event('second',{value:2});
+if(!observerContext.exports.agentObservationEnabled('http://localhost/play.html?agent=1')||observerContext.exports.agentObservationEnabled('http://localhost/play.html')||debugTarget.__mir2Agent.version!==1||debugTarget.__mir2Agent.events().length!==2||debugTarget.__mir2Agent.snapshot().ready!==true)throw new Error('agent observer is unavailable, unbounded or enabled outside explicit debug mode');
+debugTarget.__mir2Agent.clear();if(debugTarget.__mir2Agent.events().length)throw new Error('agent observer timeline cannot be reset between scenarios');
+console.log('PASS agent observer is explicit, bounded and resettable');

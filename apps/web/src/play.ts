@@ -1,5 +1,5 @@
 import {createMapView} from './map-view';
-import {OnlineActor,type Entity} from './online-actors';
+import {OnlineActor,preloadPlayerLocomotion,type Entity} from './online-actors';
 import './style.css';
 import {EquipmentView,InventoryView,type InventoryItem} from './inventory';
 import {GroundItems,type GroundItem} from './ground-items';
@@ -16,6 +16,7 @@ import {ClassicAuth,type SelectCharacter} from './classic-auth';
 import {ClassicStage} from './classic-stage';
 import {movementInput,releasesMovement,screenDirection,type HeldMovement} from './movement-input';
 import {DIRECTIONS as directions,MOVEMENT_DURATION_MS,directionIndex,findGridPath,movementCanFinish,type MovementStep} from './movement-model';
+import {AgentObserver,agentObservationEnabled,type AgentDebugApi} from './agent-observer';
 const connection=document.querySelector<HTMLElement>('#connection')!;
 const worldStatus=document.querySelector<HTMLOutputElement>('#world-status')!;
 new MutationObserver(()=>worldStatus.textContent=connection.textContent).observe(connection,{childList:true,characterData:true,subtree:true});
@@ -256,11 +257,33 @@ let socket:WebSocket|undefined,self:number|undefined,lastSequence=0,mapGeneratio
 let mapReady:Promise<void>=Promise.resolve();
 type Credentials={account:string;password:string};
 let credentials:Credentials|undefined,selectedCharacter:string|undefined;
+const agentObserver=new AgentObserver(agentObservationEnabled(location.href));
+function agentSnapshot(){
+ const entity=self===undefined?undefined:entities.get(self),visual=self===undefined?undefined:visuals.get(self),visualState=visual?.debugState();
+ const occupied=new Set([...entities.values()].filter(value=>!value.self&&!value.dead).map(value=>`${value.x},${value.y}`));
+ const directionsAvailable=entity?directions.map(([dx,dy],direction)=>{
+  let clearSteps=0;
+  for(let step=1;step<=4;step++){const x=entity.x+dx*step,y=entity.y+dy*step;if(view.isWalkable(x,y)!==true||occupied.has(`${x},${y}`))break;clearSteps=step;}
+  return {direction,dx,dy,clearSteps};
+ }):[];
+ return {
+  now:performance.now(),visibility:document.visibilityState,hasFocus:document.hasFocus(),
+  inWorld:document.body.classList.contains('in-world'),authScene:document.querySelector<HTMLElement>('#auth-overlay')?.dataset.authScene,
+  connection:connection.textContent,map:currentMap,mapGeneration,lastSequence,worldReady,
+  self:entity?{id:entity.id,name:entity.name,x:entity.x,y:entity.y,direction:entity.direction,action:entity.action,dead:Boolean(entity.dead),hp:entity.hp,maxHp:entity.maxHp}:undefined,
+  confirmedCell:pending?{x:pending.acknowledged?pending.x:pending.fromX,y:pending.acknowledged?pending.y:pending.fromY}:{x:entity?.x,y:entity?.y},
+  render:visualState?{...visualState,grid:{x:visualState.pixel.x/48,y:visualState.pixel.y/32},screen:{x:visualState.pixel.x+view.app.stage.position.x,y:visualState.pixel.y+view.app.stage.position.y}}:undefined,
+  camera:{x:view.app.stage.position.x,y:view.app.stage.position.y},pending:pending?{...pending}:undefined,pendingAction:pendingAction?{...pendingAction}:undefined,
+  intentions:{held:held?{...held}:undefined,rightPointer:Boolean(rightPointer),clickDestination:clickDestination?{...clickDestination}:undefined,pursuitTarget,pursuitGroundItem,combatTarget},
+  directions:directionsAvailable,entityCount:entities.size,
+ };
+}
+agentObserver.attach(window as Window&{__mir2Agent?:AgentDebugApi},agentSnapshot);
 function appendChat(channel:string,text:string){const line=document.createElement('li');line.dataset.channel=channel;const labels:Record<string,string>={local:'附近',group:'组队',shout:'喊话',whisper:'私聊',guild:'行会',system:'系统'};line.textContent=`[${labels[channel]??channel}] ${text}`;chatLog.append(line);while(chatLog.children.length>100)chatLog.firstElementChild?.remove();chatLog.scrollTop=chatLog.scrollHeight;}
 function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;pendingAction=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;initialSelfPending=true;pursuitTarget=undefined;pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];castleWarStatus=undefined;dialogueNpcId=undefined;classicWindow.hidden=true;dockChat();characterWindow.hidden=true;inventoryWindow.hidden=true;renderGroup();renderAttackMode();renderGuild();clearTrade();if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();equipment.clear();paperdoll.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}dialogueElement.hidden=true;revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();}
 function update(entity:Entity,movementStart?:number){entities.set(entity.id,entity);let visual=visuals.get(entity.id);if(!visual){visual=new OnlineActor(entity,interact);visuals.set(entity.id,visual);view.depth.addChild(visual.container);}visual.update(entity,movementStart);if(entity.self)paperdoll.setFeature(entity.feature);renderTargets();}
 function createAction(kind:'move'|'attack'|'spell',startedAt=performance.now(),duration=MOVEMENT_DURATION_MS){
- const action={actionId:nextActionId++,kind,startedAt,duration,acknowledged:false};pendingAction=action;return action;
+ const action={actionId:nextActionId++,kind,startedAt,duration,acknowledged:false};pendingAction=action;agentObserver.event('action-start',{...action});return action;
 }
 function overlap(left:{x:number;y:number;width:number;height:number},right:{x:number;y:number;width:number;height:number}){return left.x<right.x+right.width&&left.x+left.width>right.x&&left.y<right.y+right.height&&left.y+left.height>right.y;}
 function layoutActorLabels(){
@@ -296,6 +319,7 @@ function sendMovement(actor:Entity,dx:number,dy:number,run=false,distanceOverrid
  if(actor.dead||pendingAction||socket?.readyState!==WebSocket.OPEN)return false;const direction=directionIndex(dx,dy);if(direction<0)return false;
  const distance=distanceOverride??(run?2:1),startedAt=performance.now(),action=createAction('move',startedAt);
  pending={...action,fromX:actor.x,fromY:actor.y,x:actor.x+dx*distance,y:actor.y+dy*distance,direction,run,startedAt,acknowledged:false};
+ agentObserver.event('movement-start',{...pending});
  update({...actor,x:pending.x,y:pending.y,direction,action:run?'running':'walking'},startedAt);
  view.moveCenter(pending.x,pending.y,MOVEMENT_DURATION_MS,startedAt);
  socket.send(JSON.stringify({type:'move',mapGeneration,...pending}));return true;
@@ -345,13 +369,13 @@ function continueGroundPursuit(){
 function continueMovementIntent(){continueHeld();continuePointerRun();continueClickDestination();continuePursuit();continueGroundPursuit();}
 function finishMovement(time:number){
  if(!pending||!movementCanFinish(pending,time))return;
- const completed=pending;pending=undefined;if(pendingAction?.actionId===completed.actionId)pendingAction=undefined;
+ const completed=pending;pending=undefined;if(pendingAction?.actionId===completed.actionId)pendingAction=undefined;agentObserver.event('action-finish',{actionId:completed.actionId,kind:'move',x:completed.x,y:completed.y,elapsedMs:time-completed.startedAt});
  const actor=self===undefined?undefined:entities.get(self);if(actor)update({...actor,action:'standing'});
  continueMovementIntent();
 }
 function finishNonMovementAction(time:number){
  if(!pendingAction||pendingAction.kind==='move'||!pendingAction.acknowledged||time<pendingAction.startedAt+pendingAction.duration)return;
- pendingAction=undefined;continueMovementIntent();
+ const completed=pendingAction;pendingAction=undefined;agentObserver.event('action-finish',{actionId:completed.actionId,kind:completed.kind,elapsedMs:time-completed.startedAt});continueMovementIntent();
 }
 function stopCombat(){combatTarget=undefined;if(combatTimer!==undefined){clearTimeout(combatTimer);combatTimer=undefined;}}
 function scheduleCombat(){if(combatTimer===undefined)combatTimer=window.setTimeout(()=>{combatTimer=undefined;continueCombat();},620);}
@@ -400,6 +424,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   if(socket!==active)return;const envelope=JSON.parse(event.data),message=envelope.message;
   if(envelope.sequence<=lastSequence)return;lastSequence=envelope.sequence;
   if(envelope.mapGeneration<mapGeneration)return;
+  agentObserver.event('gateway-in',{sequence:envelope.sequence,mapGeneration:envelope.mapGeneration,type:message.type,actionId:message.actionId,kind:message.kind,accepted:message.accepted,x:message.x,y:message.y,direction:message.direction,reason:message.reason,id:message.id,self:message.self,action:message.action,map:message.map});
   if(message.type==='connected'){active.send(JSON.stringify({type:intent,account,password}));document.querySelector<HTMLInputElement>('#password')!.value='';connection.textContent=intent==='register'?'正在创建账号…':'正在登录…';}
   else if(message.type==='registrationResult'){
    if(message.accepted){connection.textContent='账号创建成功，正在登录…';active.send(JSON.stringify({type:'login',account,password}));}
@@ -408,6 +433,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   else if(message.type==='characters'){
    reconnectAttempts=0;
    const list=message.characters as SelectCharacter[];
+   for(const candidate of list)void preloadPlayerLocomotion(((candidate.sex&1)<<24)|((candidate.hair??0)<<16));
    const enter=(name:string)=>{selectedCharacter=name;loadQuest();active.send(JSON.stringify({type:'selectCharacter',name}));connection.textContent='正在进入比奇…';};
    const resumed=resumeCharacter===undefined?undefined:list.find(candidate=>candidate.name===resumeCharacter);
    if(resumed){enter(resumed.name);connection.textContent='正在返回安全区…';return;}
@@ -538,14 +564,14 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
    if(message.kind==='move'&&pending){
     const movement=pending;
     if(message.accepted&&message.mapGeneration===mapGeneration&&message.x===movement.x&&message.y===movement.y){
-     movement.acknowledged=true;classicHud.position(view.map,movement.x,movement.y);view.setMarker(movement.x,movement.y);audio.play('movement',.22);connection.textContent=`已连接 · ${entities.get(self!)?.name??''} · ${movement.x}, ${movement.y}`;finishMovement(performance.now());
+     movement.acknowledged=true;agentObserver.event('action-ack',{actionId:movement.actionId,kind:'move',accepted:true,x:message.x,y:message.y});classicHud.position(view.map,movement.x,movement.y);view.setMarker(movement.x,movement.y);audio.play('movement',.22);connection.textContent=`已连接 · ${entities.get(self!)?.name??''} · ${movement.x}, ${movement.y}`;finishMovement(performance.now());
     }else{
-     pending=undefined;pendingAction=undefined;held=undefined;rightPointer=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;
+     agentObserver.event('action-rollback',{actionId:movement.actionId,kind:'move',accepted:false,x:message.x,y:message.y,reason:message.reason});pending=undefined;pendingAction=undefined;held=undefined;rightPointer=undefined;pursuitTarget=undefined;pursuitGroundItem=undefined;
      const entity=self===undefined?undefined:entities.get(self),x=Number.isInteger(message.x)?message.x:movement.fromX,y=Number.isInteger(message.y)?message.y:movement.fromY;
      if(entity){update({...entity,x,y,action:'standing'});classicHud.position(view.map,x,y);view.setMarker(x,y);void view.setCenter(x,y);}
      if(message.reason===28&&socket?.readyState===WebSocket.OPEN){doorRetry={x:movement.x,y:movement.y,direction:movement.direction,run:movement.run};socket.send(JSON.stringify({type:'openDoor',x:movement.x,y:movement.y}));connection.textContent=`尝试打开门 · ${movement.x}, ${movement.y}`;}else{clickDestination=undefined;connection.textContent='该方向暂时无法通行';}
     }
-   }else if(message.accepted){pendingAction.acknowledged=true;finishNonMovementAction(performance.now());}else{pendingAction=undefined;continueMovementIntent();}
+   }else if(message.accepted){pendingAction.acknowledged=true;agentObserver.event('action-ack',{actionId:pendingAction.actionId,kind:pendingAction.kind,accepted:true});finishNonMovementAction(performance.now());}else{agentObserver.event('action-rollback',{actionId:pendingAction.actionId,kind:pendingAction.kind,accepted:false,reason:message.reason});pendingAction=undefined;continueMovementIntent();}
   }
   else if(message.type==='inventory')inventory.replace(message.items);
   else if(message.type==='equipment')equipment.replace(message.slots);

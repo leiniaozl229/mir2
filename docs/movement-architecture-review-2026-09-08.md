@@ -12,9 +12,9 @@
 - Crystal 人物与怪物恢复资源原方向编号，0/2/4/6 分别对应上/右/下/左。人物走路使用 `32 + 6*d + f`，跑步使用 `80 + 6*d + f`；女性身体/头发偏移 808、女性武器偏移 416 保持不变。
 - 自机当前装备的站立、走路、跑步八方向资源会提前加载。动作切换加载期间保留上一个有效姿态。远端角色把连续移动事件放入独立队列，在前一段 600ms 位移完成后按顺序播放，后续目标不会覆盖当前段；跨越超过单次走跑距离或队列积压到八段时直接同步到最新权威格。
 
-验证结果：`npm run test:web`、`npm run build`、Python 网关契约 9 项和 C# GatewayRegression 均通过；`node tools/movement_architecture_audit.mjs` 对生产移动模型执行方向、路径、ACK/动画门控及集成边界检查并输出 [implementation.json](../.runtime/reports/movement-audit-20260908/implementation.json)。更新后的真实 WebSocket 回放完成 22 次走跑、0 次拒绝并回到起点，相邻动作启动间隔为 600–602ms，见 [movement-replay.json](../.runtime/reports/movement-replay.json)。动作校验页已逐格检查八方向走路和跑步素材，朝向与方向编号一致。
+验证结果：`npm run test:web`、`npm run build`、Python 网关契约 9 项和 C# GatewayRegression 均通过；`node tools/movement_architecture_audit.mjs` 对生产移动模型执行方向、路径、ACK/动画门控及集成边界检查并输出 [implementation.json](../.runtime/reports/movement-audit-20260908/implementation.json)。更新后的真实 WebSocket 回放完成 22 次走跑、0 次拒绝并回到起点，相邻动作启动间隔为 600–602ms，见 [movement-replay.json](../.runtime/reports/movement-replay.json)。动作校验页已逐格检查八方向走路和跑步素材，朝向与方向编号一致。可见 Chrome 实机试玩又通过 15 项检查，覆盖人物首帧可渲染、键盘单步与长按、直线点击、近水平右键跑步、半程渲染位置、人物/相机锚点、动作关联和返程复位；人物预载后约 `89.8ms` 可渲染，报告见 [Agent 实机试玩 latest](../.runtime/reports/agent-playtest/latest.json)。
 
-尚未完成带登录角色的浏览器逐帧录屏、冷缓存耗时量化及 900ms 高延迟网络注入，因此当前结论覆盖机制修复、生产构建、网关实包和素材方向；最终人工观感仍需按文末验收矩阵执行。
+尚未完成视频级逐帧录制、冷缓存耗时量化、900ms 高延迟网络注入及多人同屏长距离移动，因此当前结论覆盖机制修复、生产构建、网关实包、素材方向和一轮可见浏览器自动试玩；剩余场景继续按文末验收矩阵执行。
 
 ## 修复前核心证据
 
@@ -83,7 +83,7 @@
 2. **本地移动控制：已完成。** 一次只预测一段，下一段等待动画时限和 ACK，所有移动输入共用一个 pending 动作与意图调度入口。
 3. **视觉时间线：已完成。** 自机角色、分层帧和相机使用同一个动作起点；远端连续移动按事件排队，当前段不会被改写。
 4. **输入与素材：已完成。** 右键扇区、死区、滞回、稳定寻路、Crystal 原方向映射、八方向预载和异步姿态保留均已落地。
-5. **最终人工验收：待执行。** 需要带登录角色的逐帧录屏、冷缓存、网络延迟注入和多人同屏长距离移动。自动检查与真实协议回放已通过。
+5. **浏览器验收：已完成首轮。** 可见 Chrome 已覆盖单步半程、连续键盘、点击和右键走跑；视频级逐帧录制、冷缓存、网络延迟注入和多人同屏长距离移动仍待执行。
 
 ## 已替换的验证方式
 
