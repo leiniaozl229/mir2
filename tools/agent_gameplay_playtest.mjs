@@ -161,6 +161,8 @@ try{
  requireCheck(entered.minimap?.imageReady&&entered.minimap.frameIndex===100&&/\/100\.[^/]+\.png$/.test(entered.minimap.imageUrl),'Bichon minimap uses the mapped mmap.wil frame',{minimap:entered.minimap});
  const compactMapGeometry=await evaluate("(()=>{const shell=document.querySelector('#viewport-shell').getBoundingClientRect(),panel=document.querySelector('[data-hud-minimap-frame]').getBoundingClientRect();return {within:panel.left>=shell.left&&panel.top>=shell.top&&panel.right<=shell.right&&panel.bottom<shell.top+349,panel:{left:panel.left-shell.left,top:panel.top-shell.top,width:panel.width,height:panel.height}}})()");
  requireCheck(compactMapGeometry.within,'compact minimap stays inside the world viewport above the bottom HUD',{geometry:compactMapGeometry.panel});
+ const hudSkillbar=await evaluate("(()=>{const node=document.querySelector('[data-hud-skillbar]');return {display:getComputedStyle(node).display,hidden:node.hidden,ariaHidden:node.getAttribute('aria-hidden')}})()");
+ requireCheck(hudSkillbar.hidden&&hudSkillbar.display==='none'&&hudSkillbar.ariaHidden==='true','national HUD keeps skill shortcuts in the F11 skill page',{skillbar:hudSkillbar});
  await pressTab();const expandedMap=await waitFor("(()=>{const s=window.__mir2Agent.snapshot();return s.minimap.mode==='expanded'&&s.minimap.drawRect.width>500&&s})()");
  requireCheck(expandedMap.minimap.mode==='expanded','Tab expands the minimap');await capture('02a-minimap-expanded.png');
  const routeDirection=expandedMap.directions.find(value=>value.clearSteps>0);requireCheck(Boolean(routeDirection),'minimap route fixture has an adjacent walkable cell',{directions:expandedMap.directions});

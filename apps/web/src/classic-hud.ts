@@ -103,7 +103,9 @@ export class ClassicHud {
   const main=root.querySelector<HTMLElement>('[data-hud-main]')!;
   applyNationalUiFrame(main,'prguse',uiFrame(prguse,1));main.style.left='0';main.style.top='349px';
   void punchNationalHudChat(main,prguse);
-  for(const selector of ['[data-hud-minimap-frame]','[data-hud-skillbar]','[data-hud-chatbar]','[data-hud-exp-track]','[data-hud-weight]']){
+  const skillbar=root.querySelector<HTMLElement>('[data-hud-skillbar]');
+  if(skillbar){skillbar.hidden=true;skillbar.setAttribute('aria-hidden','true');}
+  for(const selector of ['[data-hud-minimap-frame]','[data-hud-chatbar]','[data-hud-exp-track]','[data-hud-weight]']){
    const element=root.querySelector<HTMLElement>(selector);if(element)element.style.backgroundImage='none';
   }
   const orb=uiFrame(prguse,4);
