@@ -6,7 +6,7 @@ type ButtonSpec={library:string;index:number;hover:number;pressed:number;x:numbe
 type NationalLibrary=Awaited<ReturnType<typeof loadNationalUiLibrary>>;
 
 const portraits:Record<string,number>={'0-0':20,'1-0':40,'2-0':60,'0-1':300,'1-1':320,'2-1':340};
-const nationalPortraits:Record<string,number>={'0-0':80,'1-0':40,'2-0':60,'0-1':160,'1-1':220,'2-1':200};
+const nationalPortraits:Record<string,number>={'0-0':40,'1-0':80,'2-0':120,'0-1':160,'1-1':200,'2-1':240};
 const nationalCreateJobs=[{job:0,normal:74,active:55},{job:1,normal:75,active:56},{job:2,normal:76,active:57}];
 const nationalCreateSexes=[{sex:0,normal:77,active:58},{sex:1,normal:78,active:59}];
 const login={

@@ -7,6 +7,7 @@ export class PaperdollView {
  private feature?:number;
  constructor(private element:HTMLElement){}
  clear(){this.generation++;this.feature=undefined;this.element.replaceChildren();}
+ debugState(){const layers=this.feature===undefined?undefined:playerLayers(this.feature);return {feature:this.feature,layers,images:Array.from(this.element.querySelectorAll('img')).map(image=>({src:image.src,loaded:image.complete&&image.naturalWidth>0})),ready:Boolean(layers)&&this.element.querySelectorAll('img').length>0&&Array.from(this.element.querySelectorAll('img')).every(image=>image.complete&&image.naturalWidth>0)};}
  setFeature(feature:number){
   if(feature===this.feature)return;
   this.feature=feature;

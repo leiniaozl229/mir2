@@ -15,6 +15,7 @@ export class GroundItems {
  clear(){this.generation++;for(const visual of this.visuals.values())visual.destroy({children:true});this.visuals.clear();this.items.clear();this.renderList();}
  at(x:number,y:number){return [...this.items.values()].find(item=>item.x===x&&item.y===y);}
  get(id:number){return this.items.get(id);}
+ debugState(){return [...this.items.values()].map(item=>({...item}));}
  remove(id:number){this.items.delete(id);this.visuals.get(id)?.destroy({children:true});this.visuals.delete(id);this.renderList();}
  hitTest(x:number,y:number){return [...this.visuals.entries()].map(([id,visual])=>({item:this.items.get(id),visual})).filter((entry):entry is {item:GroundItem;visual:Container}=>{const bounds=entry.visual.getBounds();return Boolean(entry.item)&&x>=bounds.x&&x<=bounds.x+bounds.width&&y>=bounds.y&&y<=bounds.y+bounds.height;}).sort((left,right)=>right.visual.zIndex-left.visual.zIndex)[0]?.item;}
  requestPickup(item:GroundItem){this.pickup(item);}

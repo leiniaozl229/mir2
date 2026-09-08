@@ -29,6 +29,7 @@ export class SkillBar {
  add(skill:MagicSkill){this.known=true;this.skills.set(skill.magicId,skill);this.render();}
  remove(magicId:number){this.skills.delete(magicId);if(this.selected===magicId){this.selected=undefined;this.actions.select(undefined);}this.render();}
  progress(magicId:number,level:number,currentTrain:number){const skill=this.skills.get(magicId);if(skill){this.skills.set(magicId,{...skill,level,currentTrain});this.render();}}
+ debugState(){return {known:this.known,selected:this.selected,pending:this.pending,skills:arrangeSkills(this.skills.values()).map(skill=>({...skill,use:skillUseOf(skill.magicId)}))};}
  skillAt(index:number){return arrangeSkills(this.skills.values())[index];}
  selectSlot(index:number){const skill=this.skillAt(index);if(!skill||this.pending!==undefined)return false;this.selected=skill.magicId;this.actions.select(skill);this.render();return true;}
  castSelf(skill:MagicSkill){if(this.pending!==undefined)return false;this.selected=undefined;this.pending=skill.magicId;this.actions.self(skill);this.render();return true;}

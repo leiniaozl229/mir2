@@ -98,7 +98,7 @@ python3 tools/protocol_probe.py --drop-pickup
 
 `tools/movement_replay.mjs` 在当前地图执行可回退的走/跑协议回放，记录服务端接受/阻挡、方向、WebSocket 序列号、地图世代和动作启动间隔；每一步同时等待对应 `actionResult` 与 600ms 动作截止点，调度规则与浏览器一致，结果写入 `.runtime/reports/movement-replay.json`。2026-09-08 最新回放完成 22 次走跑、0 次拒绝并回到起点，相邻动作启动间隔为 600–602ms。`node tools/movement_architecture_audit.mjs` 会执行生产移动模型，检查方向、路径、ACK/动画门控及协议集成边界。实现与待完成的人工观感验收见 [移动机制审计与修复](docs/movement-architecture-review-2026-09-08.md)。
 
-`bash scripts/run-agent-playtest.sh` 会启动真实可见 Chrome，通过联机页完成单步、长按、直线点击和近水平右键跑步，采集逻辑格、确认格、渲染位置、相机锚点、动作时间线、脱敏 WebSocket 摘要及截图，并在结束时返回起点。观察接口只在 `play.html?agent=1` 启用。使用方法和报告结构见 [Agent 实机试玩与调试](docs/agent-playtesting.md)。
+`bash scripts/run-agent-playtest.sh` 会通过真实联机页完成单步、长按、直线点击和近水平右键跑步；`bash scripts/run-agent-gameplay-playtest.sh` 会用一次性角色检查战士/法师选角图、六类装备图标与穿戴外形，并实玩练级、挖肉、NPC 进兽人古墓、骷髅精灵、地面掉落和拾取。两套回归默认使用后台无头 Chrome，设置 `MIR2_AGENT_VISIBLE=1` 可显示独立窗口；逻辑格、确认格、渲染位置、页面状态、脱敏 WebSocket 摘要及截图都会写入 `.runtime/reports/`。观察接口只在 `play.html?agent=1` 启用。使用方法和报告结构见 [Agent 实机试玩与调试](docs/agent-playtesting.md)。
 
 本机旧协议入口为 `127.0.0.1:17000`、`17100`、`17200`，WebSocket 入口为 `127.0.0.1:18800/ws`。启动后选角网关连接数据库可能需要约 20 秒，可在 `.runtime/logs/DBSrv.log` 确认“角色网关…已打开”再运行探针。数据库未暴露宿主端口。
 

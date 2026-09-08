@@ -2,6 +2,7 @@
 请选择你的职业测试技能。\
 <升到七级/@levelseven>\
 <准备洞穴战斗测试/@cavecombat>\
+<领取装备图标测试套装/@equipmentset>\
 <领取火球术秘籍/@fireballbook>\
 <领取治愈术秘籍/@healingbook>\
 <领取基本剑术秘籍/@fencingbook>\
@@ -34,6 +35,20 @@ GIVE 魔法药(中量) 5
 #SAY
 已升到三十级、学会三级雷电术，并领取洞穴测试药品。此入口只属于 P0 验证世界。\
 <进入兽人古墓/@orcgrave>\
+<返回/@main>
+
+[@equipmentset]
+#IF
+#ACT
+CHANGELEVEL = 30
+GIVE 轻型盔甲(男) 1
+GIVE 乌木剑 1
+GIVE 青铜头盔 1
+GIVE 金项链 1
+GIVE 铁手镯 1
+GIVE 古铜戒指 1
+#SAY
+已领取衣服、武器、头盔、项链、手镯和戒指各一件，用于验证背包图标、装备槽、人物外形与纸娃娃。\
 <返回/@main>
 
 [@fireballbook]

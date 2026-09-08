@@ -44,7 +44,7 @@ class CdpSession{
 
 async function launchChrome(binary,port,profile){
  const args=[`--remote-debugging-port=${port}`,`--user-data-dir=${profile}`,'--disable-background-networking','--disable-background-timer-throttling','--disable-backgrounding-occluded-windows','--disable-renderer-backgrounding','--disable-extensions','--no-first-run','--enable-webgl','--use-gl=angle'];
- if(process.env.MIR2_AGENT_HEADLESS==='1')args.push('--headless=new');
+ if(process.env.MIR2_AGENT_VISIBLE!=='1')args.push('--headless=new');
  args.push('about:blank');const child=spawn(binary,args,{stdio:'ignore'});
  let targets;
  for(let attempt=0;attempt<60;attempt++){

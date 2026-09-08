@@ -11,6 +11,7 @@ export class CharacterPanel {
  level(level:number,experience:number){if(!this.attributes)return;this.attributes.level=level;this.attributes.experience=experience;this.render();}
  weights(values:{weight:number;wearWeight:number;handWeight:number}){if(!this.attributes)return;Object.assign(this.attributes,values);this.render();}
  currency(values:{gold?:number;gameGold?:number}){if(!this.attributes)return;Object.assign(this.attributes,values);this.render();}
+ debugState(){return this.attributes?structuredClone(this.attributes):undefined;}
  private render(){
   const a=this.attributes;
   if(this.nameElement)this.nameElement.textContent=a?`${['战士','法师','道士'][a.job]??''} ${a.level}`:'';

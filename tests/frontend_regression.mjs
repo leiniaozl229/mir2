@@ -84,6 +84,11 @@ console.log('PASS frontend dual accessories select the empty paired slot');
 const playSource=fs.readFileSync(path.join(root,'apps/web/src/play.ts'),'utf8');
 if(playSource.includes("if(id==='chat'){classicWindow.hidden=true;return;}"))throw new Error('chat tab still closes the classic window');
 if(!playSource.includes("if(id==='chat')classicWindowBody.append(chatPanel)"))throw new Error('chat tab does not expose the complete chat form');
+if(playSource.includes('suppressNpcDialogsUntil'))throw new Error('valid NPC dialogue is discarded during the first seconds after map entry');
+if(!playSource.includes('function targetApproachStep(')||!playSource.includes('pursuitRejectedCells.add(`${movement.x},${movement.y}`)')||!playSource.includes('pursuitTarget=retryTarget'))throw new Error('target pursuit does not reroute after a transient blocked move');
+console.log('PASS target pursuit reroutes after a transient blocked move');
+if(!playSource.includes('.filter(value=>value.distance<=8)')||!playSource.includes('if(distance>8){connection.textContent=`${target.name||\'目标\'} 超出施法距离`'))throw new Error('the interaction list and spell distance exceed the server range');
+console.log('PASS interaction targets match the server spell range');
 console.log('PASS frontend chat tab exposes the channel and recipient controls');
 
 const authSource=fs.readFileSync(path.join(root,'apps/web/src/classic-auth.ts'),'utf8');
@@ -95,6 +100,8 @@ if(!authSource.includes("paintNationalButton(selectSprite,nationalPrguse"))throw
 console.log('PASS national character slots use matching frame metadata');
 if(!authSource.includes('nationalCreateJobs.find')||!authSource.includes('nationalCreateSexes.find')||authSource.includes('paintNationalButton(button,national,this.job===spec.job?spec.active:spec.index'))throw new Error('national character creation repaints with unavailable legacy frame indexes');
 console.log('PASS national character creation keeps its own frame index space');
+if(!authSource.includes("{'0-0':40,'1-0':80,'2-0':120,'0-1':160,'1-1':200,'2-1':240}"))throw new Error('national character selection portraits do not follow the three profession frame ranges');
+console.log('PASS national character portraits use the correct profession ranges');
 
 const actorsPage=fs.readFileSync(path.join(root,'apps/web/actors.html'),'utf8');
 const actorsSource=fs.readFileSync(path.join(root,'apps/web/src/actors.ts'),'utf8');
