@@ -801,8 +801,10 @@ def main():
             fixtures[name] = "\n".join(unique_lines) + ("\n" if unique_lines else "")
         for name, text in fixtures.items():
             (SERVER / "Mir200/Envir" / name).write_text(text, encoding="utf-8-sig")
+        market_target = SERVER / "Mir200/Envir/Market_Def/比奇城/麦家铺子-0.txt"
+        market_target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(SOURCE / "Mir200/Envir/Market_Def/比奇城/麦家铺子-0125.txt",
-                        SERVER / "Mir200/Envir/Market_Def/比奇城/麦家铺子-0.txt")
+                        market_target)
         trainer = SERVER / "Mir200/Envir/Market_Def/测试/技能导师-0.txt"
         trainer.parent.mkdir(parents=True, exist_ok=True)
         trainer.write_text(read_text(ROOT / "content/classic-176/p0/skill-trainer.txt"), encoding="gb18030")
@@ -816,8 +818,9 @@ def main():
         weapon.write_text(read_text(ROOT / "content/classic-176/p0/weapon-quest.txt"), encoding="gb18030")
         shop_source = SOURCE / "Mir200/Envir/Market_Def/比奇城"
         for script_name, _, _, _, _, source_name in boundary_shops:
-            shutil.copyfile(shop_source / source_name,
-                            SERVER / f"Mir200/Envir/Market_Def/测试/{script_name}-0.txt")
+            shop_target = SERVER / f"Mir200/Envir/Market_Def/测试/{script_name}-0.txt"
+            shop_target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(shop_source / source_name, shop_target)
         guide = SERVER / "Mir200/Envir/Market_Def/测试/古墓向导-D001.txt"
         guide.write_text(read_text(ROOT / "content/classic-176/p0/cave-guide.txt"), encoding="gb18030")
         boss_examiner = SERVER / "Mir200/Envir/Market_Def/测试/首领测试官-D001.txt"
