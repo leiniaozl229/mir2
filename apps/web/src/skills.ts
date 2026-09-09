@@ -14,13 +14,16 @@ export function spellCost(skill:Pick<MagicSkill,'spell'|'defSpell'|'level'>){
  return Math.round(skill.spell/4*(skill.level+1))+skill.defSpell;
 }
 export function arrangeSkills(skills:Iterable<MagicSkill>){
+ return arrangeSkillSlots(skills).filter((skill):skill is MagicSkill=>skill!==undefined);
+}
+export function arrangeSkillSlots(skills:Iterable<MagicSkill>):Array<MagicSkill|undefined>{
  const ordered:Array<MagicSkill|undefined>=Array(8).fill(undefined),unassigned:MagicSkill[]=[];
  for(const skill of skills){
   const key=skill.key>=49&&skill.key<=56?skill.key-49:skill.key>=1&&skill.key<=8?skill.key-1:-1;
   if(key>=0&&ordered[key]===undefined)ordered[key]=skill;else unassigned.push(skill);
  }
  let next=0;for(const skill of unassigned){while(next<ordered.length&&ordered[next]!==undefined)next++;if(next<ordered.length)ordered[next++]=skill;else ordered.push(skill);}
- return ordered.filter((skill):skill is MagicSkill=>skill!==undefined);
+ return ordered;
 }
 
 type SkillActions={select:(skill:MagicSkill|undefined)=>void;self:(skill:MagicSkill)=>void};
@@ -37,22 +40,24 @@ export class SkillBar {
  add(skill:MagicSkill){this.known=true;this.skills.set(skill.magicId,skill);this.render();}
  remove(magicId:number){this.skills.delete(magicId);if(this.selected===magicId){this.selected=undefined;this.actions.select(undefined);}this.render();}
  progress(magicId:number,level:number,currentTrain:number){const skill=this.skills.get(magicId);if(skill){this.skills.set(magicId,{...skill,level,currentTrain});this.render();}}
- debugState(){return {known:this.known,selected:this.selected,pending:this.pending,skills:arrangeSkills(this.skills.values()).map(skill=>({...skill,use:skillUseOf(skill.magicId)})),icons:Array.from(this.element.querySelectorAll<HTMLImageElement>('.skill-icon')).map(image=>({magicId:Number(image.dataset.magicId),src:image.src,loaded:image.complete&&image.naturalWidth>0}))};}
- skillAt(index:number){return arrangeSkills(this.skills.values())[index];}
+ debugState(){return {known:this.known,selected:this.selected,pending:this.pending,skills:arrangeSkillSlots(this.skills.values()).map(skill=>skill?{...skill,use:skillUseOf(skill.magicId)}:undefined),icons:Array.from(this.element.querySelectorAll<HTMLImageElement>('.skill-icon')).map(image=>({magicId:Number(image.dataset.magicId),src:image.src,loaded:image.complete&&image.naturalWidth>0}))};}
+ skillAt(index:number){return arrangeSkillSlots(this.skills.values())[index];}
  selectSlot(index:number){const skill=this.skillAt(index);if(!skill||this.pending!==undefined)return false;this.selected=skill.magicId;this.actions.select(skill);this.render();return true;}
  castSelf(skill:MagicSkill){if(this.pending!==undefined)return false;this.selected=undefined;this.pending=skill.magicId;this.actions.self(skill);this.render();return true;}
  setPending(magicId:number){this.selected=undefined;this.pending=magicId;this.render();}
  resolve(){this.pending=undefined;this.render();}
  private render(){
   this.element.replaceChildren();if(!this.known&&!this.skills.size){this.element.textContent='尚未收到技能数据';return;}if(!this.skills.size){this.element.textContent='尚未学会技能';return;}
-  let slot=0;for(const skill of arrangeSkills(this.skills.values())){
+  const slots=arrangeSkillSlots(this.skills.values());
+  for(let slot=0;slot<slots.length;slot++){
+   const skill=slots[slot];if(!skill)continue;
    const use=skillUseOf(skill.magicId);
    const row=document.createElement('div');row.className='skill-item';row.dataset.magicId=String(skill.magicId);row.dataset.use=use;
    const iconIndex=iconIndexOf(skill),nationalFrame=this.nationalIcons?.frames[String(iconIndex)];
    const frame=nationalFrame??this.icons?.frames[String(iconIndex)]??this.icons?.frames[String(Math.max(0,iconIndex-1))];
    if(frame){const icon=document.createElement('img');icon.className='skill-icon';icon.dataset.magicId=String(skill.magicId);icon.src=nationalFrame?nationalUiUrl('magic-icons',nationalFrame):uiUrl('MagIcon',frame);icon.alt='';icon.width=frame.width;icon.height=frame.height;row.append(icon);}
    const description=document.createElement('span'),name=document.createElement('strong'),key=document.createElement('kbd'),detail=document.createElement('small');
-   key.textContent=slot<8?`F${slot+1}`:'';name.append(key,skill.name);slot++;
+   key.textContent=slot<8?`F${slot+1}`:'';name.append(key,skill.name);
    const next=Math.min(3,skill.level);detail.textContent=`${skill.level} 级 · 修炼 ${skill.currentTrain}/${skill.maxTrain[next]??0} · MP ${spellCost(skill)}`;
    description.append(name,detail);
    if(use==='hostile'){

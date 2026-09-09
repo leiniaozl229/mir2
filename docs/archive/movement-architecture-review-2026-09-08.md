@@ -12,7 +12,7 @@
 - Crystal 人物与怪物恢复资源原方向编号，0/2/4/6 分别对应上/右/下/左。人物走路使用 `32 + 6*d + f`，跑步使用 `80 + 6*d + f`；女性身体/头发偏移 808、女性武器偏移 416 保持不变。
 - 自机当前装备的站立、走路、跑步八方向资源会提前加载。动作切换加载期间保留上一个有效姿态。远端角色把连续移动事件放入独立队列，在前一段 600ms 位移完成后按顺序播放，后续目标不会覆盖当前段；跨越超过单次走跑距离或队列积压到八段时直接同步到最新权威格。
 
-验证结果：`npm run test:web`、`npm run build`、Python 网关契约 9 项和 C# GatewayRegression 均通过；`node tools/movement_architecture_audit.mjs` 对生产移动模型执行方向、路径、ACK/动画门控及集成边界检查并输出 [implementation.json](../.runtime/reports/movement-audit-20260908/implementation.json)。更新后的真实 WebSocket 回放完成 22 次走跑、0 次拒绝并回到起点，相邻动作启动间隔为 600–602ms，见 [movement-replay.json](../.runtime/reports/movement-replay.json)。动作校验页已逐格检查八方向走路和跑步素材，朝向与方向编号一致。可见 Chrome 实机试玩又通过 15 项检查，覆盖人物首帧可渲染、键盘单步与长按、直线点击、近水平右键跑步、半程渲染位置、人物/相机锚点、动作关联和返程复位；人物预载后约 `89.8ms` 可渲染，报告见 [Agent 实机试玩 latest](../.runtime/reports/agent-playtest/latest.json)。
+验证结果：`npm run test:web`、`npm run build`、Python 网关契约 9 项和 C# GatewayRegression 均通过；`node tools/movement_architecture_audit.mjs` 对生产移动模型执行方向、路径、ACK/动画门控及集成边界检查并输出 [implementation.json](../../.runtime/reports/movement-audit-20260908/implementation.json)。更新后的真实 WebSocket 回放完成 22 次走跑、0 次拒绝并回到起点，相邻动作启动间隔为 600–602ms，见 [movement-replay.json](../../.runtime/reports/movement-replay.json)。动作校验页已逐格检查八方向走路和跑步素材，朝向与方向编号一致。可见 Chrome 实机试玩又通过 15 项检查，覆盖人物首帧可渲染、键盘单步与长按、直线点击、近水平右键跑步、半程渲染位置、人物/相机锚点、动作关联和返程复位；人物预载后约 `89.8ms` 可渲染，报告见 [Agent 实机试玩 latest](../../.runtime/reports/agent-playtest/latest.json)。
 
 尚未完成视频级逐帧录制、冷缓存耗时量化、900ms 高延迟网络注入及多人同屏长距离移动，因此当前结论覆盖机制修复、生产构建、网关实包、素材方向和一轮可见浏览器自动试玩；剩余场景继续按文末验收矩阵执行。
 
@@ -31,7 +31,7 @@
 
 `GameSvrConf.cs:1920` 默认 `CloseSpeedHackCheck = true`；`PlayObject.Attack.cs:1301,1377` 在该开关为 false 时才进入走跑间隔检查。虽然 `WalkIntervalTime`、`RunIntervalTime` 都配置为 600，不能据此认定服务端每 600ms 才接受一步。
 
-本轮使用已验证的专用探针角色，步行 3 步出、3 步回，跑步 3 步出、3 步回。12 次全部接受、0 拒绝，起终点均为 `(286,618)`。连续发包间隔约 200ms，移动阶段只有 12 个 `+GD`，没有自机 `entity` 移动消息。原始记录：[live-cadence.json](../.runtime/reports/movement-audit-20260908/live-cadence.json)。
+本轮使用已验证的专用探针角色，步行 3 步出、3 步回，跑步 3 步出、3 步回。12 次全部接受、0 拒绝，起终点均为 `(286,618)`。连续发包间隔约 200ms，移动阶段只有 12 个 `+GD`，没有自机 `entity` 移动消息。原始记录：[live-cadence.json](../../.runtime/reports/movement-audit-20260908/live-cadence.json)。
 
 `PlayObject.Message.cs:1413,1433` 明确排除向玩家自己广播 WALK/RUN。因此此前文档中“自机先收到 entity，随后 +GD，二者分别启动人物与相机”的解释不适用于这条实际链路。自机使用动作确认来推进权威坐标有协议依据。
 
@@ -45,7 +45,7 @@
 - 向右一步尚未显示完成，在 150ms 时收到向下一步：逻辑方向为南，实际新插值向量为 **右 0.75 格、下 1 格**。仅用相邻权威格计算方向无法修正这条已被改写的显示轨迹。
 - 注入 300ms 图片加载延迟：299ms 时人物纹理为空，300ms 就绪后直接显示第 4 个步态帧。该数值为控制实验，尚未量化真实浏览器冷缓存耗时。
 
-证据：[input-render.json](../.runtime/reports/movement-audit-20260908/input-render.json)。人物和相机仍各自持有一份 motion 与起始时间（`map-view.ts:23,159`）；使用同一个常量和同一个事件入口，仍不足以保证共享同一份动作状态。
+证据：[input-render.json](../../.runtime/reports/movement-audit-20260908/input-render.json)。人物和相机仍各自持有一份 motion 与起始时间（`map-view.ts:23,159`）；使用同一个常量和同一个事件入口，仍不足以保证共享同一份动作状态。
 
 ### 3. 输入错误可以脱离服务端复现
 
@@ -63,9 +63,9 @@
 
 实际资源来自 Crystal `.Lib`，使用 compact CArmour 布局。当前 Walking `32 + 6*d + f`、Running `80 + 6*d + f` 与 [Crystal 玩家帧表](https://github.com/Suprcode/Crystal/blob/0e315fe327192afe52c3d7357ddd1f5b7e26c5b8/Client/MirObjects/Frames.cs#L157) 一致。女性身体/头发偏移 808、武器偏移 416 也与其客户端相符。
 
-22 个衣服、头发、武器库的男女站立/走路/跑步 **5,632 帧**已与锁定原 `.Lib` 解码结果比对：像素、尺寸、偏移全部一致，源文件哈希全部一致，0 错误。[机器校验](../.runtime/reports/movement-audit-20260908/actor-export-validation.json)。
+22 个衣服、头发、武器库的男女站立/走路/跑步 **5,632 帧**已与锁定原 `.Lib` 解码结果比对：像素、尺寸、偏移全部一致，源文件哈希全部一致，0 错误。[机器校验](../../.runtime/reports/movement-audit-20260908/actor-export-validation.json)。
 
-原图中方向 0 是背面朝上，2 是侧面朝右，4 是正面朝下，6 是侧面朝左；修复前向右选帧 `68`，正确首帧为 `44`。[八方向对照图](../.runtime/reports/movement-audit-20260908/direction-contact-sheet.png)、[男女分层六帧图](../.runtime/reports/movement-audit-20260908/movement-layers-six-frames.png)。Crystal 直接按方向乘 stride 选帧：[PlayerObject.cs](https://github.com/Suprcode/Crystal/blob/0e315fe327192afe52c3d7357ddd1f5b7e26c5b8/Client/MirObjects/PlayerObject.cs#L761)。
+原图中方向 0 是背面朝上，2 是侧面朝右，4 是正面朝下，6 是侧面朝左；修复前向右选帧 `68`，正确首帧为 `44`。[八方向对照图](../../.runtime/reports/movement-audit-20260908/direction-contact-sheet.png)、[男女分层六帧图](../../.runtime/reports/movement-audit-20260908/movement-layers-six-frames.png)。Crystal 直接按方向乘 stride 选帧：[PlayerObject.cs](https://github.com/Suprcode/Crystal/blob/0e315fe327192afe52c3d7357ddd1f5b7e26c5b8/Client/MirObjects/PlayerObject.cs#L761)。
 
 旧式 Hum.wil 使用另一套带空位的帧布局；本项目应显式记录资源布局，防止将 Hum 名称、compact 帧表和方向补偿混用。`actors.ts` 预览页本轮已接入在线渲染使用的 `visualDirection`，并增加八方向跑步校验入口。
 
@@ -73,7 +73,7 @@
 
 `GatewaySession.cs:237,282` 会拒绝前一个攻击尚待确认时的移动请求；`508–512` 又会按真正的 pending 类型消费 GOOD。前端 `play.ts:535` 缺少这个关联，`555` 的错误处理保留了移动 pending。
 
-执行修复前前端处理函数，注入上述合法网关事件顺序：攻击占线 → 用户移动 → 网关拒绝移动 → 攻击 `+GD` → 再次移动。结果为网关位置仍 `(10,10)`，前端凭空更新到 `(11,10)`，下一次请求 `(12,10)` 被拒后 pending 无法释放。证据：[action-ack-repro.json](../.runtime/reports/movement-audit-20260908/action-ack-repro.json)。这是源码控制实验，本轮未对真人角色执行攻击切换。
+执行修复前前端处理函数，注入上述合法网关事件顺序：攻击占线 → 用户移动 → 网关拒绝移动 → 攻击 `+GD` → 再次移动。结果为网关位置仍 `(10,10)`，前端凭空更新到 `(11,10)`，下一次请求 `(12,10)` 被拒后 pending 无法释放。证据：[action-ack-repro.json](../../.runtime/reports/movement-audit-20260908/action-ack-repro.json)。这是源码控制实验，本轮未对真人角色执行攻击切换。
 
 ## 实施方案与落地状态
 

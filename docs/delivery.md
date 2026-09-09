@@ -1,38 +1,54 @@
 # 安装、备份与交付
 
-本机按 README.md 的开发步骤可以从干净目录进入同一比奇参考场景。下面把启动、停服、备份和恢复收成可重复命令。完整玩法范围仍以 PLAN.md 为准。
+本文对应 2026-09-09 的可复现基线。历史运行快照保存在 [`docs/archive/`](archive/README.md)，当前功能与缺口见 [`docs/implementation-status.md`](implementation-status.md)。
 
-## 安装
+## 干净检出
 
-需要 Git、Python 3、Docker（Apple Silicon 可用 Colima）以及 Docker Compose 或独立的 `docker-compose`。
+需要 Git、Python 3、Node.js/npm、Docker 和 Docker Compose。Apple Silicon 可使用 Colima；脚本会自动选择 `docker compose` 或 `docker-compose`。`vendor/openmir2` 由公开镜像 `leiniaozl229/mir2-openmir2` 提供固定提交，`vendor/mirserver-data` 使用公开数据仓库。
 
 ```sh
+git clone <repository-url>
+cd mir2
 git submodule update --init --recursive
+npm ci
 python3 scripts/install-check.py
 bash scripts/build-server.sh
 bash scripts/build-gateway.sh
-python3 scripts/prepare-runtime.py
+python3 scripts/prepare-runtime.py --refresh-classic-route
+python3 scripts/import-map-assets.py
 bash scripts/compose.sh up -d
 python3 scripts/wait-ready.py
-```
-
-`python3 scripts/prepare-runtime.py --refresh-classic-route` 会接入 570 张可解析地图、刷怪、NPC 脚本和 MapQuest。浏览器客户端：
-
-```sh
-python3 scripts/import-map-assets.py
-npm ci
 npm run dev
 ```
 
-联机入口：http://127.0.0.1:5173/play.html 。WebSocket 为 `127.0.0.1:18800/ws`。
+打开 `http://127.0.0.1:5173/play.html` 进入联机页，`http://127.0.0.1:5173/ui-calibration.html` 进入 800×600 国服 UI 校准页。旧协议服务端端口由 Compose 保持在本机回环地址，WebSocket 网关入口为 `127.0.0.1:18800/ws`。
 
-2003 国服 UI 基准入口：http://127.0.0.1:5173/ui-calibration.html 。页面会优先加载 `assets/web/ui-national` 中的国服原始帧，缺少导入产物时回退到 Crystal 候选帧；加载国服参考截图后，可在固定 800×600 画布上切换登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话，使用透明度、网格和坐标尺完成逐窗口校准。导入客户端前运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data`，确认必需素材族齐全；WIL/WIX 或 WZL/WZX 可直接运行 `python3 tools/import-national-ui.py --data-dir /path/to/Data` 导出到隔离的 `assets/web/ui-national`。当前 2003 客户端包实测导出 8 组核心素材、2,756 帧，NewopUI、Prguse3、ui1、ui3 在包内缺失并按版本契约作为可选族处理。
+`assets/raw/` 和 `assets/web/` 属于可重建产物并被 Git 忽略。`content/classic-176/asset-sources.json` 锁定下载地址、文件大小和 SHA-256；导入器缺少源文件时会自动下载，哈希变化会停止导入。国服 UI 原始帧需要用户准备 2003 客户端解出的 `Data` 目录，再执行：
 
-当前联机页的商店、修理和仓库会使用国服 `Prguse#402` 窗口框，并在物品实例数据到达后显示 `Items` 图标；角色装备页会按 `Looks` 使用同编号 `stateitem` 帧及其锚点，并以 `Prguse#378` 的六个首饰/蜡烛槽作为交互热区。
+```sh
+python3 tools/validate-national-ui.py --data-dir /path/to/Data
+python3 tools/import-national-ui.py --data-dir /path/to/Data --export-root assets/web/ui-national
+python3 tools/validate-national-ui.py --data-dir /path/to/Data \
+  --export-root assets/web/ui-national --json .runtime/reports/national-ui-validation.json
+```
 
-## 存档
+没有国服 `Data` 时，页面会显示缺项并使用 Crystal 候选帧，地图和游戏逻辑仍可运行。安装包只用于资源、视觉和协议取证，浏览器运行链路由自有 OpenMir2 服务端与 WebSocket 网关提供。
 
-角色进度在 MySQL。浏览器只缓存可再下载的素材和个人设置。
+## 运行模式
+
+- `python3 scripts/prepare-runtime.py --refresh-p0` 生成最小 P0 世界，适合确定性战斗、技能和掉落回归；P0 任务审计会报告跳过 Q001。
+- `python3 scripts/prepare-runtime.py --refresh-classic-route` 生成 570 张地图的经典路线目录，并保留账号与角色存档；当前目录包含 Q001 地图任务。
+- 切换运行模式后重启 `engine` 和 `web-gateway`。修改运行配置前先创建备份。
+
+## 停服与备份
+
+正常停服会先停止网关、请求在线角色保存并等待数据库确认，再停止引擎和数据库：
+
+```sh
+bash scripts/compose.sh stop
+```
+
+备份工具会导出 `mir2_account`、`mir2_db`、`mir2_data` 及行会、沙巴克文件，数据库密码不会写入归档：
 
 ```sh
 python3 scripts/backup.py create
@@ -40,33 +56,29 @@ python3 scripts/backup.py verify .runtime/backups/mir2-save-YYYYMMDD-HHMMSS.tar.
 python3 scripts/backup.py restore .runtime/backups/mir2-save-YYYYMMDD-HHMMSS.tar.gz --yes
 ```
 
-创建备份会先断开网关、保存在线角色并等待数据库确认，再导出 `mir2_account`、`mir2_db`、`mir2_data` 以及行会和沙巴克文件。恢复会替换当前账号、角色、游戏数据、行会和城堡状态。
-
-正常停服：
+## 验收命令
 
 ```sh
-bash scripts/compose.sh stop
+python3 scripts/install-check.py
+npm run build
+npm run test:web
+python3 -m unittest discover -s tests -p 'test_*.py'
+python3 tools/content_audit.py --verify-hashes \
+  --json .runtime/reports/content-audit.json \
+  --markdown .runtime/reports/content-audit.md
+python3 tools/world_catalog_audit.py --json .runtime/reports/world-catalog.json
+python3 tools/skill_combat_audit.py --json .runtime/reports/skill-combat-audit.json
+python3 tools/quest_catalog_audit.py --runtime-mode p0 \
+  --json .runtime/reports/quest-catalog-audit.json
+node tools/movement_replay.mjs
+node tools/reconnect_probe.mjs
+node tools/session_stability_probe.mjs
+node tools/frame_budget_probe.mjs
+node tools/power_loss_probe.mjs
 ```
 
-## 验收入口
+双客户端 PK、交易和行会战使用 `tools/pvp_fixture_setup.mjs`、`tools/pvp_probe.mjs`、`tools/trade_probe.mjs` 与 `scripts/run-guild-war-known-fixture.sh`。报告全部写入被忽略的 `.runtime/reports/`，不应提交账号、密码、令牌或个人存档。
 
-最新验收记录见 [2026-09-08 整体 review](reviews/2026-09-08-review.md)。R01–R10 已完成代码修复；前端 5 项交互回归、81 项 Python、CoreRegression 和 GatewayRegression 通过。试玩中出现 Colima 连接 / 挂载异常及引擎退出，真实服务复验仍需在环境恢复后完成。
+## 交付限制
 
-执行验收前需记录当前运行模式：本轮实际只有 `0 / D001`，570 张地图导出不等同于完整世界加载。任务审计现报告 `runtimeMode`、`expectedRuntimeEntries`、`skippedRuntimeEntries` 和 `missingRuntimeEntries`；经典路线缺少必需任务时返回失败。下表中的主动故障、停服与双行会夹具属于独立场景，本轮未重跑。
-
-| 检查 | 命令 |
-|---|---|
-| 内容引用闭合 | `python3 tools/content_audit.py` |
-| 世界刷怪清单 | `python3 tools/world_catalog_audit.py --json .runtime/reports/world-catalog.json` |
-| 15 项技能实战 | `node tools/skill_combat_probe.mjs` |
-| 800×600 帧预算 | `node tools/frame_budget_probe.mjs` |
-| 20 次断线重连 | `node tools/reconnect_probe.mjs` |
-| 断线重连快照 | `node tools/session_stability_probe.mjs`；2 小时验收使用 `MIR2_STABILITY_MS=7200000 node tools/session_stability_probe.mjs` |
-| 异常退出回退 | `node tools/power_loss_probe.mjs` |
-| 双行会宣战与倒计时 | `bash scripts/run-guild-war-known-fixture.sh` |
-| 有效攻城申请 | `MIR2_GUILD_EXPECT_CASTLE_SUBMISSION=1 bash scripts/run-guild-war-known-fixture.sh` |
-| 安装清单 | `python3 scripts/install-check.py` |
-
-帧预算页：http://127.0.0.1:5173/perf.html 。默认采样比奇 `296,624` 的 800×600 画布；`?pressure=100` 额外放入 100 个可见对象。报告写入 `.runtime/reports/frame-budget.json` 与 `.runtime/reports/reconnect.json`。
-
-已知限制：原端逐像素对照、完整旧服任务筛选、沙巴克联机战役、Safari / Firefox 首发关闭和连续 2 小时稳定性仍按 PLAN.md 后续验收。双行会宣战、双方倒计时和有效攻城申请已有实机回归；该入口会创建并清理临时角色、行会文件，结束后恢复沙巴克申请文件、引擎和 Web 网关。
+当前已验证 OpenMir2 服务端、WebSocket 网关、浏览器登录/选角/入图/移动、P0 战斗与掉落、15 项技能、行会战夹具、570 张地图内容闭合、30 秒稳定性、5 个重连周期、异常退出恢复和 60 FPS 帧预算。Windows 原端动态兼容、逐像素 UI 校准、Safari/Firefox、完整 1.76 任务与怪物内容、完整沙巴克战役、两小时稳定性、真实主机断电和云服务器部署仍需专项验收。

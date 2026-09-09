@@ -1,9 +1,9 @@
 {
   "schemaVersion": 1,
   "profile": "shanda-2003-1.76-cn",
-  "source": "Crystal candidate layout; replace after shanda-2003-1.76-cn reference assets are imported",
+  "source": "Shared 800x600 layout with static shanda-2003-1.76-cn asset import; window purpose and runtime coordinates remain measured/inferred until original client capture",
   "fallbackProfile": "crystal-candidate",
-  "status": "fallback-only-until-reference-assets",
+  "status": "asset-imported-awaiting-runtime-reference",
   "canvas": {"width": 800, "height": 600},
   "libraries": {
     "Prguse": "Prguse.Lib",
@@ -55,6 +55,20 @@
     "cellY": 3,
     "cellStep": 25
   },
+  "itemQuickBar": {
+    "library": "prguse",
+    "index": 1,
+    "x": 280,
+    "y": 50,
+    "slotWidth": 38,
+    "slotHeight": 35,
+    "slotStep": 46,
+    "count": 6,
+    "keys": ["1", "2", "3", "4", "5", "6"],
+    "relativeTo": "mainDialog",
+    "frameOrigin": {"x": 0, "y": 349},
+    "source": "Prguse#1 six pocket boundaries measured from imported 800x251 frame"
+  },
   "miniMap": {
     "library": "Prguse",
     "index": 2090,
@@ -87,6 +101,23 @@
     "character": {"library": "Title", "index": 504, "x": 536, "y": 0, "closeLibrary": "Prguse2", "closeIndex": 360, "closeX": 241, "closeY": 3},
     "inventory": {"library": "Title", "index": 196, "x": 0, "y": 185, "closeLibrary": "Prguse2", "closeIndex": 360, "closeX": 289, "closeY": 3},
     "npc": {"library": "Prguse", "index": 995, "x": 5, "y": 40, "closeLibrary": "Prguse2", "closeIndex": 360, "closeX": 413, "closeY": 3}
+  },
+  "nationalWindowContracts": {
+    "character": {"frame": "prguse#380", "width": 256, "height": 359, "content": "paperdoll-or-status", "evidence": "asset"},
+    "inventory": {"frame": "prguse#3", "width": 336, "height": 270, "content": "8x5-grid", "evidence": "asset"},
+    "npc": {"frame": "prguse#402", "width": 416, "height": 347, "content": "title-body-options", "evidence": "asset"},
+    "shop": {"frame": "prguse#402", "width": 416, "height": 347, "content": "goods-two-column-details", "evidence": "asset-frame+interaction-proposal"},
+    "repair": {"frame": "prguse#402", "width": 416, "height": 347, "content": "durability-list-single-column", "evidence": "asset-frame+interaction-proposal"},
+    "storage": {"frame": "prguse#402", "width": 416, "height": 347, "content": "storage-grid-four-column", "evidence": "asset-frame+interaction-proposal"},
+    "quest": {"frame": "prguse#402", "width": 416, "height": 347, "content": "quest-progress-list", "evidence": "asset-frame+interaction-proposal"},
+    "attack": {"frame": "prguse#402", "width": 416, "height": 347, "content": "attack-mode-select", "evidence": "asset-frame+interaction-proposal"},
+    "targets": {"frame": "prguse#402", "width": 416, "height": 347, "content": "nearby-target-list", "evidence": "asset-frame+interaction-proposal"},
+    "ground": {"frame": "prguse#402", "width": 416, "height": 347, "content": "ground-item-list", "evidence": "asset-frame+interaction-proposal"},
+    "group": {"frame": "prguse#402", "width": 416, "height": 347, "content": "party-members-and-actions", "evidence": "asset-frame+interaction-proposal"},
+    "guild": {"frame": "prguse#402", "width": 416, "height": 347, "content": "guild-members-and-actions", "evidence": "asset-frame+interaction-proposal"},
+    "system": {"frame": "prguse#402", "width": 416, "height": 347, "content": "modal-confirmation", "evidence": "asset-frame+interaction-proposal"},
+    "chat": {"frame": "prguse#402", "width": 416, "height": 347, "content": "channel-log-and-input", "evidence": "asset-frame+interaction-proposal"},
+    "trade": {"frame": "prguse#402", "width": 416, "height": 347, "content": "two-party-items-and-confirmation", "evidence": "asset-frame+interaction-proposal"}
   },
   "classIcons": {"warrior": 100, "wizard": 101, "taoist": 102},
   "inventoryGrid": {

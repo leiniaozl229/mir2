@@ -1,6 +1,6 @@
 # 浏览器传奇复刻工程
 
-**最新 review（2026-09-08）：** [整体审查、实机问题与截图](docs/reviews/2026-09-08-review.md) 记录 10 项待修问题（P1 1 项、P2 9 项），包括动作确认关联、背包拒绝后锁定、隐藏错误提示、松键与尸体交互。构建、79 项 Python 测试和三套 .NET 回归通过。此次运行世界仅加载 `0 / D001`；570 张地图属于导出目录覆盖，后文其他路线与玩法的实机结论为历史证据。本轮试玩中途发生 Colima 连接 / 挂载异常及引擎退出，后续存档恢复等闭环未验收；问题与环境事件均尚未关闭。
+**状态快照（2026-09-09）：** 安装清单、`npm run build`、`npm run test:web`（32 项）和 Python 回归（96 项）均通过。内容审计已闭合 570/570 张地图、570/570 条路线目的地；国服 UI 素材验证为 `ready-for-decoder`，必需素材缺项为 0。当前 classic-route 运行目录含 570 张 `MapInfo` 地图和 Q001；P0 模式会有意跳过 Q001。完整 UI 逐像素校准、Windows 原端动态验证、Safari/Firefox、两小时稳定性和完整沙巴克战役仍需专项验收。旧审查及运行快照见 [`docs/archive/`](docs/archive/README.md)。
 
 实施范围与验收要求见 [PLAN.md](PLAN.md)，阶段记录见 [docs/implementation-status.md](docs/implementation-status.md)，安装备份见 [docs/delivery.md](docs/delivery.md)。P0 基础闭环、经典主世界与 570 张可解析地图目录（其中 121 张精选路线配置了分层向导和区域刷怪）、浏览器网关和技能导师已可重复运行；完整 1.76 内容、全量素材校准和经典 UI 仍在扩展。动态门协议已接入，阻挡移动收到服务端拒绝后会尝试开门，门的开闭状态实时投影到地图。
 
@@ -22,17 +22,17 @@ npm run dev
 
 动作校验页：http://127.0.0.1:5173/actors.html 。可查看基础男女角色、头发、大刀卫士、鸡、鹿、多钩猫、山洞蝙蝠、羊、虎蛇、洞蛆、盔甲虫候选、沃玛战士、沃玛勇士、红野猪、黑野猪、僵尸 1/2/3、毒蜘蛛候选、骷髅、掷斧骷髅、骷髅战士、骷髅战将、祖玛系候选的八方向站立、行走与攻击。导入命令同时处理这些素材；页面只核验动作，尚未连接游戏服务器。
 
-2003 国服 UI 基准页：http://127.0.0.1:5173/ui-calibration.html 。页面固定 800×600 设计坐标，提供登录、选角、创建角色、主 HUD、角色窗、背包窗和 NPC 对话场景；检测到已导入的国服原始素材时优先显示对应帧，缺少本地 Data 时回退到 Crystal 候选帧。截图叠加、16px 网格、坐标尺和设计坐标读数用于逐窗口校准，联机页也会按同一设计坐标整体缩放，不改变游戏内控件位置。先运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data`，通过校验再运行 `python3 tools/import-national-ui.py --data-dir /path/to/Data` 导出隔离的国服 PNG/帧表。
+2003 国服 UI 基准页：http://127.0.0.1:5173/ui-calibration.html 。页面固定 800×600 设计坐标，提供登录、选角、创建角色、主 HUD（含六槽物品快捷栏）、角色窗、背包窗、NPC 对话、商店、修理、仓库、任务、攻击模式、目标、地面物品、队伍、行会、系统弹窗、聊天和交易场景；检测到已导入的国服原始素材时优先显示对应帧，缺少本地 Data 时回退到 Crystal 候选帧。截图叠加、16px 网格、坐标尺和设计坐标读数用于逐窗口校准，联机页也会按同一设计坐标整体缩放，不改变游戏内控件位置。先运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data`，通过校验再运行 `python3 tools/import-national-ui.py --data-dir /path/to/Data` 导出隔离的国服 PNG/帧表；导出后可追加 `--export-root assets/web/ui-national` 检查有效、空白、重复和解码失败帧。
 
 商店、修理和仓库窗口也会复用国服 `Prguse#402` 窗口框；服务端返回的成色详情、出售/修理物品和仓库实例会显示 `Items` 国服物品图标。角色装备页按物品 `Looks` 读取同编号 `stateitem` 帧：衣服、武器和头盔使用素材自带锚点叠入角色区，项链、蜡烛、手镯和戒指落入 `Prguse#378` 的原始槽位。
 
-本机已用 `mir2setup2003.exe` 完成只读解包和格式校验，安装包 SHA-256 为 `46e6cf029bd33f32b9977a4184b95d056a24ac32b60d03210a50e5251dcf4d42`。该包的 `Data` 目录已成功解出 `Prguse`、`Prguse2`、`ChrSel`、`mmap`、`stateitem`、`MagIcon`、`Items`、`DnItems` 八组核心 WIL/WIX 素材，共 2,756 帧；`NewopUI`、`Prguse3`、`ui1`、`ui3` 在这个客户端包中未提供，已按该版本标记为可选。导出结果位于 `assets/web/ui-national`，该目录属于可重建产物并被 Git 忽略；干净目录需重新准备解出的 `Data` 后执行上述两条命令。
+本机已用 `mir2setup2003.exe` 完成只读解包和格式校验，安装包 SHA-256 为 `46e6cf029bd33f32b9977a4184b95d056a24ac32b60d03210a50e5251dcf4d42`。该包的 `Data` 目录已成功解出 `Prguse`、`Prguse2`、`ChrSel`、`mmap`、`stateitem`、`MagIcon`、`Items`、`DnItems` 八组核心 WIL/WIX 素材，共 2,760 个导出帧条目（含空白占位帧）；`NewopUI`、`Prguse3`、`ui1`、`ui3` 在这个客户端包中未提供，已按该版本标记为可选。导出结果位于 `assets/web/ui-national`，该目录属于可重建产物并被 Git 忽略；干净目录需重新准备解出的 `Data` 后执行上述两条命令。
 
 ## 本机开发
 
 WebSocket 网关已接入账号注册、三职业角色创建、登录、选角、入图、移动、基础近战、施法、组队、玩家交易、攻击模式、行会面板、行会战宣战、攻城申请、挖肉、NPC 对话、四条早期任务、商店买卖、仓库存取、背包、装备、药品、丢弃和拾取。先运行 `bash scripts/build-gateway.sh`，再运行 `bash scripts/compose.sh up -d web-gateway`。接口与当前限制见 [docs/web-protocol.md](docs/web-protocol.md)。联机页通过 Vite 的同源 `/ws` 代理连接网关；静态生产部署的入口代理仍需配置。
 
-需要 Git、Python 3、Docker（Apple Silicon 可使用 Colima），以及 Docker Compose 或独立的 docker-compose。所有服务程序从固定提交源码构建。
+需要 Git、Python 3、Docker（Apple Silicon 可使用 Colima），以及 Docker Compose 或独立的 docker-compose。`vendor/openmir2` 指向公开的固定提交镜像 `leiniaozl229/mir2-openmir2`，`vendor/mirserver-data` 使用公开数据仓库；所有服务程序从固定提交源码构建。
 
 ```sh
 git submodule update --init --recursive
@@ -88,15 +88,15 @@ python3 tools/protocol_probe.py --drop-pickup
 
 `scripts/run-guild-war-known-fixture.sh` 会从两个已存在的测试账号克隆临时角色，补齐创建行会所需的金币、沃玛号角、金条、祖玛头像和地图状态，运行 `tools/guild_war_probe.mjs` 验证国王 NPC 创建行会、二级战争对话、双向战争关系及倒计时递减；设置 `MIR2_GUILD_EXPECT_CASTLE_SUBMISSION=1` 时还会提交有效攻城申请并校验物品删除与 `AttackSabukWall.txt` 持久化。脚本结束后精确删除临时角色、行会数据库行和行会文件，恢复沙巴克申请文件、引擎与 Web 网关。报告写入 `.runtime/reports/guild-war.json`。
 
-`tools/session_stability_probe.mjs` 在指定时长内重复请求背包和攻击模式快照，检查 WebSocket 序列号与地图世代单调递增，然后主动断线并以同一角色重连；默认运行 30 秒，可通过 `MIR2_STABILITY_MS` 设置 5 秒到 2 小时的窗口，执行 2 小时验收时使用 `MIR2_STABILITY_MS=7200000`。结果写入 `.runtime/reports/session-stability.json`。当前已用 5 分钟窗口完成 100 次周期快照，重连前后均收到 `attributes`、`equipment`、`inventory`、`skills` 四组权威状态。`tools/reconnect_probe.mjs` 把同一角色断开再进入重复 20 次，写入 `.runtime/reports/reconnect.json`。`tools/frame_budget_probe.mjs` 用无头 Chrome 打开 http://127.0.0.1:5173/perf.html ，记录 800×600 比奇场景的 p95 帧耗时，并另采 `?pressure=100` 的压力样本，写入 `.runtime/reports/frame-budget.json`。
+`tools/session_stability_probe.mjs` 在指定时长内重复请求背包和攻击模式快照，检查 WebSocket 序列号与地图世代单调递增，然后主动断线并以同一角色重连；默认运行 30 秒，可通过 `MIR2_STABILITY_MS` 设置 5 秒到 2 小时的窗口，执行 2 小时验收时使用 `MIR2_STABILITY_MS=7200000`。结果写入 `.runtime/reports/session-stability.json`。当前 30 秒窗口完成 10 次快照，重连前后均收到 `attributes`、`equipment`、`inventory`、`skills` 四组权威状态。`tools/reconnect_probe.mjs` 当前完成 5 个重连周期，写入 `.runtime/reports/reconnect.json`。`tools/frame_budget_probe.mjs` 用无头 Chrome 打开 http://127.0.0.1:5173/perf.html ，记录 800×600 比奇场景的 p95 帧耗时，并另采 `?pressure=100` 的压力样本，写入 `.runtime/reports/frame-budget.json`。
 
-`tools/power_loss_probe.mjs` 会先正常停服保存探针角色，移动到相邻格后在 `SaveHumanRcdTime=60000` 窗口内强制终止引擎，再重启服务并验证恢复到基线坐标；默认故障延迟 1 秒，可用 `MIR2_POWER_LOSS_DELAY_MS` 设置 250–59999ms。结果写入 `.runtime/reports/power-loss.json`，脚本结束时会尝试恢复引擎和 Web 网关。
+`tools/power_loss_probe.mjs` 会先正常停服保存探针角色，移动到相邻格后在 `SaveHumanRcdTime=60000` 窗口内强制终止引擎，再重启服务并验证恢复到基线坐标；默认故障延迟 1 秒，可用 `MIR2_POWER_LOSS_DELAY_MS` 设置 250–59999ms。当前 1 秒故障延迟回归通过。结果写入 `.runtime/reports/power-loss.json`，脚本结束时会尝试恢复引擎和 Web 网关。
 
 `tools/content_audit.py` 是只读的版本内容审计器。它会检查版本清单中的 570 张地图、源地图与 Web 分块、Tiles/SmTiles/Objects 依赖、完整目录生成结果，以及已锁定的角色、怪物、物品、特效和音频素材。`tools/world_catalog_audit.py` 从源 `MonGen.txt` 与锁定地图生成可追踪刷怪清单，核对 SQL 名称、掉落文件和已导出外观；缺掉落/缺外观记入报告，不单独把 570 张地图审计打成失败。`tools/monster_visual_audit.py` 另按服务端 `RaceImg:Appr` 二元外观字段核对 P0 的 22 个经典怪物名称；当前 22/22 已有可加载库，其中 4 项标记为候选外观。需要在发布前验证原始文件 SHA-256 时追加 `--verify-hashes`；报告中的“已声明待校准项”仍表示原端视觉和数值需要继续核对。
 
 `tools/skill_combat_probe.mjs` 会注册三个临时职业账号，走到边界技能导师领取对应技能组，再按 `skill-combat.json` 逐项施法；道士还会装备护身符并检查 `变异骷髅` 召唤物出现与跟随。结果写入 `.runtime/reports/skill-combat.json`。运行前需让引擎加载最新 `content/classic-176/p0/skill-trainer.txt`（`python3 scripts/prepare-runtime.py --refresh-p0` 或 `--refresh-classic-route` 后重启）。
 
-`tools/movement_replay.mjs` 在当前地图执行可回退的走/跑协议回放，记录服务端接受/阻挡、方向、WebSocket 序列号、地图世代和动作启动间隔；每一步同时等待对应 `actionResult` 与 600ms 动作截止点，调度规则与浏览器一致，结果写入 `.runtime/reports/movement-replay.json`。2026-09-08 最新回放完成 22 次走跑、0 次拒绝并回到起点，相邻动作启动间隔为 600–602ms。`node tools/movement_architecture_audit.mjs` 会执行生产移动模型，检查方向、路径、ACK/动画门控及协议集成边界。实现与待完成的人工观感验收见 [移动机制审计与修复](docs/movement-architecture-review-2026-09-08.md)。
+`tools/movement_replay.mjs` 在当前地图执行可回退的走/跑协议回放，记录服务端接受/阻挡、方向、WebSocket 序列号、地图世代和动作启动间隔；每一步同时等待对应 `actionResult` 与 600ms 动作截止点，调度规则与浏览器一致，结果写入 `.runtime/reports/movement-replay.json`。当前回放完成 22 次走跑、0 次拒绝并回到起点，相邻动作启动间隔为 600–602ms。`node tools/movement_architecture_audit.mjs` 会执行生产移动模型，检查方向、路径、ACK/动画门控及协议集成边界。历史实现记录见 [移动机制审计与修复](docs/archive/movement-architecture-review-2026-09-08.md)。
 
 `bash scripts/run-agent-playtest.sh` 会通过真实联机页完成单步、长按、直线点击和近水平右键跑步；`bash scripts/run-agent-gameplay-playtest.sh` 会用一次性角色检查战士/法师选角图、六类装备图标与穿戴外形，并实玩练级、挖肉、NPC 进兽人古墓、骷髅精灵、地面掉落和拾取。两套回归默认使用后台无头 Chrome，设置 `MIR2_AGENT_VISIBLE=1` 可显示独立窗口；逻辑格、确认格、渲染位置、页面状态、脱敏 WebSocket 摘要及截图都会写入 `.runtime/reports/`。观察接口只在 `play.html?agent=1` 启用。使用方法和报告结构见 [Agent 实机试玩与调试](docs/agent-playtesting.md)。
 

@@ -20,12 +20,36 @@ def index_files(data_dir):
     return result
 
 
+def _parent_key(path):
+    """Normalize a directory for deterministic WIL/WIX pairing."""
+    return path.parent.resolve(strict=False).as_posix().casefold()
+
+
 def choose_variant(family, files):
+    """Return one unambiguous variant and an optional diagnostic.
+
+    WIL/WIX (and WZL/WZX) files must come from the same directory. A
+    filename-only lookup can silently pair an atlas with an index from a
+    different extracted client, so ambiguity is reported to the caller.
+    """
     for variant in family["variants"]:
         candidates = [files.get(name.casefold(), []) for name in variant]
-        if all(candidates):
-            return [paths[0] for paths in candidates]
-    return None
+        if not all(candidates):
+            continue
+        common = set(_parent_key(path) for path in candidates[0])
+        for paths in candidates[1:]:
+            common &= {_parent_key(path) for path in paths}
+        if not common:
+            return None, "paired files are in different directories"
+        parent = sorted(common)[0]
+        selected = []
+        for paths in candidates:
+            matches = [path for path in paths if _parent_key(path) == parent]
+            if len(matches) != 1:
+                return None, "multiple same-name files in the selected directory"
+            selected.append(matches[0])
+        return selected, None
+    return None, None
 
 
 def main():
@@ -49,11 +73,13 @@ def main():
     for family in families:
         if family["id"] not in selected:
             continue
-        match = choose_variant(family, files)
+        match, diagnostic = choose_variant(family, files)
         required = family.get("required", True)
         entry = {"id": family["id"], "label": family["label"], "required": required}
         if match is None:
-            entry["status"] = "missing-or-unsupported" if required else "optional-missing"
+            entry["status"] = "ambiguous-pairing" if diagnostic else ("missing-or-unsupported" if required else "optional-missing")
+            if diagnostic:
+                entry["error"] = diagnostic
             if required:
                 report["ok"] = False
         elif match[0].suffix.casefold() == ".pak":
@@ -64,7 +90,15 @@ def main():
             try:
                 destination = args.output / family["id"]
                 manifest = export(match[0], destination, index=match[1])
-                entry.update(status="imported", files=[path.name for path in match], frames=len(manifest["frames"]), empty=len(manifest["empty"]), missing=len(manifest["missing"]))
+                entry.update(
+                    status="imported",
+                    files=[path.name for path in match],
+                    frames=len(manifest["frames"]),
+                    empty=len(manifest["empty"]),
+                    missing=len(manifest["missing"]),
+                    rawIndexEntries=manifest.get("rawIndexEntries", manifest.get("sourceFrameCount", 0)),
+                    discardedTrailingOffsets=manifest.get("discardedTrailingOffsets", []),
+                )
             except (OSError, ValueError, WeMadeFormatError) as error:
                 entry.update(status="decode-failed", error=str(error))
                 report["ok"] = False

@@ -2,6 +2,27 @@
   "schemaVersion": 1,
   "status": "candidate-needs-visual-calibration",
   "source": "Crystal patch ShandaMir2 libraries",
+  "clientInstaller": {
+    "file": "mir2setup2003.exe",
+    "size": 326778386,
+    "sha256": "46e6cf029bd33f32b9977a4184b95d056a24ac32b60d03210a50e5251dcf4d42",
+    "format": "PE32 i386 InstallShield self-extracting archive",
+    "declaredVersion": "1.76.0.0",
+    "declaredPublisher": "上海盛大网络发展有限公司",
+    "runtimeStatus": "windows-runtime-pending",
+    "chain": [
+      {"artifact": "InstallShield CAB", "files": [
+        {"file": "data1.cab", "size": 309628, "sha256": "bc5457e956f61d35d2409e243cedde01a4a7315e5c4f73bff5fa5c83ca5a71c6"},
+        {"file": "data2.cab", "size": 325305512, "sha256": "ad8847b9e04cce2036487a9239266b233c58eda8dff1bfce7910df3ca007f69c"}
+      ]},
+      {"artifact": "extracted client files", "files": [
+        {"file": "Mir.exe", "size": 616448, "sha256": "ce552c8ba7792170dc78b1887a238995a48ec990f69dff6ec1337ca78c5f38c5"},
+        {"file": "mir.dat", "size": 253440, "sha256": "db71634bcfd46a7ed682612eee9c6da88e5881524ac2cc6f894890a02b18a3a5"},
+        {"file": "mirclient.dll", "size": 138752, "sha256": "c00967d540c1b5b5c68ff3431b8bbe17eb353636aac852db6ab4352770502954"},
+        {"file": "load.lib", "size": 41847, "sha256": "beef975b17074ab36ece74ace0640e8a095cca08e843c0bf6acc99d7cc17ed3b"}
+      ]}
+    ]
+  },
   "files": [
     {
       "file": "Objects.Lib",

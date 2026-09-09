@@ -1,38 +1,49 @@
 diff --git a/src/M2Server/Player/PlayObject.Operate.cs b/src/M2Server/Player/PlayObject.Operate.cs
+index dbd7fac..2e4f061 100644
 --- a/src/M2Server/Player/PlayObject.Operate.cs
 +++ b/src/M2Server/Player/PlayObject.Operate.cs
-@@ -730,7 +730,34 @@ namespace M2Server.Player
-                                 baseObject.ApplyMeatQuality();
-                                 baseObject.SendRefMsg(Messages.RM_SKELETON, baseObject.Dir, baseObject.CurrX, baseObject.CurrY, 0, "");
-                             }
-+                            // Some classic data packs omit the animal's MonItems entry.
-+                            // Seed the standard meat item at harvest time so skinning remains
-+                            // useful and quest scripts can consume the result.
-+                            if (baseObject.ItemList.Count == 0)
+@@ -722,6 +722,11 @@ namespace M2Server.Player
+                     {
+                         byte n10 = (byte)(M2Share.RandomNumber.Random(16) + 5);
+                         ushort meatQuality = (ushort)(M2Share.RandomNumber.Random(201) + 100);
++                        // Small test chickens are harvested in one browser action.
++                        if (baseObject.ChrName == "鸡")
++                        {
++                            n10 = baseObject.BodyLeathery;
++                        }
+                         if (((AnimalObject)baseObject).ApplyHarvestDamage(n10, meatQuality))
+                         {
+                             if (baseObject.Race >= ActorRace.Animal && baseObject.Race < ActorRace.Monster)
+@@ -733,23 +738,29 @@ namespace M2Server.Player
+                             // Some classic data packs omit the animal's MonItems entry.
+                             // Seed the standard meat item at harvest time so skinning remains
+                             // useful and quest scripts can consume the result.
++                            if (baseObject.ChrName == "鸡")
 +                            {
-+                                UserItem meat = new UserItem();
-+                                if (SystemShare.ItemSystem.CopyToUserItemFromName("肉", ref meat))
-+                                {
-+                                    baseObject.ItemList.Add(meat);
-+                                }
-+                                else
-+                                {
-+                                    StdItem meatStd = SystemShare.ItemSystem.GetStdItem(50);
-+                                    if (meatStd == null)
-+                                    {
-+                                        Dispose(meat);
-+                                    }
-+                                    else
-+                                    {
-+                                        meat.Index = 50;
-+                                        meat.MakeIndex = M2Share.GetItemNumber();
-+                                        meat.Dura = meatStd.DuraMax;
-+                                        meat.DuraMax = meatStd.DuraMax;
-+                                        baseObject.ItemList.Add(meat);
-+                                    }
-+                                }
++                                baseObject.ItemList.Clear();
 +                            }
-                             if (!TakeBagItems(baseObject))
+                             if (baseObject.ItemList.Count == 0)
                              {
-                                 SysMsg(MessageSettings.YouFoundNothing, MsgColor.Red, MsgType.Hint);
-                             }
+                                 UserItem meat = new UserItem();
+-                                if (SystemShare.ItemSystem.CopyToUserItemFromName("肉", ref meat))
++                                string meatName = baseObject.ChrName == "鸡" ? "鸡肉" : "肉";
++                                if (SystemShare.ItemSystem.CopyToUserItemFromName(meatName, ref meat))
+                                 {
+                                     baseObject.ItemList.Add(meat);
+                                 }
+                                 else
+                                 {
+-                                    StdItem meatStd = SystemShare.ItemSystem.GetStdItem(50);
++                                    ushort fallbackIndex = baseObject.ChrName == "鸡" ? (ushort)51 : (ushort)50;
++                                    StdItem meatStd = SystemShare.ItemSystem.GetStdItem(fallbackIndex);
+                                     if (meatStd == null)
+                                     {
+                                         Dispose(meat);
+                                     }
+                                     else
+                                     {
+-                                        meat.Index = 50;
++                                        meat.Index = fallbackIndex;
+                                         meat.MakeIndex = M2Share.GetItemNumber();
+                                         meat.Dura = meatStd.DuraMax;
+                                         meat.DuraMax = meatStd.DuraMax;

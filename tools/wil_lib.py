@@ -55,6 +55,8 @@ class WeMadeLibrary:
         self.index_header_size = 52 if self.kind == "wzl" else 48
         if self.kind == "wil":
             self._read_wil_header()
+        self.raw_offset_count = 0
+        self.discarded_trailing_offsets = []
         self.offsets = self._read_offsets()
 
     def _read_wil_header(self):
@@ -103,6 +105,7 @@ class WeMadeLibrary:
         if size % 4:
             raise WeMadeFormatError("misaligned WIX/WZX index table")
         offsets = list(struct.unpack_from(f"<{size // 4}i", self.index_data, self.index_header_size))
+        self.raw_offset_count = len(offsets)
         # A few original libraries append a terminal offset after the last
         # real frame. Some clients leave that value just past the extracted
         # WIL length, so discard only a trailing invalid entry while keeping
@@ -110,7 +113,7 @@ class WeMadeLibrary:
         while offsets and offsets[-1] >= len(self.data) and all(
             offset == 0 or 0 <= offset < len(self.data) for offset in offsets[:-1]
         ):
-            offsets.pop()
+            self.discarded_trailing_offsets.append(offsets.pop())
         return offsets
 
     @property
@@ -234,6 +237,8 @@ def export(source, destination, indices=None, index=None):
         "index": library.index_path.name,
         "indexSha256": hashlib.sha256(library.index_data).hexdigest(),
         "sourceFrameCount": library.count,
+        "rawIndexEntries": library.raw_offset_count,
+        "discardedTrailingOffsets": library.discarded_trailing_offsets,
         "frames": frames,
         "empty": empty,
         "missing": missing,

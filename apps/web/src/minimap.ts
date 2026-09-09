@@ -12,8 +12,9 @@ const markerColor:Record<MiniMapMarker['kind'],string>={self:'#fff07a',player:'#
 
 export function nextMiniMapMode(mode:MiniMapMode){return modes[(modes.indexOf(mode)+1)%modes.length];}
 
-export function mapPointFromClient(clientX:number,clientY:number,canvas:Rect,draw:Rect,world:Size){
- const localX=clientX-canvas.left-draw.left,localY=clientY-canvas.top-draw.top;
+export function mapPointFromClient(clientX:number,clientY:number,canvas:Rect,draw:Rect,world:Size,displayScale:Size={width:1,height:1}){
+ const scaleX=displayScale.width>0?displayScale.width:1,scaleY=displayScale.height>0?displayScale.height:1;
+ const localX=(clientX-canvas.left)/scaleX-draw.left,localY=(clientY-canvas.top)/scaleY-draw.top;
  if(draw.width<=0||draw.height<=0||localX<0||localY<0||localX>draw.width||localY>draw.height)return undefined;
  return {
   x:Math.max(0,Math.min(world.width-1,Math.round(localX/draw.width*(world.width-1)))),
@@ -93,7 +94,8 @@ export class MiniMapController{
   if(event.button!==0||this.mode==='hidden')return;
   event.preventDefault();event.stopPropagation();
   const rect=this.canvas.getBoundingClientRect();
-  const point=mapPointFromClient(event.clientX,event.clientY,{left:rect.left,top:rect.top,width:rect.width,height:rect.height},this.drawRect,this.world);
+  const displayScale={width:rect.width/Math.max(1,this.canvas.clientWidth),height:rect.height/Math.max(1,this.canvas.clientHeight)};
+  const point=mapPointFromClient(event.clientX,event.clientY,{left:rect.left,top:rect.top,width:rect.width,height:rect.height},this.drawRect,this.world,displayScale);
   if(point)this.route(point,event.shiftKey);
  }
 

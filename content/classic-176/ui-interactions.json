@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "profile": "shanda-2003-1.76-cn",
+  "source": "State table for controls rendered from the imported client atlases; proposed CSS states are explicit where the atlas has no separate frame.",
+  "states": ["normal", "hover", "pressed", "selected", "disabled"],
+  "controls": {
+    "auth.login.submit": {"family": "Title", "normal": 320, "hover": 321, "pressed": 322, "evidence": "asset"},
+    "auth.login.register": {"family": "Title", "normal": 323, "hover": 324, "pressed": 325, "evidence": "asset"},
+    "auth.select.slot": {"family": "prguse", "normal": 66, "hover": 67, "selected": 67, "pressed": 67, "evidence": "asset"},
+    "auth.create.job": {"family": "prguse", "normal": [74, 75, 76], "selected": [55, 56, 57], "hover": [55, 56, 57], "pressed": [55, 56, 57], "evidence": "asset"},
+    "hud.window.character": {"family": "prguse", "normal": 8, "hover": 24, "pressed": 24, "evidence": "asset"},
+    "hud.window.inventory": {"family": "prguse", "normal": 9, "hover": 9, "pressed": 9, "evidence": "asset-same-frame"},
+    "hud.window.skills": {"family": "prguse", "normal": 10, "hover": 10, "pressed": 10, "evidence": "asset-same-frame"},
+    "hud.window.quest": {"family": "prguse", "normal": 12, "hover": 12, "pressed": 12, "evidence": "asset-same-frame"},
+    "hud.window.attack": {"family": "prguse", "normal": 11, "hover": 11, "pressed": 11, "evidence": "asset-same-frame"},
+    "hud.itemQuickBar.slot": {"family": "prguse", "normal": 1, "hover": "css-border", "pressed": "css-press", "selected": "css-border", "disabled": "css-opacity", "evidence": "asset-measured+proposed-interaction"},
+    "service.close": {"family": "prguse", "normal": 371, "hover": "css-brightness", "pressed": "css-dim", "evidence": "asset-frame+interaction-proposal"},
+    "shop.goods.buy": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "disabled": "css-opacity", "evidence": "interaction-proposal"},
+    "repair.item.action": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "disabled": "css-opacity", "evidence": "interaction-proposal"},
+    "storage.item.action": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "disabled": "css-opacity", "evidence": "interaction-proposal"},
+    "quest.entry": {"family": "prguse", "normal": "css-row", "selected": "css-border", "evidence": "interaction-proposal"},
+    "attack.mode": {"family": "prguse", "normal": "css-select", "focus": "css-outline", "evidence": "interaction-proposal"},
+    "targets.entry": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "evidence": "interaction-proposal"},
+    "ground.pickup": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "disabled": "css-opacity", "evidence": "interaction-proposal"},
+    "group.action": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "disabled": "css-opacity", "evidence": "interaction-proposal"},
+    "guild.action": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "disabled": "css-opacity", "evidence": "interaction-proposal"},
+    "system.action": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "disabled": "css-opacity", "evidence": "interaction-proposal"},
+    "chat.channel": {"family": "prguse", "normal": "css-select", "focus": "css-outline", "evidence": "interaction-proposal"},
+    "trade.confirm": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "disabled": "css-opacity", "evidence": "interaction-proposal"},
+    "trade.cancel": {"family": "prguse", "normal": "css-button", "hover": "css-border", "pressed": "css-press", "evidence": "interaction-proposal"}
+  }
+}

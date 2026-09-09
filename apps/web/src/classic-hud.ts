@@ -1,6 +1,6 @@
 import type {CharacterAttributes} from './character-panel';
-import {arrangeSkills,type MagicSkill} from './skills';
-import {applyNationalUiFrame,applyUiFrame,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
+import {arrangeSkillSlots,type MagicSkill} from './skills';
+import {applyNationalUiFrame,applyUiFrame,loadClassicUiSession,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
 import skillAssets from '../../../content/classic-176/skill-assets.json';
 
 type ResourceState={hp:number;mp:number;maxHp:number;maxMp:number;experience:number;maxExperience:number};
@@ -49,23 +49,29 @@ export class ClassicHud {
   this.hotbar=root.querySelector<HTMLElement>('[data-hud-hotbar]')!;
   this.statusText=root.querySelector<HTMLElement>('[data-hud-status]')!;
   this.classIcon=root.querySelector<HTMLElement>('[data-hud-class]')!;
-  this.mountTask=this.mount(root);
- }
+ this.mountTask=this.mount(root);
+}
 
  async ready(){await this.mountTask;}
 
  private async mount(root:HTMLElement){
-  const [prguse,prguse2,title,icons]=await Promise.all(['Prguse','Prguse2','Title','MagIcon'].map(loadUiLibrary));
-  this.libraries.set('Prguse',prguse);this.libraries.set('Prguse2',prguse2);this.libraries.set('Title',title);this.libraries.set('MagIcon',icons);
-  applyUiFrame(root.querySelector<HTMLElement>('[data-hud-main]')!, 'Prguse', uiFrame(prguse, 0));
-  applyUiFrame(root.querySelector<HTMLElement>('[data-hud-chat]')!, 'Prguse', uiFrame(prguse, 2201));
-  applyUiFrame(root.querySelector<HTMLElement>('[data-hud-chatbar]')!, 'Prguse', uiFrame(prguse, 2035));
-  applyUiFrame(root.querySelector<HTMLElement>('[data-hud-skillbar]')!, 'Prguse', uiFrame(prguse, 2190));
-  const orb=uiFrame(prguse, 4);
-  this.hpFill.replaceChildren(orbImage(orb, 0));
-  this.mpFill.replaceChildren(orbImage(orb, -51));
-  applyUiFrame(root.querySelector<HTMLElement>('[data-hud-exp-track]')!, 'Prguse', uiFrame(prguse, 7));
-  applyUiFrame(root.querySelector<HTMLElement>('[data-hud-weight]')!, 'Prguse', uiFrame(prguse, 76));
+  const session=await loadClassicUiSession();
+  for(const [name,library] of session.fallback)this.libraries.set(name,library);
+  for(const [name,library] of session.national)this.nationalLibraries.set(name,library);
+  const nationalPrguse=session.national.get('prguse');
+  if(nationalPrguse){this.nationalLibraries.set('prguse',nationalPrguse);this.nationalReady=true;}
+  const prguse=this.libraries.get('Prguse');
+  if(prguse){
+   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-main]')!, 'Prguse', uiFrame(prguse, 0));
+   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-chat]')!, 'Prguse', uiFrame(prguse, 2201));
+   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-chatbar]')!, 'Prguse', uiFrame(prguse, 2035));
+   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-skillbar]')!, 'Prguse', uiFrame(prguse, 2190));
+   const orb=uiFrame(prguse, 4);
+   this.hpFill.replaceChildren(orbImage(orb, 0));
+   this.mpFill.replaceChildren(orbImage(orb, -51));
+   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-exp-track]')!, 'Prguse', uiFrame(prguse, 7));
+   applyUiFrame(root.querySelector<HTMLElement>('[data-hud-weight]')!, 'Prguse', uiFrame(prguse, 76));
+  }
   const buttons:Record<string,UiButton>={
    character:{library:'Prguse',index:1900,hover:1901,pressed:1902,x:681,y:524,window:'character'},
    inventory:{library:'Prguse',index:1903,hover:1904,pressed:1905,x:704,y:524,window:'inventory'},
@@ -76,6 +82,7 @@ export class ClassicHud {
   for(const [id,spec] of Object.entries(buttons)){
    const button=root.querySelector<HTMLButtonElement>(`[data-window-open="${spec.window}"]`);
    if(!button)continue;
+   if(!prguse)continue;
    const frame=uiFrame(prguse, spec.index);
    button.style.left=`${spec.x}px`;button.style.top=`${spec.y}px`;
    applyUiFrame(button, 'Prguse', frame);
@@ -85,13 +92,11 @@ export class ClassicHud {
    button.onmousedown=()=>applyUiFrame(button, 'Prguse', uiFrame(prguse, spec.pressed));
    button.onmouseup=()=>applyUiFrame(button, 'Prguse', uiFrame(prguse, spec.hover));
   }
-  try{
-   const nationalPrguse=await loadNationalUiLibrary('prguse');
-  this.nationalLibraries.set('prguse',nationalPrguse);this.nationalReady=true;this.mountNationalHud(root);
-   void loadNationalUiLibrary('magic-icons').then(icons=>{this.nationalLibraries.set('magic-icons',icons);this.renderHotbar();}).catch(()=>{});
-  }catch{
-   this.nationalReady=false;
+  if(this.nationalReady){
+   this.mountNationalHud(root);
+   this.renderHotbar();
   }
+  if(!prguse&&!this.nationalReady)throw new Error('缺少可用的经典 HUD 素材');
   this.applyCursor(document.body);
   this.render();
  }
@@ -145,11 +150,13 @@ export class ClassicHud {
   const specs:{library:string;index:number;x:number;y:number;closeX:number;closeY:number}={
    character:{library:'Title',index:504,x:536,y:0,closeX:241,closeY:3},
    inventory:{library:'Title',index:196,x:0,y:185,closeX:289,closeY:3},
-   npc:{library:'Prguse',index:995,x:5,y:40,closeX:413,closeY:3}
-  }[kind==='skills'||kind==='equipment'?'character':kind==='quest'?'character':kind]??{library:'Title',index:504,x:268,y:80,closeX:241,closeY:3};
+   npc:{library:'Prguse',index:995,x:5,y:40,closeX:413,closeY:3},
+   quest:{library:'Title',index:504,x:268,y:80,closeX:241,closeY:3},
+   attack:{library:'Title',index:504,x:268,y:80,closeX:241,closeY:3}
+  }[kind==='skills'||kind==='equipment'?'character':kind]??{library:'Title',index:504,x:268,y:80,closeX:241,closeY:3};
   const library=this.libraries.get(specs.library)!;
   const frame=uiFrame(library, specs.index);
-  if(element.dataset.windowMoved!=='true'){element.style.left=`${specs.x}px`;element.style.top=`${specs.y}px`;}
+  if(element.dataset.windowMoved!=='true'){element.style.left=`${specs.x}px`;element.style.top=`${specs.y}px`;if(element.id==='classic-window'){element.style.setProperty('--classic-window-left',`${specs.x}px`);element.style.setProperty('--classic-window-top',`${specs.y}px`);}}
   element.style.right='auto';element.style.bottom='auto';
   applyUiFrame(element, specs.library, frame);
   if(kind==='character'||kind==='equipment'||kind==='skills'){
@@ -182,11 +189,20 @@ export class ClassicHud {
    npc:{index:402,x:192,y:126,closeX:385,closeY:-37,closeWidth:17,closeHeight:23},
    shop:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
    repair:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
-   storage:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23}
+   storage:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   quest:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   attack:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   targets:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   ground:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   group:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   guild:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   system:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   chat:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   trade:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23}
   };
   const spec=specs[kind];
   if(!prguse||!spec)return false;
-  element.classList.add('national-window');element.classList.toggle('national-panel',['shop','repair','storage'].includes(kind));if(element.dataset.windowMoved!=='true'){element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;}element.style.right='auto';element.style.bottom='auto';
+  element.classList.add('national-window');element.classList.toggle('national-panel',['shop','repair','storage','quest','attack','targets','ground','group','guild','system','chat','trade'].includes(kind));if(element.dataset.windowMoved!=='true'){element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;if(element.id==='classic-window'){element.style.setProperty('--classic-window-left',`${spec.x}px`);element.style.setProperty('--classic-window-top',`${spec.y}px`);}}element.style.right='auto';element.style.bottom='auto';
   applyNationalUiFrame(element,'prguse',uiFrame(prguse,spec.index));
   if(kind==='character'){
    const paper=element.querySelector<HTMLElement>('[data-character-page="paperdoll"]');
@@ -219,14 +235,14 @@ export class ClassicHud {
  resource(values:Partial<ResourceState>){this.resources={...this.resources,...values};this.renderBars();}
  experience(total:number){this.resources.experience=total;this.renderBars();}
  level(level:number,total:number){if(this.attributes)this.attributes={...this.attributes,level,experience:total};this.resources.experience=total;this.render();}
- replaceSkills(skills:MagicSkill[]){this.skills=arrangeSkills(skills);this.selected=-1;this.renderHotbar();}
- addSkill(skill:MagicSkill){this.skills=arrangeSkills([...this.skills.filter(value=>value.magicId!==skill.magicId),skill]);this.renderHotbar();}
+ replaceSkills(skills:MagicSkill[]){this.skills=[...skills];this.selected=-1;this.renderHotbar();}
+ addSkill(skill:MagicSkill){this.skills=[...this.skills.filter(value=>value.magicId!==skill.magicId),skill];this.renderHotbar();}
  removeSkill(magicId:number){this.skills=this.skills.filter(skill=>skill.magicId!==magicId);if(this.selected>=this.skills.length)this.selected=-1;this.renderHotbar();}
  progress(magicId:number,level:number,currentTrain:number){this.skills=this.skills.map(skill=>skill.magicId===magicId?{...skill,level,currentTrain}:skill);this.renderHotbar();}
  position(map:string,x:number,y:number){this.map=map;this.x=x;this.y=y;this.coords.textContent=`${x}:${y}`;}
  status(mask:number){this.statusMask=mask>>>0;this.renderStatus();}
  hungerStatus(value:number){this.hunger=Math.max(0,Math.min(4,value));this.renderStatus();}
- selectSlot(index:number){if(index<0||index>=this.skills.length)return;this.selected=index;this.renderHotbar();}
+ selectSlot(index:number){const slots=arrangeSkillSlots(this.skills);if(index<0||index>=slots.length||!slots[index])return;this.selected=index;this.renderHotbar();}
 
  private render(){
   const jobNames=['战士','法师','道士'];
@@ -271,7 +287,7 @@ export class ClassicHud {
  private renderHotbar(){
   this.hotbar.replaceChildren();
   const icons=this.libraries.get('MagIcon'),nationalIcons=this.nationalLibraries.get('magic-icons');
-  const skills=arrangeSkills(this.skills);
+  const skills=arrangeSkillSlots(this.skills);
   for(let index=0;index<8;index++){
    const skill=skills[index],button=document.createElement('button');
    button.type='button';button.className='hud-slot';button.style.left=`${15+index*25}px`;button.style.top='3px';
@@ -326,10 +342,11 @@ function skinNationalHudButton(button:HTMLButtonElement,library:NationalLibrary,
   button.style.backgroundPosition=`${spec.backgroundX}px ${spec.backgroundY}px`;
   button.style.backgroundRepeat='no-repeat';button.style.backgroundColor='transparent';button.style.filter=filter;
  };
+ const hoverFilter=spec.hover===spec.index?'':'brightness(1.14)',pressedFilter=spec.pressed===spec.index?'':'brightness(.86)';
  paint(spec.index,'');
- button.onmouseenter=()=>paint(spec.hover,'brightness(1.14)');
+ button.onmouseenter=()=>paint(spec.hover,hoverFilter);
  button.onmouseleave=()=>paint(spec.index,'');
- button.onmousedown=()=>paint(spec.pressed,'brightness(.86)');
- button.onmouseup=()=>paint(spec.hover,'brightness(1.14)');
+ button.onmousedown=()=>paint(spec.pressed,pressedFilter);
+ button.onmouseup=()=>paint(spec.hover,hoverFilter);
 }
 function ratio(value:number,max:number){return max>0?Math.max(0,Math.min(1,value/max)):0;}

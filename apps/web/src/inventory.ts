@@ -2,7 +2,7 @@ import {loadNationalUiLibrary} from './classic-ui';
 import itemAssets from '../../../content/classic-176/item-assets.json';
 
 export type ItemRange={min:number;max:number};
-export type InventoryItem={name:string;makeIndex:number;durability:number;maxDurability:number;stdMode:number;weight:number;looks:number;shape?:number;baseDurability?:number;ac?:ItemRange;mac?:ItemRange;dc?:ItemRange;mc?:ItemRange;sc?:ItemRange;need?:number;needLevel?:number;price?:number;attackSpeed?:number;agility?:number;accuracy?:number;magicAvoidance?:number;strong?:number;undead?:number;hpAdd?:number;mpAdd?:number;light?:number};
+export type InventoryItem={name:string;makeIndex:number;durability:number;maxDurability:number;stdMode:number;weight:number;looks:number;quantity?:number;count?:number;shape?:number;baseDurability?:number;ac?:ItemRange;mac?:ItemRange;dc?:ItemRange;mc?:ItemRange;sc?:ItemRange;need?:number;needLevel?:number;price?:number;attackSpeed?:number;agility?:number;accuracy?:number;magicAvoidance?:number;strong?:number;undead?:number;hpAdd?:number;mpAdd?:number;light?:number};
 type IconFrame={file:string;width:number;height:number;offsetX:number;offsetY:number};
 type Icons={frames:Record<string,IconFrame>};
 type InventoryActions={drop:(makeIndex:number)=>void;equip:(makeIndex:number,slot:number)=>void;use:(makeIndex:number)=>void;trade?:(makeIndex:number)=>void;layoutKey?:()=>string|undefined};
@@ -25,7 +25,7 @@ export const EQUIPMENT_APPEARANCE:{slot:number;name:string;layer:string;z:number
  {slot:1,name:'武器',layer:'weapon',z:3},
  {slot:4,name:'头盔',layer:'helmet',z:4}
 ];
-function iconIndexOf(item:InventoryItem){return (itemAssets.iconIndexByName as Record<string,number>)[item.name]??(itemAssets.fallbackIconIndexBySourceIndex as Record<string,number>)[item.looks]??item.looks;}
+export function iconIndexOf(item:InventoryItem){return (itemAssets.iconIndexByName as Record<string,number>)[item.name]??(itemAssets.fallbackIconIndexBySourceIndex as Record<string,number>)[item.looks]??item.looks;}
 
 let iconsPromise:Promise<Icons>|undefined;
 export function loadFallbackItemIcons(){return iconsPromise??=fetch('/items/Items/library.json').then(async response=>{if(!response.ok)throw new Error('缺少物品素材');return response.json();});}
@@ -45,28 +45,60 @@ export function itemDetailRows(item:InventoryItem){
  return rows;
 }
 
+let nextServiceTooltipId=0;
+/** Attach the same hover/focus attribute surface to service-window rows. */
+export function attachItemTooltip(target:HTMLElement,item:InventoryItem,label=item.name){
+ const document=target.ownerDocument;
+ const tooltip=document.createElement('div');
+ tooltip.className='inventory-item-tooltip service-item-tooltip';
+ tooltip.setAttribute('role','tooltip');
+ tooltip.id=`service-item-tooltip-${++nextServiceTooltipId}`;
+ tooltip.hidden=true;
+ const heading=document.createElement('strong');heading.textContent=item.name;tooltip.append(heading);
+ const slot=document.createElement('span'),slotName=document.createElement('em'),slotValue=document.createElement('b');
+ slotName.textContent='对象';slotValue.textContent=label;slot.append(slotName,slotValue);tooltip.append(slot);
+ for(const [name,value] of itemDetailRows(item)){
+  const row=document.createElement('span'),key=document.createElement('em'),amount=document.createElement('b');
+  key.textContent=name;amount.textContent=value;row.append(key,amount);tooltip.append(row);
+ }
+ target.append(tooltip);
+ target.setAttribute('aria-describedby',tooltip.id);
+ const show=()=>{tooltip.hidden=false;};
+ const hide=()=>{tooltip.hidden=true;};
+ target.addEventListener('pointerenter',show);target.addEventListener('pointerleave',hide);
+ target.addEventListener('focusin',show);target.addEventListener('focusout',hide);
+ return ()=>{target.removeEventListener('pointerenter',show);target.removeEventListener('pointerleave',hide);target.removeEventListener('focusin',show);target.removeEventListener('focusout',hide);tooltip.remove();};
+}
+
 export class InventoryView {
- private items=new Map<number,InventoryItem>();private placements=new Map<number,number>();private pending=new Set<number>();private known=false;private icons:Icons|undefined;private nationalIcons:Icons|undefined;private selectedSlot:number|undefined;private activeLayoutKey:string|undefined;private gold=0;private readonly tooltip:HTMLElement|undefined;private readonly heldPreview:HTMLElement|undefined;
+ private items=new Map<number,InventoryItem>();private placements=new Map<number,number>();private pending=new Set<number>();private pendingTimers=new Map<number,ReturnType<typeof setTimeout>>();private known=false;private icons:Icons|undefined;private nationalIcons:Icons|undefined;private selectedSlot:number|undefined;private activeLayoutKey:string|undefined;private gold=0;private readonly tooltip:HTMLElement|undefined;private readonly heldPreview:HTMLElement|undefined;
  constructor(private element:HTMLElement,private actions:InventoryActions){
   this.element.classList.add('classic-bag');
-  this.tooltip=this.element.parentElement?.querySelector<HTMLElement>('[data-inventory-tooltip]')??undefined;
+  this.tooltip=this.element.parentElement?.querySelector<HTMLElement>('[data-inventory-tooltip],#inventory-item-tooltip')??undefined;
   const body=this.element.ownerDocument?.body;
   if(body){this.heldPreview=this.element.ownerDocument.createElement('div');this.heldPreview.className='inventory-held-item';this.heldPreview.hidden=true;body.append(this.heldPreview);}
-  this.element.onpointermove=event=>{if(this.selectedSlot!==undefined&&this.heldPreview){this.heldPreview.style.left=`${event.clientX+10}px`;this.heldPreview.style.top=`${event.clientY+10}px`;}};
+  this.element.onpointermove=event=>{this.moveHeldPreview(event.clientX,event.clientY);};
+  this.element.ownerDocument?.addEventListener?.('pointermove',event=>{this.moveHeldPreview(event.clientX,event.clientY);});
+  this.element.ownerDocument?.addEventListener?.('pointercancel',()=>this.clearSelection());
+  this.element.ownerDocument?.defaultView?.addEventListener?.('blur',()=>this.clearSelection());
+  this.element.ownerDocument?.addEventListener?.('visibilitychange',()=>{if(this.element.ownerDocument?.hidden)this.clearSelection();});
   void loadFallbackItemIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});
   void loadNationalUiLibrary('items').then(icons=>{this.nationalIcons=icons;this.render();}).catch(()=>{});
  }
- clear(){this.known=false;this.items.clear();this.placements.clear();this.activeLayoutKey=undefined;this.pending.clear();this.clearSelection();this.render();}
- replace(items:InventoryItem[]){this.loadPlacements();this.known=true;this.items=new Map(items.map(item=>[item.makeIndex,item]));this.pending.clear();this.assignPlacements();this.render();}
+ clear(){this.known=false;this.items.clear();this.placements.clear();this.activeLayoutKey=undefined;this.clearPendingTimers();this.pending.clear();this.clearSelection();this.render();}
+ replace(items:InventoryItem[]){this.loadPlacements();this.known=true;this.items=new Map(items.map(item=>[item.makeIndex,item]));this.clearPendingTimers();this.pending.clear();this.assignPlacements();this.render();}
  add(item:InventoryItem){this.items.set(item.makeIndex,item);this.assignPlacements();this.render();}
   update(item:InventoryItem){if(this.items.has(item.makeIndex)){this.items.set(item.makeIndex,item);this.render();}}
- remove(id:number){this.pending.delete(id);this.items.delete(id);this.placements.delete(id);this.render();}
- resolve(id:number,accepted:boolean,removeOnSuccess:boolean){this.pending.delete(id);if(accepted&&removeOnSuccess){this.items.delete(id);this.placements.delete(id);}this.render();}
-  rejectPending(){if(!this.pending.size)return;this.pending.clear();this.render();}
+ remove(id:number){this.clearPendingTimer(id);this.pending.delete(id);this.items.delete(id);this.placements.delete(id);this.render();}
+ resolve(id:number,accepted:boolean,removeOnSuccess:boolean){if(!this.pending.has(id))return false;this.clearPendingTimer(id);this.pending.delete(id);if(accepted&&removeOnSuccess){this.items.delete(id);this.placements.delete(id);}this.render();return true;}
+  rejectPending(){if(!this.pending.size)return;this.clearPendingTimers();this.pending.clear();this.render();}
  currency(gold:number){this.gold=gold;const output=this.element.parentElement?.querySelector<HTMLElement>('[data-inventory-gold]');if(output)output.textContent=gold.toLocaleString('zh-CN');}
  cancelSelection(){this.clearSelection();}
+ requestDrop(makeIndex:number){const item=this.items.get(makeIndex);if(item)this.begin(item,()=>this.actions.drop(makeIndex));}
  debugState(){return {known:this.known,items:[...this.items.values()].map(item=>({...item,slot:this.placements.get(item.makeIndex)})),pending:[...this.pending],selectedSlot:this.selectedSlot,gold:this.gold};}
-  private begin(item:InventoryItem,action:()=>void){this.pending.add(item.makeIndex);this.render();action();}
+  private begin(item:InventoryItem,action:()=>void){const id=item.makeIndex;this.pending.add(id);this.clearPendingTimer(id);if(typeof setTimeout==='function')this.pendingTimers.set(id,setTimeout(()=>{this.pendingTimers.delete(id);if(this.pending.delete(id))this.render();},8000));this.render();action();}
+ private clearPendingTimer(id:number){const timer=this.pendingTimers.get(id);if(timer!==undefined){clearTimeout(timer);this.pendingTimers.delete(id);}}
+ private clearPendingTimers(){for(const timer of this.pendingTimers.values())clearTimeout(timer);this.pendingTimers.clear();}
  private loadPlacements(){
   const key=this.actions.layoutKey?.();if(key===this.activeLayoutKey)return;this.activeLayoutKey=key;this.placements.clear();
   if(!key||typeof localStorage==='undefined')return;
@@ -87,6 +119,7 @@ export class InventoryView {
   this.element.querySelectorAll?.('.item-cell.selected').forEach(cell=>{cell.classList.remove('selected');cell.setAttribute('aria-pressed','false');});
   if(render)this.render();
  }
+ private moveHeldPreview(clientX:number,clientY:number){if(this.selectedSlot!==undefined&&this.heldPreview){this.heldPreview.style.left=`${clientX+10}px`;this.heldPreview.style.top=`${clientY+10}px`;}}
  private select(index:number,item:InventoryItem,cell:HTMLButtonElement,event:MouseEvent){
   if(this.selectedSlot===index){this.clearSelection();return;}
   if(this.selectedSlot!==undefined){
@@ -117,23 +150,20 @@ export class InventoryView {
     cell.dataset.itemId=String(item.makeIndex);cell.disabled=pending;cell.setAttribute('aria-label',item.name);cell.setAttribute('aria-describedby','inventory-item-tooltip');
     const iconIndex=iconIndexOf(item),nationalIcon=usableIcon(this.nationalIcons?.frames[iconIndex]),icon=nationalIcon??usableIcon(this.icons?.frames[iconIndex]);
     cell.append(imageOrEmpty(icon,item,nationalIcon?`/ui-national/items/${nationalIcon.file}`:undefined));
+    const quantity=item.quantity??item.count;if(quantity!==undefined&&quantity>1){const badge=document.createElement('b');badge.className='item-count';badge.textContent=String(quantity);cell.append(badge);}
     cell.onclick=event=>{
      event.preventDefault();
      if(event.shiftKey&&this.actions.trade)this.begin(item,()=>this.actions.trade!(item.makeIndex));
      else this.select(index,item,cell,event);
     };
     cell.ondblclick=event=>{event.preventDefault();event.stopPropagation();this.activate(item);};
-    cell.onmouseenter=()=>this.showTooltip(item,cell);cell.onmouseleave=()=>this.hideTooltip();
+    cell.onmouseenter=()=>this.showTooltip(item,cell);cell.onmouseleave=()=>this.hideTooltip();cell.onfocus=()=>this.showTooltip(item,cell);cell.onblur=()=>this.hideTooltip();
     cell.draggable=true;
     cell.ondragstart=event=>{
      event.dataTransfer?.setData('text/plain',String(item.makeIndex));
      if(event.dataTransfer)event.dataTransfer.effectAllowed='move';
     };
-    cell.ondragend=event=>{
-     const rect=this.element.getBoundingClientRect();
-     const outside=event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom;
-     if(outside)this.begin(item,()=>this.actions.drop(item.makeIndex));
-    };
+    cell.ondragend=()=>{this.clearSelection();};
     cell.oncontextmenu=event=>{
      event.preventDefault();this.activate(item);
     };
@@ -145,18 +175,19 @@ export class InventoryView {
 }
 
 export class EquipmentView {
- private slots=new Map<number,InventoryItem>();private pending=new Set<number>();private icons:Icons|undefined;private stateIcons:Icons|undefined;
+ private slots=new Map<number,InventoryItem>();private pending=new Set<number>();private icons:Icons|undefined;private stateIcons:Icons|undefined;private readonly tooltip:HTMLElement|undefined;
  constructor(private element:HTMLElement,private takeOff:(slot:number)=>void){
+  this.tooltip=this.element.parentElement?.querySelector<HTMLElement>('[data-equipment-tooltip],#equipment-item-tooltip')??undefined;
   this.element.classList.add('paperdoll');
   void loadFallbackItemIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});this.render();
   void loadNationalUiLibrary('stateitem').then(icons=>{this.stateIcons=icons;this.render();}).catch(()=>{});
  }
- clear(){this.slots.clear();this.pending.clear();this.render();}
+ clear(){this.hideTooltip();this.slots.clear();this.pending.clear();this.render();}
  replace(values:{slot:number;item:InventoryItem}[]){this.slots=new Map(values.map(value=>[value.slot,value.item]));this.pending.clear();this.render();}
  set(slot:number,item:InventoryItem){this.pending.delete(slot);this.slots.set(slot,item);this.render();}
  remove(slot:number){this.pending.delete(slot);this.slots.delete(slot);this.render();}
  update(item:InventoryItem){for(const [slot,current] of this.slots)if(current.makeIndex===item.makeIndex){this.slots.set(slot,item);this.render();break;}}
- resolve(slot:number,accepted:boolean){this.pending.delete(slot);if(accepted)this.slots.delete(slot);this.render();}
+ resolve(slot:number,accepted:boolean){if(!this.pending.has(slot))return false;this.pending.delete(slot);if(accepted)this.slots.delete(slot);this.render();return true;}
  rejectPending(){if(!this.pending.size)return;this.pending.clear();this.render();}
  debugState(){return {slots:[...this.slots].map(([slot,item])=>({slot,item:{...item}})),pending:[...this.pending],rendered:Array.from(this.element.querySelectorAll<HTMLElement>('[data-slot]')).map(node=>({slot:Number(node.dataset.slot),kind:node.classList.contains('equipment-appearance')?'appearance':'cell',left:node.style.left,top:node.style.top}))};}
  preferredSlot(slot:number){
@@ -165,18 +196,18 @@ export class EquipmentView {
   return slot;
  }
  private render(){
-  this.element.replaceChildren();this.element.classList.add('paperdoll');
+  this.hideTooltip();this.element.replaceChildren();this.element.classList.add('paperdoll');
   for(const appearance of EQUIPMENT_APPEARANCE){
    const item=this.slots.get(appearance.slot),frame=item&&this.stateIcons?.frames[String(iconIndexOf(item))];
    if(!item||!frame)continue;
    const button=document.createElement('button');button.type='button';button.className=`equipment-appearance equipment-appearance--${appearance.layer}`;
    button.style.left=`${EQUIPMENT_PAGE.x+frame.offsetX}px`;button.style.top=`${EQUIPMENT_PAGE.y+frame.offsetY}px`;
    button.style.width=`${frame.width}px`;button.style.height=`${frame.height}px`;button.style.zIndex=String(appearance.z);
-   button.dataset.slot=String(appearance.slot);button.dataset.durability=String(item.durability);button.dataset.maxDurability=String(item.maxDurability);
+   button.dataset.slot=String(appearance.slot);button.dataset.durability=String(item.durability);button.dataset.maxDurability=String(item.maxDurability);button.setAttribute('aria-describedby','equipment-item-tooltip');
    button.title=`${appearance.name}：${item.name}\n持久 ${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`;
    button.disabled=this.pending.has(appearance.slot);
    const image=imageOrEmpty(frame,item,`/ui-national/stateitem/${frame.file}`);image.classList.add('equipment-state-art');button.append(image);
-   button.onclick=()=>{this.pending.add(appearance.slot);this.render();this.takeOff(appearance.slot);};
+   button.onclick=()=>{this.pending.add(appearance.slot);this.render();this.takeOff(appearance.slot);};button.onmouseenter=()=>this.showTooltip(item,button,appearance.name);button.onmouseleave=()=>this.hideTooltip();button.onfocus=()=>this.showTooltip(item,button,appearance.name);button.onblur=()=>this.hideTooltip();
    this.element.append(button);
   }
   for(const cell of EQUIPMENT_CELLS){
@@ -185,16 +216,23 @@ export class EquipmentView {
    button.dataset.slot=String(cell.slot);button.setAttribute('aria-label',cell.name);
    const item=this.slots.get(cell.slot);
    if(item){
-    button.dataset.durability=String(item.durability);button.dataset.maxDurability=String(item.maxDurability);
+    button.dataset.durability=String(item.durability);button.dataset.maxDurability=String(item.maxDurability);button.setAttribute('aria-describedby','equipment-item-tooltip');
     button.title=`${cell.name}：${item.name}\n持久 ${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`;
     button.disabled=this.pending.has(cell.slot);
     const iconIndex=iconIndexOf(item),stateIcon=usableIcon(this.stateIcons?.frames[String(iconIndex)]),icon=stateIcon??usableIcon(this.icons?.frames[String(iconIndex)]);
     button.append(imageOrEmpty(icon,item,stateIcon?`/ui-national/stateitem/${stateIcon.file}`:undefined));
-    button.onclick=()=>{this.pending.add(cell.slot);this.render();this.takeOff(cell.slot);};
+    button.onclick=()=>{this.pending.add(cell.slot);this.render();this.takeOff(cell.slot);};button.onmouseenter=()=>this.showTooltip(item,button,cell.name);button.onmouseleave=()=>this.hideTooltip();button.onfocus=()=>this.showTooltip(item,button,cell.name);button.onblur=()=>this.hideTooltip();
    }else{button.title=`${cell.name}：空`;button.disabled=true;}
    this.element.append(button);
   }
  }
+ private showTooltip(item:InventoryItem,cell:HTMLButtonElement,label:string){
+  if(!this.tooltip)return;this.tooltip.replaceChildren();const heading=document.createElement('strong');heading.textContent=item.name;this.tooltip.append(heading);
+  const slot=document.createElement('span'),slotName=document.createElement('em'),slotValue=document.createElement('b');slotName.textContent='部位';slotValue.textContent=label;slot.append(slotName,slotValue);this.tooltip.append(slot);
+  for(const [name,value] of itemDetailRows(item)){const row=document.createElement('span'),key=document.createElement('em'),amount=document.createElement('b');key.textContent=name;amount.textContent=value;row.append(key,amount);this.tooltip.append(row);}
+  const left=cell.offsetLeft+(cell.offsetLeft>150?-180:38),top=Math.max(6,Math.min(250,cell.offsetTop));this.tooltip.style.left=`${left}px`;this.tooltip.style.top=`${top}px`;this.tooltip.hidden=false;
+ }
+ private hideTooltip(){if(this.tooltip)this.tooltip.hidden=true;}
 }
 
 function defaultSlot(mode:number){

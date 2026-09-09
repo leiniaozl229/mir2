@@ -2,6 +2,7 @@ import {createMapView} from './map-view';
 import {OnlineActor,preloadPlayerLocomotion,type Entity} from './online-actors';
 import './style.css';
 import {EquipmentView,InventoryView,type InventoryItem} from './inventory';
+import {ItemQuickBar} from './item-quickbar';
 import {GroundItems,type GroundItem} from './ground-items';
 import {PaperdollView} from './paperdoll';
 import {CharacterPanel} from './character-panel';
@@ -180,6 +181,11 @@ const inventory=new InventoryView(document.querySelector<HTMLElement>('#inventor
  trade:makeIndex=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'tradeAdd',makeIndex}));},
  layoutKey:()=>selectedCharacter?`mir2.inventory-layout.${selectedCharacter}`:undefined
 });
+const itemQuickBar=new ItemQuickBar(document.querySelector<HTMLElement>('[data-hud-item-quickbar]')!,{
+ use:makeIndex=>{if(socket?.readyState!==WebSocket.OPEN)return false;socket.send(JSON.stringify({type:'useItem',makeIndex}));return true;},
+ status:text=>{connection.textContent=text;},
+ layoutKey:()=>selectedCharacter?`mir2.item-quickbar.${selectedCharacter}`:undefined
+});
 const equipment=new EquipmentView(document.querySelector<HTMLElement>('#equipment-items')!,slot=>{if(socket?.readyState===WebSocket.OPEN)socket.send(JSON.stringify({type:'takeOffItem',slot}));});
 const paperdoll=new PaperdollView(document.querySelector<HTMLElement>('#paperdoll-actor')!);
 const characterWindow=document.querySelector<HTMLElement>('#character-window')!;
@@ -207,7 +213,6 @@ for(const source of classicWindowSources){source.node.hidden=source.id!=='chat';
 hudChat.append(chatPanel);
 function dockChat(){if(chatPanel.parentElement!==hudChat)hudChat.append(chatPanel);chatPanel.hidden=false;}
 function setCharacterPage(page:'paperdoll'|'status'|'state'|'skills'){
- hideClassicWindows('character');
  characterWindow.hidden=false;classicHud.skinWindow(characterWindow,'character');
  characterWindow.querySelectorAll<HTMLElement>('[data-character-page]').forEach(node=>node.hidden=node.dataset.characterPage!==page);
  document.querySelector<HTMLElement>('#equipment-items')!.hidden=page!=='paperdoll';
@@ -216,8 +221,21 @@ function setCharacterPage(page:'paperdoll'|'status'|'state'|'skills'){
 }
 function hideClassicWindows(except:'character'|'inventory'|'classic'|undefined=undefined){
  if(except!=='character')characterWindow.hidden=true;
- if(except!=='inventory')inventoryWindow.hidden=true;
+ if(except!=='inventory'){inventory.cancelSelection();inventoryWindow.hidden=true;}
  if(except!=='classic'){classicWindow.hidden=true;dockChat();}
+}
+function hideServiceWindows(){
+ closeDialogue();
+ document.querySelector<HTMLElement>('#shop-panel')!.hidden=true;
+ document.querySelector<HTMLElement>('#repair-panel')!.hidden=true;
+ document.querySelector<HTMLElement>('#storage-panel')!.hidden=true;
+ classicWindow.hidden=true;dockChat();
+}
+function closeDialogue(){
+ dialogueElement.hidden=true;
+ dialogueNpcId=undefined;
+ dialogueOptions.replaceChildren();
+ renderGuild();
 }
 function toggleClassicWindow(id:string){
  if(id==='character'||id==='equipment'){
@@ -227,8 +245,8 @@ function toggleClassicWindow(id:string){
  if(id==='skills'){setCharacterPage('skills');return;}
  if(id==='inventory'){
   const open=inventoryWindow.hidden;
-  if(open)hideClassicWindows('inventory');
   inventoryWindow.hidden=!open;
+  if(!open)inventory.cancelSelection();
   if(open)classicHud.skinWindow(inventoryWindow,'inventory');
   return;
  }
@@ -236,19 +254,19 @@ function toggleClassicWindow(id:string){
 }
 function showClassicWindow(id:string){
  const source=classicWindowSources.find(value=>value.id===id);if(!source)return;
- hideClassicWindows('classic');
+ classicWindow.hidden=false;
  if(id==='chat')classicWindowBody.append(chatPanel);else dockChat();
  for(const value of classicWindowSources)if(value.id!=='chat')value.node.hidden=value.node!==source.node;
  source.node.hidden=false;
  classicWindowTitle.textContent=source.label;
- classicWindow.hidden=false;classicHud.skinWindow(classicWindow,id);
+ classicHud.skinWindow(classicWindow,id);
  document.querySelectorAll<HTMLButtonElement>('[data-window-tab]').forEach(button=>button.classList.toggle('active',button.dataset.windowTab===id));
 }
 document.querySelectorAll<HTMLButtonElement>('[data-window-open],[data-window-tab]').forEach(button=>button.addEventListener('click',()=>toggleClassicWindow(button.dataset.windowOpen??button.dataset.windowTab??'')));
 document.querySelectorAll<HTMLButtonElement>('[data-window-close]').forEach(button=>button.addEventListener('click',()=>{
  const id=button.dataset.windowClose;
  if(id==='character')characterWindow.hidden=true;
- else if(id==='inventory')inventoryWindow.hidden=true;
+ else if(id==='inventory'){inventory.cancelSelection();inventoryWindow.hidden=true;}
 }));
 document.querySelector<HTMLButtonElement>('#classic-window-close')!.addEventListener('click',()=>{classicWindow.hidden=true;dockChat();});
 characterWindow.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach(button=>button.addEventListener('click',()=>setCharacterPage((button.dataset.characterTab??'paperdoll') as 'paperdoll'|'status'|'state'|'skills')));
@@ -285,14 +303,14 @@ function agentSnapshot(){
   render:visualState?{...visualState,grid:{x:visualState.pixel.x/48,y:visualState.pixel.y/32},screen:{x:visualState.pixel.x+view.app.stage.position.x,y:visualState.pixel.y+view.app.stage.position.y}}:undefined,
   camera:{x:view.app.stage.position.x,y:view.app.stage.position.y},pending:pending?{...pending}:undefined,pendingAction:pendingAction?{...pendingAction}:undefined,
   intentions:{held:held?{...held}:undefined,rightPointer:Boolean(rightPointer),clickDestination:clickDestination?{...clickDestination}:undefined,pursuitTarget,pursuitHarvest,pursuitGroundItem,combatTarget},
-  attributes:characterPanel.debugState(),inventory:inventory.debugState(),equipment:equipment.debugState(),paperdoll:paperdoll.debugState(),groundItems:groundItems.debugState(),skills:skillBar.debugState(),minimap:minimap.debugState(),
+  attributes:characterPanel.debugState(),inventory:inventory.debugState(),itemQuickBar:itemQuickBar.debugState(),equipment:equipment.debugState(),paperdoll:paperdoll.debugState(),groundItems:groundItems.debugState(),skills:skillBar.debugState(),minimap:minimap.debugState(),
   dialogue:{visible:!dialogueElement.hidden,npc:dialogueTitle.textContent,text:dialogueText.textContent,options:Array.from(dialogueOptions.querySelectorAll<HTMLButtonElement>('button')).map(button=>({text:button.textContent,command:button.dataset.dialogueCommand}))},
   combatStatus:combatStatus.textContent,nearby, directions:directionsAvailable,entityCount:entities.size,
  };
 }
 agentObserver.attach(window as Window&{__mir2Agent?:AgentDebugApi},agentSnapshot);
 function appendChat(channel:string,text:string){const line=document.createElement('li');line.dataset.channel=channel;const labels:Record<string,string>={local:'附近',group:'组队',shout:'喊话',whisper:'私聊',guild:'行会',system:'系统'};line.textContent=`[${labels[channel]??channel}] ${text}`;chatLog.append(line);while(chatLog.children.length>100)chatLog.firstElementChild?.remove();chatLog.scrollTop=chatLog.scrollHeight;}
-function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;pendingAction=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;initialSelfPending=true;pursuitTarget=undefined;pursuitHarvest=false;pursuitRejectedCells.clear();pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];castleWarStatus=undefined;dialogueNpcId=undefined;classicWindow.hidden=true;dockChat();characterWindow.hidden=true;inventoryWindow.hidden=true;renderGroup();renderAttackMode();renderGuild();clearTrade();if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();equipment.clear();paperdoll.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}dialogueElement.hidden=true;revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();refreshMiniMapMarkers();}
+function clearWorld(preserveCharacter=false){magicEffects.clear();for(const visual of visuals.values())visual.destroy();visuals.clear();entities.clear();groundItems.clear();self=undefined;pending=undefined;pendingAction=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;initialSelfPending=true;pursuitTarget=undefined;pursuitHarvest=false;pursuitRejectedCells.clear();pursuitGroundItem=undefined;combatTarget=undefined;selectedMagic=undefined;groupEnabled=false;groupMemberNames=[];attackMode=0;guildName='';guildRankName='';guildNotice='';guildWarGuildNames=[];guildWarTimers=[];guildWarReceivedAt=0;guildAllyGuildNames=[];guildMemberNames=[];guildRanks=[];castleWarStatus=undefined;closeDialogue();classicWindow.hidden=true;dockChat();characterWindow.hidden=true;inventoryWindow.hidden=true;inventory.cancelSelection();inventory.rejectPending();itemQuickBar.rejectPending();equipment.rejectPending();shop.rejectPending();repair.rejectPending();storage.rejectPending();renderGroup();renderAttackMode();renderGuild();clearTrade();if(combatTimer!==undefined)clearTimeout(combatTimer);combatTimer=undefined;if(!preserveCharacter){inventory.clear();itemQuickBar.clear();equipment.clear();paperdoll.clear();characterPanel.clear();skillBar.clear();classicHud.clear();}revivePanel.hidden=true;returnToTown.disabled=false;shop.clear();storage.clear();repair.clear();renderTargets();refreshMiniMapMarkers();}
 function update(entity:Entity,movementStart?:number){entities.set(entity.id,entity);let visual=visuals.get(entity.id);if(!visual){visual=new OnlineActor(entity,interact);visuals.set(entity.id,visual);view.depth.addChild(visual.container);}visual.update(entity,movementStart);if(entity.self)paperdoll.setFeature(entity.feature);renderTargets();refreshMiniMapMarkers();}
 function refreshMiniMapMarkers(){
  const markers:MiniMapMarker[]=[...entities.values()].map(entity=>{const race=entity.feature&255;return {id:`entity-${entity.id}`,x:entity.x,y:entity.y,kind:entity.self?'self':race===50?'npc':race===0?'player':'monster'} as MiniMapMarker;});
@@ -450,7 +468,7 @@ function interact(target:Entity,harvest=false){
 view.app.ticker.add(()=>{const time=performance.now();for(const visual of visuals.values())visual.tick(time);finishMovement(time);finishNonMovementAction(time);if(pendingAction&&time-pendingAction.startedAt>5000){connection.textContent='动作确认超时，正在重新同步位置…';socket?.close();}layoutActorLabels();});
 function scheduleReconnect(){
  if(!reconnectEnabled||reconnectTimer!==undefined||!credentials)return;
- if(reconnectAttempts>=5){reconnectEnabled=false;document.body.classList.remove('in-world');classicAuth.showLogin();connection.textContent='自动重连失败，请重新登录';return;}
+ if(reconnectAttempts>=5){reconnectEnabled=false;document.body.classList.remove('in-world');classicAuth.showLogin();classicAuth.setBusy(false);connection.textContent='自动重连失败，请重新登录';return;}
  const attempt=reconnectAttempts++,delay=Math.min(8000,500*2**attempt);
  connection.textContent=`连接已断开，${Math.ceil(delay/1000)} 秒后自动重连 (${attempt+1}/5)…`;
  reconnectTimer=window.setTimeout(()=>{reconnectTimer=undefined;const saved=credentials;connect('login',selectedCharacter,saved,true);},delay);
@@ -458,6 +476,7 @@ function scheduleReconnect(){
 function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Credentials,automatic=false){
  if(reconnectTimer!==undefined){clearTimeout(reconnectTimer);reconnectTimer=undefined;}
  if(!automatic){reconnectEnabled=true;reconnectAttempts=0;selectedCharacter=resumeCharacter;}
+ classicAuth.setBusy(true);
  socket?.close();clearWorld();lastSequence=0;mapGeneration=0;currentMap='0';mapReady=Promise.resolve();
  const account=supplied?.account??document.querySelector<HTMLInputElement>('#account')!.value,password=supplied?.password??document.querySelector<HTMLInputElement>('#password')!.value;
  credentials={account,password};
@@ -470,15 +489,16 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
   if(message.type==='connected'){active.send(JSON.stringify({type:intent,account,password}));document.querySelector<HTMLInputElement>('#password')!.value='';connection.textContent=intent==='register'?'正在创建账号…':'正在登录…';}
   else if(message.type==='registrationResult'){
    if(message.accepted){connection.textContent='账号创建成功，正在登录…';active.send(JSON.stringify({type:'login',account,password}));}
-   else connection.textContent=message.reason===0?'该账号已经存在':`账号创建失败 (${message.reason})`;
+   else {classicAuth.setBusy(false);connection.textContent=message.reason===0?'该账号已经存在':`账号创建失败 (${message.reason})`;}
   }
   else if(message.type==='characters'){
    reconnectAttempts=0;
    const list=message.characters as SelectCharacter[];
    for(const candidate of list)void preloadPlayerLocomotion(((candidate.sex&1)<<24)|((candidate.hair??0)<<16));
-   const enter=(name:string)=>{selectedCharacter=name;loadQuest();active.send(JSON.stringify({type:'selectCharacter',name}));connection.textContent='正在进入比奇…';};
+   const enter=(name:string)=>{selectedCharacter=name;classicAuth.setBusy(true);loadQuest();active.send(JSON.stringify({type:'selectCharacter',name}));connection.textContent='正在进入比奇…';};
    const resumed=resumeCharacter===undefined?undefined:list.find(candidate=>candidate.name===resumeCharacter);
    if(resumed){enter(resumed.name);connection.textContent='正在返回安全区…';return;}
+   classicAuth.setBusy(false);
    classicAuth.showSelect(list,{
     start:enter,
     create:()=>classicAuth.showCreate(),
@@ -486,7 +506,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
    });
    connection.textContent=list.length?'选择角色后点击开始游戏':'当前账号没有角色，请创建战士、法师或道士。';
   }
-  else if(message.type==='characterCreationResult')connection.textContent=message.accepted?`角色 ${message.name} 创建成功，请选择角色`:`角色创建失败 (${message.reason})`;
+  else if(message.type==='characterCreationResult'){classicAuth.setBusy(false);connection.textContent=message.accepted?`角色 ${message.name} 创建成功，请选择角色`:`角色创建失败 (${message.reason})`;}
   else if(message.type==='map'){
    reconnectAttempts=0;
    classicAuth.hide();document.body.classList.add('in-world');
@@ -504,7 +524,7 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
    update(entity);if(entity.self){self=entity.id;classicHud.position(currentMap,entity.x,entity.y);minimap.setPosition(entity.x,entity.y);refreshMiniMapMarkers();if(initialSelfPending){initialSelfPending=false;void mapReady.then(()=>{const current=entities.get(entity.id);if(current)void view.setCenter(current.x,current.y);});}else if(entity.action==='walking'||entity.action==='running')view.moveCenter(entity.x,entity.y,MOVEMENT_DURATION_MS);connection.textContent=`已连接 · ${entity.name} · ${entity.x}, ${entity.y}`;}if(message.self&&mapGeneration===1)active.send(JSON.stringify({type:'inventory'}));
   }
   else if(message.type==='appearance'||message.type==='entityName'||message.type==='nameColor'||message.type==='entityDied'||message.type==='entityAlive'){
-   const entity=entities.get(message.id);if(entity){const next={...entity,...(message.type==='appearance'?{feature:message.feature}:message.type==='entityName'?{name:message.name,nameColor:message.nameColor??entity.nameColor,kind:message.kind??entity.kind}:message.type==='nameColor'?{nameColor:message.color,kind:message.color===254?'slave':entity.kind}:message.type==='entityAlive'?{dead:false,action:'standing',x:message.x,y:message.y,direction:message.direction}:{dead:true,action:'dying',x:message.x,y:message.y,direction:message.direction,hp:0})};update(next);if(message.type==='entityDied'&&combatTarget===message.id)stopCombat();if(message.type==='entityDied'&&entity.self){held=undefined;pending=undefined;pendingAction=undefined;stopCombat();characterPanel.resources({hp:0});revivePanel.hidden=false;connection.textContent='角色已死亡';combatStatus.textContent='等待回城复活';}}
+   const entity=entities.get(message.id);if(entity){const next={...entity,...(message.type==='appearance'?{feature:message.feature}:message.type==='entityName'?{name:message.name,nameColor:message.nameColor??entity.nameColor,kind:message.kind??entity.kind}:message.type==='nameColor'?{nameColor:message.color,kind:message.color===254?'slave':entity.kind}:message.type==='entityAlive'?{dead:false,action:'standing',x:message.x,y:message.y,direction:message.direction}:{dead:true,action:'dying',x:message.x,y:message.y,direction:message.direction,hp:0})};update(next);if(message.type==='entityDied'&&combatTarget===message.id)stopCombat();if(message.type==='entityDied'&&entity.self){held=undefined;pending=undefined;pendingAction=undefined;stopCombat();characterPanel.resources({hp:0});classicHud.skinWindow(revivePanel,'system');revivePanel.hidden=false;connection.textContent='角色已死亡';combatStatus.textContent='等待回城复活';}}
   }
   else if(message.type==='entityAction'){const entity=entities.get(message.id);if(entity){update({...entity,x:message.x,y:message.y,direction:message.direction,action:message.action});if(message.action==='attack'&&!entity.self&&((entity.feature>>>16)&0xffff)===20)audio.play('skeletonAttack');}}
   else if(message.type==='health'){const entity=entities.get(message.id);if(entity){update({...entity,hp:message.hp,maxHp:message.maxHp,action:entity.dead?'dead':'struck'});if(message.damage>0)audio.play('struck');if(entity.self)characterPanel.resources({hp:message.hp,maxHp:message.maxHp});if(combatTarget===message.id&&message.hp<=0)stopCombat();combatStatus.textContent=`${entity.name||'目标'} ${message.hp}/${message.maxHp} HP`;}}
@@ -574,27 +594,27 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
    for(const option of message.options){if(option.input){const form=document.createElement('form');form.className='dialogue-input';const input=document.createElement('input');input.type='text';input.maxLength=80;input.placeholder=option.text;input.required=true;const button=document.createElement('button');button.type='submit';button.textContent=option.text;button.dataset.dialogueCommand=option.command;form.onsubmit=event=>{event.preventDefault();active.send(JSON.stringify({type:'dialogueSelect',npcId:message.npcId,command:option.command,input:input.value}));};form.append(input,button);dialogueOptions.append(form);}else{const button=document.createElement('button');button.type='button';button.textContent=option.text;button.dataset.dialogueCommand=option.command;button.onclick=()=>active.send(JSON.stringify({type:'dialogueSelect',npcId:message.npcId,command:option.command}));dialogueOptions.append(button);}}
   }
   else if(message.type==='dialogueMessage'&&worldReady){if(Array.isArray(message.quests))for(const quest of message.quests)updateQuest(quest as QuestState);else if(message.quest)updateQuest(message.quest as QuestState);hideClassicWindows();dialogueElement.hidden=false;classicHud.skinWindow(dialogueElement,'npc');renderDialogueText(message.text);dialogueOptions.replaceChildren();}
-  else if(message.type==='npcDialogueClosed'){dialogueElement.hidden=true;dialogueNpcId=undefined;renderGuild();shop.clear();storage.clear();repair.clear();}
-  else if(message.type==='shop'){dialogueElement.hidden=true;storage.clear();repair.clear();hideClassicWindows();shop.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent=`商店已打开 · ${message.items.length} 种商品`;}
-  else if(message.type==='shopSell'){dialogueElement.hidden=true;storage.clear();repair.clear();hideClassicWindows();shop.openSell(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent='请选择要出售的背包物品';}
-  else if(message.type==='shopDetails'){shop.showDetails(message.npcId,message.items);connection.textContent=`已载入 ${message.items.length} 件具体商品`;}
+  else if(message.type==='npcDialogueClosed'){closeDialogue();shop.clear();storage.clear();repair.clear();}
+  else if(message.type==='shop'){dialogueElement.hidden=true;storage.clear();repair.clear();hideServiceWindows();shop.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent=`商店已打开 · ${message.items.length} 种商品`;}
+  else if(message.type==='shopSell'){dialogueElement.hidden=true;storage.clear();repair.clear();hideServiceWindows();shop.openSell(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#shop-panel')!,'shop');connection.textContent='请选择要出售的背包物品';}
+  else if(message.type==='shopDetails'){if(shop.showDetails(message.npcId,message.items))connection.textContent=`已载入 ${message.items.length} 件具体商品`;}
   else if(message.type==='shopPurchaseResult'){
-   shop.resolve(message.name,message.makeIndex,message.accepted);if(message.accepted&&message.gold!==null)updateCurrency({gold:message.gold});
+   if(!shop.resolve(message.name,message.makeIndex,message.accepted))return;if(message.accepted&&message.gold!==null)updateCurrency({gold:message.gold});
    const reasons:Record<number,string>={1:'商品已售罄',2:'背包空间或负重不足',3:'金币不足',4:'缺少必需物品'};
    connection.textContent=message.accepted?`购买 ${message.name} 成功 · 剩余 ${message.gold} 金币`:`购买失败 · ${reasons[message.reason]??`原因 ${message.reason}`}`;
   }
-  else if(message.type==='shopSellQuote'){shop.showSellQuote(message.npcId,message.item,message.price);connection.textContent=message.price>0?`${message.item.name} 可卖 ${message.price} 金币`:`${message.item.name} 无法出售`;}
+  else if(message.type==='shopSellQuote'){if(shop.showSellQuote(message.npcId,message.item,message.price))connection.textContent=message.price>0?`${message.item.name} 可卖 ${message.price} 金币`:`${message.item.name} 无法出售`;}
   else if(message.type==='shopSellResult'){
-   shop.resolveSale(message.item,message.accepted);if(message.accepted){inventory.remove(message.item.makeIndex);if(message.gold!==null)updateCurrency({gold:message.gold});}
+   if(!shop.resolveSale(message.item,message.accepted))return;if(message.accepted){inventory.remove(message.item.makeIndex);if(message.gold!==null)updateCurrency({gold:message.gold});}
    connection.textContent=message.accepted?`已卖出 ${message.item.name} · 当前 ${message.gold} 金币`:`出售 ${message.item.name} 失败`;
   }
-  else if(message.type==='repairItems'){dialogueElement.hidden=true;shop.clear();storage.clear();hideClassicWindows();repair.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#repair-panel')!,'repair');connection.textContent='请选择要修理的背包物品';}
-  else if(message.type==='repairQuote'){repair.showQuote(message.npcId,message.item,message.price);connection.textContent=message.price>=0?`${message.item.name} 修理需要 ${message.price} 金币`:`${message.item.name} 无需或无法修理`;}
-  else if(message.type==='repairResult'){repair.resolve(message.item,message.accepted);if(message.accepted){inventory.update(message.item);if(message.gold!==null)updateCurrency({gold:message.gold});}connection.textContent=message.accepted?`${message.item.name} 修理完成 · 当前 ${message.gold} 金币`:`${message.item.name} 修理失败`;}
-  else if(message.type==='storageDeposit'){dialogueElement.hidden=true;shop.clear();repair.clear();hideClassicWindows();storage.openDeposit(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent='请选择要存入仓库的物品';}
-  else if(message.type==='storageItems'){dialogueElement.hidden=true;shop.clear();repair.clear();hideClassicWindows();storage.openItems(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent=`仓库共 ${message.items.length} 件物品`;}
+  else if(message.type==='repairItems'){dialogueElement.hidden=true;shop.clear();storage.clear();hideServiceWindows();repair.open(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#repair-panel')!,'repair');connection.textContent='请选择要修理的背包物品';}
+  else if(message.type==='repairQuote'){if(repair.showQuote(message.npcId,message.item,message.price))connection.textContent=message.price>=0?`${message.item.name} 修理需要 ${message.price} 金币`:`${message.item.name} 无需或无法修理`;}
+  else if(message.type==='repairResult'){if(!repair.resolve(message.item,message.accepted))return;if(message.accepted){inventory.update(message.item);if(message.gold!==null)updateCurrency({gold:message.gold});}connection.textContent=message.accepted?`${message.item.name} 修理完成 · 当前 ${message.gold} 金币`:`${message.item.name} 修理失败`;}
+  else if(message.type==='storageDeposit'){dialogueElement.hidden=true;shop.clear();repair.clear();hideServiceWindows();storage.openDeposit(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent='请选择要存入仓库的物品';}
+  else if(message.type==='storageItems'){dialogueElement.hidden=true;shop.clear();repair.clear();hideServiceWindows();storage.openItems(message.npcId,message.items);classicHud.skinWindow(document.querySelector<HTMLElement>('#storage-panel')!,'storage');connection.textContent=`仓库共 ${message.items.length} 件物品`;}
   else if(message.type==='storageResult'){
-   storage.resolve(message.item,message.accepted);if(message.accepted&&message.kind==='store')inventory.remove(message.item.makeIndex);
+   if(!storage.resolve(message.item,message.accepted))return;if(message.accepted&&message.kind==='store')inventory.remove(message.item.makeIndex);
    const reasons:Record<number,string>={1:'服务端拒绝操作',2:'仓库已满',3:'背包空间或负重不足'};connection.textContent=message.accepted?(message.kind==='store'?`已存入 ${message.item.name}`:`已取回 ${message.item.name}`):`仓库操作失败 · ${reasons[message.reason]??`原因 ${message.reason}`}`;
   }
   else if(message.type==='chat')appendChat(message.channel,message.text);
@@ -616,18 +636,20 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
     }
    }else if(message.accepted){pendingAction.acknowledged=true;agentObserver.event('action-ack',{actionId:pendingAction.actionId,kind:pendingAction.kind,accepted:true});finishNonMovementAction(performance.now());}else{agentObserver.event('action-rollback',{actionId:pendingAction.actionId,kind:pendingAction.kind,accepted:false,reason:message.reason});pendingAction=undefined;continueMovementIntent();}
   }
-  else if(message.type==='inventory')inventory.replace(message.items);
+  else if(message.type==='inventory'){inventory.replace(message.items);itemQuickBar.replace(message.items);}
   else if(message.type==='equipment')equipment.replace(message.slots);
-  else if(message.type==='itemAdded'){inventory.add(message.item);connection.textContent=`获得 ${message.item.name}`;}
-  else if(message.type==='itemRemoved')inventory.remove(message.makeIndex);
-  else if(message.type==='itemUpdated'){inventory.update(message.item);equipment.update(message.item);}
+  else if(message.type==='itemAdded'){inventory.add(message.item);itemQuickBar.add(message.item);connection.textContent=`获得 ${message.item.name}`;}
+  else if(message.type==='itemRemoved'){inventory.remove(message.makeIndex);itemQuickBar.remove(message.makeIndex);}
+  else if(message.type==='itemUpdated'){inventory.update(message.item);itemQuickBar.update(message.item);equipment.update(message.item);}
   else if(message.type==='equipmentDurability'){equipment.set(message.slot,message.item);}
   else if(message.type==='equipmentBroken'){equipment.remove(message.slot);connection.textContent=`${message.item.name} 已损坏`;}
-  else if(message.type==='dropResult'){inventory.resolve(message.makeIndex,message.accepted,true);connection.textContent=message.accepted?'物品已落到地面':'服务端拒绝丢弃物品';}
+  else if(message.type==='dropResult'){const inventoryHandled=inventory.resolve(message.makeIndex,message.accepted,true);const quickBarHandled=itemQuickBar.resolve(message.makeIndex,message.accepted,true);if(!inventoryHandled&&!quickBarHandled)return;connection.textContent=message.accepted?'物品已落到地面':'服务端拒绝丢弃物品';}
   else if(message.type==='itemActionResult'){
-   if(message.kind==='equip'){inventory.resolve(message.makeIndex,message.accepted,true);if(message.accepted)equipment.set(message.slot,message.item);}
-   else if(message.kind==='takeoff')equipment.resolve(message.slot,message.accepted);
-   else if(message.kind==='use')inventory.resolve(message.makeIndex,message.accepted,true);
+   let handled=false;
+   if(message.kind==='equip'){handled=inventory.resolve(message.makeIndex,message.accepted,true);if(handled&&message.accepted)equipment.set(message.slot,message.item);}
+   else if(message.kind==='takeoff')handled=equipment.resolve(message.slot,message.accepted);
+   else if(message.kind==='use'){const inventoryHandled=inventory.resolve(message.makeIndex,message.accepted,true);const quickBarHandled=itemQuickBar.resolve(message.makeIndex,message.accepted,true);handled=inventoryHandled||quickBarHandled;}
+   if(!handled)return;
    if(message.accepted&&message.feature!==null&&self!==undefined){const actor=entities.get(self);if(actor)update({...actor,feature:message.feature});}
    connection.textContent=message.accepted?message.kind==='equip'?`已装备 ${message.item.name}`:message.kind==='takeoff'?`已卸下 ${message.item.name}`:`已使用 ${message.item.name}`:`物品操作失败 (${message.reason})`;
   }
@@ -639,11 +661,11 @@ function connect(intent:'login'|'register',resumeCharacter?:string,supplied?:Cre
     if(failed.kind==='move'&&pending){const movement=pending;pending=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;const entity=self===undefined?undefined:entities.get(self);if(entity){update({...entity,x:movement.fromX,y:movement.fromY,action:'standing'});classicHud.position(view.map,movement.fromX,movement.fromY);minimap.setPosition(movement.fromX,movement.fromY);void view.setCenter(movement.fromX,movement.fromY);}}
     else continueMovementIntent();
    }
-   selectedMagic=undefined;skillBar.resolve();inventory.rejectPending();equipment.rejectPending();connection.textContent=message.message;appendChat('system',`操作失败：${message.message}`);
+   selectedMagic=undefined;skillBar.resolve();inventory.rejectPending();itemQuickBar.rejectPending();equipment.rejectPending();shop.rejectPending();repair.rejectPending();storage.rejectPending();connection.textContent=message.message;appendChat('system',`操作失败：${message.message}`);
   }
  });
-  active.addEventListener('close',()=>{if(socket!==active)return;pending=undefined;pendingAction=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;stopCombat();if(reconnectEnabled&&credentials){scheduleReconnect();}else{document.body.classList.remove('in-world');classicAuth.showLogin();connection.textContent='连接已断开，请重新登录';}});
- active.addEventListener('error',()=>{if(socket===active)connection.textContent='无法连接游戏网关';});
+ active.addEventListener('close',()=>{if(socket!==active)return;pending=undefined;pendingAction=undefined;doorRetry=undefined;held=undefined;rightPointer=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;selectedMagic=undefined;skillBar.resolve();inventory.cancelSelection();inventory.rejectPending();itemQuickBar.rejectPending();equipment.rejectPending();shop.rejectPending();repair.rejectPending();storage.rejectPending();stopCombat();if(reconnectEnabled&&credentials){scheduleReconnect();}else{document.body.classList.remove('in-world');classicAuth.showLogin();classicAuth.setBusy(false);connection.textContent='连接已断开，请重新登录';}});
+ active.addEventListener('error',()=>{if(socket===active){if(!reconnectEnabled||!credentials||reconnectAttempts>=5)classicAuth.setBusy(false);connection.textContent='无法连接游戏网关';}});
 }
 loginForm.addEventListener('submit',event=>{event.preventDefault();connect('login');});
 document.querySelector('#register')!.addEventListener('click',()=>connect('register'));
@@ -670,13 +692,20 @@ tradeSetGold.addEventListener('click',()=>{if(socket?.readyState!==WebSocket.OPE
 tradeAccept.addEventListener('click',()=>{if(socket?.readyState===WebSocket.OPEN&&tradeOpen){socket.send(JSON.stringify({type:'tradeAccept'}));connection.textContent='已确认交易，等待对方确认…';}});
 tradeCancel.addEventListener('click',()=>{if(socket?.readyState===WebSocket.OPEN&&tradeOpen){socket.send(JSON.stringify({type:'tradeCancel'}));connection.textContent='正在取消交易…';}});
 returnToTown.addEventListener('click',()=>{if(!credentials||!selectedCharacter){connection.textContent='请重新输入密码并登录';return;}returnToTown.disabled=true;connection.textContent='正在保存死亡状态…';const saved=credentials,character=selectedCharacter;window.setTimeout(()=>connect('login',character,saved),1000);});
-document.querySelector('#close-dialogue')!.addEventListener('click',()=>dialogueElement.hidden=true);
+document.querySelector('#close-dialogue')!.addEventListener('click',()=>closeDialogue());
 createCharacterForm.addEventListener('submit',event=>{
  event.preventDefault();if(socket?.readyState!==WebSocket.OPEN)return;
  const name=document.querySelector<HTMLInputElement>('#character-name')!.value,job=Number(document.querySelector<HTMLSelectElement>('#character-job')!.value),sex=Number(document.querySelector<HTMLSelectElement>('#character-sex')!.value),hair=Number(document.querySelector<HTMLSelectElement>('#character-hair')!.value);
+ classicAuth.setBusy(true);
  socket.send(JSON.stringify({type:'createCharacter',name,job,sex,hair}));connection.textContent=`正在创建 ${name}…`;
 });
 view.app.canvas.addEventListener('contextmenu',event=>event.preventDefault());
+view.app.canvas.addEventListener('dragover',event=>{event.preventDefault();if(event.dataTransfer)event.dataTransfer.dropEffect='move';});
+view.app.canvas.addEventListener('drop',event=>{
+ event.preventDefault();
+ const makeIndex=Number(event.dataTransfer?.getData('text/plain'));
+ if(Number.isSafeInteger(makeIndex)&&makeIndex>0)inventory.requestDrop(makeIndex);
+});
 view.app.canvas.addEventListener('pointerdown',event=>{
  if(performance.now()<ignoreCanvasPointerUntil)return;
  const entity=self===undefined?undefined:entities.get(self);if(!entity||entity.dead||socket?.readyState!==WebSocket.OPEN)return;
@@ -720,7 +749,31 @@ function cycleAttackMode(){
  socket.send(JSON.stringify({type:'attackMode',mode}));
  connection.textContent='正在切换攻击模式…';
 }
-window.addEventListener('keydown',event=>{if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea'))return;if(event.key==='Tab'){event.preventDefault();if(!event.repeat)minimap.cycle();return;}if(event.ctrlKey&&event.key.toLowerCase()==='h'){event.preventDefault();if(!event.repeat)cycleAttackMode();return;}const classicWindowKey:Record<string,string>={F9:'inventory',F10:'character',F11:'skills'};const windowId=classicWindowKey[event.key];if(windowId){event.preventDefault();if(!event.repeat)toggleClassicWindow(windowId);return;}const functionKey=/^F([1-8])$/.exec(event.key);if(functionKey){event.preventDefault();if(!event.repeat)selectSkillSlot(Number(functionKey[1])-1);return;}const movement=movementInput(event);if(!movement||event.repeat)return;event.preventDefault();rightPointer=undefined;stopCombat();doorRetry=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;held=movement;const actor=self===undefined?undefined:entities.get(self);if(actor)sendMovement(actor,held.dx,held.dy,held.run);});
+window.addEventListener('keydown',event=>{
+ if(event.isComposing)return;
+ if(event.key==='Escape'&&!event.repeat){
+  if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea')){event.target.blur();return;}
+  event.preventDefault();selectedMagic=undefined;skillBar.resolve();inventory.cancelSelection();
+  if(!dialogueElement.hidden){closeDialogue();return;}
+  if(!document.querySelector<HTMLElement>('#shop-panel')!.hidden){shop.clear();return;}
+  if(!document.querySelector<HTMLElement>('#repair-panel')!.hidden){repair.clear();return;}
+  if(!document.querySelector<HTMLElement>('#storage-panel')!.hidden){storage.clear();return;}
+  if(!classicWindow.hidden){classicWindow.hidden=true;dockChat();return;}
+  if(!inventoryWindow.hidden){inventoryWindow.hidden=true;return;}
+  if(!characterWindow.hidden){characterWindow.hidden=true;return;}
+  return;
+ }
+ if(event.target instanceof HTMLElement&&event.target.matches('input,select,textarea'))return;
+ if(itemQuickBar.handleKey(event))return;
+ if(event.key==='Enter'&&!event.repeat){event.preventDefault();chatInput.focus();return;}
+ if(event.key==='Tab'){event.preventDefault();if(!event.repeat)minimap.cycle();return;}
+ if(event.ctrlKey&&event.key.toLowerCase()==='h'){event.preventDefault();if(!event.repeat)cycleAttackMode();return;}
+ const classicWindowKey:Record<string,string>={F9:'inventory',F10:'character',F11:'skills'},windowId=classicWindowKey[event.key];
+ if(windowId){event.preventDefault();if(!event.repeat)toggleClassicWindow(windowId);return;}
+ const functionKey=/^F([1-8])$/.exec(event.key);
+ if(functionKey){event.preventDefault();if(!event.repeat)selectSkillSlot(Number(functionKey[1])-1);return;}
+ const movement=movementInput(event);if(!movement||event.repeat)return;event.preventDefault();rightPointer=undefined;stopCombat();doorRetry=undefined;clickDestination=undefined;pursuitTarget=undefined;pursuitHarvest=false;pursuitGroundItem=undefined;held=movement;const actor=self===undefined?undefined:entities.get(self);if(actor)sendMovement(actor,held.dx,held.dy,held.run);
+});
 window.addEventListener('keyup',event=>{if(releasesMovement(held,event))held=undefined;});
 window.addEventListener('blur',()=>{held=undefined;rightPointer=undefined;});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){held=undefined;rightPointer=undefined;}});

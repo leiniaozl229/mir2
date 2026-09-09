@@ -10,7 +10,7 @@ CONTENT = ROOT / "content/classic-176/p0"
 
 class P0QuestContentTests(unittest.TestCase):
     def test_source_map_quest_has_script_and_runtime_route_import_path(self):
-        report = audit()
+        report = audit(runtime_mode="p0")
         self.assertTrue(report["ok"], report)
         self.assertEqual(report["sourceEntries"], 1)
         self.assertEqual(report["runtimeMode"], "p0")
@@ -21,11 +21,11 @@ class P0QuestContentTests(unittest.TestCase):
         self.assertEqual(report["entries"][0]["npc"], "Q002")
         self.assertEqual(report["sourceTriggerScripts"]["Q001"], ["任务NPC/老人-1.txt"])
 
-    def test_classic_route_reports_source_quest_missing_from_runtime(self):
+    def test_classic_route_reports_source_quest_in_runtime(self):
         report = audit(runtime_mode="classic-route")
-        self.assertFalse(report["ok"], report)
+        self.assertTrue(report["ok"], report)
         self.assertEqual(report["expectedRuntimeEntries"], 1)
-        self.assertEqual(report["missingRuntimeEntries"], ["Q001"])
+        self.assertEqual(report["missingRuntimeEntries"], [])
 
     def test_quest_scripts_keep_persistent_accept_and_complete_flags(self):
         specs = {

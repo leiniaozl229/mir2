@@ -41,6 +41,7 @@ body.classic-play #paperdoll-actor img{position:absolute;image-rendering:pixelat
 body.classic-play .item-cell{position:absolute;width:36px;height:32px;padding:0;border:0;background:transparent;overflow:hidden;pointer-events:auto}
 body.classic-play .item-cell img{position:absolute;left:50%;top:50%;width:auto;height:auto;max-width:36px;max-height:32px;transform:translate(-50%,-50%);object-fit:contain;image-rendering:pixelated;display:block}
 body.classic-play .item-cell .missing-item-icon{width:34px;height:30px;image-rendering:pixelated;display:block}
+body.classic-play .item-cell .item-count{position:absolute;right:1px;bottom:0;padding:0 2px;background:rgba(8,6,4,.78);color:#fff1ae;font:9px/11px ui-monospace,monospace;pointer-events:none}
 body.classic-play .item-cell:hover{outline:1px solid #ffe27a}
 body.classic-play .item-cell.selected{z-index:3;outline:1px solid #fff0a6;filter:brightness(1.25)}
 body.classic-play .inventory-window{--bag-origin-x:9px;--bag-origin-y:37px;--bag-step-x:37px;--bag-step-y:33px}
@@ -89,6 +90,63 @@ body.in-world #world-status{position:absolute;left:50%;top:8px;z-index:7;display
 
 body.classic-play #classic-hud.national-ui .hud-main{left:0;top:349px;z-index:1}body.classic-play #classic-hud.national-ui .hud-minimap-frame{background-image:none!important;left:688px;top:400px;width:100px;height:108px;opacity:1;z-index:3}body.classic-play #classic-hud.national-ui .hud-minimap-frame canvas{left:2px;top:4px;width:96px;height:84px}body.classic-play #classic-hud.national-ui .hud-minimap-frame [data-hud-coords]{left:0;top:88px;width:100px;height:16px}body.classic-play #classic-hud.national-ui .hud-skillbar{left:286px!important;top:352px!important;width:248px;height:28px;background:transparent!important;background-image:none!important;z-index:3}body.classic-play #classic-hud.national-ui .hud-slot kbd{display:none}body.classic-play.national-play #audio-toggle{display:none}body.classic-play #classic-hud.national-ui .hud-chatbar{display:none}body.classic-play #classic-hud.national-ui .hud-chat{left:207px!important;top:469px!important;width:387px;height:123px;overflow:hidden;background:#1a1612!important;z-index:2}body.classic-play #classic-hud.national-ui .hud-window-buttons{z-index:4}body.classic-play #classic-hud.national-ui .hud-chat .chat-panel{background:#1a1612}body.classic-play #classic-hud.national-ui .hud-chat .chat-panel ol{height:100px;padding:4px 8px;color:#e8d6a0;overflow:auto}body.classic-play #classic-hud.national-ui .hud-chat .chat-panel form{top:104px;left:4px;width:378px;height:16px;display:block}body.classic-play #classic-hud.national-ui .hud-chat .chat-panel form label{position:absolute;inset:0;display:flex;margin:0;padding:0;font-size:0;gap:0}body.classic-play #classic-hud.national-ui .hud-chat .chat-panel form label:not(:last-of-type),body.classic-play #classic-hud.national-ui .hud-chat .chat-panel form button{display:none}body.classic-play #classic-hud.national-ui #chat-input{width:100%;height:16px;background:#14110e;color:#e8d6a0}body.classic-play #classic-hud.national-ui .hud-orb-well{display:block;left:42px;top:85px;width:46px;height:90px;overflow:hidden}body.classic-play #classic-hud.national-ui .hud-orb-well.mp{left:88px}body.classic-play #classic-hud.national-ui .hud-orb-fill{width:46px;height:90px}body.classic-play #classic-hud.national-ui .hud-orb-fill img{width:92px;height:90px}body.classic-play #classic-hud.national-ui .hud-exp-track{display:block;left:664px;top:176px;width:75px;height:12px;background-image:none}body.classic-play #classic-hud.national-ui .hud-weight{display:block;left:664px;top:209px;width:75px;height:12px;background-image:none}body.classic-play #classic-hud.national-ui [data-hud-hp]{left:42px;top:118px;width:46px;color:#fff0bb;text-align:center;font-size:10px}body.classic-play #classic-hud.national-ui [data-hud-mp]{left:88px;top:118px;width:46px;color:#d6e4ff;text-align:center;font-size:10px}body.classic-play #classic-hud.national-ui [data-hud-name]{left:24px;top:196px;width:120px}body.classic-play #classic-hud.national-ui [data-hud-job]{left:630px;top:152px}body.classic-play #classic-hud.national-ui [data-hud-status]{left:742px;top:206px;max-width:48px;font-size:10px}body.classic-play #classic-hud.national-ui [data-hud-exp]{left:642px;top:160px;width:110px;font-size:11px}body.classic-play #classic-hud.national-ui [data-hud-gold]{left:630px;top:228px;width:142px}body.classic-play #classic-hud.national-ui .hud-window-buttons button{background-image:none!important}body.classic-play .national-window{border:0;background-color:transparent;box-shadow:none}body.classic-play .inventory-window.national-window{padding:0}body.classic-play .character-window.national-window{padding:0;overflow:hidden}body.classic-play .character-window.national-window .classic-char-name{width:256px}body.classic-play .character-window.national-window [data-character-tab]{color:#e8d6a0;font:12px SimSun,serif;line-height:18px;text-align:center}body.classic-play .national-window .classic-window-close{position:absolute;z-index:2}
 body.classic-play .national-panel{box-sizing:border-box;padding:28px 12px 10px;color:#e8d6a0;overflow:auto}body.classic-play .national-panel .shop-heading{height:22px;margin:0 12px 5px;color:#f4d67c;text-shadow:1px 1px #000}body.classic-play .national-panel .shop-heading button{position:absolute;right:2px;top:2px;width:22px;height:22px;padding:0;border:0;background:transparent;color:transparent;cursor:pointer}body.classic-play .national-panel .shop-goods,body.classic-play .national-panel .shop-details,body.classic-play .national-panel .storage-items{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}body.classic-play .national-panel .shop-row{min-height:38px;padding:3px 4px;gap:4px;border-color:#6c5a3e;background:rgba(22,13,8,.72);box-shadow:inset 0 0 0 1px rgba(231,196,112,.16)}body.classic-play .national-panel .shop-row span{min-width:0;gap:1px}body.classic-play .national-panel .shop-row strong,body.classic-play .national-panel .shop-row small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body.classic-play .national-panel .shop-row small{font-size:10px;color:#c5b27d}body.classic-play .national-panel .shop-row button{padding:2px 4px;border-color:#8a6c39;background:#2b1d11;color:#f0d286;font:11px SimSun,serif;white-space:nowrap}body.classic-play .national-panel .item-icon{flex:none;width:32px;height:32px;object-fit:contain;image-rendering:pixelated}body.classic-play .national-panel h3{margin:8px 0 4px;color:#f0d286;font-size:12px}
+body.classic-play #shop-panel.national-panel .shop-list--buy,body.classic-play #shop-panel.national-panel .shop-details{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.classic-play #shop-panel.national-panel .shop-list--sell{grid-template-columns:1fr}
+body.classic-play #repair-panel.national-panel .repair-list{grid-template-columns:1fr;gap:5px}
+body.classic-play #repair-panel.national-panel .repair-list .shop-row{min-height:42px}
+body.classic-play #storage-panel.national-panel .storage-list--store,body.classic-play #storage-panel.national-panel .storage-list--take{grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+body.classic-play #storage-panel.national-panel .storage-list--store .shop-row,body.classic-play #storage-panel.national-panel .storage-list--take .shop-row{display:grid;grid-template-columns:32px 1fr;grid-template-rows:1fr auto;min-height:68px;padding:3px;gap:2px}
+body.classic-play #storage-panel.national-panel .storage-list--store .shop-row button,body.classic-play #storage-panel.national-panel .storage-list--take .shop-row button{grid-column:1 / -1;width:100%}
+body.classic-play .national-panel .shop-row{position:relative}
+body.classic-play .national-panel .service-item-tooltip{position:absolute;left:2px;top:calc(100% + 2px);width:180px;z-index:45;padding:8px 9px;border:1px solid #94783f;background:rgba(12,9,7,.97);color:#e7d5a2;box-shadow:2px 3px 8px rgba(0,0,0,.72);font:12px/17px SimSun,'Songti SC',serif;pointer-events:none}
+body.classic-play .national-panel .service-item-tooltip[hidden]{display:none}
+body.classic-play .national-panel.chat-panel{display:flex;gap:5px;padding:38px 14px 12px}
+body.classic-play .national-panel.chat-panel .calibration-window-heading,body.classic-play .national-panel.trade-panel .calibration-window-heading{position:absolute;left:0;right:0;top:8px;height:20px;display:flex;align-items:center;justify-content:center;color:#f4d67c;text-shadow:1px 1px #000}
+body.classic-play .national-panel.chat-panel .calibration-window-heading .classic-window-close,body.classic-play .national-panel.trade-panel .calibration-window-heading .classic-window-close{position:absolute;right:2px;top:2px;width:22px;height:22px;padding:0;border:0;background-image:none!important;color:transparent}
+body.classic-play .national-panel.chat-panel ol{flex:1;min-height:160px;margin:0;padding:7px 9px;overflow:auto;border:1px solid rgba(108,90,62,.75);background:rgba(22,13,8,.72);list-style:none}
+body.classic-play .national-panel.chat-panel form{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:5px;margin:0;padding:5px 0 0;border:0}
+body.classic-play .national-panel.chat-panel form label{display:flex;align-items:center;gap:3px;min-width:0;color:#c5b27d;font-size:11px}
+body.classic-play .national-panel.chat-panel form label:last-of-type{grid-column:1 / 3}
+body.classic-play .national-panel.chat-panel form input,body.classic-play .national-panel.chat-panel form select{min-width:0;width:100%;height:22px;padding:2px 4px;border:1px solid #6c5a3e;background:#1a110b;color:#e8d6a0;font:11px SimSun,serif}
+body.classic-play .national-panel.chat-panel form button{grid-column:3;grid-row:1 / 3;padding:2px 7px;border-color:#8a6c39;background:#2b1d11;color:#f0d286;font:11px SimSun,serif}
+body.classic-play .national-panel.trade-panel{display:flex;gap:5px;padding:38px 14px 12px}
+body.classic-play .national-panel.trade-panel>p{margin:0;color:#c5b27d;font:11px SimSun,serif}
+body.classic-play .national-panel.trade-panel .trade-columns{display:grid;grid-template-columns:1fr 1fr;gap:5px;min-height:155px}
+body.classic-play .national-panel.trade-panel .trade-columns>div{padding:5px;border:1px solid rgba(108,90,62,.75);background:rgba(22,13,8,.72);font:11px SimSun,serif;color:#e8d6a0}
+body.classic-play .national-panel.trade-panel .trade-columns ol{margin:5px 0 0;padding:0;list-style:none}
+body.classic-play .national-panel.trade-panel .trade-columns li{display:flex;justify-content:space-between;gap:4px;margin:2px 0;padding:3px;border:1px solid rgba(108,90,62,.55)}
+body.classic-play .national-panel.trade-panel .trade-columns button,body.classic-play .national-panel.trade-panel .trade-controls button{padding:2px 4px;border-color:#8a6c39;background:#2b1d11;color:#f0d286;font:11px SimSun,serif}
+body.classic-play .national-panel.trade-panel .trade-controls{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin:0}
+body.classic-play .national-panel.trade-panel .trade-controls label{display:flex;align-items:center;gap:3px;color:#c5b27d;font:11px SimSun,serif}
+body.classic-play .national-panel.trade-panel .trade-controls input{width:64px;height:22px;padding:2px 4px;border:1px solid #6c5a3e;background:#1a110b;color:#e8d6a0;font:11px SimSun,serif}
+body.classic-play .national-panel.quest-panel,body.classic-play .national-panel.attack-panel{display:flex;flex-direction:column;align-items:stretch;gap:6px;padding:38px 14px 12px}
+body.classic-play .national-panel.quest-panel .calibration-window-heading,body.classic-play .national-panel.attack-panel .calibration-window-heading{position:absolute;left:0;right:0;top:8px;height:20px;display:flex;align-items:center;justify-content:center;color:#f4d67c;text-shadow:1px 1px #000}
+body.classic-play .national-panel.quest-panel .calibration-window-heading .classic-window-close,body.classic-play .national-panel.attack-panel .calibration-window-heading .classic-window-close{position:absolute;right:2px;top:2px;width:22px;height:22px;padding:0;border:0;background-image:none!important;color:transparent}
+body.classic-play .national-panel.quest-panel .quest-entry{padding:6px 8px;border:1px solid rgba(108,90,62,.75);background:rgba(22,13,8,.72);font:11px/16px SimSun,serif}
+body.classic-play .national-panel.quest-panel .quest-entry:first-of-type{border-top:1px solid rgba(108,90,62,.75)}
+body.classic-play .national-panel.quest-panel .quest-entry p{margin:2px 0;color:#c5b27d}
+body.classic-play .national-panel.quest-panel .quest-entry small{color:#9c8c68}
+body.classic-play .national-panel.attack-panel label{display:flex;align-items:center;gap:6px;color:#c5b27d;font:11px SimSun,serif}
+body.classic-play .national-panel.attack-panel select{flex:1;height:24px;padding:2px 4px;border:1px solid #6c5a3e;background:#1a110b;color:#e8d6a0;font:11px SimSun,serif}
+body.classic-play .national-panel.attack-panel #calibration-attack-status{min-width:0;color:#e8d6a0;font:11px SimSun,serif}
+body.classic-play .national-panel.attack-panel small{color:#9c8c68;font:10px/15px SimSun,serif}
+body.classic-play .national-panel.utility-panel{display:flex;flex-direction:column;align-items:stretch;gap:7px;padding:38px 14px 12px}
+body.classic-play .national-panel.utility-panel .calibration-window-heading{position:absolute;left:0;right:0;top:8px;height:20px;display:flex;align-items:center;justify-content:center;color:#f4d67c;text-shadow:1px 1px #000}
+body.classic-play .national-panel.utility-panel .calibration-window-heading .classic-window-close{position:absolute;right:2px;top:2px;width:22px;height:22px;padding:0;border:0;background-image:none!important;color:transparent}
+body.classic-play .national-panel.utility-panel>span{color:#c5b27d;font:11px SimSun,serif}
+body.classic-play .national-panel.utility-panel .target-list,body.classic-play .national-panel.utility-panel .ground-item-list{display:flex;flex-direction:column;align-items:stretch;gap:5px}
+body.classic-play .national-panel.utility-panel .target-list button,body.classic-play .national-panel.utility-panel .ground-item-list button{padding:5px 7px;border:1px solid rgba(108,90,62,.75);background:rgba(22,13,8,.72);color:#e8d6a0;text-align:left;font:11px SimSun,serif}
+body.classic-play .national-panel.utility-panel .target-list button:hover,body.classic-play .national-panel.utility-panel .ground-item-list button:hover{border-color:#d4af5c;color:#fff0bb}
+body.classic-play .national-panel.utility-panel label{display:flex;align-items:center;gap:6px;color:#c5b27d;font:11px SimSun,serif}
+body.classic-play .national-panel.utility-panel label input{flex:1;min-width:0;height:24px;padding:2px 4px;border:1px solid #6c5a3e;background:#1a110b;color:#e8d6a0;font:11px SimSun,serif}
+body.classic-play .national-panel.utility-panel>button{padding:3px 6px;border-color:#8a6c39;background:#2b1d11;color:#f0d286;font:11px SimSun,serif}
+body.classic-play .national-panel.utility-panel ol{display:flex;flex-direction:column;align-items:stretch;gap:4px;width:auto;margin:0;padding:0;list-style:none}
+body.classic-play .national-panel.utility-panel ol li{padding:4px 6px;border:1px solid rgba(108,90,62,.55);background:rgba(22,13,8,.72);color:#e8d6a0;font:11px SimSun,serif}
+body.classic-play .national-panel.system-panel p{margin:0;color:#c5b27d;font:11px/17px SimSun,serif}
+body.classic-play .national-panel.system-panel .system-actions{display:flex;flex-wrap:wrap;gap:6px}
+body.classic-play .national-panel.system-panel .system-actions button{flex:1 1 30%;min-width:88px;padding:5px 6px;border:1px solid #8a6c39;background:#2b1d11;color:#f0d286;font:11px SimSun,serif}
+body.classic-play .national-panel.system-panel .system-actions button:hover{border-color:#d4af5c;color:#fff0bb}
+body.classic-play .national-panel.system-panel small{color:#9c8c68;font:10px/15px SimSun,serif}
 
 body.classic-play.in-world main{min-height:100vh;padding:0;display:grid;place-items:center}
 body.classic-play.in-world #game-stage{grid-area:1 / 1;margin:0}
@@ -138,6 +196,8 @@ body.classic-play main{padding:0;min-height:100vh;display:grid;place-items:cente
 body.classic-play .dev-chrome{display:none}
 body.classic-play #auth-overlay input:focus{outline:1px solid #d6a84c;outline-offset:1px;box-shadow:0 0 0 1px #24170d}
 body.classic-play #auth-overlay button:focus-visible{outline:1px solid #d6a84c;outline-offset:2px}
+body.classic-play #auth-overlay button:disabled,body.classic-play #auth-overlay input:disabled,body.classic-play #auth-overlay select:disabled{opacity:.55;cursor:wait}
+body.classic-play #auth-overlay[data-auth-busy="true"]{cursor:wait}
 body.classic-play #auth-overlay [data-auth-login-dialog] button{appearance:none;color:transparent!important;font-size:0;line-height:0;text-indent:-9999px}
 body.classic-play #classic-modal-layer .npc-dialog{overflow:hidden}
 body.classic-play #classic-modal-layer .npc-dialog #npc-text{display:block;max-height:235px;margin:8px 0;overflow-x:hidden;overflow-y:auto;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word;line-height:1.45;color:#e8d6a0}
@@ -149,7 +209,7 @@ body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-cly
 body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clred{color:#e98a6a}
 body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clblue{color:#8ab5e8}
 body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clgreen{color:#8fc77b}
-body.classic-play #viewport-shell:has(#classic-modal-layer>section:not([hidden])) #character-window,body.classic-play #viewport-shell:has(#classic-modal-layer>section:not([hidden])) #inventory-window{display:none!important}
+/* Modal service panels are hidden by the controller before they open. Character and inventory windows can remain visible beside a shop, repair or storage panel. */
 /* The mmap.wil view is a standalone map panel. Its three modes intentionally override legacy HUD frame guesses. */
 body.classic-play #classic-hud .hud-minimap-frame{position:absolute;left:614px!important;top:12px!important;right:auto;width:174px!important;height:148px!important;display:block;padding:5px;background:linear-gradient(145deg,rgba(43,35,25,.97),rgba(8,11,10,.98))!important;border:1px solid #a98a4c;outline:1px solid #20180e;box-shadow:0 2px 10px #000;opacity:1;z-index:16;pointer-events:auto;color:#e7d6a4;text-shadow:1px 1px #000;image-rendering:pixelated}
 body.classic-play #classic-hud .minimap-heading{position:relative;display:grid;grid-template-columns:1fr auto 20px;align-items:center;gap:5px;width:auto;max-width:none;height:22px;min-height:0;padding:0 1px 3px;border-bottom:1px solid #66522c;font:11px SimSun,'Songti SC',serif}
@@ -172,3 +232,18 @@ body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"]{left:7
 body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-heading{display:block;width:20px;height:20px;padding:0;border:0}
 body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-heading>*:not(button),body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-viewport,body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-legend{display:none}
 body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-heading button{display:block}
+
+/* The window drag controller owns this position after the legacy skin is applied. */
+body.classic-play #classic-window{left:var(--classic-window-left,192px)!important;top:var(--classic-window-top,126px)!important}
+/* The imported Prguse#1 frame has six item pockets at x≈281..537, y≈52. */
+body.classic-play #classic-hud .hud-itembar{display:none;position:absolute;left:0;top:0;width:800px;height:600px;z-index:3;pointer-events:none}
+body.classic-play #classic-hud.national-ui .hud-itembar{display:block;top:349px;width:800px;height:251px;pointer-events:none}
+body.classic-play #classic-hud.national-ui .hud-item-quickbar{position:absolute;left:280px;top:50px;display:flex;gap:8px;width:258px;height:36px;pointer-events:auto}
+body.classic-play #classic-hud .item-quickbar-slot{position:relative;display:grid;place-items:center;width:38px;height:35px;padding:0;border:1px solid rgba(226,202,151,.42);border-radius:1px;background:rgba(11,9,7,.58);color:#f3d681;box-shadow:inset 0 0 0 1px rgba(23,17,10,.8);image-rendering:pixelated;cursor:pointer}
+body.classic-play #classic-hud .item-quickbar-slot:hover,body.classic-play #classic-hud .item-quickbar-slot:focus-visible{border-color:#f4db86;background:rgba(68,48,24,.62);outline:1px solid rgba(255,225,137,.45);outline-offset:1px}
+body.classic-play #classic-hud .item-quickbar-slot:active{background:rgba(114,81,30,.7);transform:translateY(1px)}
+body.classic-play #classic-hud .item-quickbar-slot:disabled{opacity:.48;cursor:default}
+body.classic-play #classic-hud .item-quickbar-slot img{display:block;max-width:32px;max-height:30px;image-rendering:pixelated;object-fit:contain;pointer-events:none}
+body.classic-play #classic-hud .item-quickbar-slot kbd{position:absolute;right:2px;bottom:0;padding:0;border:0;background:rgba(8,6,4,.7);color:#ffe8a2;font:9px/11px SimSun,serif;pointer-events:none}
+body.classic-play #classic-hud .item-quickbar-slot .item-quickbar-fallback{font:14px SimSun,serif;color:#e6c873;pointer-events:none}
+body.classic-play #classic-hud .item-quickbar-slot .item-quickbar-count{position:absolute;left:2px;bottom:0;padding:0 2px;background:rgba(8,6,4,.78);color:#fff1ae;font:9px/11px ui-monospace,monospace;pointer-events:none}

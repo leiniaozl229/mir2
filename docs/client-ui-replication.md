@@ -1,5 +1,7 @@
 # 客户端 UI 复刻依据
 
+2026-09-09 更新：[UI 复刻原因检查与完整实施方案](ui-fidelity-audit-2026-09-09.md) 已核实本地安装包的 1.76.0.0 声明、静态启动链和 2,760 个导出帧，列出当前视觉/交互缺口、原端无法运行时的替代路线及验收矩阵。`/ui-calibration.html` 已接入生产组件的登录、HUD、角色、背包、NPC、商店、修理、仓库、任务、攻击、目标、地面物品、队伍、行会、系统弹窗、聊天和交易固定场景。下文背包等条目为目标契约，实际完成状态以该审查和后续关闭证据为准。
+
 当前复刻把视觉、交互和服务端状态分开取证，避免再次混用不同客户端版本的坐标。
 
 ## 证据来源
@@ -25,6 +27,16 @@
 4. 背包排序按角色保存在浏览器本地，物品实例和使用结果仍由服务端确认。
 5. 角色、背包、通用窗口及 NPC/商店/修理/仓库窗口可拖动，位置保存在浏览器本地并限制在 800×600 游戏区域内。
 
+## 物品快捷栏契约
+
+主 HUD 使用 `Prguse#1` 的六个物品槽，槽框相对主界面帧原点为 `(280,50)`，间距 46px，底图原点为 `(0,349)`；契约记录在 `content/classic-176/ui-layout.json`。`ItemQuickBar` 只接受可使用物品，按 1–6 或 Numpad1–Numpad6 提交同一 `useItem(makeIndex)` 请求。首次收到角色背包快照时，可使用物品按顺序填入空槽；手动从背包拖入槽位会替换绑定，右键清空槽位，绑定保存在 `mir2.item-quickbar.<角色名>`。服务端确认、拒绝、超时、断线和角色切换都会释放 pending；成功消耗物品会同步移除绑定。技能栏继续使用 F1–F8，两套快捷键互不覆盖。
+
+登录、HUD、物品、装备和校准入口共用 `loadClassicUiSession()`。会话对候选库和国服库分别执行 settled 并行加载，返回 profile、可用库及缺项列表；完整国服库缺失时允许候选回退，并在校准页状态中显示缺项，避免页面静默混用不同版本资源。
+
+导出完成后可运行 `python3 tools/validate-national-ui.py --data-dir /path/to/Data --export-root assets/web/ui-national --json .runtime/reports/national-ui-validation.json`。验证器先检查 WIL/WIX、WZL/WZX 或 PAK 成套文件，再按 manifest 扫描导出的 PNG，报告有效、空白、重复、缺失、解码失败、哈希和几何不一致帧；缺少导出目录时仍可只做源文件成套检查。
+
 ## 后续窗口复刻流程
 
 每个窗口先锁定安装包中的底图帧，再通过透明边界和格线检测生成坐标表。随后对照客户端源码或可执行程序静态分析补充点击语义与状态机，最后在现有浏览器里完成打开、悬停、点击、拖动、关闭和重登恢复检查。自动化测试需同时校验设计坐标和服务端操作结果，截图只用于视觉复核。
+
+原端截图可裁成 800×600 游戏区后使用 `python3 tools/ui_visual_diff.py --reference reference.png --actual actual.png --output-dir .runtime/reports/ui-diff --threshold 8 --max-changed-ratio 0.02` 生成 `diff.png` 与 `report.json`。动态角色、粒子和计时器区域用重复截图测得噪声后通过重复 `--mask x,y,width,height` 排除；报告保留输入文件哈希、阈值、遮罩、变化像素和平均通道误差，作为逐窗口验收记录。

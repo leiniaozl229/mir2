@@ -21,4 +21,4 @@
 
 `npm run test:web` 覆盖索引换算、模式循环、画布坐标和黑边点击。`npm run build` 覆盖 TypeScript 与生产打包。
 
-2026-09-08 的无界面完整试玩报告为 `.runtime/reports/agent-gameplay-playtest/2026-09-08T10-39-04Z/report.json`：31 项检查全部通过，地图点击移动到相邻目标格，随后完成兽人古墓练级、骷髅精灵战斗和 2 件掉落拾取。
+2026-09-08 的无界面完整试玩报告为 `../../.runtime/reports/agent-gameplay-playtest/2026-09-08T10-39-04Z/report.json`：31 项检查全部通过，地图点击移动到相邻目标格，随后完成兽人古墓练级、骷髅精灵战斗和 2 件掉落拾取。

@@ -1,4 +1,4 @@
-import {applyNationalUiFrame,applyUiFrame,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
+import {applyNationalUiFrame,applyUiFrame,loadClassicUiSession,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
 
 export type SelectCharacter={name:string;job:number;level:number;sex:number;hair?:number};
 type Library=Awaited<ReturnType<typeof loadUiLibrary>>;
@@ -81,24 +81,27 @@ export class ClassicAuth {
  async ready(){await this.mountTask;}
 
  private async mount(){
-  const names=['Prguse','Title','ChrSel'] as const;
-  const loaded=await Promise.all(names.map(loadUiLibrary));
-  names.forEach((name,index)=>this.libraries.set(name,loaded[index]));
-  clipBackdrop(this.loginScene, 'ChrSel', uiFrame(this.libraries.get('ChrSel')!, 0));
-  clipBackdrop(this.selectScene, 'Prguse', uiFrame(this.libraries.get('Prguse')!, 65));
+  const session=await loadClassicUiSession();
+  for(const name of ['Prguse','Title','ChrSel'] as const){const library=session.fallback.get(name);if(library)this.libraries.set(name,library);}
+  const fallbackChrSel=this.libraries.get('ChrSel'),fallbackPrguse=this.libraries.get('Prguse');
+  if(fallbackChrSel)clipBackdrop(this.loginScene, 'ChrSel', uiFrame(fallbackChrSel, 0));
+  if(fallbackPrguse)clipBackdrop(this.selectScene, 'Prguse', uiFrame(fallbackPrguse, 65));
   const dialog=this.root.querySelector<HTMLElement>('[data-auth-login-dialog]')!;
   place(dialog, login.dialog.x, login.dialog.y);
-  applyUiFrame(dialog, 'Prguse', uiFrame(this.libraries.get('Prguse')!, login.dialog.index));
-  placeLabel(dialog, '[data-auth-title-label]', 'Title', uiFrame(this.libraries.get('Title')!, login.title.index), login.title);
-  placeLabel(dialog, '[data-auth-account-label]', 'Title', uiFrame(this.libraries.get('Title')!, login.accountLabel.index), login.accountLabel);
-  placeLabel(dialog, '[data-auth-pass-label]', 'Title', uiFrame(this.libraries.get('Title')!, login.passwordLabel.index), login.passwordLabel);
+  if(fallbackPrguse)applyUiFrame(dialog, 'Prguse', uiFrame(fallbackPrguse, login.dialog.index));
+  const fallbackTitle=this.libraries.get('Title');
+  if(fallbackTitle){
+   placeLabel(dialog, '[data-auth-title-label]', 'Title', uiFrame(fallbackTitle, login.title.index), login.title);
+   placeLabel(dialog, '[data-auth-account-label]', 'Title', uiFrame(fallbackTitle, login.accountLabel.index), login.accountLabel);
+   placeLabel(dialog, '[data-auth-pass-label]', 'Title', uiFrame(fallbackTitle, login.passwordLabel.index), login.passwordLabel);
+  }
   const account=this.root.querySelector<HTMLElement>('#account')!;
   const password=this.root.querySelector<HTMLElement>('#password')!;
   place(account, login.accountInput.x, login.accountInput.y, login.accountInput.width, login.accountInput.height);
   place(password, login.passwordInput.x, login.passwordInput.y, login.passwordInput.width, login.passwordInput.height);
   this.skinButton(this.root.querySelector<HTMLButtonElement>('#auth-login-ok')!, login.ok);
   this.skinButton(this.root.querySelector<HTMLButtonElement>('#register')!, login.register);
-  placeLabel(this.selectScene, '[data-auth-select-title]', 'Title', uiFrame(this.libraries.get('Title')!, select.title.index), select.title);
+  if(fallbackTitle)placeLabel(this.selectScene, '[data-auth-select-title]', 'Title', uiFrame(fallbackTitle, select.title.index), select.title);
   this.skinButton(this.root.querySelector<HTMLButtonElement>('[data-auth-start]')!, select.start);
   this.skinButton(this.root.querySelector<HTMLButtonElement>('[data-auth-new]')!, select.create);
   this.skinButton(this.root.querySelector<HTMLButtonElement>('[data-auth-exit]')!, select.exit);
@@ -109,8 +112,8 @@ export class ClassicAuth {
   this.root.querySelector<HTMLButtonElement>('[data-auth-new]')!.onclick=()=>this.onCreate();
   this.root.querySelector<HTMLButtonElement>('[data-auth-exit]')!.onclick=()=>this.onExit();
   place(this.createForm, created.x, created.y);
-  applyUiFrame(this.createForm, 'Prguse', uiFrame(this.libraries.get('Prguse')!, created.index));
-  placeLabel(this.createForm, '[data-auth-create-title]', 'Title', uiFrame(this.libraries.get('Title')!, created.title.index), created.title);
+  if(fallbackPrguse)applyUiFrame(this.createForm, 'Prguse', uiFrame(fallbackPrguse, created.index));
+  if(fallbackTitle)placeLabel(this.createForm, '[data-auth-create-title]', 'Title', uiFrame(fallbackTitle, created.title.index), created.title);
   const name=this.root.querySelector<HTMLElement>('#character-name')!;
   place(name, created.nameInput.x, created.nameInput.y, created.nameInput.width, created.nameInput.height);
   this.skinButton(this.root.querySelector<HTMLButtonElement>('#auth-create-ok')!, created.ok);
@@ -125,14 +128,15 @@ export class ClassicAuth {
    const button=this.root.querySelector<HTMLButtonElement>(`[data-auth-sex="${spec.sex}"]`)!;
   this.skinToggle(button, spec, ()=>{this.sex=spec.sex;this.sexInput.value=String(spec.sex);this.renderCreate();});
   }
-  try{
-   const [prguse,chrsel]=await Promise.all([loadNationalUiLibrary('prguse'),loadNationalUiLibrary('chrsel')]);
-   this.nationalLibraries.set('prguse',prguse);this.nationalLibraries.set('chrsel',chrsel);this.nationalReady=true;
+  const nationalPrguse=session.national.get('prguse'),nationalChrSel=session.national.get('chrsel');
+  if(nationalPrguse&&nationalChrSel){
+   this.nationalLibraries.set('prguse',nationalPrguse);this.nationalLibraries.set('chrsel',nationalChrSel);this.nationalReady=true;
    this.mountNationalAuth();
    this.renderSlots();
-  }catch{
+  }else{
    this.nationalReady=false;
   }
+  if(!this.nationalReady&&(!fallbackChrSel||!fallbackPrguse||!fallbackTitle))throw new Error('缺少可用的经典登录素材');
   this.renderCreate();
   this.showLogin();
  }
@@ -183,6 +187,14 @@ export class ClassicAuth {
   this.onStart=handlers.start;this.onCreate=handlers.create;this.onExit=handlers.exit;
  }
 
+ /** Reflect an in-flight authentication request in every visible auth control. */
+ setBusy(busy:boolean){
+  this.root.dataset.authBusy=String(busy);
+  this.root.setAttribute('aria-busy',String(busy));
+  this.root.querySelectorAll<HTMLButtonElement>('button').forEach(button=>{button.disabled=busy;});
+  this.root.querySelectorAll<HTMLInputElement>('input,select').forEach(input=>{input.disabled=busy;});
+ }
+
  showLogin(){
   this.root.hidden=false;
   this.root.dataset.authScene='login';
@@ -219,7 +231,7 @@ export class ClassicAuth {
 
  private renderSlots(){
   const chrSel=this.libraries.get('ChrSel'),title=this.libraries.get('Title'),prguse=this.libraries.get('Prguse');
-  if(!chrSel||!title||!prguse)return;
+  if(!this.nationalReady&&(!chrSel||!title||!prguse))return;
   this.charactersElement.replaceChildren();
   const spec=select.slot;
   const nationalPrguse=this.nationalLibraries.get('prguse');
@@ -241,7 +253,7 @@ export class ClassicAuth {
     button.onmousedown=()=>paintSelect(67);
     button.onmouseup=()=>paintSelect(67);
     button.append(selectSprite);
-   }else{
+   }else if(chrSel&&title&&prguse){
     place(button, spec.x, spec.y+index*spec.step);
     const filled=character?uiFrame(title, spec.filledIndex+character.job+(index===this.selected?5:0)):uiFrame(prguse, spec.index);
     applyUiFrame(button, character?'Title':'Prguse', filled);
@@ -281,6 +293,7 @@ export class ClassicAuth {
     return;
    }
   }
+  if(!chrSel)return;
   const index=portraits[`${selected.job}-${selected.sex}`]??20;
   const frame=uiFrame(chrSel, index);
   this.portrait.src=uiUrl('ChrSel', frame);
@@ -289,12 +302,26 @@ export class ClassicAuth {
 
  private renderCreate(){
   const chrSel=this.libraries.get('ChrSel');
-  if(!chrSel)return;
-  const index=portraits[`${this.job}-${this.sex}`]??20;
-  const frame=uiFrame(chrSel, index);
-  this.createPortrait.src=uiUrl('ChrSel', frame);
-  this.createPortrait.alt=['战士','法师','道士'][this.job]??'角色';
-  place(this.createPortrait, created.portrait.x+frame.offsetX, created.portrait.y+frame.offsetY, frame.width, frame.height);
+  if(!this.nationalReady&&!chrSel)return;
+  if(this.nationalReady){
+   const nationalChr=this.nationalLibraries.get('chrsel');
+   const frame=nationalChr&&uiFrame(nationalChr, nationalPortraits[`${this.job}-${this.sex}`]??80);
+   if(frame){
+    this.createPortrait.src=nationalUiUrl('chrsel', frame);
+    this.createPortrait.alt=['战士','法师','道士'][this.job]??'角色';
+    const height=Math.min(frame.height, 318);
+    const width=Math.round(frame.width*height/frame.height);
+    place(this.createPortrait, 40, 112, width, height);
+    this.createPortrait.hidden=false;
+   }
+  }else if(chrSel){
+   const index=portraits[`${this.job}-${this.sex}`]??20;
+   const frame=uiFrame(chrSel, index);
+   this.createPortrait.src=uiUrl('ChrSel', frame);
+   this.createPortrait.alt=['战士','法师','道士'][this.job]??'角色';
+   place(this.createPortrait, created.portrait.x+frame.offsetX, created.portrait.y+frame.offsetY, frame.width, frame.height);
+   this.createPortrait.hidden=false;
+  }
   for(const spec of created.jobs){
   const button=this.root.querySelector<HTMLButtonElement>(`[data-auth-job="${spec.job}"]`);
    const library=this.libraries.get(spec.library);
@@ -332,22 +359,26 @@ export class ClassicAuth {
  private skinNationalButton(button:HTMLButtonElement,library:NationalLibrary,spec:{index:number;hover:number;pressed:number;x:number;y:number;width:number;height:number;backgroundX?:number;backgroundY?:number}){
   place(button,spec.x,spec.y,spec.width,spec.height);
   const backgroundX=spec.backgroundX??0,backgroundY=spec.backgroundY??0;
+  const hoverFilter=spec.hover===spec.index?'':'brightness(1.12)';
+  const pressedFilter=spec.pressed===spec.index?'':'brightness(.88)';
   const paint=(index:number,filter:string)=>paintNationalButton(button,library,index,backgroundX,backgroundY,filter);
   paint(spec.index,'');
-  button.onmouseenter=()=>paint(spec.hover,'brightness(1.12)');
+  button.onmouseenter=()=>paint(spec.hover,hoverFilter);
   button.onmouseleave=()=>paint(spec.index,'');
-  button.onmousedown=()=>paint(spec.pressed,'brightness(.88)');
-  button.onmouseup=()=>paint(spec.hover,'brightness(1.12)');
+  button.onmousedown=()=>paint(spec.pressed,pressedFilter);
+  button.onmouseup=()=>paint(spec.hover,hoverFilter);
  }
 
  private bindNationalToggle(button:HTMLButtonElement,library:NationalLibrary,spec:{normal:number;active:number;hover:number;pressed:number}){
   const selected=()=>button.dataset.authJob!==undefined?this.job===Number(button.dataset.authJob):this.sex===Number(button.dataset.authSex);
+  const hoverFilter=spec.hover===spec.active?'':'brightness(1.12)';
+  const pressedFilter=spec.pressed===spec.active?'':'brightness(.88)';
   const paint=(index:number,filter='')=>paintNationalButton(button,library,index,0,0,filter);
   paint(selected()?spec.active:spec.normal);
-  button.onmouseenter=()=>paint(spec.hover,'brightness(1.12)');
+  button.onmouseenter=()=>paint(spec.hover,hoverFilter);
   button.onmouseleave=()=>paint(selected()?spec.active:spec.normal);
-  button.onmousedown=()=>paint(spec.pressed,'brightness(.88)');
-  button.onmouseup=()=>paint(spec.hover,'brightness(1.12)');
+  button.onmousedown=()=>paint(spec.pressed,pressedFilter);
+  button.onmouseup=()=>paint(spec.hover,hoverFilter);
  }
 
  private skinToggle(button:HTMLButtonElement,spec:{library:string;index:number;hover:number;pressed:number;x:number;y:number},activate:()=>void){

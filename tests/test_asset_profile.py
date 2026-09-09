@@ -2,6 +2,7 @@ import json
 import importlib.util
 from pathlib import Path
 import re
+import tempfile
 import unittest
 
 
@@ -9,9 +10,37 @@ ROOT = Path(__file__).resolve().parents[1]
 import sys
 sys.path.insert(0, str(ROOT / 'tools'))
 from monster_visual_audit import audit as audit_monster_visuals
+from ui_visual_diff import write_png
 
 
 class ActorAssetProfileTests(unittest.TestCase):
+    def test_national_importer_requires_same_directory_for_paired_indices(self):
+        spec = importlib.util.spec_from_file_location(
+            'import_national_ui', ROOT / 'tools/import-national-ui.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        family = {'variants': [['Prguse.wil', 'Prguse.wix']]}
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            wil_dir, wix_dir = root / 'client-a', root / 'client-b'
+            wil_dir.mkdir()
+            wix_dir.mkdir()
+            wil = wil_dir / 'Prguse.wil'
+            wix = wix_dir / 'Prguse.wix'
+            wil.write_bytes(b'wil')
+            wix.write_bytes(b'wix')
+            match, diagnostic = module.choose_variant(
+                family, module.index_files(root))
+            self.assertIsNone(match)
+            self.assertEqual(diagnostic, 'paired files are in different directories')
+            wix.unlink()
+            wix = wil_dir / 'Prguse.wix'
+            wix.write_bytes(b'wix')
+            match, diagnostic = module.choose_variant(
+                family, module.index_files(root))
+            self.assertEqual(match, [wil, wix])
+            self.assertIsNone(diagnostic)
+
     def test_runtime_notices_and_login_messages_are_localized(self):
         spec = importlib.util.spec_from_file_location(
             'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
@@ -40,6 +69,64 @@ class ActorAssetProfileTests(unittest.TestCase):
         profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text())
         self.assertEqual(set(profile['p0Baseline']['maps']), set(module._source_map_paths()))
         self.assertEqual(len(module._source_map_paths()), 570)
+
+    def test_client_installer_chain_is_hash_locked(self):
+        profile = json.loads((ROOT / 'content/classic-176/asset-sources.json').read_text())
+        installer = profile['clientInstaller']
+        self.assertEqual(installer['sha256'], '46e6cf029bd33f32b9977a4184b95d056a24ac32b60d03210a50e5251dcf4d42')
+        self.assertEqual(installer['runtimeStatus'], 'windows-runtime-pending')
+        chain_files = [file for step in installer['chain'] for file in step['files']]
+        self.assertEqual(
+            [file['file'] for file in chain_files],
+            ['data1.cab', 'data2.cab', 'Mir.exe', 'mir.dat', 'mirclient.dll', 'load.lib'],
+        )
+        for file in chain_files:
+            self.assertRegex(file['sha256'], r'^[0-9a-f]{64}$')
+
+    def test_exported_ui_audit_classifies_blank_duplicate_and_decode_failure(self):
+        spec = importlib.util.spec_from_file_location(
+            'validate_national_ui', ROOT / 'tools/validate-national-ui.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            export = root / 'ui-national' / 'prguse'
+            export.mkdir(parents=True)
+            valid = write_png(2, 2, bytes([
+                255, 0, 0, 255, 0, 255, 0, 255,
+                0, 0, 255, 255, 255, 255, 255, 255,
+            ]))
+            blank = write_png(1, 1, bytes([0, 0, 0, 0]))
+            (export / '0.png').write_bytes(valid)
+            (export / '1.png').write_bytes(blank)
+            (export / '2.png').write_bytes(valid)
+            (export / '3.png').write_bytes(b'not-a-png')
+            manifest = {
+                'source': 'Prguse.wil',
+                'frames': {
+                    '0': {'width': 2, 'height': 2, 'file': '0.png'},
+                    '1': {'width': 1, 'height': 1, 'file': '1.png'},
+                    '2': {'width': 2, 'height': 2, 'file': '2.png'},
+                    '3': {'width': 1, 'height': 1, 'file': '3.png'},
+                    '4': {'width': 1, 'height': 1, 'file': 'missing.png'},
+                },
+            }
+            (export / 'library.json').write_text(json.dumps(manifest))
+            report = module.audit_exported_libraries(root / 'ui-national')
+            summary = report['libraries'][0]
+            self.assertFalse(report['ok'])
+            self.assertEqual(summary['validFrames'], 1)
+            self.assertEqual(summary['blankFrames'], 1)
+            self.assertEqual(summary['duplicateFrames'], 1)
+            self.assertEqual(summary['decodeFailedFrames'], 1)
+            self.assertEqual(summary['missingFrames'], 1)
+            source_data = root / 'Data'
+            source_data.mkdir()
+            for name in ('Prguse.wil', 'Prguse.wix', 'Prguse2.wil', 'Prguse2.wix', 'stateitem.wil', 'stateitem.wix', 'ChrSel.wil', 'ChrSel.wix', 'mmap.wil', 'mmap.wix', 'MagIcon.wil', 'MagIcon.wix', 'Items.wil', 'Items.wix', 'DnItems.wil', 'DnItems.wix'):
+                (source_data / name).write_bytes(b'asset')
+            checked = module.validate(source_data, root / 'ui-national')
+            self.assertFalse(checked['ok'])
+            self.assertEqual(checked['status'], 'blocked-export-integrity')
 
     def test_classic_spawn_filter_covers_route_catalog(self):
         spec = importlib.util.spec_from_file_location(
@@ -251,6 +338,23 @@ class ActorAssetProfileTests(unittest.TestCase):
             self.assertRegex(entry['sha256'], r'^[0-9a-f]{64}$')
             self.assertIn(f'/Data/{name}', entry['url'])
 
+    def test_national_ui_manifests_preserve_raw_index_diagnostics(self):
+        expected = {
+            'chrsel': (280, []),
+            'prguse': (510, []),
+            'prguse2': (14, []),
+            'stateitem': (561, [520652]),
+            'items': (571, [292422]),
+            'dnitems': (566, [117328]),
+            'mmap': (190, [17396799]),
+            'magic-icons': (72, []),
+        }
+        for name, (raw_count, discarded) in expected.items():
+            manifest = json.loads((ROOT / 'assets/web/ui-national' / name / 'library.json').read_text())
+            self.assertEqual(manifest['rawIndexEntries'], raw_count, name)
+            self.assertEqual(manifest['discardedTrailingOffsets'], discarded, name)
+            self.assertEqual(manifest['sourceFrameCount'] + len(discarded), raw_count, name)
+
     def test_exported_classic_ui_covers_required_hud_frames(self):
         layout = json.loads((ROOT / 'content/classic-176/ui-layout.json').read_text())
         self.assertEqual(layout['canvas'], {'width': 800, 'height': 600})
@@ -278,7 +382,7 @@ class ActorAssetProfileTests(unittest.TestCase):
         self.assertEqual(layout['newCharacter']['index'], 73)
         source = (ROOT / 'apps/web/src/classic-auth.ts').read_text()
         self.assertIn("index:1084", source)
-        self.assertIn("uiFrame(this.libraries.get('Prguse')!, 65)", source)
+        self.assertIn("uiFrame(fallbackPrguse, 65)", source)
         markup = (ROOT / 'apps/web/play.html').read_text()
         self.assertIn('data-auth-login', markup)
         self.assertIn('data-auth-select', markup)

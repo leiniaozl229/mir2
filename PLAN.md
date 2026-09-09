@@ -1,8 +1,8 @@
 **The Legend of Mir 2 浏览器个人游玩项目：可实施方案**
 
-调研日期：2026-09-05。本文保留完整实施设计与验收范围。实施已开始：OpenMir2 六个服务已在 Linux ARM64 容器运行，协议探针已通过注册、登录、选服、角色创建/查询/选择与比奇入图；P0 可玩闭环、首区素材导入、浏览器联机、行会治理入口、两条持久化新手任务和首版经典 HUD 已落地，完整版本内容仍按后续阶段扩展。当前状态与启动命令见 README.md，开发机器为 macOS / Apple Silicon。
+原始调研日期：2026-09-05。本文保留设计方案、验收范围和取证方法；当前实现状态、测试数字与运行模式以 [README.md](README.md)、[docs/implementation-status.md](docs/implementation-status.md) 和 [docs/delivery.md](docs/delivery.md) 为准。现行基线使用固定的 OpenMir2 子模块提交、`patches/openmir2/` 补丁链、WebSocket 网关和浏览器客户端；完整版本内容仍按后续阶段扩展。
 
-建议以“国服 1.76、战法道三职业、经典像素素材与操作”为默认基准，采用 **TypeScript + PixiJS 浏览器客户端、OpenMir2 服务端、WebSocket 适配网关、离线素材转换工具**。OpenMir2 先通过限时技术验证再正式选定，Crystal 为后备。
+建议以“国服 1.76、战法道三职业、经典像素素材与操作”为默认基准，采用 **TypeScript + PixiJS 浏览器客户端、OpenMir2 服务端、WebSocket 适配网关、离线素材转换工具**。该架构已作为当前实现主线；Crystal 保留为协议、帧表和素材解析参考。
 
 另保留“Windows 原端 + 浏览器串流”的快速方案。如果最看重尽快个人游玩和保留原端表现，且接受一台图形主机持续运行，这条路线可以直接成为最终交付。两条路线各有完整验收标准，开工时只选一条作为交付主线。
 

@@ -290,9 +290,8 @@ def _classic_mon_gen(route_maps):
         seen.add(canonical)
     lines = ["0 292 623 鸡 3 4 1", "0 300 626 鹿 4 3 1"]
     lines.extend(source_lines)
-    lines.extend(["D001 168 350 骷髅 2 2 45", "D001 176 350 掷斧骷髅 2 1 60",
-                  "D001 180 345 骷髅战士 2 1 75", "D001 185 345 骷髅战将 2 1 90",
-                  "D001 190 340 骷髅精灵 1 1 300"])
+    # D001 is driven by the cave-guide scripts so browser tests can choose a
+    # controlled encounter. Keep the map free of background spawns here.
     for map_id, meta in CLASSIC_EXTRA_ROUTES.items():
         if map_id in {"0", "D001"} or map_id in seen:
             continue
@@ -529,7 +528,13 @@ def main():
         # while the current engine formats group notices with string.Format.
         if name == "String.conf":
             text = re.sub(r"(?m)^JoinGroupMsg=%s(.*)$", r"JoinGroupMsg={0}\1", text)
-        write_new(SERVER / "Mir200" / name.lower(), text)
+            text = re.sub(r"(?m)^ChangeKillMonExpRateMsg=.*$",
+                          "ChangeKillMonExpRateMsg=经验倍数:{0} 时长{1}秒", text)
+        target = SERVER / "Mir200" / name.lower()
+        if name == "String.conf":
+            target.write_text(text, encoding="utf-8-sig")
+        else:
+            write_new(target, text)
     string_target = SERVER / "Mir200/string.conf"
     string_target.write_text(_localize_string_config(read_text(string_target)), encoding="utf-8-sig")
     _write_local_notices()
@@ -689,11 +694,7 @@ def main():
                               "D715 32 344 红野猪 3 2 20\n"
                               "D716 25 26 黑野猪 3 2 30\n" if route_mode else "")
                            + extra_monsters
-                           + "D001 168 350 骷髅 2 2 45\n"
-                           "D001 176 350 掷斧骷髅 2 1 60\n"
-                           "D001 180 345 骷髅战士 2 1 75\n"
-                           "D001 185 345 骷髅战将 2 1 90\n"
-                           "D001 190 340 骷髅精灵 1 1 300\n"),
+                           ),
             "AdminList.txt": "",
             "MapQuest.txt": "",
         }
