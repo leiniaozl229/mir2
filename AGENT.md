@@ -65,7 +65,7 @@ bash scripts/compose.sh up -d web-gateway
 - 动作校验页：`http://127.0.0.1:5173/actors.html`
 - 网关健康检查：`http://127.0.0.1:18800/health`
 
-查看状态使用 `docker compose ps`。正常停服使用 `bash scripts/compose.sh stop`，该脚本会先停止网关、保存在线角色，再停止引擎和数据库。修改角色或世界配置前先使用 `python3 scripts/backup.py create` 创建备份。
+查看状态使用 `bash scripts/compose.sh ps`，脚本会自动选择 `docker compose` 或 `docker-compose`。正常停服使用 `bash scripts/compose.sh stop`，该脚本会先停止网关、保存在线角色，再停止引擎和数据库。修改角色或世界配置前先使用 `python3 scripts/backup.py create` 创建备份。
 
 ## 构建和测试
 
@@ -115,7 +115,7 @@ python3 tests/test_web_gateway_contract.py
 
 ## 诊断和交付
 
-默认日志位于 `.runtime/logs/`，网关协议跟踪可用 `MIR2_PROTOCOL_TRACE=1 bash scripts/compose.sh up -d engine` 临时打开；跟踪内容不得包含密码或完整消息体。服务未就绪时先检查 `docker compose ps`、`.runtime/logs/LoginGate.log`、`DBSrv.log`、`GameGate.log` 和 `GameSrv.log`。
+默认日志位于 `.runtime/logs/`，网关协议跟踪可用 `MIR2_PROTOCOL_TRACE=1 bash scripts/compose.sh up -d engine` 临时打开；跟踪内容不得包含密码或完整消息体。服务未就绪时先检查 `bash scripts/compose.sh ps`、`.runtime/logs/LoginGate.log`、`DBSrv.log`、`GameGate.log` 和 `GameSrv.log`。
 
 交付前应说明：改动文件、用户可见行为、运行模式、已执行的测试、未覆盖的真实环境，以及哪些视觉或交互结论仍属于推断。不要把导出的帧数量、静态构建成功或历史截图当作原端逐像素和动态兼容性证明。
 
