@@ -8,7 +8,7 @@
 
 - `apps/web`：Vite、TypeScript、PixiJS 前端，包含登录、选角、地图、HUD、窗口、物品和联机页面。
 - `services/web-gateway`：.NET 10 WebSocket 网关，把浏览器 JSON 命令转换为旧版 Mir TCP 协议，并将服务端事件投影回浏览器。
-- `vendor/openmir2`、`vendor/mirserver-data`：固定提交的 OpenMir2 服务端源码和数据子模块。`vendor/openmir2` 使用公开的 `leiniaozl229/mir2-openmir2` 镜像，以便根仓库记录的提交可被干净检出；服务端补丁放在 `patches/openmir2/`，不要直接在子模块工作树里留下未记录的行为修改。
+- `vendor/openmir2`、`vendor/mirserver-data`：固定提交的 OpenMir2 服务端源码和数据子模块。`vendor/openmir2` 使用私有的 `leiniaozl229/mir2-openmir2` 镜像；检出主仓库时需要对主仓库和该镜像都具备 GitHub 访问权限。服务端补丁放在 `patches/openmir2/`，不要直接在子模块工作树里留下未记录的行为修改。
 
 运行时还包含 MySQL、`LoginSrv`、`DBSrv`、`GameSrv`、`LoginGate`、`SelGate` 和 `GameGate`。浏览器连接 `ws://127.0.0.1:18800/ws`，Vite 开发服务器在 `127.0.0.1:5173` 提供页面并代理 `/ws`。原版 `mir.exe` 使用旧版 TCP/Gate 协议，不能直接连接浏览器 WebSocket；原版客户端的动态直连兼容性仍需在 Windows 环境实测。
 

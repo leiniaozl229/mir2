@@ -32,7 +32,7 @@ npm run dev
 
 WebSocket 网关已接入账号注册、三职业角色创建、登录、选角、入图、移动、基础近战、施法、组队、玩家交易、攻击模式、行会面板、行会战宣战、攻城申请、挖肉、NPC 对话、四条早期任务、商店买卖、仓库存取、背包、装备、药品、丢弃和拾取。先运行 `bash scripts/build-gateway.sh`，再运行 `bash scripts/compose.sh up -d web-gateway`。接口与当前限制见 [docs/web-protocol.md](docs/web-protocol.md)。联机页通过 Vite 的同源 `/ws` 代理连接网关；静态生产部署的入口代理仍需配置。
 
-需要 Git、Python 3、Docker（Apple Silicon 可使用 Colima），以及 Docker Compose 或独立的 docker-compose。`vendor/openmir2` 指向公开的固定提交镜像 `leiniaozl229/mir2-openmir2`，`vendor/mirserver-data` 使用公开数据仓库；所有服务程序从固定提交源码构建。
+需要 Git、Python 3、Docker（Apple Silicon 可使用 Colima），以及 Docker Compose 或独立的 docker-compose。`vendor/openmir2` 指向私有的固定提交镜像 `leiniaozl229/mir2-openmir2`，`vendor/mirserver-data` 使用公开数据仓库；检出主仓库时需要对这两个 GitHub 仓库具备访问权限，所有服务程序从固定提交源码构建。
 
 ```sh
 git submodule update --init --recursive
