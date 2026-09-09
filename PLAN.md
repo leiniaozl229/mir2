@@ -1,6 +1,6 @@
 **The Legend of Mir 2 浏览器个人游玩项目：可实施方案**
 
-原始调研日期：2026-09-05。本文保留设计方案、验收范围和取证方法；当前实现状态、测试数字与运行模式以 [README.md](README.md)、[docs/implementation-status.md](docs/implementation-status.md) 和 [docs/delivery.md](docs/delivery.md) 为准。现行基线使用固定的 OpenMir2 子模块提交、`patches/openmir2/` 补丁链、WebSocket 网关和浏览器客户端；完整版本内容仍按后续阶段扩展。
+原始调研日期：2026-09-05。本文保留设计方案、验收范围和取证方法；当前实现状态、测试数字与运行模式以 [README.md](README.md)、[docs/implementation-status.md](docs/implementation-status.md) 和 [docs/delivery.md](docs/delivery.md) 为准。现行基线使用主仓库内固定的 OpenMir2 源码、`patches/openmir2/` 变更记录、WebSocket 网关和浏览器客户端；完整版本内容仍按后续阶段扩展。
 
 建议以“国服 1.76、战法道三职业、经典像素素材与操作”为默认基准，采用 **TypeScript + PixiJS 浏览器客户端、OpenMir2 服务端、WebSocket 适配网关、离线素材转换工具**。该架构已作为当前实现主线；Crystal 保留为协议、帧表和素材解析参考。
 

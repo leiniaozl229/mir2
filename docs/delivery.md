@@ -4,7 +4,7 @@
 
 ## 干净检出
 
-需要 Git、Python 3、Node.js/npm、Docker 和 Docker Compose。Apple Silicon 可使用 Colima；脚本会自动选择 `docker compose` 或 `docker-compose`。`vendor/openmir2` 由私有镜像 `leiniaozl229/mir2-openmir2` 提供固定提交，`vendor/mirserver-data` 使用公开数据仓库。干净检出需要对主仓库和私有镜像具备 GitHub 访问权限。
+需要 Git、Python 3、Node.js/npm、Docker 和 Docker Compose。Apple Silicon 可使用 Colima；脚本会自动选择 `docker compose` 或 `docker-compose`。`vendor/openmir2` 已随主仓库提交，`vendor/mirserver-data` 使用公开数据子模块；干净检出只需初始化该数据子模块。
 
 ```sh
 git clone <repository-url>

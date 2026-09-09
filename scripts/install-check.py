@@ -52,7 +52,7 @@ def check() -> dict:
         "notes": notes,
         "commands": {
             "install": [
-                "git submodule update --init --recursive",
+                "git submodule update --init --recursive  # initializes vendor/mirserver-data",
                 "bash scripts/build-server.sh",
                 "bash scripts/build-gateway.sh",
                 "python3 scripts/prepare-runtime.py",

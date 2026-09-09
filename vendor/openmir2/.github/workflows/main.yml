@@ -1,0 +1,153 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+  
+jobs:
+  build_and_test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v1
+    
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 7.0.x
+
+    - name: Publish & DBSvr
+      run: |
+          cd src/DBSvr/
+          dotnet build --configuration Release /p:Mode=Publish
+          dotnet publish -c Release -o ../Build/DBSvr
+          zip -qq -r ../Build/DBSvr.zip ../Build/DBSvr
+
+    - name: Publish & LoginSvr
+      run: |
+          cd src/LoginSvr/
+          dotnet build --configuration Release /p:Mode=Publish
+          dotnet publish -c Release -o ../Build/LoginSvr
+          zip -qq -r ../Build/LoginSvr.zip ../Build/LoginSvr
+          
+    - name: Publish & SelGate
+      run: |
+          cd src/SelGate/
+          dotnet build --configuration Release /p:Mode=Publish
+          dotnet publish -c Release -o ../Build/SelGate
+          zip -qq -r ../Build/SelGate.zip ../Build/SelGate
+
+    - name: Publish & LoginGate
+      run: |
+          cd src/LoginGate/
+          dotnet build --configuration Release /p:Mode=Publish
+          dotnet publish -c Release -o ../Build/LoginGate
+          zip -qq -r ../Build/LoginGate.zip ../Build/LoginGate
+          
+    - name: Publish & GameSvr
+      run: |
+          cd src/LoginGate/
+          dotnet build --configuration Release /p:Mode=Publish
+          dotnet publish -c Release -o ../Build/GameSvr
+          zip -qq -r ../Build/GameSvr.zip ../Build/GameSvr
+          
+    - name: Publish & GameGate
+      run: |
+          cd src/GameGate/
+          dotnet build --configuration Release /p:Mode=Publish
+          dotnet publish -c Release -o ../Build/GameGate
+          zip -qq -r ../Build/GameGate.zip ../Build/GameGate
+          
+    - name: Publish & MakePlayer
+      run: |                              
+          cd src/MakePlayer/
+          dotnet build --configuration Release /p:Mode=Publish
+          dotnet publish -c Release -o ../Build/MakePlayer
+          zip -qq -r ../Build/MakePlayer.zip ../Build/MakePlayer
+
+    - name: Create release
+      id: create_release
+      uses: actions/create-release@v1.0.0
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      with:
+        tag_name: v${{steps.version.outputs.value}}
+        release_name: v${{steps.version.outputs.value}}
+        body: ${{steps.description.outputs.content}}
+        draft: false
+        prerelease: false
+
+    - name: Upload DBSvr Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: src/Build/DBSvr.zip
+        asset_name: DBSvr.${{ steps.create_release.outputs.tag }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload LoginSvr Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: src/Build/LoginSvr.zip
+        asset_name: LoginSvr.${{ steps.create_release.outputs.tag }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload SelGate Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: src/Build/SelGate.zip
+        asset_name: SelGate.${{ steps.create_release.outputs.tag }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload LoginGate Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: src/Build/LoginGate.zip
+        asset_name: LoginGate.${{ steps.create_release.outputs.tag }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload GameSvr Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: src/Build/GameSvr.zip
+        asset_name: GameSvr.${{ steps.create_release.outputs.tag }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload GameGate Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: src/Build/GameGate.zip
+        asset_name: GameGate.${{ steps.create_release.outputs.tag }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload MakePlayer Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: src/Build/MakePlayer.zip
+        asset_name: MakePlayer.${{ steps.create_release.outputs.tag }}.zip
+        asset_content_type: application/zip

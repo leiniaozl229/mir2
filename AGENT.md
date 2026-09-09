@@ -8,7 +8,7 @@
 
 - `apps/web`：Vite、TypeScript、PixiJS 前端，包含登录、选角、地图、HUD、窗口、物品和联机页面。
 - `services/web-gateway`：.NET 10 WebSocket 网关，把浏览器 JSON 命令转换为旧版 Mir TCP 协议，并将服务端事件投影回浏览器。
-- `vendor/openmir2`、`vendor/mirserver-data`：固定提交的 OpenMir2 服务端源码和数据子模块。`vendor/openmir2` 使用私有的 `leiniaozl229/mir2-openmir2` 镜像；检出主仓库时需要对主仓库和该镜像都具备 GitHub 访问权限。服务端补丁放在 `patches/openmir2/`，不要直接在子模块工作树里留下未记录的行为修改。
+- `vendor/openmir2`：已纳入主仓库的固定 OpenMir2 服务端源码，当前集成补丁已写入该目录；`vendor/mirserver-data` 仍是公开数据子模块。服务端补丁保存在 `patches/openmir2/` 作为基线记录，后续源码修改直接在主仓库提交，不要再创建嵌套 Git 工作树。
 
 运行时还包含 MySQL、`LoginSrv`、`DBSrv`、`GameSrv`、`LoginGate`、`SelGate` 和 `GameGate`。浏览器连接 `ws://127.0.0.1:18800/ws`，Vite 开发服务器在 `127.0.0.1:5173` 提供页面并代理 `/ws`。原版 `mir.exe` 使用旧版 TCP/Gate 协议，不能直接连接浏览器 WebSocket；原版客户端的动态直连兼容性仍需在 Windows 环境实测。
 
@@ -30,7 +30,7 @@
 ## 开始工作前
 
 1. 执行 `git status --short`，保留用户已有修改，不要用 reset、clean 或覆盖式复制清理工作树。
-2. 执行 `git submodule status`，确认 `vendor/openmir2` 和 `vendor/mirserver-data` 位于项目记录的提交。
+2. 执行 `git submodule status`，确认 `vendor/mirserver-data` 位于项目记录的提交，并检查 `vendor/openmir2/src` 已存在。
 3. 先阅读与任务直接相关的文档：协议改动看 `docs/web-protocol.md`，UI 改动看 `docs/client-ui-replication.md` 和 `docs/ui-fidelity-audit-2026-09-09.md`，部署看 `docs/delivery.md`。
 4. 运行时数据、账号、角色和报告都在 `.runtime/`；日志和探针输出中不得写入口令、数据库密码或完整认证票据。
 
@@ -108,7 +108,7 @@ python3 tests/test_web_gateway_contract.py
 
 ## 服务端和数据修改规则
 
-- `vendor/openmir2` 和 `vendor/mirserver-data` 是子模块。服务端行为修改写成 `patches/openmir2/*.patch`，通过 `scripts/apply-patches.sh` 应用，并在提交说明中写清上游基线。
+- `vendor/mirserver-data` 是唯一保留的 Git 子模块；`vendor/openmir2` 是主仓库内的固定源码目录。服务端行为修改直接提交到 `vendor/openmir2/`，对应的 `patches/openmir2/*.patch` 作为上游基线和变更记录保留；旧式子模块检出仍可由 `scripts/apply-patches.sh` 兼容处理。
 - 运行目录由 `scripts/prepare-runtime.py` 生成；不要手工编辑 `.runtime/server`、`.runtime/sql` 来代替可重建脚本。需要保留账号和角色时使用脚本提供的 refresh 选项并先备份。
 - 地图、刷怪、NPC、掉落和技能的来源优先使用版本数据文件及 `content/classic-176` 契约。浏览器临时夹具必须与生产数据隔离，并在探针结束后清理测试账号、行会、掉落和城堡状态。
 - 修改停服、存档、交易或城战逻辑时，验证正常停服、异常退出、断线重连和重复请求；不要只验证成功路径。

@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
-# The build container mounts the workspace with the host UID. Allow Git to
-# inspect the submodule there without requiring a host-specific configuration.
+# OpenMir2 is vendored in the main repository. Its pinned upstream snapshot
+# and the integration patches are already present in the committed tree, so
+# there is no second Git worktree to mutate during a build.
+if [[ ! -e "$PWD/vendor/openmir2/.git" ]]; then
+  echo "OpenMir2 source is vendored in the main repository; patch step skipped"
+  exit 0
+fi
+# The legacy submodule layout remains supported for older checkouts. The build
+# container mounts the workspace with the host UID, so allow Git to inspect it.
 git config --global --add safe.directory "$PWD/vendor/openmir2" >/dev/null 2>&1 || true
 patches=("$PWD"/patches/openmir2/*.patch)
 # The recorded submodule commit already contains the first integration batch.
