@@ -1,4 +1,5 @@
 import {loadNationalUiLibrary} from './classic-ui';
+import {bagCellPositionFromLayout,bagGridFromLayout,classicUiLayout,nationalUsesLayout} from './classic-layout';
 import itemAssets from '../../../content/classic-176/item-assets.json';
 
 export type ItemRange={min:number;max:number};
@@ -7,32 +8,20 @@ type IconFrame={file:string;width:number;height:number;offsetX:number;offsetY:nu
 type Icons={frames:Record<string,IconFrame>};
 type InventoryActions={drop:(makeIndex:number)=>void;equip:(makeIndex:number,slot:number)=>void;use:(makeIndex:number)=>void;trade?:(makeIndex:number)=>void;layoutKey?:()=>string|undefined};
 
-export const BAG_COLUMNS=8;
-export const BAG_VISIBLE=40;
-export const BAG_CELL={width:36,height:32,originX:9,originY:37,gapX:1,gapY:1};
-export const NATIONAL_BAG_CELL={width:36,height:32,originX:18,originY:14,gapX:0,gapY:0};
-export const EQUIPMENT_PAGE={x:44,y:72};
-export const EQUIPMENT_CELLS:{slot:number;name:string;x:number;y:number}[]=[
- {slot:3,name:'项链',x:131,y:36},
- {slot:2,name:'蜡烛',x:131,y:72},
- {slot:5,name:'左手镯',x:4,y:125},
- {slot:6,name:'右手镯',x:131,y:125},
- {slot:7,name:'左戒指',x:4,y:161},
- {slot:8,name:'右戒指',x:131,y:161}
-];
-export const EQUIPMENT_APPEARANCE:{slot:number;name:string;layer:string;z:number}[]=[
- {slot:0,name:'衣服',layer:'clothes',z:1},
- {slot:1,name:'武器',layer:'weapon',z:3},
- {slot:4,name:'头盔',layer:'helmet',z:4}
-];
+export const BAG_COLUMNS=bagGridFromLayout(false).columns;
+export const BAG_VISIBLE=bagGridFromLayout(false).visible;
+export const BAG_CELL=bagGridFromLayout(false);
+export const NATIONAL_BAG_CELL=bagGridFromLayout(true);
+export const EQUIPMENT_PAGE={x:classicUiLayout().nationalCharacterPage.x,y:classicUiLayout().nationalCharacterPage.y};
+export const EQUIPMENT_CELLS:{slot:number;name:string;x:number;y:number}[]=classicUiLayout().nationalEquipmentCells.map(cell=>({slot:cell.slot,name:cell.name,x:cell.x,y:cell.y}));
+export const EQUIPMENT_APPEARANCE:{slot:number;name:string;layer:string;z:number}[]=classicUiLayout().nationalEquipmentAppearance.map(cell=>({slot:cell.slot,name:cell.name,layer:cell.layer,z:cell.z}));
 export function iconIndexOf(item:InventoryItem){return (itemAssets.iconIndexByName as Record<string,number>)[item.name]??(itemAssets.fallbackIconIndexBySourceIndex as Record<string,number>)[item.looks]??item.looks;}
 
 let iconsPromise:Promise<Icons>|undefined;
 export function loadFallbackItemIcons(){return iconsPromise??=fetch('/items/Items/library.json').then(async response=>{if(!response.ok)throw new Error('缺少物品素材');return response.json();});}
 
-export function bagCellPosition(index:number){
- const x=index%BAG_COLUMNS,y=Math.floor(index/BAG_COLUMNS)%5;
- return {left:x*(BAG_CELL.width+BAG_CELL.gapX)+BAG_CELL.originX,top:y*(BAG_CELL.height+BAG_CELL.gapY)+BAG_CELL.originY};
+export function bagCellPosition(index:number,national=false){
+ return bagCellPositionFromLayout(index,national);
 }
 
 export function itemDetailRows(item:InventoryItem){
@@ -141,8 +130,10 @@ export class InventoryView {
   this.element.replaceChildren();this.element.classList.add('classic-bag');this.hideTooltip();
   const bag=new Map<number,InventoryItem>();for(const item of this.items.values()){const slot=this.placements.get(item.makeIndex);if(slot!==undefined)bag.set(slot,item);}
   for(let index=0;index<BAG_VISIBLE;index++){
-   const item=bag.get(index),cell=document.createElement('button'),column=index%BAG_COLUMNS,row=Math.floor(index/BAG_COLUMNS)%5;
-   const position=bagCellPosition(index);cell.type='button';cell.className='item-cell';cell.style.left=`calc(var(--bag-origin-x, ${position.left-column*(BAG_CELL.width+BAG_CELL.gapX)}px) + ${column} * var(--bag-step-x, ${BAG_CELL.width+BAG_CELL.gapX}px))`;cell.style.top=`calc(var(--bag-origin-y, ${position.top-row*(BAG_CELL.height+BAG_CELL.gapY)}px) + ${row} * var(--bag-step-y, ${BAG_CELL.height+BAG_CELL.gapY}px))`;
+   const item=bag.get(index),cell=document.createElement('button');
+   const national=nationalUsesLayout()||Boolean(this.element.closest?.('.national-window'));
+   const metrics=national?NATIONAL_BAG_CELL:BAG_CELL;
+   const position=bagCellPosition(index,national);cell.type='button';cell.className='item-cell';cell.style.left=`${position.left}px`;cell.style.top=`${position.top}px`;cell.style.width=`${metrics.width}px`;cell.style.height=`${metrics.height}px`;
    cell.dataset.slot=String(index);cell.setAttribute('aria-pressed',String(this.selectedSlot===index));if(this.selectedSlot===index)cell.classList.add('selected');
    if(!this.known){cell.disabled=true;cell.title='等待服务端背包数据…';}
    else if(item){

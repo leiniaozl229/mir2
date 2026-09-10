@@ -5,7 +5,10 @@ import ts from 'typescript';
 import {fileURLToPath} from 'node:url';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-const source=`const itemAssets={iconIndexByName:{'祖玛井中月':48},fallbackIconIndexBySourceIndex:{1144:0,1582:0}};\n`+fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8').replace(/^import .*;\n/gm,'');
+const uiLayout=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-layout.json'),'utf8'));
+const uiInteractions=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-interactions.json'),'utf8'));
+const layoutSource=fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8').replace(/^import .*;\n/gm,'');
+const source=`const itemAssets={iconIndexByName:{'祖玛井中月':48},fallbackIconIndexBySourceIndex:{1144:0,1582:0}};\nconst uiLayout=${JSON.stringify(uiLayout)};\nconst uiInteractions=${JSON.stringify(uiInteractions)};\n${layoutSource}\n`+fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8').replace(/^import .*;\n/gm,'');
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const mockDocument={createElement:tag=>new Element(tag)};
 class Element{
@@ -203,7 +206,12 @@ const profile=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/nat
 if(profile.canvas.width!==800||profile.canvas.height!==600||profile.typography?.primaryCandidates?.length<2)throw new Error('national UI profile lacks the fixed canvas and typography contract');
 const layout=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-layout.json'),'utf8'));
 if(layout.nationalWindowContracts?.repair?.content!=='durability-list-single-column'||layout.nationalWindowContracts?.storage?.content!=='storage-grid-four-column'||layout.nationalWindowContracts?.quest?.content!=='quest-progress-list'||layout.nationalWindowContracts?.attack?.content!=='attack-mode-select'||layout.nationalWindowContracts?.system?.content!=='modal-confirmation'||layout.nationalWindowContracts?.group?.frame!=='prguse#402'||layout.nationalWindowContracts?.guild?.frame!=='prguse#402')throw new Error('national service and utility windows do not have separate semantic content contracts');
+if(layout.nationalHud?.mainDialog?.y!==349||layout.nationalHud?.mainDialog?.evidence!=='asset'||layout.nationalInventoryWindow?.index!==3||layout.nationalCharacterWindow?.index!==380||layout.nationalInventoryGrid?.originX!==18||layout.nationalInventoryGrid?.originY!==14)throw new Error('national HUD, inventory and character layout contracts are missing measured coordinates');
+if(!classicUiSource.includes('layout:typeof uiLayout')||!classicUiSource.includes('layout:uiLayout'))throw new Error('shared UI resource session does not expose the layout contract');
+const layoutHelperSource=fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8');
+if(!layoutHelperSource.includes('export function applyNationalHudLayout')||!layoutHelperSource.includes('export function applyNationalInventoryLayout')||!layoutHelperSource.includes('export function applyNationalCharacterLayout'))throw new Error('classic layout helper does not apply HUD, inventory and character contracts');
 const nationalHudSource=fs.readFileSync(path.join(root,'apps/web/src/classic-hud.ts'),'utf8');
+if(!nationalHudSource.includes('applyNationalHudLayout(root)')||!nationalHudSource.includes('applyNationalInventoryLayout(element)')||!nationalHudSource.includes('applyNationalCharacterLayout(element)'))throw new Error('classic HUD does not apply national layout from the shared contract');
 for(const kind of ['targets','ground','group','guild','system'])if(!nationalHudSource.includes(`${kind}:{index:402`))throw new Error(`national ${kind} window falls back to an unrelated skin`);
 if(!fs.readFileSync(path.join(root,'apps/web/src/shop.ts'),'utf8').includes('shop-list--${this.mode}')||!fs.readFileSync(path.join(root,'apps/web/src/repair.ts'),'utf8').includes('repair-list')||!fs.readFileSync(path.join(root,'apps/web/src/storage.ts'),'utf8').includes('storage-list--${this.mode}'))throw new Error('service panels do not emit their semantic content layout classes');
 const stageSource=fs.readFileSync(path.join(root,'apps/web/src/classic-stage.ts'),'utf8');
@@ -268,7 +276,7 @@ if(!inventorySource.includes('if(!this.pending.has(id))return false;')||!invento
 if(!playSource.includes("if(!shop.resolve(message.name,message.makeIndex,message.accepted))return;")||!playSource.includes("if(!shop.resolveSale(message.item,message.accepted))return;")||!playSource.includes("if(!repair.resolve(message.item,message.accepted))return;")||!playSource.includes("if(!storage.resolve(message.item,message.accepted))return;")||!playSource.includes('const quickBarHandled=itemQuickBar.resolve(message.makeIndex,message.accepted,true);')||!playSource.includes('if(!inventoryHandled&&!quickBarHandled)return;'))throw new Error('stale service or item responses still apply side effects after component rejection');
 console.log('PASS shop, repair and storage pending states time out and unlock');
 
-const quickBarSource=fs.readFileSync(path.join(root,'apps/web/src/item-quickbar.ts'),'utf8').replace(/^import .*;\n/gm,'');
+const quickBarSource=`const uiLayout=${JSON.stringify(uiLayout)};\nfunction classicUiLayout(){return uiLayout;}\n`+fs.readFileSync(path.join(root,'apps/web/src/item-quickbar.ts'),'utf8').replace(/^import .*;\n/gm,'');
 const quickBarContext={exports:{},document:mockDocument,HTMLElement:Element,setTimeout,clearTimeout,loadFallbackItemIcons:()=>new Promise(()=>{}),loadNationalUiLibrary:()=>new Promise(()=>{}),nationalUiUrl:()=>'',uiUrl:()=>'',iconIndexOf:item=>item.looks};
 vm.createContext(quickBarContext);
 vm.runInContext(ts.transpileModule(quickBarSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,quickBarContext);
@@ -290,7 +298,18 @@ console.log('PASS item quickbar exposes six consumable slots, key use and manual
 const playPage=fs.readFileSync(path.join(root,'apps/web/play.html'),'utf8');
 const calibrationPage=fs.readFileSync(path.join(root,'apps/web/ui-calibration.html'),'utf8');
 if(!playPage.includes('data-hud-item-quickbar')||!calibrationPage.includes('data-hud-item-quickbar')||!playSource.includes("import {ItemQuickBar} from './item-quickbar';")||!playSource.includes("itemQuickBar.replace(message.items)"))throw new Error('production and calibration HUDs are missing the shared item quickbar wiring');
-const itemLayout=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-layout.json'),'utf8')).itemQuickBar;
+const layoutHelperCompiled=ts.transpileModule(`const uiLayout=${JSON.stringify(uiLayout)};\nconst uiInteractions=${JSON.stringify(uiInteractions)};\n`+fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8').replace(/^import .*;\n/gm,''),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+const layoutHelperContext={exports:{}};vm.createContext(layoutHelperContext);
+vm.runInContext(layoutHelperCompiled,layoutHelperContext);
+const origin=layoutHelperContext.exports.bagCellPositionFromLayout(0,true);
+const lastCell=layoutHelperContext.exports.bagCellPositionFromLayout(39,true);
+if(origin.left!==18||origin.top!==14||lastCell.left!==18+7*36||lastCell.top!==14+4*32)throw new Error('national bag cells are not generated from the layout contract');
+if(layoutHelperContext.exports.nationalHudOrbMetrics().barWidth!==layout.nationalHud.experienceBar.width)throw new Error('national HUD orb metrics diverge from the layout contract');
+const placed={style:{}};
+layoutHelperContext.exports.placeBox(placed,{x:232,y:165,width:336,height:270});
+if(placed.style.left!=='232px'||placed.style.top!=='165px'||placed.style.width!=='336px')throw new Error('layout helper does not apply contract boxes to elements');
+const itemLayout=uiLayout.itemQuickBar;
 const styleSource=fs.readFileSync(path.join(root,'apps/web/src/style.css'),'utf8');
-if(itemLayout.count!==6||itemLayout.slotStep!==46||itemLayout.x!==280||itemLayout.y!==50||!styleSource.includes('.hud-itembar{display:block;top:349px'))throw new Error('item quickbar geometry does not match the imported Prguse#1 evidence');
+if(itemLayout.count!==6||itemLayout.slotStep!==46||itemLayout.x!==280||itemLayout.y!==50||itemLayout.frameOrigin.y!==349)throw new Error('item quickbar geometry does not match the imported Prguse#1 evidence');
+if(styleSource.includes('left:286px!important')||styleSource.includes('left:207px!important')||styleSource.includes('left:12px!important')||styleSource.includes('7.c0ab139c0ca9ba48.png'))throw new Error('national HUD/inventory/character coordinates are still duplicated as CSS !important literals');
 console.log('PASS production and calibration pages share the measured national item quickbar contract');

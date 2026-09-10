@@ -1,3 +1,5 @@
+import {applyNationalCharacterStats,classicUiLayout,nationalUsesLayout} from './classic-layout';
+
 type RangeStat={min:number;max:number};
 export type CharacterAttributes={level:number;job:number;gold:number;gameGold:number;ac:RangeStat;mac:RangeStat;dc:RangeStat;mc:RangeStat;sc:RangeStat;hp:number;mp:number;maxHp:number;maxMp:number;experience:number;maxExperience:number;weight:number;maxWeight:number;wearWeight:number;maxWearWeight:number;handWeight:number;maxHandWeight:number};
 
@@ -25,11 +27,20 @@ export class CharacterPanel {
   }
  }
  private place(root:HTMLElement,rows:[string,string,number][]){
-  for(const [name,value,top] of rows){
+  const statusPage=root.id==='character-panel'||root.matches('[data-character-page="status"]');
+  const national=statusPage&&(nationalUsesLayout()||Boolean(root.closest('.national-window')));
+  const stats=national?classicUiLayout().nationalCharacterWindow.statValues:undefined;
+  for(const [index,[name,value,top]] of rows.entries()){
    const label=document.createElement('span');label.className='classic-stat';label.style.left='20px';label.style.top=`${top}px`;label.textContent=name;
    const amount=document.createElement('span');amount.className='classic-stat-value';amount.style.left='126px';amount.style.top=`${top}px`;amount.textContent=value;
+   if(stats){
+    label.style.display='none';
+    const rowTop=stats.tops[index];
+    if(rowTop!==undefined){amount.style.left=`${stats.x}px`;amount.style.top=`${rowTop}px`;amount.style.width=`${stats.width}px`;amount.style.textAlign='center';}
+   }
    root.append(label,amount);
   }
+  if(national)applyNationalCharacterStats(root);
  }
 }
 

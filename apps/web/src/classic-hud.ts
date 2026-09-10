@@ -1,6 +1,7 @@
 import type {CharacterAttributes} from './character-panel';
 import {arrangeSkillSlots,type MagicSkill} from './skills';
 import {applyNationalUiFrame,applyUiFrame,loadClassicUiSession,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
+import {applyNationalCharacterLayout,applyNationalHudLayout,applyNationalInventoryLayout,classicUiLayout,nationalHudOrbMetrics,nationalWindowButtonFrames,placeBox} from './classic-layout';
 import skillAssets from '../../../content/classic-176/skill-assets.json';
 
 type ResourceState={hp:number;mp:number;maxHp:number;maxMp:number;experience:number;maxExperience:number};
@@ -72,13 +73,7 @@ export class ClassicHud {
    applyUiFrame(root.querySelector<HTMLElement>('[data-hud-exp-track]')!, 'Prguse', uiFrame(prguse, 7));
    applyUiFrame(root.querySelector<HTMLElement>('[data-hud-weight]')!, 'Prguse', uiFrame(prguse, 76));
   }
-  const buttons:Record<string,UiButton>={
-   character:{library:'Prguse',index:1900,hover:1901,pressed:1902,x:681,y:524,window:'character'},
-   inventory:{library:'Prguse',index:1903,hover:1904,pressed:1905,x:704,y:524,window:'inventory'},
-   skills:{library:'Prguse',index:1906,hover:1907,pressed:1908,x:727,y:524,window:'skills'},
-   quest:{library:'Prguse',index:1909,hover:1910,pressed:1911,x:750,y:524,window:'quest'},
-   option:{library:'Prguse',index:1912,hover:1913,pressed:1914,x:773,y:524,window:'attack'}
-  };
+  const buttons=classicUiLayout().buttons as Record<string,UiButton>;
   for(const [id,spec] of Object.entries(buttons)){
    const button=root.querySelector<HTMLButtonElement>(`[data-window-open="${spec.window}"]`);
    if(!button)continue;
@@ -104,36 +99,37 @@ export class ClassicHud {
  private mountNationalHud(root:HTMLElement){
   const prguse=this.nationalLibraries.get('prguse');
   if(!prguse)return;
+  const layout=classicUiLayout();
+  const hud=layout.nationalHud;
   root.classList.add('national-ui');document.body.classList.add('national-play');
   const main=root.querySelector<HTMLElement>('[data-hud-main]')!;
-  applyNationalUiFrame(main,'prguse',uiFrame(prguse,1));main.style.left='0';main.style.top='349px';
+  applyNationalUiFrame(main,'prguse',uiFrame(prguse,hud.mainDialog.index));
   void punchNationalHudChat(main,prguse);
   const skillbar=root.querySelector<HTMLElement>('[data-hud-skillbar]');
   if(skillbar){skillbar.hidden=true;skillbar.setAttribute('aria-hidden','true');}
-  for(const selector of ['[data-hud-minimap-frame]','[data-hud-chatbar]','[data-hud-exp-track]','[data-hud-weight]']){
+  for(const selector of ['[data-hud-minimap-frame]','[data-hud-chatbar]','[data-hud-weight]']){
    const element=root.querySelector<HTMLElement>(selector);if(element)element.style.backgroundImage='none';
   }
+  const expTrack=root.querySelector<HTMLElement>('[data-hud-exp-track]');
+  if(expTrack)applyNationalUiFrame(expTrack,'prguse',uiFrame(prguse,hud.experienceBar.index));
   const orb=uiFrame(prguse,4);
-  this.hpFill.replaceChildren(orbImage(orb,0,true));
-  this.mpFill.replaceChildren(orbImage(orb,-46,true));
+  const orbMetrics=nationalHudOrbMetrics();
+  this.hpFill.replaceChildren(orbImage(orb,hud.orbs.hp.imageOffsetX,true));
+  this.mpFill.replaceChildren(orbImage(orb,orbMetrics.mpImageOffsetX,true));
+  applyNationalHudLayout(root);
   const windowButtons=Array.from(root.querySelectorAll<HTMLButtonElement>('.hud-window-buttons button'));
-  const nationalButtons=[
-   {index:8,hover:24,pressed:24,x:640,y:410,width:32,height:32,backgroundX:3,backgroundY:0},
-   {index:9,hover:9,pressed:9,x:678,y:390,width:32,height:32,backgroundX:4,backgroundY:0},
-   {index:10,hover:10,pressed:10,x:718,y:370,width:32,height:32,backgroundX:4,backgroundY:0},
-   undefined,
-   {index:11,hover:11,pressed:11,x:760,y:360,width:32,height:32,backgroundX:4,backgroundY:0}
-  ];
-  windowButtons.forEach((button,index)=>{
-   const spec=nationalButtons[index];
+  hud.windowButtons.forEach((spec,index)=>{
+   const button=windowButtons[index];if(!button)return;
    button.hidden=false;
-   if(index===3){
+   const frames=nationalWindowButtonFrames('control' in spec?spec.control:undefined);
+   if('remapFrom' in spec&&spec.remapFrom){
     clearSkin(button);button.onmouseenter=null;button.onmouseleave=null;button.onmousedown=null;button.onmouseup=null;
-    button.dataset.windowOpen='targets';button.setAttribute('aria-label','目标');button.title='附近目标';button.style.left='748px';button.style.top='400px';button.style.width='32px';button.style.height='32px';
-   }else if(spec){
-    skinNationalHudButton(button,prguse,spec);
+    button.dataset.windowOpen=spec.window;button.setAttribute('aria-label','目标');button.title='附近目标';
+    placeBox(button,{x:spec.x,y:spec.y,width:spec.width,height:spec.height});
+   }else if(frames){
+    skinNationalHudButton(button,prguse,{...frames,x:spec.x,y:spec.y,width:spec.width,height:spec.height,backgroundX:'backgroundX' in spec?spec.backgroundX??0:0,backgroundY:'backgroundY' in spec?spec.backgroundY??0:0});
    }
-   if(index===4){
+   if(spec.id==='attack'){
     button.setAttribute('aria-label','声音');
     button.addEventListener('click',event=>{
      event.preventDefault();event.stopImmediatePropagation();
@@ -147,13 +143,12 @@ export class ClassicHud {
   const prguse=this.libraries.get('Prguse'),title=this.libraries.get('Title'),prguse2=this.libraries.get('Prguse2');
   if(this.nationalReady&&this.skinNationalWindow(element,kind))return;
   if(!prguse||!title||!prguse2)return;
-  const specs:{library:string;index:number;x:number;y:number;closeX:number;closeY:number}={
-   character:{library:'Title',index:504,x:536,y:0,closeX:241,closeY:3},
-   inventory:{library:'Title',index:196,x:0,y:185,closeX:289,closeY:3},
-   npc:{library:'Prguse',index:995,x:5,y:40,closeX:413,closeY:3},
-   quest:{library:'Title',index:504,x:268,y:80,closeX:241,closeY:3},
-   attack:{library:'Title',index:504,x:268,y:80,closeX:241,closeY:3}
-  }[kind==='skills'||kind==='equipment'?'character':kind]??{library:'Title',index:504,x:268,y:80,closeX:241,closeY:3};
+  const layout=classicUiLayout();
+  const specs:{library:string;index:number;x:number;y:number;closeX:number;closeY:number}=
+   kind==='inventory'?{library:layout.windows.inventory.library,index:layout.windows.inventory.index,x:layout.windows.inventory.x,y:layout.windows.inventory.y,closeX:layout.windows.inventory.closeX,closeY:layout.windows.inventory.closeY}:
+   kind==='npc'?{library:layout.windows.npc.library,index:layout.windows.npc.index,x:layout.windows.npc.x,y:layout.windows.npc.y,closeX:layout.windows.npc.closeX,closeY:layout.windows.npc.closeY}:
+   kind==='character'||kind==='equipment'||kind==='skills'?{library:layout.windows.character.library,index:layout.windows.character.index,x:layout.windows.character.x,y:layout.windows.character.y,closeX:layout.windows.character.closeX,closeY:layout.windows.character.closeY}:
+   {library:'Title',index:504,x:268,y:80,closeX:241,closeY:3};
   const library=this.libraries.get(specs.library)!;
   const frame=uiFrame(library, specs.index);
   if(element.dataset.windowMoved!=='true'){element.style.left=`${specs.x}px`;element.style.top=`${specs.y}px`;if(element.id==='classic-window'){element.style.setProperty('--classic-window-left',`${specs.x}px`);element.style.setProperty('--classic-window-top',`${specs.y}px`);}}
@@ -161,15 +156,14 @@ export class ClassicHud {
   applyUiFrame(element, specs.library, frame);
   if(kind==='character'||kind==='equipment'||kind==='skills'){
    const page=element.querySelector<HTMLElement>('[data-character-page="paperdoll"]');
-   if(page)applyUiFrame(page, 'Prguse', uiFrame(prguse, 340));
+   if(page)applyUiFrame(page, 'Prguse', uiFrame(prguse, layout.characterPage.index));
    const status=element.querySelector<HTMLElement>('[data-character-page="status"]');
    if(status)applyUiFrame(status, 'Title', uiFrame(title, 506));
    const state=element.querySelector<HTMLElement>('[data-character-page="state"]');
    if(state)applyUiFrame(state, 'Title', uiFrame(title, 507));
    const skills=element.querySelector<HTMLElement>('[data-character-page="skills"]');
    if(skills)applyUiFrame(skills, 'Title', uiFrame(title, 508));
-   const tabs=[{id:'paperdoll',index:500,x:8,y:70},{id:'status',index:501,x:70,y:70},{id:'state',index:502,x:132,y:70},{id:'skills',index:503,x:194,y:70}];
-   for(const tab of tabs){
+   for(const tab of layout.characterTabs){
     const button=element.querySelector<HTMLButtonElement>(`[data-character-tab="${tab.id}"]`);
     if(!button)continue;
     button.style.left=`${tab.x}px`;button.style.top=`${tab.y}px`;
@@ -183,9 +177,8 @@ export class ClassicHud {
 
  private skinNationalWindow(element:HTMLElement,kind:string){
   const prguse=this.nationalLibraries.get('prguse');
+  const layout=classicUiLayout();
   const specs:Record<string,{index:number;x:number;y:number;closeX:number;closeY:number;closeWidth:number;closeHeight:number;paintClose?:boolean}>={
-   character:{index:380,x:272,y:80,closeX:240,closeY:0,closeWidth:16,closeHeight:23,paintClose:true},
-   inventory:{index:3,x:232,y:165,closeX:310,closeY:203,closeWidth:16,closeHeight:23},
    npc:{index:402,x:192,y:126,closeX:385,closeY:-37,closeWidth:17,closeHeight:23},
    shop:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
    repair:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
@@ -200,20 +193,27 @@ export class ClassicHud {
    chat:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
    trade:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23}
   };
-  const spec=specs[kind];
+  const spec=kind==='character'||kind==='equipment'||kind==='skills'?{
+   index:layout.nationalCharacterWindow.index,x:layout.nationalCharacterWindow.x,y:layout.nationalCharacterWindow.y,
+   closeX:layout.nationalCharacterWindow.close.x,closeY:layout.nationalCharacterWindow.close.y,
+   closeWidth:layout.nationalCharacterWindow.close.width,closeHeight:layout.nationalCharacterWindow.close.height,
+   paintClose:layout.nationalCharacterWindow.close.paint
+  }:kind==='inventory'?{
+   index:layout.nationalInventoryWindow.index,x:layout.nationalInventoryWindow.x,y:layout.nationalInventoryWindow.y,
+   closeX:layout.nationalInventoryWindow.close.x,closeY:layout.nationalInventoryWindow.close.y,
+   closeWidth:layout.nationalInventoryWindow.close.width,closeHeight:layout.nationalInventoryWindow.close.height
+  }:specs[kind];
   if(!prguse||!spec)return false;
   element.classList.add('national-window');element.classList.toggle('national-panel',['shop','repair','storage','quest','attack','targets','ground','group','guild','system','chat','trade'].includes(kind));if(element.dataset.windowMoved!=='true'){element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;if(element.id==='classic-window'){element.style.setProperty('--classic-window-left',`${spec.x}px`);element.style.setProperty('--classic-window-top',`${spec.y}px`);}}element.style.right='auto';element.style.bottom='auto';
   applyNationalUiFrame(element,'prguse',uiFrame(prguse,spec.index));
-  if(kind==='character'){
+  if(kind==='character'||kind==='equipment'||kind==='skills'){
    const paper=element.querySelector<HTMLElement>('[data-character-page="paperdoll"]');
-   if(paper){applyNationalUiFrame(paper,'prguse',uiFrame(prguse,378));paper.style.left='44px';paper.style.top='72px';}
+   if(paper)applyNationalUiFrame(paper,'prguse',uiFrame(prguse,layout.nationalCharacterPage.index));
    const status=element.querySelector<HTMLElement>('[data-character-page="status"]');
-   if(status){applyNationalUiFrame(status,'prguse',uiFrame(prguse,370));status.style.left='12px';status.style.top='52px';}
-   const labels=['装备','属性','状态','技能'];
-   element.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach((button,index)=>{
-    button.style.left=`${8+index*60}px`;button.style.top='28px';button.style.width='56px';button.style.height='18px';button.textContent=labels[index]??'';
-   });
+   if(status)applyNationalUiFrame(status,'prguse',uiFrame(prguse,layout.nationalCharacterWindow.statusPage.index));
+   applyNationalCharacterLayout(element);
   }
+  if(kind==='inventory')applyNationalInventoryLayout(element);
   const close=element.querySelector<HTMLButtonElement>('#classic-window-close, [data-window-close], #close-dialogue, .classic-window-close');
   if(close)skinNationalClose(close,prguse,spec);
   return true;
@@ -264,7 +264,7 @@ export class ClassicHud {
   const {hp,mp,maxHp,maxMp,experience,maxExperience}=this.resources;
   this.hpText.textContent=`${Math.max(0,hp)}/${Math.max(0,maxHp)}`;
   this.mpText.textContent=`${Math.max(0,mp)}/${Math.max(0,maxMp)}`;
-  const orbHeight=this.nationalReady?90:80,barWidth=this.nationalReady?75:784,weightWidth=this.nationalReady?75:76;
+  const orbHeight=this.nationalReady?nationalHudOrbMetrics().orbHeight:80,barWidth=this.nationalReady?nationalHudOrbMetrics().barWidth:784,weightWidth=this.nationalReady?nationalHudOrbMetrics().weightWidth:76;
   this.hpFill.style.height=`${ratio(hp,maxHp)*orbHeight}px`;
   this.mpFill.style.height=`${ratio(mp,maxMp)*orbHeight}px`;
   this.expFill.style.width=`${ratio(experience,maxExperience)*barWidth}px`;
@@ -321,7 +321,8 @@ async function punchNationalHudChat(main:HTMLElement,prguse:NationalLibrary){
  const context=canvas.getContext('2d');if(!context)return;
  context.drawImage(image,0,0);
  const pixels=context.getImageData(0,0,canvas.width,canvas.height),data=pixels.data;
- const left=207,right=Math.min(canvas.width-1,594),top=120,bottom=Math.min(canvas.height-1,243);
+ const punch=classicUiLayout().nationalHud.chatPunch;
+ const left=punch.left,right=Math.min(canvas.width-1,punch.right),top=punch.top,bottom=Math.min(canvas.height-1,punch.bottom);
  for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
   const i=(y*canvas.width+x)*4;
   if(data[i]>248&&data[i+1]>248&&data[i+2]>248&&data[i+3]>200){data[i]=26;data[i+1]=22;data[i+2]=18;data[i+3]=255;}

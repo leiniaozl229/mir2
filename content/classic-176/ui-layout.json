@@ -67,7 +67,79 @@
     "keys": ["1", "2", "3", "4", "5", "6"],
     "relativeTo": "mainDialog",
     "frameOrigin": {"x": 0, "y": 349},
-    "source": "Prguse#1 six pocket boundaries measured from imported 800x251 frame"
+    "source": "Prguse#1 six pocket boundaries measured from imported 800x251 frame",
+    "evidence": "asset"
+  },
+  "nationalHud": {
+    "source": "Prguse#1 imported 800x251 frame plus current production HUD placement; original-runtime capture pending",
+    "status": "proposed",
+    "mainDialog": {
+      "library": "prguse",
+      "index": 1,
+      "x": 0,
+      "y": 349,
+      "width": 800,
+      "height": 251,
+      "evidence": "asset"
+    },
+    "chatPunch": {
+      "left": 207,
+      "right": 594,
+      "top": 120,
+      "bottom": 243,
+      "relativeTo": "mainDialog",
+      "evidence": "proposed"
+    },
+    "orbs": {
+      "relativeTo": "mainDialog",
+      "hp": {"x": 42, "y": 85, "width": 46, "height": 90, "imageOffsetX": 0, "evidence": "proposed"},
+      "mp": {"x": 88, "y": 85, "width": 46, "height": 90, "imageOffsetX": -46, "evidence": "proposed"},
+      "fillImageWidth": 92,
+      "fillImageHeight": 90
+    },
+    "experienceBar": {
+      "library": "prguse",
+      "index": 7,
+      "x": 664,
+      "y": 176,
+      "width": 76,
+      "height": 13,
+      "relativeTo": "mainDialog",
+      "evidence": "proposed"
+    },
+    "weightBar": {
+      "x": 664,
+      "y": 209,
+      "width": 76,
+      "height": 13,
+      "relativeTo": "mainDialog",
+      "evidence": "proposed"
+    },
+    "fields": {
+      "hp": {"x": 42, "y": 118, "width": 46, "evidence": "proposed"},
+      "mp": {"x": 88, "y": 118, "width": 46, "evidence": "proposed"},
+      "name": {"x": 24, "y": 196, "width": 120, "evidence": "proposed"},
+      "job": {"x": 630, "y": 152, "evidence": "proposed"},
+      "status": {"x": 742, "y": 206, "maxWidth": 48, "evidence": "proposed"},
+      "exp": {"x": 642, "y": 160, "width": 110, "evidence": "proposed"},
+      "gold": {"x": 630, "y": 228, "width": 142, "evidence": "proposed"}
+    },
+    "windowButtons": [
+      {"id": "character", "window": "character", "x": 640, "y": 410, "width": 32, "height": 32, "backgroundX": 3, "backgroundY": 0, "control": "hud.window.character", "evidence": "proposed"},
+      {"id": "inventory", "window": "inventory", "x": 678, "y": 390, "width": 32, "height": 32, "backgroundX": 4, "backgroundY": 0, "control": "hud.window.inventory", "evidence": "proposed"},
+      {"id": "skills", "window": "skills", "x": 718, "y": 370, "width": 32, "height": 32, "backgroundX": 4, "backgroundY": 0, "control": "hud.window.skills", "evidence": "proposed"},
+      {"id": "targets", "window": "targets", "x": 748, "y": 400, "width": 32, "height": 32, "remapFrom": "quest", "evidence": "proposed"},
+      {"id": "attack", "window": "attack", "x": 760, "y": 360, "width": 32, "height": 32, "backgroundX": 4, "backgroundY": 0, "control": "hud.window.attack", "evidence": "proposed"}
+    ],
+    "chat": {
+      "x": 207,
+      "y": 469,
+      "width": 387,
+      "height": 123,
+      "logHeight": 100,
+      "input": {"x": 4, "y": 104, "width": 378, "height": 16},
+      "evidence": "proposed"
+    }
   },
   "miniMap": {
     "library": "Prguse",
@@ -140,7 +212,32 @@
     "originY": 14,
     "gapX": 0,
     "gapY": 0,
-    "gold": {"x": 65, "y": 190, "width": 136, "height": 16}
+    "gold": {"x": 65, "y": 190, "width": 136, "height": 16},
+    "evidence": "asset"
+  },
+  "nationalInventoryWindow": {
+    "index": 3,
+    "x": 232,
+    "y": 165,
+    "width": 336,
+    "height": 270,
+    "close": {"x": 310, "y": 203, "width": 16, "height": 23},
+    "frameEvidence": "asset",
+    "placementEvidence": "proposed"
+  },
+  "nationalCharacterWindow": {
+    "index": 380,
+    "x": 272,
+    "y": 80,
+    "width": 256,
+    "height": 359,
+    "close": {"x": 240, "y": 0, "width": 16, "height": 23, "paint": true, "index": 371},
+    "tabs": {"x": 8, "y": 28, "width": 56, "height": 18, "step": 60, "labels": ["装备", "属性", "状态", "技能"], "evidence": "proposed"},
+    "statusPage": {"index": 370, "x": 12, "y": 52, "width": 232, "height": 325, "evidence": "proposed"},
+    "skillsPage": {"x": 12, "y": 52, "width": 232, "height": 295, "evidence": "proposed"},
+    "statValues": {"x": 104, "width": 76, "tops": [90, 111, 132, 153, 174, 195, 216], "hideLabels": true, "evidence": "proposed"},
+    "frameEvidence": "asset",
+    "placementEvidence": "proposed"
   },
   "inventoryInteraction": {
     "source": "Crystal InventoryDialog and MirItemCell behavior reference",
