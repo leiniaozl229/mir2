@@ -83,6 +83,12 @@ function setCharacterPage(page:'paperdoll'|'status'|'state'|'skills'){
  window.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach(value=>{value.classList.toggle('active',value.dataset.characterTab===page);});
 }
 
+function showHudWorkspace(){
+ document.querySelector<HTMLElement>('#auth-overlay')!.hidden=true;
+ document.querySelector<HTMLElement>('#classic-hud')!.hidden=false;
+ for(const id of ['npc-dialog','shop-panel','repair-panel','storage-panel','calibration-quest-panel','calibration-attack-panel','calibration-targets-panel','calibration-ground-panel','calibration-group-panel','calibration-guild-panel','calibration-system-panel','calibration-chat-panel','calibration-trade-panel'])document.querySelector<HTMLElement>(`#${id}`)!.hidden=true;
+}
+
 function show(screenName:Screen){
  screen=screenName;hideContent();
  if(screenName==='login'||screenName==='select'||screenName==='create'){
@@ -134,10 +140,22 @@ function wireControls(){
  document.querySelectorAll<HTMLButtonElement>('[data-window-close]').forEach(button=>button.onclick=()=>show('hud'));
  document.querySelectorAll<HTMLButtonElement>('[data-window-open]').forEach(button=>button.addEventListener('click',()=>{
   const target=button.dataset.windowOpen;
- if(target==='character')show('character');
- else if(target==='inventory')show('inventory');
- else if(target==='skills'){show('character');setCharacterPage('skills');}
-  else if(target==='quest')show('quest');
+ if(target==='character'||target==='inventory'||target==='skills'){
+  showHudWorkspace();
+  if(target==='character'||target==='skills'){
+   const window=document.querySelector<HTMLElement>('#character-window')!;window.hidden=false;hud.skinWindow(window,'character');
+   setCharacterPage(target==='skills'?'skills':'paperdoll');
+  }else{
+   const window=document.querySelector<HTMLElement>('#inventory-window')!;window.hidden=false;hud.skinWindow(window,'inventory');
+  }
+  screen='hud';
+  document.querySelectorAll<HTMLButtonElement>('[data-scene]').forEach(value=>value.classList.toggle('active',value.dataset.scene==='hud'));
+  document.querySelector<HTMLElement>('#calibration-status-message')!.setAttribute('data-scene','hud');
+  document.querySelector<HTMLElement>('#calibration-status-message')!.textContent=calibrationStatus('hud');
+  updateNationalMode();
+  return;
+ }
+ if(target==='quest')show('quest');
   else if(target==='attack')show('attack');
   else if(target==='targets')show('targets');
   else if(target==='ground')show('ground');

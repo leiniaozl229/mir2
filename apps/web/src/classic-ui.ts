@@ -2,6 +2,7 @@ export type Frame={file:string;width:number;height:number;offsetX:number;offsetY
 type Library={frames:Record<string,Frame>};
 import nationalProfile from '../../../content/classic-176/national-ui-profile.json';
 import uiInteractions from '../../../content/classic-176/ui-interactions.json';
+import uiLayout from '../../../content/classic-176/ui-layout.json';
 const cache=new Map<string,Promise<Library>>();
 const nationalCache=new Map<string,Promise<Library>>();
 
@@ -43,6 +44,7 @@ export function applyNationalUiFrame(element:HTMLElement,name:string,frame:Frame
 export type ClassicUiSession={
  profile:typeof nationalProfile;
  interactions:typeof uiInteractions;
+ layout:typeof uiLayout;
  fallback:Map<string,Library>;
  national:Map<string,Library>;
  missingFallback:string[];
@@ -63,10 +65,11 @@ export function loadClassicUiSession(){
   const missingFallback:string[]=[],missingNational:string[]=[];
   SESSION_FALLBACK.forEach((name,index)=>{const result=fallbackResults[index];if(result.status==='fulfilled')fallback.set(name,result.value);else missingFallback.push(name);});
   SESSION_NATIONAL.forEach((name,index)=>{const result=nationalResults[index];if(result.status==='fulfilled')national.set(name,result.value);else missingNational.push(name);});
-  return {profile:nationalProfile,interactions:uiInteractions,fallback,national,missingFallback,missingNational};
+  return {profile:nationalProfile,interactions:uiInteractions,layout:uiLayout,fallback,national,missingFallback,missingNational};
  });
  return sessionPromise;
 }
 
 export function classicUiProfile(){return nationalProfile;}
 export function classicUiInteractions(){return uiInteractions;}
+export {classicUiLayout} from './classic-layout';

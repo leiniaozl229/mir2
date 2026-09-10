@@ -1,5 +1,6 @@
 import {iconIndexOf,loadFallbackItemIcons,type InventoryItem} from './inventory';
 import {loadNationalUiLibrary,nationalUiUrl,uiUrl} from './classic-ui';
+import {classicUiLayout} from './classic-layout';
 
 export const ITEM_QUICKBAR_SLOTS=6;
 export const ITEM_QUICKBAR_KEYS=['1','2','3','4','5','6'] as const;
@@ -103,7 +104,9 @@ export class ItemQuickBar{
   this.element.replaceChildren();
   const visible=arrangeItemQuickSlots([...this.items.values()],this.slots);
   for(let slot=0;slot<ITEM_QUICKBAR_SLOTS;slot++){
+   const spec=classicUiLayout().itemQuickBar;
    const item=visible[slot],button=document.createElement('button');button.type='button';button.className='item-quickbar-slot';button.dataset.itemQuickbarSlot=String(slot);button.setAttribute('aria-label',item?`${ITEM_QUICKBAR_KEYS[slot]}：${item.name}`:`${ITEM_QUICKBAR_KEYS[slot]}：空`);button.title=item?`${item.name} · ${ITEM_QUICKBAR_KEYS[slot]}键使用`:`${ITEM_QUICKBAR_KEYS[slot]}键：空`;
+   button.style.width=`${spec.slotWidth}px`;button.style.height=`${spec.slotHeight}px`;button.style.flex=`0 0 ${spec.slotWidth}px`;
    const id=item?.makeIndex;button.disabled=id!==undefined&&this.pending.has(id);button.draggable=id!==undefined;
    const key=document.createElement('kbd');key.textContent=ITEM_QUICKBAR_KEYS[slot];button.append(key);
    if(item){

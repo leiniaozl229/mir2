@@ -397,6 +397,10 @@ class ActorAssetProfileTests(unittest.TestCase):
         self.assertEqual(layout['paperdollActor'], {'x': 70, 'y': 150, 'direction': 4})
         self.assertEqual(layout['nationalCharacterPage'], {'library': 'prguse', 'index': 378, 'x': 44, 'y': 72})
         self.assertEqual(layout['nationalPaperdollActor'], {'x': 128, 'y': 184, 'direction': 4, 'scale': 1})
+        self.assertEqual(layout['nationalHud']['mainDialog']['y'], 349)
+        self.assertEqual(layout['nationalInventoryWindow']['width'], 336)
+        self.assertEqual(layout['nationalCharacterWindow']['width'], 256)
+        self.assertEqual(layout['nationalInventoryGrid']['gold'], {'x': 65, 'y': 190, 'width': 136, 'height': 16})
         self.assertEqual(layout['windows']['inventory']['index'], 196)
         self.assertEqual(layout['windows']['character']['index'], 504)
         slots = {cell['slot']: (cell['x'], cell['y']) for cell in layout['equipmentCells']}
