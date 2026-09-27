@@ -40,6 +40,25 @@ class OldClientCodecProxyTests(unittest.TestCase):
     def test_uses_client_file_checksum(self):
         self.assertEqual(self.proxy.NATIVE_CRC, 0x04030204)
 
+    def test_old_codec_matches_legacy_bit_packing_across_lengths(self):
+        for length in range(0, 260):
+            payload = bytes((index * 73 + length) % 256 for index in range(length))
+            bits = "".join(f"{byte:08b}" for byte in payload)
+            bits += "0" * (-len(bits) % 6)
+            expected = bytes(int(bits[index:index + 6], 2) + 60
+                             for index in range(0, len(bits), 6))
+            with self.subTest(length=length):
+                self.assertEqual(self.proxy.old_encode(payload), expected)
+                self.assertEqual(self.proxy.old_decode(expected), payload)
+        # The legacy decoder ignores one incomplete trailing sextet.
+        self.assertEqual(self.proxy.old_decode(self.proxy.old_encode(b"abc") + b"<"), b"abc")
+
+    def test_new_codec_round_trips_all_byte_values_and_tail_lengths(self):
+        for length in range(0, 260):
+            payload = bytes((index * 73 + length) % 256 for index in range(length))
+            with self.subTest(length=length):
+                self.assertEqual(self.proxy.new_decode(self.proxy.new_encode(payload)), payload)
+
     def test_sends_matching_check_with_logon(self):
         logon = struct.pack("<IHHHH", 7, 50, 250, 200, 0) + bytes(16)
         incoming = b"#" + self.proxy.new_encode(logon) + b"!"

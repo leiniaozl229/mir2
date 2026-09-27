@@ -1,14 +1,28 @@
 """Loopback-only old Mir2 6-bit codec bridge for the local OpenMir2 server."""
 import asyncio
+import base64
 import os
 import struct
 import sys
+import time
 from pathlib import Path
 
 LOCAL_PORT = int(sys.argv[1]) if len(sys.argv) > 1 else 7000
 if LOCAL_PORT not in (7000, 17100, 17200):
     raise SystemExit("Unsupported local Mir2 gate port")
 UPSTREAM_PORT = LOCAL_PORT + 1
+BASE64_ALPHABET = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+OLD_ALPHABET = bytes(range(60, 124))
+TO_OLD = bytes.maketrans(BASE64_ALPHABET, OLD_ALPHABET)
+FROM_OLD = bytes.maketrans(OLD_ALPHABET, BASE64_ALPHABET)
+TO_VALUE = bytes.maketrans(OLD_ALPHABET, bytes(range(64)))
+NEW_FIRST = bytes(((((first << 2) & 0xF0) | (fourth & 0x0C) | (first & 0x03)) ^ 0xAC)
+                  for fourth in range(64) for first in range(64))
+NEW_SECOND = bytes(((((second << 2) & 0xF0) | ((fourth << 2) & 0x0C) | (second & 0x03)) ^ 0xAC)
+                   for fourth in range(64) for second in range(64))
+NEW_THIRD = bytes(((third | ((fourth << 2) & 0xC0)) ^ 0xAC)
+                  for fourth in range(64) for third in range(64))
+TRACE = os.environ.get("MIR2_CODEC_TRACE") == "1"
 
 
 def file_checksum(path):
@@ -30,14 +44,16 @@ def version_frame():
 
 
 def old_decode(data):
-    bits = "".join(f"{byte - 60:06b}" for byte in data)
-    return bytes(int(bits[i:i + 8], 2) for i in range(0, len(bits) - 7, 8))
+    # The old alphabet is standard Base64 sextets shifted into bytes 60..123.
+    # A trailing lone sextet has no complete byte, matching the old decoder.
+    if len(data) % 4 == 1:
+        data = data[:-1]
+    encoded = data.translate(FROM_OLD)
+    return base64.b64decode(encoded + b"=" * (-len(encoded) % 4))
 
 
 def old_encode(data):
-    bits = "".join(f"{byte:08b}" for byte in data)
-    bits += "0" * ((-len(bits)) % 6)
-    return bytes(int(bits[i:i + 6], 2) + 60 for i in range(0, len(bits), 6))
+    return base64.b64encode(data).rstrip(b"=").translate(TO_OLD)
 
 
 def new_encode(data):
@@ -61,15 +77,17 @@ def new_encode(data):
 
 
 def new_decode(data):
+    values = data.translate(TO_VALUE)
     result = bytearray()
-    for pos in range(0, len(data) - 3, 4):
-        first, second, third, fourth = (value - 60 for value in data[pos:pos + 4])
-        result.append((((first << 2) & 0xF0) | (fourth & 0x0C) | (first & 0x03)) ^ 0xAC)
-        result.append((((second << 2) & 0xF0) | ((fourth << 2) & 0x0C) | (second & 0x03)) ^ 0xAC)
-        result.append((third | ((fourth << 2) & 0xC0)) ^ 0xAC)
-    rem = len(data) % 4
+    append = result.append
+    for pos in range(0, len(values) - 3, 4):
+        base = values[pos + 3] << 6
+        append(NEW_FIRST[base + values[pos]])
+        append(NEW_SECOND[base + values[pos + 1]])
+        append(NEW_THIRD[base + values[pos + 2]])
+    rem = len(values) % 4
     if rem:
-        tail = [value - 60 for value in data[-rem:]]
+        tail = values[-rem:]
         if rem == 2:
             result.append(((((tail[0] << 2) & 0xF0) | ((tail[1] << 2) & 0x0C) | (tail[0] & 0x03)) ^ 0xAC))
         elif rem == 3:
@@ -115,6 +133,21 @@ def relay_payload(frame, to_server):
     return outgoing
 
 
+def trace_frame(frame, to_server, elapsed_ms):
+    if not TRACE or LOCAL_PORT != 17200 or not frame.startswith(b"#") or not frame.endswith(b"!"):
+        return
+    marker = frame[1:2] if to_server and frame[1:2] in b"123456789" else b""
+    encoded = frame[1 + len(marker):-1].split(b"/")[0]
+    if not encoded or any(value < 60 or value > 123 for value in encoded):
+        return
+    decoded = old_decode(encoded) if to_server else new_decode(encoded)
+    fields = struct.unpack_from("<IHHHH", decoded) if len(decoded) >= 12 else (0, -1, 0, 0, 0)
+    recog, message_id, param, tag, series = fields
+    print(f"codec {time.time():.3f} {'client' if to_server else 'server'} id={message_id} "
+          f"recog={recog} param={param} tag={tag} series={series} bytes={len(frame)} ms={elapsed_ms:.3f}",
+          file=sys.stderr, flush=True)
+
+
 async def handle(client_reader, client_writer):
     try:
         server_reader, server_writer = await asyncio.open_connection("127.0.0.1", UPSTREAM_PORT)
@@ -138,7 +171,10 @@ async def handle(client_reader, client_writer):
                     end = buffer.index(b"!") + 1
                     frame = bytes(buffer[:end])
                     del buffer[:end]
+                    began = time.perf_counter() if TRACE else 0
                     outgoing = relay_payload(frame, direction == "client_to_gate")
+                    if TRACE:
+                        trace_frame(frame, direction == "client_to_gate", (time.perf_counter() - began) * 1000)
                     writer.write(outgoing)
                     await writer.drain()
         except (ConnectionError, OSError):
