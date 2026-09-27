@@ -87,6 +87,13 @@ class OldClientCodecProxyTests(unittest.TestCase):
         self.assertEqual(self.proxy.convert(b"#+GOOD/12345!", False), b"#+GOOD/12345!")
         self.assertEqual(self.proxy.convert(b"#+GD/12345!", True), b"#+GD/12345!")
 
+    def test_legacy_runlogin_code_is_padded_for_actual_marker(self):
+        login = b"**tester01/warrior/1/20210101/0"
+        frame = b"#3" + self.proxy.old_encode(login) + b"!"
+        converted = self.proxy.convert(frame, True)
+        self.assertEqual(self.proxy.new_decode(converted[2:-1]),
+                         b"**tester01/warrior/1/20210101/0000000000")
+
     def test_inventory_items_keep_real_instance_and_durability_for_legacy_client(self):
         item = bytearray(124)
         item[:5] = b"\x04Wood"

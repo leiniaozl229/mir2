@@ -302,11 +302,15 @@ def _classic_mon_gen(route_maps):
 def read_text(path):
     raw = path.read_bytes()
     if raw.startswith(b"\xef\xbb\xbf"):
-        return raw.decode("utf-8-sig")
-    try:
-        return raw.decode("utf-8")
-    except UnicodeDecodeError:
-        return raw.decode("gb18030")
+        text = raw.decode("utf-8-sig")
+    else:
+        try:
+            text = raw.decode("utf-8")
+        except UnicodeDecodeError:
+            text = raw.decode("gb18030")
+    # Path.write_text translates LF to CRLF on Windows. Normalize source files
+    # first, otherwise CRLF source becomes CRCRLF in generated NPC scripts.
+    return re.sub(r"\r+\n|\r", "\n", text)
 
 
 def _filtered_route_definitions(path, map_field, route_maps):
@@ -474,7 +478,8 @@ def _write_local_notices():
 
 
 def configure_native_windows(password, database_port=3306, login_port=17000,
-                             selection_port=17100, game_port=17200):
+                             selection_port=17100, game_port=17200,
+                             client_selection_port=None, client_game_port=None):
     """Use local TCP endpoints consistently, including redirects sent to mir.dat.
 
     Only deployment settings are refreshed; existing world/account/save data
@@ -507,10 +512,12 @@ def configure_native_windows(password, database_port=3306, login_port=17000,
                      "GateAddress1": "127.0.0.1", "GatePort1": game_port},
         "Cloud": {"UseCloudGate": 0},
     }, refresh=True)
+    selection_redirect = client_selection_port or selection_port
+    game_redirect = client_game_port or game_port
     for name, value in {
-        "LoginSrv/AddrTable.txt": f"热血传奇 Classic 127.0.0.1 127.0.0.1 127.0.0.1:{selection_port}\n",
-        "DBServer/ServerInfo.txt": f"127.0.0.1 127.0.0.1 {game_port}\n",
-        "Mir200/!servertable.txt": f"0 127.0.0.1 {game_port}\n",
+        "LoginSrv/AddrTable.txt": f"热血传奇 Classic 127.0.0.1 127.0.0.1 127.0.0.1:{selection_redirect}\n",
+        "DBServer/ServerInfo.txt": f"127.0.0.1 127.0.0.1 {game_redirect}\n",
+        "Mir200/!servertable.txt": f"0 127.0.0.1 {game_redirect}\n",
     }.items():
         (SERVER / name).write_text(value, encoding="utf-8-sig")
 
@@ -531,9 +538,15 @@ def main():
     parser.add_argument("--login-port", type=int, default=17000)
     parser.add_argument("--selection-port", type=int, default=17100)
     parser.add_argument("--game-port", type=int, default=17200)
+    parser.add_argument("--client-selection-port", type=int,
+                        help="Port sent to clients for character selection (default: selection-port)")
+    parser.add_argument("--client-game-port", type=int,
+                        help="Port sent to clients for gameplay (default: game-port)")
     args = parser.parse_args()
     native_ports = (args.database_port, args.login_port, args.selection_port, args.game_port)
-    if any(not 1 <= port <= 65535 for port in native_ports):
+    redirect_ports = tuple(port for port in (args.client_selection_port, args.client_game_port)
+                           if port is not None)
+    if any(not 1 <= port <= 65535 for port in native_ports + redirect_ports):
         parser.error("Native service ports must be between 1 and 65535")
     if args.native_windows and (len(set(native_ports)) != 4 or
             set(native_ports) & {3000, 5000, 5100, 5500, 5600, 5700, 6000}):
@@ -904,7 +917,8 @@ def main():
                                      "classicRoute": route_mode}, indent=2, ensure_ascii=False))
     if args.native_windows:
         configure_native_windows(password, args.database_port, args.login_port,
-                                 args.selection_port, args.game_port)
+                                 args.selection_port, args.game_port,
+                                 args.client_selection_port, args.client_game_port)
     files = [p for p in (SOURCE / "Mir200/Map").glob("*.map")]
     report = {"mapCount": len(files), "clientGraphicsPresent": False,
               "accountDataImported": False, "legacyBinariesImported": False,
@@ -912,7 +926,7 @@ def main():
                    for p in (ROOT / "vendor/openmir2/sql").glob("*.sql")}}
     (RUNTIME / "reports").mkdir(exist_ok=True)
     (RUNTIME / "reports/import.json").write_text(json.dumps(report, indent=2))
-    print(f"Prepared isolated P0 runtime; {len(files)} source maps; {market_definitions if 'market_definitions' in locals() else 0} classic market definitions imported; {castle_configs} castle configs normalized; empty account/save databases.")
+    print(f"Prepared isolated P0 runtime; {len(files)} source maps; {market_definitions if 'market_definitions' in locals() else 0} classic market definitions imported; {castle_configs} castle configs normalized; no account or save records imported; existing databases untouched.")
 
 
 if __name__ == "__main__":

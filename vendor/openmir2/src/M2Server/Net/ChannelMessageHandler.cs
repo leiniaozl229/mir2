@@ -394,11 +394,10 @@ namespace M2Server.Net
                                     {
                                         gateUser.PlayObject.BoSoftClose = true;
                                     }
-                                    if (gateUser.PlayObject.Ghost && !gateUser.PlayObject.BoReconnection)
-                                    {
-                                        M2Share.Authentication.SendHumanLogOutMsg(gateUser.Account, gateUser.SessionID);
-                                    }
-                                    if (gateUser.PlayObject.BoSoftClose && gateUser.PlayObject.BoReconnection && gateUser.PlayObject.BoEmergencyClose)
+                                    // Release the login ticket on an ordinary socket close;
+                                    // Ghost is set later during player cleanup.
+                                    if (!gateUser.PlayObject.BoReconnection
+                                        || (gateUser.PlayObject.BoSoftClose && gateUser.PlayObject.BoEmergencyClose))
                                     {
                                         M2Share.Authentication.SendHumanLogOutMsg(gateUser.Account, gateUser.SessionID);
                                     }

@@ -550,6 +550,7 @@ namespace M2Server.Player
                                 {
                                     SystemShare.FunctionNPC.GotoLable(this, "@TakeOff" + sItemName, false);
                                 }
+                                n10 = 1;
                             }
                             else
                             {

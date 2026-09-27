@@ -12,13 +12,15 @@ namespace LoginSrv.Services
         private readonly IList<ServerSessionInfo> _serverList = null;
         private readonly TcpService _serverSocket;
         private readonly AccountStorage _accountStorage;
+        private readonly SessionManager _sessionManager;
         private readonly Config _config;
         private static readonly LimitServerUserInfo[] UserLimit = new LimitServerUserInfo[100];
 
-        public SessionServer(ConfigManager configManager, AccountStorage accountStorage)
+        public SessionServer(ConfigManager configManager, AccountStorage accountStorage, SessionManager sessionManager)
         {
             _config = configManager.Config;
             _accountStorage = accountStorage;
+            _sessionManager = sessionManager;
             _serverList = new List<ServerSessionInfo>();
             _serverSocket = new TcpService();
             _serverSocket.Connected += Connecting;
@@ -312,6 +314,10 @@ namespace LoginSrv.Services
 
         private void CloseUser(ServerSessionInfo serverInfo, string account, int sessionId)
         {
+            // A game logout must release the login ticket too. SessionList is
+            // not populated by the current login flow, while SessionManager is
+            // the account-uniqueness source consulted by AccountLogin.
+            _sessionManager.Delete(account, sessionId);
             for (int i = serverInfo.SessionList.Count - 1; i >= 0; i--)
             {
                 SessionConnInfo connInfo = serverInfo.SessionList[i];

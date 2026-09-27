@@ -172,6 +172,21 @@ class NativeRuntimeTests(unittest.TestCase):
                 prepare.configure_native_windows("test-only-password", 13306, 17000, 17101, 17201)
                 self.assertEqual([row[2] for row in runner.configured_services()[3:]], [(17000,), (17101,), (17201,)])
                 self.assertIn("127.0.0.1:17101", (server / "LoginSrv/AddrTable.txt").read_text(encoding="utf-8-sig"))
+                # The old client must receive the bridge ports, even though
+                # the services themselves listen one port higher.
+                prepare.configure_native_windows("test-only-password", 13306, 7001, 17101, 17201,
+                                                 17100, 17200)
+                self.assertEqual([row[2] for row in runner.configured_services()[3:]], [(7001,), (17101,), (17201,)])
+                self.assertIn("127.0.0.1:17100", (server / "LoginSrv/AddrTable.txt").read_text(encoding="utf-8-sig"))
+                self.assertEqual((server / "DBServer/ServerInfo.txt").read_text(encoding="utf-8-sig").split()[-1], "17200")
+                self.assertEqual((server / "Mir200/!servertable.txt").read_text(encoding="utf-8-sig").split()[-1], "17200")
+
+    def test_source_line_endings_do_not_double_when_written_on_windows(self):
+        prepare = load_script("prepare-runtime")
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "trainer.txt"
+            source.write_bytes(b"first\r\nsecond\r\r\nthird\r")
+            self.assertEqual(prepare.read_text(source), "first\nsecond\nthird\n")
 
     def test_docker_default_does_not_refresh_existing_configuration(self):
         prepare = load_script("prepare-runtime")

@@ -1100,10 +1100,6 @@ namespace M2Server.Player
                     }
                     else
                     {
-                        if ((HUtil32.GetTickCount() - WaitLoginNoticeOkTick) > 10 * 1000)
-                        {
-                            BoEmergencyClose = true;
-                        }
                         ProcessMessage msg = default;
                         while (GetMessage(ref msg))
                         {
@@ -1113,6 +1109,12 @@ namespace M2Server.Player
                                 ClientTick = (short)msg.nParam1;
                                 SysMsg(ClientTick.ToString(), MsgColor.Red, MsgType.Notice);
                             }
+                        }
+                        // Allow time to read the notice, and process an
+                        // acknowledgement already queued before expiring it.
+                        if (!LoginNoticeOk && (HUtil32.GetTickCount() - WaitLoginNoticeOkTick) > 120 * 1000)
+                        {
+                            BoEmergencyClose = true;
                         }
                     }
                 }

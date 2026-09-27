@@ -3,57 +3,81 @@ namespace LoginSrv.Services
     public class SessionManager
     {
         private readonly Dictionary<int, SessionConnInfo> sessionMap = new Dictionary<int, SessionConnInfo>();
-        private readonly Dictionary<string, SessionConnInfo> sessionAccountMap = new Dictionary<string, SessionConnInfo>();
+        private readonly Dictionary<string, SessionConnInfo> sessionAccountMap = new Dictionary<string, SessionConnInfo>(StringComparer.OrdinalIgnoreCase);
+        private readonly object syncRoot = new object();
 
         public void AddSession(int sessionId, SessionConnInfo sessionConnInfo)
         {
-            sessionMap.Add(sessionId, sessionConnInfo);
-            sessionAccountMap.Add(sessionConnInfo.Account, sessionConnInfo);
+            lock (syncRoot)
+            {
+                if (sessionMap.ContainsKey(sessionId) || sessionAccountMap.ContainsKey(sessionConnInfo.Account))
+                {
+                    throw new InvalidOperationException("The account or session is already active.");
+                }
+                sessionMap.Add(sessionId, sessionConnInfo);
+                sessionAccountMap.Add(sessionConnInfo.Account, sessionConnInfo);
+            }
         }
 
         public SessionConnInfo GetSession(string account)
         {
-            return sessionAccountMap[account];
+            lock (syncRoot)
+            {
+                return sessionAccountMap.TryGetValue(account, out SessionConnInfo session) ? session : null;
+            }
         }
 
         public void UpdateSession(int sessionId, string sServerName, bool isPayMent)
         {
-            if (sessionMap.ContainsKey(sessionId))
+            lock (syncRoot)
             {
-                sessionMap[sessionId].ServerName = sServerName;
-                sessionMap[sessionId].IsPayMent = isPayMent;
+                if (sessionMap.TryGetValue(sessionId, out SessionConnInfo session))
+                {
+                    session.ServerName = sServerName;
+                    session.IsPayMent = isPayMent;
+                }
             }
         }
 
         public bool IsLogin(int sessionId)
         {
-            if (sessionMap.ContainsKey(sessionId))
+            lock (syncRoot)
             {
-                return true;
+                return sessionMap.ContainsKey(sessionId);
             }
-            return false;
         }
 
         public bool IsLogin(string sessionId)
         {
-            if (sessionAccountMap.ContainsKey(sessionId))
+            lock (syncRoot)
             {
-                return true;
+                return sessionAccountMap.ContainsKey(sessionId);
             }
-            return false;
         }
 
         public void Delete(string account, int sessionId)
         {
-            if (sessionMap.Remove(sessionId))
+            lock (syncRoot)
             {
-                sessionAccountMap.Remove(account);
+                if (sessionMap.TryGetValue(sessionId, out SessionConnInfo session)
+                    && string.Equals(session.Account, account, StringComparison.OrdinalIgnoreCase))
+                {
+                    sessionMap.Remove(sessionId);
+                    if (sessionAccountMap.TryGetValue(account, out SessionConnInfo active)
+                        && ReferenceEquals(active, session))
+                    {
+                        sessionAccountMap.Remove(account);
+                    }
+                }
             }
         }
 
         public SessionConnInfo[] GetSessions()
         {
-            return sessionMap.Count > 0 ? sessionMap.Values.ToArray() : null;
+            lock (syncRoot)
+            {
+                return sessionMap.Count > 0 ? sessionMap.Values.ToArray() : null;
+            }
         }
     }
 }

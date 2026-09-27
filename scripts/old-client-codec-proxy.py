@@ -142,7 +142,7 @@ def convert(frame, to_server):
         return frame
     if to_server:
         decoded_parts = [old_decode(part) for part in parts]
-        if LOCAL_PORT == 17200 and marker == b"5" and decoded_parts[0].startswith(b"**") and decoded_parts[0].endswith(b"/0"):
+        if LOCAL_PORT == 17200 and decoded_parts[0].startswith(b"**") and decoded_parts[0].endswith(b"/0"):
             decoded_parts[0] = decoded_parts[0][:-1] + b"0000000000"
         encoded = b"/".join(new_encode(part) for part in decoded_parts)
     else:
@@ -179,7 +179,7 @@ def relay_payload(frame, to_server):
 
 
 def trace_frame(frame, to_server, elapsed_ms):
-    if not TRACE or LOCAL_PORT != 17200 or not frame.startswith(b"#") or not frame.endswith(b"!"):
+    if not TRACE or not frame.startswith(b"#") or not frame.endswith(b"!"):
         return
     marker = frame[1:2] if to_server and frame[1:2] in b"123456789" else b""
     encoded = frame[1 + len(marker):-1].split(b"/")[0]
@@ -188,6 +188,11 @@ def trace_frame(frame, to_server, elapsed_ms):
     decoded = old_decode(encoded) if to_server else new_decode(encoded)
     fields = struct.unpack_from("<IHHHH", decoded) if len(decoded) >= 12 else (0, -1, 0, 0, 0)
     recog, message_id, param, tag, series = fields
+    if LOCAL_PORT != 17200:
+        print(f"codec {time.time():.3f} port={LOCAL_PORT} {'client' if to_server else 'server'} "
+              f"id={message_id} bytes={len(frame)} ms={elapsed_ms:.3f}",
+              file=sys.stderr, flush=True)
+        return
     print(f"codec {time.time():.3f} {'client' if to_server else 'server'} id={message_id} "
           f"recog={recog} param={param} tag={tag} series={series} bytes={len(frame)} ms={elapsed_ms:.3f}",
           file=sys.stderr, flush=True)

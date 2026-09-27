@@ -3,17 +3,25 @@
 <升到七级/@levelseven>\
 <准备洞穴战斗测试/@cavecombat>\
 <领取装备图标测试套装/@equipmentset>\
-<领取火球术秘籍/@fireballbook>\
-<领取治愈术秘籍/@healingbook>\
+<技能与秘籍/@skills>\
+<地图与其他测试/@more>\
+<离开/@exit>
+
+[@skills]
+请选择要测试的技能或秘籍。\
+<领取火球术秘籍/@fireballbook> <领取治愈术秘籍/@healingbook>\
 <领取基本剑术秘籍/@fencingbook>\
-<战士技能测试/@warriorset>\
-<法师技能测试/@wizardset>\
+<战士技能测试/@warriorset> <法师技能测试/@wizardset>\
 <道士技能测试/@taoistset>\
+<返回/@main>
+
+[@more]
+请选择其他测试项目。\
 <调整治愈术测试状态/@healingtest>\
 <进入附近刷怪区/@nearmonsters>\
 <进入兽人古墓/@orcgrave>\
 <测试死亡回城/@death>\
-<离开/@exit>
+<返回/@main>
 
 [@levelseven]
 #IF
