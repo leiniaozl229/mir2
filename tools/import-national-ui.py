@@ -61,7 +61,7 @@ def main():
     args = parser.parse_args()
     if not args.data_dir.is_dir():
         parser.error(f"data directory does not exist: {args.data_dir}")
-    profile = json.loads(PROFILE.read_text())
+    profile = json.loads(PROFILE.read_text(encoding="utf-8"))
     families = profile["sourceContract"]["families"]
     selected = set(args.family or [family["id"] for family in families])
     known = {family["id"] for family in families}
@@ -109,7 +109,7 @@ def main():
     print(payload)
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)
-        args.json.write_text(payload + "\n")
+        args.json.write_text(payload + "\n", encoding="utf-8")
     return 0 if report["ok"] else 2
 
 

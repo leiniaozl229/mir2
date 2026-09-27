@@ -422,10 +422,11 @@ def write_new(path, text, encoding="utf-8-sig"):
         path.write_text(text, encoding=encoding)
 
 
-def configure(directory, source_name, target_name, updates):
+def configure(directory, source_name, target_name, updates, refresh=False):
     cfg = configparser.ConfigParser(strict=False, interpolation=None)
     cfg.optionxform = str
-    cfg.read_string(read_text(SOURCE / directory / source_name))
+    target = SERVER / directory / target_name
+    cfg.read_string(read_text(target if refresh and target.exists() else SOURCE / directory / source_name))
     for section, values in updates.items():
         if not cfg.has_section(section):
             cfg.add_section(section)
@@ -434,9 +435,8 @@ def configure(directory, source_name, target_name, updates):
                 if previous.lower() == key.lower():
                     del cfg[section][previous]
             cfg[section][key] = str(value)
-    target = SERVER / directory / target_name
     target.parent.mkdir(parents=True, exist_ok=True)
-    if not target.exists():
+    if refresh or not target.exists():
         with target.open("w", encoding="utf-8-sig") as handle:
             cfg.write(handle, space_around_delimiters=False)
 
@@ -473,6 +473,48 @@ def _write_local_notices():
         "[公告]本地测试环境已启动，请通过游戏内问题记录反馈异常。\r\n".encode("gb18030"))
 
 
+def configure_native_windows(password, database_port=3306, login_port=17000,
+                             selection_port=17100, game_port=17200):
+    """Use local TCP endpoints consistently, including redirects sent to mir.dat.
+
+    Only deployment settings are refreshed; existing world/account/save data
+    and unrelated configuration values are retained.
+    """
+    for directory, source_name, target_name, database in [
+        ("Mir200", "Server.conf", "server.conf", "mir2_data"),
+        ("DBServer", "dbsvr.conf", "dbsvr.conf", "mir2_db"),
+        ("LoginSrv", "config.conf", "logsrv.conf", "mir2_account"),
+    ]:
+        updates = {"DataBase": {"ConnctionString":
+            f"server=127.0.0.1;port={database_port};uid=root;pwd={password};database={database};"}}
+        if directory == "DBServer":
+            updates["Setup"] = {"MapFile": str((SERVER / "Mir200/Envir/MapInfo.txt").resolve())}
+        configure(directory, source_name, target_name, updates, refresh=True)
+    for directory, section, port in [
+        ("LoginGate", "LoginGate", login_port), ("SelGate", "SelGate", selection_port),
+    ]:
+        gateway_updates = {
+            section: {"Count": 1, "ServerAddr0": "127.0.0.1",
+                      "GateAddr0": "127.0.0.1", "GatePort0": port},
+        }
+        if directory == "LoginGate":
+            # Local UI calibration often pauses before credentials are entered.
+            # Keep a finite timeout while allowing ten minutes for inspection.
+            gateway_updates["Integer"] = {"ClientTimeOutTime": 600_000}
+        configure(directory, "config.conf", "config.conf", gateway_updates, refresh=True)
+    configure("RunGate", "config.conf", "config.conf", {
+        "GameGate": {"ServerWorkThread": 1, "ServerAddr1": "127.0.0.1",
+                     "GateAddress1": "127.0.0.1", "GatePort1": game_port},
+        "Cloud": {"UseCloudGate": 0},
+    }, refresh=True)
+    for name, value in {
+        "LoginSrv/AddrTable.txt": f"热血传奇 Classic 127.0.0.1 127.0.0.1 127.0.0.1:{selection_port}\n",
+        "DBServer/ServerInfo.txt": f"127.0.0.1 127.0.0.1 {game_port}\n",
+        "Mir200/!servertable.txt": f"0 127.0.0.1 {game_port}\n",
+    }.items():
+        (SERVER / name).write_text(value, encoding="utf-8-sig")
+
+
 _expand_classic_routes(CLASSIC_EXTRA_ROUTES)
 
 
@@ -482,7 +524,20 @@ def main():
                         help="Regenerate only the explicitly isolated P0 world fixtures")
     parser.add_argument("--refresh-classic-route", action="store_true",
                         help="Add the classic 0/1/2/3 world route while preserving accounts and saves")
+    parser.add_argument("--native-windows", action="store_true",
+                        help="Use local MySQL and loopback-only client ports 17000/17100/17200")
+    parser.add_argument("--database-port", "--db-port", type=int, default=3306,
+                        help="Local MySQL TCP port for --native-windows (default: 3306)")
+    parser.add_argument("--login-port", type=int, default=17000)
+    parser.add_argument("--selection-port", type=int, default=17100)
+    parser.add_argument("--game-port", type=int, default=17200)
     args = parser.parse_args()
+    native_ports = (args.database_port, args.login_port, args.selection_port, args.game_port)
+    if any(not 1 <= port <= 65535 for port in native_ports):
+        parser.error("Native service ports must be between 1 and 65535")
+    if args.native_windows and (len(set(native_ports)) != 4 or
+            set(native_ports) & {3000, 5000, 5100, 5500, 5600, 5700, 6000}):
+        parser.error("Native ports must be distinct and cannot overlap internal service ports")
     RUNTIME.mkdir(exist_ok=True)
     env = RUNTIME / "db.env"
     write_new(env, "MYSQL_ROOT_PASSWORD=" + secrets.token_hex(24) + "\n", "utf-8")
@@ -847,6 +902,9 @@ def main():
         marker.write_text(json.dumps({"purpose": "P0 engine verification only",
                                      "maps": route_maps, "fullContentComplete": False,
                                      "classicRoute": route_mode}, indent=2, ensure_ascii=False))
+    if args.native_windows:
+        configure_native_windows(password, args.database_port, args.login_port,
+                                 args.selection_port, args.game_port)
     files = [p for p in (SOURCE / "Mir200/Map").glob("*.map")]
     report = {"mapCount": len(files), "clientGraphicsPresent": False,
               "accountDataImported": False, "legacyBinariesImported": False,

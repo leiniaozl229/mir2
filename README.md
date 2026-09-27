@@ -1,6 +1,6 @@
 # 浏览器传奇复刻工程
 
-**状态快照（2026-09-09）：** 安装清单、`npm run build`、`npm run test:web`（32 项）和 Python 回归（96 项）均通过。内容审计已闭合 570/570 张地图、570/570 条路线目的地；国服 UI 素材验证为 `ready-for-decoder`，必需素材缺项为 0。当前 classic-route 运行目录含 570 张 `MapInfo` 地图和 Q001；P0 模式会有意跳过 Q001。完整 UI 逐像素校准、Windows 原端动态验证、Safari/Firefox、两小时稳定性和完整沙巴克战役仍需专项验收。旧审查及运行快照见 [`docs/archive/`](docs/archive/README.md)。
+**进度（2026-09-27）：** 2003 原版 Windows 客户端已通过本机协议桥接入 OpenMir2，实测登录、选角、进入比奇地图 `0` 并移动一步；登录输入文字仍不可见，完整玩法与长时稳定性尚未验收。此前 2026-09-09 的基线中，安装清单、前端构建、32 项前端回归、96 项 Python 回归及 570/570 张地图内容审计通过；这些历史指标不代表本轮重跑全套检查。详细进度和当前测试限制见 [docs/implementation-status.md](docs/implementation-status.md)，旧审查见 [`docs/archive/`](docs/archive/README.md)。
 
 实施范围与验收要求见 [PLAN.md](PLAN.md)，阶段记录见 [docs/implementation-status.md](docs/implementation-status.md)，安装备份见 [docs/delivery.md](docs/delivery.md)。P0 基础闭环、经典主世界与 570 张可解析地图目录（其中 121 张精选路线配置了分层向导和区域刷怪）、浏览器网关和技能导师已可重复运行；完整 1.76 内容、全量素材校准和经典 UI 仍在扩展。动态门协议已接入，阻挡移动收到服务端拒绝后会尝试开门，门的开闭状态实时投影到地图。
 

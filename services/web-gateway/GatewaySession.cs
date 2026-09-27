@@ -8,6 +8,9 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
     private readonly LegacyConnection login = new(), selection = new(), game = new();
     private readonly SemaphoreSlim outgoing = new(1, 1);
     private readonly string host = Environment.GetEnvironmentVariable("MIR2_ENGINE_HOST") ?? "engine";
+    private readonly int loginPort = int.Parse(Environment.GetEnvironmentVariable("MIR2_LOGIN_GATE_PORT") ?? "7000");
+    private readonly int selectionPort = int.Parse(Environment.GetEnvironmentVariable("MIR2_SELECTION_GATE_PORT") ?? "7100");
+    private readonly int gamePort = int.Parse(Environment.GetEnvironmentVariable("MIR2_GAME_GATE_PORT") ?? "7200");
     private volatile string phase = "login";
     private string account = "", ticket = "", character = "";
     private HashSet<string> characters = [];
@@ -342,7 +345,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
     {
         account = Field(command, "account", 10);
         string password = Field(command, "password", 10);
-        await login.Connect(host, 7000, cancellation);
+        await login.Connect(host, loginPort, cancellation);
         await login.Send(2001, cancellation, $"{account}/{password}", recog: 20030422);
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
         timeout.CancelAfter(TimeSpan.FromSeconds(20));
@@ -357,7 +360,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
         await login.Send(104, cancellation, "热血传奇");
         ticket = (await login.Expect(530, cancellation)).Text.Split('/')[^1];
         if (!uint.TryParse(ticket, out _)) throw new InvalidDataException("Invalid login ticket");
-        await selection.Connect(host, 7100, cancellation);
+        await selection.Connect(host, selectionPort, cancellation);
         await selection.Send(100, cancellation, $"{account}/{ticket}");
         var result = await selection.Expect(520, cancellation);
         phase = "characters";
@@ -383,7 +386,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
     {
         string requestedAccount = AccountField(command, "account"), password = Field(command, "password", 10);
         using var registration = new LegacyConnection();
-        await registration.Connect(host, 7000, cancellation);
+        await registration.Connect(host, loginPort, cancellation);
         await Task.Delay(TimeSpan.FromSeconds(1.1), cancellation);
         byte[] body = AccountRegistration.EncodeBody(requestedAccount, password);
         await registration.SendPayload([..LegacyCodec.Header(2002), ..body], cancellation);
@@ -429,7 +432,7 @@ public sealed class GatewaySession(WebSocket socket) : IDisposable
         character = name;
         await selection.Send(103, cancellation, $"{account}/{name}");
         await selection.Expect(525, cancellation); // Internal routes stay in server configuration.
-        await game.Connect(host, 7200, cancellation);
+        await game.Connect(host, gamePort, cancellation);
         string handshake = $"**{account}/{name}/{ticket}/20030422/{uint.Parse(ticket) ^ 0xf2e44fff}/000000000000000000000000000000/0";
         await game.SendPayload(LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes(handshake)), cancellation);
         phase = "entering";

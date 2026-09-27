@@ -243,5 +243,7 @@ def export(source, destination, indices=None, index=None):
         "empty": empty,
         "missing": missing,
     }
-    (destination / "library.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2))
+    (destination / "library.json").write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
     return manifest

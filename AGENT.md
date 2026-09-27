@@ -10,7 +10,7 @@
 - `services/web-gateway`：.NET 10 WebSocket 网关，把浏览器 JSON 命令转换为旧版 Mir TCP 协议，并将服务端事件投影回浏览器。
 - `vendor/openmir2`：已纳入主仓库的固定 OpenMir2 服务端源码，当前集成补丁已写入该目录；`vendor/mirserver-data` 仍是公开数据子模块。服务端补丁保存在 `patches/openmir2/` 作为基线记录，后续源码修改直接在主仓库提交，不要再创建嵌套 Git 工作树。
 
-运行时还包含 MySQL、`LoginSrv`、`DBSrv`、`GameSrv`、`LoginGate`、`SelGate` 和 `GameGate`。浏览器连接 `ws://127.0.0.1:18800/ws`，Vite 开发服务器在 `127.0.0.1:5173` 提供页面并代理 `/ws`。原版 `mir.exe` 使用旧版 TCP/Gate 协议，不能直接连接浏览器 WebSocket；原版客户端的动态直连兼容性仍需在 Windows 环境实测。
+运行时还包含 MySQL、`LoginSrv`、`DBSrv`、`GameSrv`、`LoginGate`、`SelGate` 和 `GameGate`。浏览器连接 `ws://127.0.0.1:18800/ws`，Vite 开发服务器在 `127.0.0.1:5173` 提供页面并代理 `/ws`。原版 `mir.exe` 使用旧版 TCP/Gate 协议，不能直接连接浏览器 WebSocket；2026-09-27 已在 Windows 经 `scripts/old-client-codec-proxy.py` 实测登录、选角、比奇入图和移动一步，完整玩法仍待验收。
 
 ## 目录职责
 

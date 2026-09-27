@@ -52,7 +52,7 @@ def audit_exported_libraries(export_root: Optional[Path]):
         return result
     for manifest_path in sorted(export_root.rglob("library.json")):
         try:
-            manifest = json.loads(manifest_path.read_text())
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         except (OSError, ValueError) as error:
             result["libraries"].append({"library": str(manifest_path.parent), "error": str(error)})
             continue
@@ -123,7 +123,7 @@ def audit_exported_libraries(export_root: Optional[Path]):
 
 
 def validate(data_dir: Optional[Path], export_root: Optional[Path] = None):
-    profile = json.loads(PROFILE_PATH.read_text())
+    profile = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
     families = profile["sourceContract"]["families"]
     report = {
         "profile": profile["id"],
@@ -190,7 +190,7 @@ def main():
     print(payload)
     if args.json:
         args.json.parent.mkdir(parents=True, exist_ok=True)
-        args.json.write_text(payload + "\n")
+        args.json.write_text(payload + "\n", encoding="utf-8")
     return 0 if report["ok"] else 2
 
 

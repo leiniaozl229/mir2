@@ -15,6 +15,7 @@ namespace SelGate.Conf
             for (int i = 0; i < m_xGameGateList.Length; i++)
             {
                 m_xGameGateList[i].sServerAdress = "127.0.0.1";
+                m_xGameGateList[i].sGateAddress = "0.0.0.0";
                 m_xGameGateList[i].nServerPort = 5100;
                 m_xGameGateList[i].nGatePort = 7100 + i;
             }
@@ -73,6 +74,7 @@ namespace SelGate.Conf
                 m_xGameGateList[i].sServerAdress = ReadWriteString("SelGate", "ServerAddr" + i, m_xGameGateList[i].sServerAdress);
                 m_xGameGateList[i].nServerPort = ReadWriteInteger("SelGate", "ServerPort" + i, m_xGameGateList[i].nServerPort);
                 m_xGameGateList[i].nGatePort = ReadWriteInteger("SelGate", "GatePort" + i, m_xGameGateList[i].nGatePort);
+                m_xGameGateList[i].sGateAddress = ReadWriteString("SelGate", "GateAddr" + i, m_xGameGateList[i].sGateAddress);
             }
         }
     }
@@ -80,6 +82,7 @@ namespace SelGate.Conf
     public struct TGameGateList
     {
         public string sServerAdress;
+        public string sGateAddress;
         public int nServerPort;
         public int nGatePort;
     }

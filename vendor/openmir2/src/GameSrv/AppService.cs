@@ -41,6 +41,26 @@ namespace GameSrv
                 command.Description = "立即保存游戏数据";
                 command.OnExecute(SavePlayer);
             });
+            _application.Command("drainstatus", command =>
+            {
+                command.Description = "显示停服前的玩家、载入和存档队列数量";
+                command.OnExecute(() =>
+                {
+                    var front = (GameSrv.Services.FrontEngine)M2Share.FrontEngine;
+                    int loading;
+                    HUtil32.EnterCriticalSection(front.UserCriticalSection);
+                    try
+                    {
+                        loading = front.m_LoadRcdList.Count + front.m_LoadRcdTempList.Count
+                            + ((GameSrv.Word.WorldServer)SystemShare.WorldEngine).LoadPlayCount;
+                    }
+                    finally
+                    {
+                        HUtil32.LeaveCriticalSection(front.UserCriticalSection);
+                    }
+                    LogService.Info($"MIR2_DRAIN_STATUS players={SystemShare.WorldEngine.PlayObjectCount} loading={loading} saves={front.SaveListCount()}");
+                });
+            });
             _application.Command("gamestatus", command =>
             {
                 command.Description = "查看游戏网关状况";

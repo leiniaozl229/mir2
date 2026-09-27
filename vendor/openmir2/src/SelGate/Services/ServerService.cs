@@ -39,9 +39,10 @@ namespace SelGate.Services
 
         public void Start()
         {
-            _serverSocket.Setup(new TouchSocketConfig().SetListenIPHosts(new IPHost(IPAddress.Any, GateShare.GatePort)));
+            TGameGateList gate = _configManager.m_xGameGateList[0];
+            _serverSocket.Setup(new TouchSocketConfig().SetListenIPHosts(new IPHost(IPAddress.Parse(gate.sGateAddress), gate.nGatePort)));
             _serverSocket.Start();
-            LogService.Info($"登陆网关[127.0.0.1:{GateShare.GatePort}]已启动.");
+            LogService.Info($"角色网关[{gate.sGateAddress}:{gate.nGatePort}]已启动.");
         }
 
         public void Stop()
