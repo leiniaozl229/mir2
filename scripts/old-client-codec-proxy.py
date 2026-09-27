@@ -23,6 +23,7 @@ NEW_SECOND = bytes(((((second << 2) & 0xF0) | ((fourth << 2) & 0x0C) | (second &
 NEW_THIRD = bytes(((third | ((fourth << 2) & 0xC0)) ^ 0xAC)
                   for fourth in range(64) for third in range(64))
 TRACE = os.environ.get("MIR2_CODEC_TRACE") == "1"
+ITEM_MESSAGE_IDS = {200, 201, 203, 621}
 
 
 def file_checksum(path):
@@ -108,6 +109,33 @@ def convert(frame, to_server):
             return b"#+FAIL/" + frame[5:]
     marker = frame[1:2] if to_server and frame[1:2] in b"123456789" else b""
     body = frame[1 + len(marker):-1]
+    if (LOCAL_PORT == 17200 and not to_server and len(body) >= 16
+            and all(60 <= value <= 123 for value in body[:16])):
+        header = new_decode(body[:16])
+        if len(header) == 12 and int.from_bytes(header[4:6], "little") == 621:
+            # The encoded header runs directly into a literal slot number;
+            # the remaining fields alternate slot/item and end with '/'.
+            fields = body[16:].split(b"/")
+            if fields[-1] == b"":
+                fields.pop()
+                trailing_slash = True
+            else:
+                trailing_slash = False
+            if len(fields) % 2:
+                return frame
+            converted = []
+            for index in range(0, len(fields), 2):
+                slot, encoded_item = fields[index:index + 2]
+                if (not slot.isdigit() or not encoded_item
+                        or any(value < 60 or value > 123 for value in encoded_item)):
+                    return frame
+                item_blob = bytearray(new_decode(encoded_item))
+                if len(item_blob) != 124:
+                    return frame
+                item_blob[44:52] = item_blob[100:108]
+                converted.extend((slot, old_encode(item_blob)))
+            suffix = b"/".join(converted) + (b"/" if trailing_slash else b"")
+            return b"#" + old_encode(header) + suffix + b"!"
     # Game packets can join independently encoded fields with literal '/'.
     parts = body.split(b"/")
     if not body or any(any(value < 60 or value > 123 for value in part) for part in parts):
@@ -119,6 +147,16 @@ def convert(frame, to_server):
         encoded = b"/".join(new_encode(part) for part in decoded_parts)
     else:
         decoded_parts = [bytearray(new_decode(part)) for part in parts]
+        if (LOCAL_PORT == 17200 and decoded_parts and len(decoded_parts[0]) >= 6
+                and int.from_bytes(decoded_parts[0][4:6], "little") in ITEM_MESSAGE_IDS):
+            for index, item_blob in enumerate(decoded_parts):
+                offset = 12 if index == 0 else 0
+                if len(item_blob) - offset == 124:
+                    # This 2003 client reads MakeIndex/Dura/DuraMax from
+                    # bytes 44..51 of the item payload. OpenMir2
+                    # places these fields at bytes 100..107 in its newer wire
+                    # structure, so copy them into the legacy slots.
+                    item_blob[offset + 44:offset + 52] = item_blob[offset + 100:offset + 108]
         if (LOCAL_PORT == 17200 and decoded_parts and len(decoded_parts[0]) >= 12
                 and int.from_bytes(decoded_parts[0][4:6], "little") == 1106):
             decoded_parts[0][0:4] = NATIVE_CRC.to_bytes(4, "little")

@@ -19,6 +19,24 @@ def load_script(name):
 
 
 class NativeRuntimeTests(unittest.TestCase):
+    def test_state_reader_retries_transient_windows_file_lock(self):
+        runner = load_script("run-server-native")
+
+        class TransientState:
+            calls = 0
+
+            def read_text(self, **_kwargs):
+                self.calls += 1
+                if self.calls == 1:
+                    raise PermissionError("state file is being replaced")
+                return '{"status": "ready"}'
+
+        state = TransientState()
+        with patch.object(runner, "STATE", state), patch.object(runner.time, "sleep") as sleep:
+            self.assertEqual(runner.read_state(), {"status": "ready"})
+        self.assertEqual(state.calls, 2)
+        sleep.assert_called_once_with(0.05)
+
     def test_gateway_configuration_rewritten_as_gbk_can_restart(self):
         runner = load_script("run-server-native")
         with tempfile.TemporaryDirectory() as temporary:

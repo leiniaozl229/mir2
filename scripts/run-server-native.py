@@ -75,10 +75,17 @@ def listener_ports():
 
 
 def read_state():
-    try:
-        return json.loads(STATE.read_text(encoding="utf-8"))
-    except (FileNotFoundError, ValueError):
-        return {}
+    for attempt in range(10):
+        try:
+            return json.loads(STATE.read_text(encoding="utf-8"))
+        except (FileNotFoundError, ValueError):
+            return {}
+        except PermissionError:
+            # Windows can briefly deny a reader while the supervisor replaces
+            # its state file with an atomic rename.
+            if attempt == 9:
+                raise
+            time.sleep(0.05)
 
 
 def write_state(state):

@@ -87,6 +87,35 @@ class OldClientCodecProxyTests(unittest.TestCase):
         self.assertEqual(self.proxy.convert(b"#+GOOD/12345!", False), b"#+GOOD/12345!")
         self.assertEqual(self.proxy.convert(b"#+GD/12345!", True), b"#+GD/12345!")
 
+    def test_inventory_items_keep_real_instance_and_durability_for_legacy_client(self):
+        item = bytearray(124)
+        item[:5] = b"\x04Wood"
+        item[44:48] = struct.pack("<I", 5)  # New format's Stock, misread as the old item ID.
+        item[100:108] = struct.pack("<IHH", 15802433, 7000, 8000)
+        for message_id in (200, 201, 203):
+            header = struct.pack("<IHHHH", 0, message_id, 0, 0, 0)
+            frame = (b"#" + self.proxy.new_encode(header)
+                     + self.proxy.new_encode(item) + b"/" + self.proxy.new_encode(item) + b"/!")
+            converted = self.proxy.convert(frame, False)
+            parts = converted[1:-1].split(b"/")
+            first = self.proxy.old_decode(parts[0])
+            second = self.proxy.old_decode(parts[1])
+            with self.subTest(message_id=message_id):
+                self.assertEqual(first[:12], header)
+                self.assertEqual(first[12 + 44:12 + 52], item[100:108])
+                self.assertEqual(second[44:52], item[100:108])
+                self.assertEqual(first[12:12 + 44], item[:44])
+
+        header = struct.pack("<IHHHH", 0, 621, 0, 0, 0)
+        frame = (b"#" + self.proxy.new_encode(header) + b"1/"
+                 + self.proxy.new_encode(item) + b"/!")
+        converted = self.proxy.convert(frame, False)
+        parts = converted[1:-1].split(b"/")
+        self.assertEqual(parts[0][-1:], b"1")
+        self.assertEqual(parts[2], b"")
+        self.assertEqual(self.proxy.old_decode(parts[0][:-1]), header)
+        self.assertEqual(self.proxy.old_decode(parts[1])[44:52], item[100:108])
+
 
 if __name__ == "__main__":
     unittest.main()
