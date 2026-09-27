@@ -168,11 +168,13 @@ namespace OpenMir2.NativeList.Utils
                 throw new ArgumentOutOfRangeException(nameof(index));
             }
 
-            for (int i = index; i < Count; i++)
+            int count = Count;
+            for (int i = index; i < count - 1; i++)
             {
                 SetAt(i, GetAt(i + 1));
             }
 
+            SetAt(count - 1, default);
             Interlocked.Decrement(ref _count);
         }
 
@@ -285,17 +287,13 @@ namespace OpenMir2.NativeList.Utils
                 return 1;
             }
 
-            int pow = 0;
-
-            while (size > 0)
+            int capacity = 1;
+            while (capacity < size)
             {
-                size <<= 1;
-                pow++;
+                capacity = checked(capacity * 2);
             }
 
-            pow--;
-
-            return (int)Math.Pow(2, pow);
+            return capacity;
         }
 
         protected override void InternalDispose(bool manual)
