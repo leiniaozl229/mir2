@@ -99,6 +99,13 @@ def new_decode(data):
 def convert(frame, to_server):
     if not frame.startswith(b"#") or not frame.endswith(b"!"):
         return frame
+    if LOCAL_PORT == 17200 and not to_server:
+        # This client releases its action lock only for +GOOD/ or +FAIL/.
+        # OpenMir2 abbreviates the same game-gate replies to +GD/ and +FL/.
+        if frame.startswith(b"#+GD/"):
+            return b"#+GOOD/" + frame[5:]
+        if frame.startswith(b"#+FL/"):
+            return b"#+FAIL/" + frame[5:]
     marker = frame[1:2] if to_server and frame[1:2] in b"123456789" else b""
     body = frame[1 + len(marker):-1]
     # Game packets can join independently encoded fields with literal '/'.

@@ -1778,67 +1778,42 @@ namespace M2Server.Actor
             {
                 return true;
             }
-            bool result = Envir.Flag.SafeArea;
-            if (result) //安全区
+            if (Envir.Flag.SafeArea)
             {
-                if ((Envir.MapName != SystemShare.Config.RedHomeMap) || (Math.Abs(CurrX - SystemShare.Config.RedHomeX) > SystemShare.Config.SafeZoneSize) || (Math.Abs(CurrY - SystemShare.Config.RedHomeY) > SystemShare.Config.SafeZoneSize))
-                {
-                    for (int i = 0; i < M2Share.StartPointList.Count; i++)
-                    {
-                        if (string.Compare(M2Share.StartPointList[i].MapName, Envir.MapName, StringComparison.OrdinalIgnoreCase) == 0)
-                        {
-                            short nSafeX = M2Share.StartPointList[i].CurrX;
-                            short nSafeY = M2Share.StartPointList[i].CurrY;
-                            if ((Math.Abs(CurrX - nSafeX) <= SystemShare.Config.SafeZoneSize) && (Math.Abs(CurrY - nSafeY) <= SystemShare.Config.SafeZoneSize))
-                            {
-                                result = true;
-                                break;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    result = true;
-                }
+                return true;
             }
-            return result;
+            return InSafeZone(Envir, CurrX, CurrY);
         }
 
         public bool InSafeZone(IEnvirnoment envir, int nX, int nY)
         {
-            if (Envir == null)
+            if (envir == null)
             {
                 return true;
             }
-            bool result = Envir.Flag.SafeArea;
-            if (result)
+            if (envir.Flag.SafeArea)
             {
                 return true;
             }
-            if ((envir.MapName != SystemShare.Config.RedHomeMap) ||
-                (Math.Abs(nX - SystemShare.Config.RedHomeX) > SystemShare.Config.SafeZoneSize) ||
-                (Math.Abs(nY - SystemShare.Config.RedHomeY) > SystemShare.Config.SafeZoneSize))
-            {
-                result = false;
-            }
-            else
+            if (string.Equals(envir.MapName, SystemShare.Config.RedHomeMap, StringComparison.OrdinalIgnoreCase) &&
+                Math.Abs(nX - SystemShare.Config.RedHomeX) <= SystemShare.Config.SafeZoneSize &&
+                Math.Abs(nY - SystemShare.Config.RedHomeY) <= SystemShare.Config.SafeZoneSize)
             {
                 return true;
             }
             for (int i = 0; i < M2Share.StartPointList.Count; i++)
             {
-                if (M2Share.StartPointList[i].MapName == envir.MapName)
+                if (string.Equals(M2Share.StartPointList[i].MapName, envir.MapName, StringComparison.OrdinalIgnoreCase))
                 {
                     short nSafeX = M2Share.StartPointList[i].CurrX;
                     short nSafeY = M2Share.StartPointList[i].CurrY;
                     if ((Math.Abs(nX - nSafeX) <= SystemShare.Config.SafeZoneSize) && (Math.Abs(nY - nSafeY) <= SystemShare.Config.SafeZoneSize))
                     {
-                        result = true;
+                        return true;
                     }
                 }
             }
-            return result;
+            return false;
         }
 
         /// <summary>

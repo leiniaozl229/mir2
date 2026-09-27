@@ -81,6 +81,12 @@ class OldClientCodecProxyTests(unittest.TestCase):
         incoming = b"#" + self.proxy.new_encode(new_map) + b"!"
         self.assertEqual(self.proxy.relay_payload(incoming, False).count(b"!"), 1)
 
+    def test_game_action_replies_unlock_legacy_client(self):
+        self.assertEqual(self.proxy.convert(b"#+GD/12345!", False), b"#+GOOD/12345!")
+        self.assertEqual(self.proxy.convert(b"#+FL/12345!", False), b"#+FAIL/12345!")
+        self.assertEqual(self.proxy.convert(b"#+GOOD/12345!", False), b"#+GOOD/12345!")
+        self.assertEqual(self.proxy.convert(b"#+GD/12345!", True), b"#+GD/12345!")
+
 
 if __name__ == "__main__":
     unittest.main()

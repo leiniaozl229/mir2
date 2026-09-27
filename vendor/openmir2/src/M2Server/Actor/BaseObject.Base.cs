@@ -385,6 +385,10 @@ namespace M2Server.Actor
             {
                 return false;
             }
+            if (Race >= ActorRace.Animal && targetObject.Race == ActorRace.Play && targetObject.InSafeZone())
+            {
+                return false;
+            }
             if (Race >= ActorRace.Animal)
             {
                 if (Master != null)
