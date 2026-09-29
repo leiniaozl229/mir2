@@ -791,6 +791,7 @@ def main():
             fixtures[name] = "\n".join(lines) + ("\n" if lines else "")
         fixtures["Merchant.txt"] += "比奇城/麦家铺子 0 286 609 边界仓库 0 9 0\n"
         fixtures["Merchant.txt"] += "测试/技能导师 0 284 609 边界导师 0 5 0\n"
+        fixtures["Merchant.txt"] += "测试/试玩补给员 2 506 484 试玩补给员 0 5 0\n"
         fixtures["Merchant.txt"] += "测试/技能导师 0 648 628 银杏导师 0 5 0\n"
         fixtures["Merchant.txt"] += "测试/新手试炼 0 288 609 比奇老兵 0 5 0\n"
         fixtures["Merchant.txt"] += "测试/猎人试炼 0 294 609 边界猎人 0 5 0\n"
@@ -876,6 +877,8 @@ def main():
         trainer = SERVER / "Mir200/Envir/Market_Def/测试/技能导师-0.txt"
         trainer.parent.mkdir(parents=True, exist_ok=True)
         trainer.write_text(read_text(ROOT / "content/classic-176/p0/skill-trainer.txt"), encoding="gb18030")
+        supply = SERVER / "Mir200/Envir/Market_Def/测试/试玩补给员-2.txt"
+        supply.write_text(read_text(ROOT / "content/classic-176/p0/skill-trainer.txt"), encoding="gb18030")
         tutorial = SERVER / "Mir200/Envir/Market_Def/测试/新手试炼-0.txt"
         tutorial.write_text(read_text(ROOT / "content/classic-176/p0/tutorial-quest.txt"), encoding="gb18030")
         hunter = SERVER / "Mir200/Envir/Market_Def/测试/猎人试炼-0.txt"

@@ -3,9 +3,18 @@
 <升到七级/@levelseven>\
 <准备洞穴战斗测试/@cavecombat>\
 <领取装备图标测试套装/@equipmentset>\
+<领取回城石（3枚）/@homestone>\
 <技能与秘籍/@skills>\
 <地图与其他测试/@more>\
 <离开/@exit>
+
+[@homestone]
+#IF
+#ACT
+GIVE 回城石 3
+#SAY
+已领取3枚一次性回城石，双击使用可返回角色的回城点。\
+<返回/@main>
 
 [@skills]
 请选择要测试的技能或秘籍。\
