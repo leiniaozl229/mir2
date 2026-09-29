@@ -1,0 +1,72 @@
+diff --git a/src/DBSrv/Services/Impl/ClientSession.cs b/src/DBSrv/Services/Impl/ClientSession.cs
+index f563227..f6d5449 100644
+--- a/src/DBSrv/Services/Impl/ClientSession.cs
++++ b/src/DBSrv/Services/Impl/ClientSession.cs
+@@ -1,0 +2 @@ using DBSrv.Conf;
++using System.Net.Sockets;
+@@ -319 +320,11 @@ namespace DBSrv.Services.Impl
+-                _clientScoket.Send(HUtil32.GetBytes("(" + Messages.SS_SERVERINFO + "/" + _setting.ServerName + "/" + "99" + "/" + userCount + ")"));
++                try
++                {
++                    _clientScoket.Send(HUtil32.GetBytes("(" + Messages.SS_SERVERINFO + "/" + _setting.ServerName + "/" + "99" + "/" + userCount + ")"));
++                }
++                catch (SocketException error)
++                {
++                    // The peer can close between Online and Send, especially after resume.
++                    // Leave the timer running so Start can reconnect on the next check.
++                    LogService.Warn($"账号服务器保活发送失败: {error.SocketErrorCode}.");
++                    _clientScoket.Close();
++                }
+@@ -323 +334 @@ namespace DBSrv.Services.Impl
+-}
+\ No newline at end of file
++}
+diff --git a/src/LoginGate/Services/ClientManager.cs b/src/LoginGate/Services/ClientManager.cs
+index 7664018..78a0094 100644
+--- a/src/LoginGate/Services/ClientManager.cs
++++ b/src/LoginGate/Services/ClientManager.cs
+@@ -42 +42 @@ public class ClientManager
+-            _serverGateList[i].Start();
++            _ = _serverGateList[i].Start();
+@@ -179 +179 @@ public class ClientManager
+-            if (clientThread.CheckServerFail)
++            if (clientThread.IsConnected)
+@@ -181,2 +181 @@ public class ClientManager
+-                clientThread.CheckServerFailCount++;
+-                LogService.Debug($"重新与服务器[{clientThread.EndPoint}]建立链接.失败次数:[{clientThread.CheckServerFailCount}]");
++                clientThread.Stop();
+@@ -186 +184,0 @@ public class ClientManager
+-            clientThread.Stop();
+@@ -188 +186,2 @@ public class ClientManager
+-            LogService.Debug($"服务器[{clientThread.EndPoint}]链接超时.失败次数:[{clientThread.CheckServerFailCount}]");
++            LogService.Debug($"重新与服务器[{clientThread.EndPoint}]建立链接.失败次数:[{clientThread.CheckServerFailCount}]");
++            _ = clientThread.Start();
+@@ -200 +199 @@ public class ClientManager
+-}
+\ No newline at end of file
++}
+diff --git a/src/LoginGate/Services/ClientThread.cs b/src/LoginGate/Services/ClientThread.cs
+index 8ae2a39..ca42917 100644
+--- a/src/LoginGate/Services/ClientThread.cs
++++ b/src/LoginGate/Services/ClientThread.cs
+@@ -30,0 +31 @@ public class ClientThread
++    private int _connecting;
+@@ -60,0 +62,5 @@ public class ClientThread
++        if (Interlocked.Exchange(ref _connecting, 1) != 0)
++        {
++            return;
++        }
++
+@@ -76,0 +83,4 @@ public class ClientThread
++        finally
++        {
++            Volatile.Write(ref _connecting, 0);
++        }
+@@ -104,0 +115 @@ public class ClientThread
++        DataLen = 0;
+@@ -117,0 +129 @@ public class ClientThread
++        DataLen = 0;
+@@ -353 +365 @@ public class ClientThread
+-}
+\ No newline at end of file
++}

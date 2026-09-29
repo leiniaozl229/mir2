@@ -1,4 +1,5 @@
 using DBSrv.Conf;
+using System.Net.Sockets;
 
 namespace DBSrv.Services.Impl
 {
@@ -316,7 +317,17 @@ namespace DBSrv.Services.Impl
         {
             if (_clientScoket.Online)
             {
-                _clientScoket.Send(HUtil32.GetBytes("(" + Messages.SS_SERVERINFO + "/" + _setting.ServerName + "/" + "99" + "/" + userCount + ")"));
+                try
+                {
+                    _clientScoket.Send(HUtil32.GetBytes("(" + Messages.SS_SERVERINFO + "/" + _setting.ServerName + "/" + "99" + "/" + userCount + ")"));
+                }
+                catch (SocketException error)
+                {
+                    // The peer can close between Online and Send, especially after resume.
+                    // Leave the timer running so Start can reconnect on the next check.
+                    LogService.Warn($"账号服务器保活发送失败: {error.SocketErrorCode}.");
+                    _clientScoket.Close();
+                }
             }
         }
     }

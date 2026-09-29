@@ -26,7 +26,8 @@ if [[ "$submodule_head" == "6ae4cb3011af654e3c9fa09e57f98d0f07befdfe" ]]; then
     "$PWD"/patches/openmir2/0022-fix-buff-status-bit.patch \
     "$PWD"/patches/openmir2/0023-saturate-equipment-durability.patch \
     "$PWD"/patches/openmir2/0024-fix-conflicting-skill-identities.patch \
-    "$PWD"/patches/openmir2/0025-protect-safe-zones-from-monsters.patch; do
+    "$PWD"/patches/openmir2/0025-protect-safe-zones-from-monsters.patch \
+    "$PWD"/patches/openmir2/0026-reconnect-native-services.patch; do
     patches+=("$patch")
   done
 fi

@@ -1,6 +1,6 @@
 ﻿# 实施状态
 
-基线快照：2026-09-09；Windows 原客户端进度更新至 2026-09-28。下方基线指标是历史报告，不代表 Windows 本轮重新跑过全套检查。历史审查与旧指标已移到 [`docs/archive/`](archive/README.md)。实施范围与未完成项仍以 [`PLAN.md`](../PLAN.md) 为准。
+基线快照：2026-09-09；Windows 原客户端进度更新至 2026-09-29。下方基线指标是历史报告，不代表 Windows 本轮重新跑过全套检查。历史审查与旧指标已移到 [`docs/archive/`](archive/README.md)。实施范围与未完成项仍以 [`PLAN.md`](../PLAN.md) 为准。
 
 ## 当前基线
 
@@ -133,3 +133,61 @@ Windows 11 上的 2003 原版 `mir.dat` 已通过本机 OpenMir2 服务完成账
 原生 `mir.dat` 在比奇安全区点击边界导师时，原测试菜单的十四个单行选项超出了约 400×175 的对话框。`content/classic-176/p0/skill-trainer.txt` 现分为主菜单、技能秘籍、其他测试三页；真实客户端逐页点击、返回和关闭均成功，所有选项留在对话框内，未执行升级、传送或发物品。运行时脚本还发现 Windows 换行重复：UTF-8 源文件的 CRLF 经 `Path.write_text` 再转换后变成 CRCRLF；`scripts/prepare-runtime.py` 现先规范化换行，生成的 GB18030 导师脚本与源文本一致且无 CRCRLF。
 
 重生成配置时暴露另一项可复现回归：服务监听 `17101/17201`，但若把相同端口写入选角和游戏跳转地址，原端会绕过 `17100/17200` 协议桥；画面进入空角色页，数据库中账号、角色和物品均仍在，严格重登探针经桥接可取回完整角色。现在 `prepare-runtime.py` 提供独立的 `--client-selection-port` 与 `--client-game-port`，本机运行时配置为服务监听 `7001/17101/17201`，客户端跳转 `17100/17200`。修正后真实原端重新显示原有 7 级角色、确认公告并进入地图，导师分页实测通过；正常停服已保存世界。`test_native_runtime.py` 的服务／跳转端口及换行检查、`test_p0_quests.py` 均通过。窗口模式仍不能靠鼠标选服或选角；后续已确认入图后的地图点击能移动，见上文复测记录，因此暂不能标记为独立可玩的窗口入口。
+
+### 窗口输入路由对照（2026-09-28）
+
+本轮在 dgVoodoo 800×600 窗口下复测：坐标点击可使按钮进入悬停态，但没有切换账号／密码框焦点；UI Automation 对账号编辑框的元素点击可以切换焦点，而坐标点击、短拖、文本输入、单键输入及 `set_value` 都没有在该控件留下可读值。dgVoodoo 的 `FreeMouse=true` 与 `CursorScaleFactor=1` 两项隔离测试均未改变结果，配置已恢复到原始哈希。
+
+用本地 x86 CNC-DDraw 包设置 `windowed=true` 后，`renderer=auto`、`gdi`、`opengl` 均持续黑屏；进程模块检查确认其实际加载了替换 DLL。已恢复原 dgVoodoo DLL 与配置，运行目录中的 CNC-DDraw INI 和着色器也已移出。结果排除了简单鼠标缩放开关及该兼容层渲染后端作为可用修复；后续应追踪 DirectDraw 子画布的鼠标消息目标与窗口呈现调用，避免继续盲试配置。
+
+### DxWnd 自动刷新对照（2026-09-29）
+
+按 DxWnd 随包手册针对黑屏症状试验 `Auto Primary Surface Blit`，从 800×600 Diablo 窗口预设另建配置，只在 `flag0` 加上 `AUTOREFRESH`（`0x1000`）。测试运行于 `.runtime/dxwnd-trial-2026-09-29` 的独立副本，不带 dgVoodoo DLL；DxWnd 确认向 `mir.dat` 注入了 `dxwnd.dll`。副本初次启动弹出缺少 `Patch.exe` 的自动更新提示，在副本 `mir.ini` 设 `Patched=1` 后可继续启动；原客户端配置和文件未动。
+
+进程保持响应并创建了标题为 `mir` 的主窗口，但桌面自动化窗口枚举没有提供可操作的客户端窗口；当时模块快照也尚未看到 DirectDraw 模块，因此无法观察其画面或验证登录、鼠标与 `AUTOREFRESH` 的呈现效果。此轮结果不能证明该开关修复黑屏；后续补回 dgVoodoo 的联合窗口测试见下一节。
+
+### DxWnd + dgVoodoo 联合窗口对照（2026-09-29）
+
+在同一隔离副本中，逐字节复制日常运行目录的 `DDraw.dll`、`dgVoodoo.conf` 和 `user.ini`，并用 DxWnd 的 800×600 `WINDOWIZE + AUTOREFRESH` 配置启动。进程同时加载 `dxwnd.dll`、`DDraw.dll` 和系统 `D3D11.dll`，自动化工具现在能枚举标题为 `legend of mir2` 的窗口并显示登录场景；拖动标题栏后窗口原点从 `(776, 376)` 移至 `(896, 456)`，确认它是真正可移动的窗口。整个测试只使用隔离副本，日常客户端目录未改。
+
+窗口显示正常，但输入仍未修复：点账号框后用 `type_text("test")`、单键 `t`/`z` 均没有显示字符；点登录面板的红色关闭按钮也没有关闭面板。逐项测试关闭 DxWnd `Correct mouse position`，以及启用 `Position message processing`，都没有变化。启用 `Win Events`、`Cursor/Mouse`、`Inputs` 跟踪后，日志记录到窗口焦点和非客户区鼠标移动，但没有记录到 `WM_CHAR`、`WM_LBUTTONDOWN/UP`；这些日志来自 DxWnd 对默认窗口过程的跟踪，不能单独证明应用过程没有收到消息。短时日志会快速增长到约 1 MB，测试已停止。
+
+当前确认的是图形渲染和可移动窗口路径可用；账号输入、面板点击和实际登录仍未验证成功。DxWnd 已退出，`work/dxwnd/dxwnd.ini` 已恢复为 23 字节初始配置，日常客户端仍保持原状。后续应直接跟踪游戏输入控件使用的输入 API 或窗口子句柄路由，不能把“窗口能显示”当成窗口客户端已可玩。
+
+### DxWnd 子窗口与 DirectInput 输入对照（2026-09-29）
+
+在同一隔离副本上按 DxWnd 官方标志定义增加 `HOOKCHILDWIN`（`0x40000000`），运行日志确认该位生效。Windows 现在能枚举登录画面的两个子编辑控件；Tab 能在控件间切换焦点，但鼠标点账号框后焦点仍停在原编辑控件，点红色关闭按钮也只出现悬停高亮。一次 `type_text("test")` 后 UI Automation 在其中一个编辑控件读到 `Value=test`，截图中的输入框仍为空；这说明控件状态可能收到文字，但不足以证明账号栏已正确填入或文字能正常显示。
+
+再加入 `HOOKDI`（`0x10`）复测，DxWnd 日志确认 DirectInput 钩子已加载，账号框焦点和按钮行为没有变化。另一个配置尝试把 `OUTWINMESSAGES` 追踪位加入 `.dxw`，但 DxWnd 导入后运行日志未列出该跟踪项，因此这轮没有得到新的按键／鼠标消息记录，不能据此断定消息未到达应用。两轮均未提交登录；测试结束后已关闭客户端和 DxWnd，并将 `work/dxwnd/dxwnd.ini` 恢复为原 23 字节内容。正式客户端目录未改，窗口模式仍未达到可正常点击和登录的状态。
+
+DxWnd 标志值参考其[官方头文件](https://github.com/DxWnd/DxWnd.reloaded/blob/master/Include/dxwnd.h)。下一步应先让窗口过程跟踪位在实际运行配置中确认生效，再分别记录主窗口和两个子编辑控件收到的 `WM_LBUTTONDOWN/UP`、`WM_CHAR`；在此之前不把渲染正常视为输入修复。
+
+### 实际输入跟踪与单层 dgVoodoo 对照（2026-09-29）
+
+本轮先将隔离副本 `mir.ini` 的 `Patched` 设为 `1` 再启动；否则 DxWnd 虽能创建进程，窗口枚举暂时看不到 `legend of mir2`。正确启动后登录场景可见。通过 DxWnd 属性页保存日志选项，运行头确认 `HOOKCHILDWIN`、`HOOKDI`、`OUTWINMESSAGES`、`OUTCURSORTRACE`、`OUTDXWINTRACE` 与 `OUTINPUTS` 实际加载；随后分别试验 `MESSAGEPROC` 与 `FIXMOUSEHOOK`，均未改变控件行为。
+
+点击账号框后，UI Automation 焦点仍留在启动时的第二个编辑控件；点击密码框也没有切换焦点。按 `Tab` 可以切换到另一个编辑控件。直接按 `A` 时，DxWnd 日志记录到 `KeyboardHookProcessFunction` 的 `VK_A`，但输入框画面和 UI Automation 值仍为空。`type_text` 在日志里表现为 `Ctrl+V`，不能当作普通键盘字符输入的证据。点击游戏面板红色关闭按钮只产生悬停效果；窗口标题栏的关闭按钮可以正常退出。跟踪日志有 `WM_MOUSEACTIVATE`，但没有 `WM_CHAR` 或 `WM_LBUTTONDOWN/UP` 记录；由于 DxWnd 这组记录来自默认窗口过程，缺少这些日志本身不能证明应用没有在别处处理消息。
+
+再用副本自带 `Launch-Local.ps1` 直接启动 dgVoodoo 窗口，不经过 DxWnd，鼠标点击没有稳定选中对应输入框，`Tab` 可切换两个编辑控件，直接按 `A` 仍无可见文字。把副本 `dgVoodoo.conf` 的 `CaptureMouse` 临时改为 `true` 也没有改善，测试后已恢复 `false`；该选项的官方说明是将指针限制在应用窗口内，并提示可能与输入或应用本身冲突，见 [dgVoodoo 通用说明](https://dgvoodoo2.dege.freeweb.hu/dgVoodoo2/ReadmeGeneral/)。因此外层 DxWnd、窗口坐标修正和鼠标捕获均未构成可用修复，窗口登录交互仍未通过。当前仓库没有这份客户端对应的源码或可编译工程；下一步需对实际 `mir.dat` 跟踪输入 API／子窗口消息，或先找到版本匹配的客户端源码再构建。没有提交登录；日常客户端未改，DxWnd 配置已恢复为 23 字节初始文件，隔离副本已停止，`Patched` 已回到 `0`。
+
+补充运行时模块检查：在隔离副本的登录页进程中可见本地 dgVoodoo `DDraw.dll`、`USER32`、`GDI32`、`IMM32` 和 `WINMM`，当时未加载 `dinput.dll`。`mir.dat` 带 `.aspack` 节且磁盘导入表是解包器入口，因此静态导入表不能证明解包后未动态调用 DirectInput；模块快照只说明登录初始化阶段没有加载该 DLL。该结果使“登录输入问题由 DirectInput 钩子修复”的判断缺少运行时证据，后续应跟踪 `DispatchMessage`、键盘状态查询与目标子窗口的实际消息。复测仅观察进程与模块，没有发送登录请求；结束时已停止测试进程并确认隔离副本 `Patched=0`，正式客户端未改。
+
+### DxWnd HOTPATCH 对照（2026-09-29）
+
+针对 `.aspack` 壳，在 DxWnd 2.06.15 隔离配置中单独增加 `HOTPATCH`（`flags4=0x04000000`）。DxWnd 运行日志确认 `HOTPATCH` 与 `HOOKDLLS` 已加载；官方头文件将此标志描述为处理混淆 IAT 的热补丁机制，见 [DxWnd 官方头文件](https://github.com/DxWnd/DxWnd.reloaded/blob/master/Include/dxwnd.h)。但这次启动的 `mir.dat` 主窗口标题停在 `mir`，进程快照没有本地 dgVoodoo `DDraw.dll`，未达到之前可见的 `legend of mir2` 登录画面，因此没有形成有效的输入对照，也不能认定该选项修复了交互。未提交登录；DxWnd 管理器和测试进程已关闭，`work/dxwnd/dxwnd.ini` 恢复为原 23 字节，隔离副本 `mir.ini` 的 `Patched=0`、dgVoodoo 设置和正式客户端均未改变。当前桌面自动化没有暴露原生窗口，后续验证需先确认此配置能显示登录场景，再测点击与字符输入。
+
+### 原客户端窗口点击修复与日常入口验证（2026-09-29）
+
+继续在隔离副本跟踪实际输入消息后发现：dgVoodoo 显示的游戏主窗口是 800×600，但其 `TDXDraw` 子窗口仅为 386×327。落在画面右侧或下方的点击被分发给 `TFrmMain` 父窗口，未送达处理游戏交互的子窗口；这解释了先前选服、选角和面板按钮虽有画面响应却不执行操作。隔离试验中把 `TDXDraw` 扩至主窗口客户区后，登录界面的“新用户”与“取消”等按钮恢复正常。DxWnd 的 `HOTPATCH` 与 dgVoodoo 同时使用还曾使 `DDraw.dll` 崩溃，因此最终运行路径没有加入 DxWnd。
+
+新增 `tools/native-window-fix` 的 .NET 8 小程序，在客户端运行时定位可见的 800×600 `TFrmMain` 和 `TDXDraw`，把后者调整为父窗口客户区大小，并在切换场景后持续检查。桌面启动脚本 `outputs/Local-Mir.ps1` 在 dgVoodoo 窗口模式下自动启动该辅助程序。隔离客户端通过真实界面独立完成登录、选服、选角、公告确认和入图，点击地面后移动两步，F9 背包可打开并由鼠标按钮关闭。随后用 `.runtime/native-client/mir.dat` 日常副本重新测试，也独立进入比奇；地图点击使坐标从 `(287,617)` 到 `(283,618)`，F9 与背包关闭按钮正常。没有使用协议桥的诊断代发，原 `mir.dat` 字节未改。
+
+测试中发现一次服务监督器虽标记 `ready`，LoginSrv 与 LoginGate 的 TCP 链路实际已断开；正常停服并重启后恢复，日常入口上述测试在重启后的服务上完成。关闭诊断协议跟踪并再次干净启动后，客户端又独立登录并进入地图；三个协议桥的错误日志保持 0 字节。游戏窗口可从 `(776,376)` 拖到 `(856,396)`，地图与人物画面仍正常。这一轮登录栏文字尚不可见；后续修复和复测见下节。
+
+### 窗口登录文字与断线恢复（2026-09-29）
+
+登录场景的两个 `TEdit` 控件一直存有启动器预填的值，但画面没有绘出字符。`tools/native-window-fix` 现增加不夺焦点、允许鼠标穿透的登录文字层：账号显示明文，密码仅显示等长星号；切换场景或游戏失焦时隐藏。读取控件文本使用有 200 毫秒上限的 `SendMessageTimeoutA`，避免客户端卡住时长期堵塞辅助程序。隔离副本中实际用鼠标选中输入框、直接按键输入和退格，文字层随值更新；日常副本登录画面也显示了预填账号与密码星号。原始 `mir.dat` 没有修改。
+
+LoginGate 与 LoginSrv 链路断开后，原实现仅关闭连接而不主动重连。`ClientManager` 现按已有 10 秒检查周期重试，`ClientThread` 用原子标志避免并发连接，并在重连时清空残余收包长度。独立 TCP 故障注入验证了首次连接失败后的接通，以及被动断开后约 10 秒重连。重新发布并启动本机 LoginGate 后，日常窗口客户端通过真实界面登录、选服、选角、确认公告、入图，并用鼠标点击使坐标从 `(508,481)` 到 `(509,481)`。
+
+继续观察时，服务运行约六小时后一次长时间停顿导致 LoginSrv 关闭 DBSrv 链路；DBSrv 在 `Online` 检查与保活发送之间遭到对端关闭，未处理的 `SocketException (10054)` 使后台服务退出，监督器随之停止整组服务。DBSrv 现捕获这一发送失败、关闭失效套接字并让既有定时连接检查重试。重新发布 DBSrv、恢复六服务和三个协议桥后，上述日常窗口客户端再次走通至地图移动。这个修复针对已记录的异常路径；休眠恢复和长时间连续运行还需进一步实测，不能仅凭一次重登宣称稳定性已完全解决。

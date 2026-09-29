@@ -28,6 +28,7 @@ public class ClientThread
     /// 缓存缓冲长度
     /// </summary>
     private int DataLen;
+    private int _connecting;
 
     public ClientThread(ClientManager clientManager, SessionManager sessionManager)
     {
@@ -58,6 +59,11 @@ public class ClientThread
 
     public async Task Start()
     {
+        if (Interlocked.Exchange(ref _connecting, 1) != 0)
+        {
+            return;
+        }
+
         try
         {
             if (_clientSocket.Online)
@@ -73,6 +79,10 @@ public class ClientThread
         catch (Exception)
         {
             LogService.Error($"链接登录服务器[{gameGateInfo.LoginServer}:{gameGateInfo.LoginPort}]失败...");
+        }
+        finally
+        {
+            Volatile.Write(ref _connecting, 0);
         }
     }
 
@@ -102,6 +112,7 @@ public class ClientThread
 
     private Task ClientSocketConnect(ITcpClient client, ConnectedEventArgs e)
     {
+        DataLen = 0;
         ConnectState = true;
         RestSessionArray();
         KeepAliveTick = HUtil32.GetTickCount();
@@ -115,6 +126,7 @@ public class ClientThread
 
     private Task ClientSocketDisconnect(ITcpClientBase client, DisconnectEventArgs e)
     {
+        DataLen = 0;
         for (int i = 0; i < GateShare.MaxSession; i++)
         {
             TSessionInfo userSession = SessionArray[i];

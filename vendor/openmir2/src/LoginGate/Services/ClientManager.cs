@@ -39,7 +39,7 @@ public class ClientManager
     {
         for (int i = 0; i < _serverGateList.Count; i++)
         {
-            _serverGateList[i].Start();
+            _ = _serverGateList[i].Start();
         }
     }
 
@@ -176,16 +176,15 @@ public class ClientManager
         if (HUtil32.GetTickCount() - clientThread.CheckServerTick > GateShare.CheckServerTimeOutTime)
         {
             clientThread.CheckServerTick = HUtil32.GetTickCount();
-            if (clientThread.CheckServerFail)
+            if (clientThread.IsConnected)
             {
-                clientThread.CheckServerFailCount++;
-                LogService.Debug($"重新与服务器[{clientThread.EndPoint}]建立链接.失败次数:[{clientThread.CheckServerFailCount}]");
+                clientThread.Stop();
                 return;
             }
 
-            clientThread.Stop();
             clientThread.CheckServerFailCount++;
-            LogService.Debug($"服务器[{clientThread.EndPoint}]链接超时.失败次数:[{clientThread.CheckServerFailCount}]");
+            LogService.Debug($"重新与服务器[{clientThread.EndPoint}]建立链接.失败次数:[{clientThread.CheckServerFailCount}]");
+            _ = clientThread.Start();
         }
     }
 
