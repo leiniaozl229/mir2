@@ -1,8 +1,9 @@
-"""Correct the held-item preview of the known 2003 mir.dat windowed client.
+"""Correct screen-space cursor use in the known 2003 mir.dat windowed client.
 
 The client passes a screen-space GetCursorPos result directly to its 800x600
-DirectDraw surface. Only the held-item drawing call is adjusted; other callers
-still receive screen coordinates for input and cursor control.
+DirectDraw surface and to the inventory double-click dispatcher. Only those
+two verified callers are adjusted; other callers still receive screen
+coordinates for input and cursor control.
 """
 
 import hashlib
@@ -14,6 +15,7 @@ import threading
 
 CLIENT_SHA256 = "db71634bcfd46a7ed682612eee9c6da88e5881524ac2cc6f894890a02b18a3a5"
 HELD_ITEM_CURSOR_CALL = 0x60D97
+DOUBLE_CLICK_CURSOR_CALL = 0x63C11
 
 
 def main() -> int:
@@ -46,13 +48,15 @@ const getForegroundWindow = new NativeFunction(user32.getExportByName('GetForegr
 const getWindowThreadProcessId = new NativeFunction(user32.getExportByName('GetWindowThreadProcessId'), 'uint', ['pointer', 'pointer']);
 const clientToScreen = new NativeFunction(user32.getExportByName('ClientToScreen'), 'bool', ['pointer', 'pointer']);
 const heldItemCall = game.base.add(CURSOR_CALL);
+const doubleClickCall = game.base.add(DOUBLE_CLICK_CALL);
 Interceptor.attach(user32.getExportByName('GetCursorPos'), {
   onEnter(args) {
     this.point = args[0];
-    this.heldItem = this.returnAddress.equals(heldItemCall);
+    this.windowCoordinates = this.returnAddress.equals(heldItemCall) ||
+                             this.returnAddress.equals(doubleClickCall);
   },
   onLeave(result) {
-    if (!this.heldItem || result.toInt32() === 0 || this.point.isNull()) return;
+    if (!this.windowCoordinates || result.toInt32() === 0 || this.point.isNull()) return;
     const main = getForegroundWindow();
     if (main.isNull()) return;
     const owner = Memory.alloc(4);
@@ -67,8 +71,11 @@ Interceptor.attach(user32.getExportByName('GetCursorPos'), {
     this.point.add(4).writeS32(this.point.add(4).readS32() - origin.add(4).readS32());
   }
 });
-send({ ready: true, processId: Process.id, heldItemCall: heldItemCall.toString() });
-""".replace("CURSOR_CALL", str(HELD_ITEM_CURSOR_CALL))
+send({ ready: true, processId: Process.id,
+       heldItemCall: heldItemCall.toString(), doubleClickCall: doubleClickCall.toString() });
+""".replace("CURSOR_CALL", str(HELD_ITEM_CURSOR_CALL)).replace(
+        "DOUBLE_CLICK_CALL", str(DOUBLE_CLICK_CURSOR_CALL)
+    )
 
     detached = threading.Event()
 
@@ -76,7 +83,7 @@ send({ ready: true, processId: Process.id, heldItemCall: heldItemCall.toString()
         if message.get("type") == "send":
             payload = message.get("payload", {})
             if payload.get("ready"):
-                print(f"Held-item cursor coordinates corrected for PID {process_id}.", flush=True)
+                print(f"Item drawing and double-click coordinates corrected for PID {process_id}.", flush=True)
         elif message.get("type") == "error":
             print(message.get("description", "Cursor hook error"), file=sys.stderr, flush=True)
             detached.set()
