@@ -1,6 +1,6 @@
 # 浏览器传奇复刻工程
 
-**进度（2026-09-27）：** 2003 原版 Windows 客户端已通过本机协议桥接入 OpenMir2，实测登录、选角、进入比奇地图 `0` 并移动一步；登录输入文字仍不可见，完整玩法与长时稳定性尚未验收。此前 2026-09-09 的基线中，安装清单、前端构建、32 项前端回归、96 项 Python 回归及 570/570 张地图内容审计通过；这些历史指标不代表本轮重跑全套检查。详细进度和当前测试限制见 [docs/implementation-status.md](docs/implementation-status.md)，旧审查见 [`docs/archive/`](docs/archive/README.md)。
+**进度（2026-09-29）：** 2003 原版 Windows 客户端已通过本机协议桥接入 OpenMir2，日常副本可在可移动的 800×600 窗口中显示登录账号与密码星号，并用真实界面完成登录、选服、选角、入图和鼠标移动。背包、装备穿戴、重登显示与耐久已分别经过原端界面和旧协议探针验证；完整玩法、跨地图及休眠后的长时稳定性仍待验收。此前 2026-09-09 的基线中，安装清单、前端构建、32 项前端回归、96 项 Python 回归及 570/570 张地图内容审计通过；这些历史指标不代表本轮重跑全套检查。详细进度和当前测试限制见 [docs/implementation-status.md](docs/implementation-status.md)，旧审查见 [`docs/archive/`](docs/archive/README.md)。
 
 实施范围与验收要求见 [PLAN.md](PLAN.md)，阶段记录见 [docs/implementation-status.md](docs/implementation-status.md)，安装备份见 [docs/delivery.md](docs/delivery.md)。P0 基础闭环、经典主世界与 570 张可解析地图目录（其中 121 张精选路线配置了分层向导和区域刷怪）、浏览器网关和技能导师已可重复运行；完整 1.76 内容、全量素材校准和经典 UI 仍在扩展。动态门协议已接入，阻挡移动收到服务端拒绝后会尝试开门，门的开闭状态实时投影到地图。
 
