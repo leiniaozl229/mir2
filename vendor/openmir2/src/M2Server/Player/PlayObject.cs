@@ -21,6 +21,7 @@ namespace M2Server.Player
 {
     public partial class PlayObject : CharacterObject, IPlayerActor
     {
+        private long _nativeAutoPickupTick;
         /// <summary>
         /// 性别
         /// </summary>

@@ -731,6 +731,8 @@ namespace M2Server.Items
         public int GetUpgradeStdItem(StdItem stdItem, UserItem userItem, ref ClientItem clientItem)
         {
             CopyItemToClientItem(stdItem, ref clientItem);
+            // Send instance bonuses alongside final values for client projections.
+            clientItem.Desc = (byte[])userItem.Desc.Clone();
             int count = 0;
             switch (stdItem.StdMode)
             {
@@ -840,6 +842,7 @@ namespace M2Server.Items
                     }
                     break;
                 case 15:
+                case 16:
                     clientItem.Item.AC = HUtil32.MakeWord(HUtil32.LoByte(stdItem.AC), (ushort)HUtil32._MIN(255, HUtil32.HiByte(stdItem.AC) + userItem.Desc[0]));
                     clientItem.Item.MAC = HUtil32.MakeWord(HUtil32.LoByte(stdItem.MAC), (ushort)HUtil32._MIN(255, HUtil32.HiByte(stdItem.MAC) + userItem.Desc[1]));
                     clientItem.Item.DC = HUtil32.MakeWord(HUtil32.LoByte(stdItem.DC), (ushort)HUtil32._MIN(255, HUtil32.HiByte(stdItem.DC) + userItem.Desc[2]));
@@ -1216,6 +1219,61 @@ namespace M2Server.Items
                         UpgradeRandomHelmet(pu);
                         break;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Give a monster-dropped equipment instance 0-100% of each nonzero
+        /// template maximum as a persistent bonus. One quality roll applies
+        /// to all supported combat attributes on the item.
+        /// </summary>
+        public static void ApplyMonsterDropStatBonus(StdItem stdItem, UserItem userItem, int percent)
+        {
+            if (stdItem == null || userItem == null)
+            {
+                throw new ArgumentNullException(stdItem == null ? nameof(stdItem) : nameof(userItem));
+            }
+            if (percent < 0 || percent > 100)
+            {
+                throw new ArgumentOutOfRangeException(nameof(percent));
+            }
+
+            static byte Bonus(ushort range, byte existing, int quality)
+            {
+                int maximum = HUtil32.HiByte(range);
+                return (byte)Math.Min(255 - maximum, existing + (maximum * quality + 50) / 100);
+            }
+
+            switch (stdItem.StdMode)
+            {
+                case 5:
+                case 6:
+                    userItem.Desc[0] = Bonus(stdItem.DC, userItem.Desc[0], percent);
+                    userItem.Desc[1] = Bonus(stdItem.MC, userItem.Desc[1], percent);
+                    userItem.Desc[2] = Bonus(stdItem.SC, userItem.Desc[2], percent);
+                    break;
+                case 10:
+                case 11:
+                case 15:
+                case 16:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                case 26:
+                    userItem.Desc[0] = Bonus(stdItem.AC, userItem.Desc[0], percent);
+                    userItem.Desc[1] = Bonus(stdItem.MAC, userItem.Desc[1], percent);
+                    userItem.Desc[2] = Bonus(stdItem.DC, userItem.Desc[2], percent);
+                    userItem.Desc[3] = Bonus(stdItem.MC, userItem.Desc[3], percent);
+                    userItem.Desc[4] = Bonus(stdItem.SC, userItem.Desc[4], percent);
+                    break;
+                case 52:
+                case 54:
+                    userItem.Desc[0] = Bonus(stdItem.AC, userItem.Desc[0], percent);
+                    userItem.Desc[1] = Bonus(stdItem.MAC, userItem.Desc[1], percent);
+                    break;
             }
         }
 

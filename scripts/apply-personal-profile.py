@@ -8,6 +8,8 @@ import math
 import re
 from pathlib import Path
 
+import drop_balance
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_PROFILE = ROOT / "content/classic-176/personal-profile.example.json"
 
@@ -85,11 +87,14 @@ def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
     profile = json.loads(profile_path.read_text(encoding="utf-8"))
     exp = profile.get("experienceMultiplier", 1)
     drop = float(profile.get("dropMultiplier", 1.0))
+    balance_mode = profile.get("dropBalance", False)
     spawn = float(profile.get("spawnDelayMultiplier", 1.0))
     if isinstance(exp, bool) or int(exp) != exp or int(exp) < 1:
         raise ValueError("experienceMultiplier must be a positive integer")
     if not 0.1 <= drop <= 100 or not 0.1 <= spawn <= 100:
         raise ValueError("dropMultiplier and spawnDelayMultiplier must be between 0.1 and 100")
+    if balance_mode not in (False, "high-level-v1"):
+        raise ValueError("dropBalance must be false or high-level-v1")
     mir = runtime / "server/Mir200"
     exps = mir / "exps.conf"
     server = mir / "server.conf"
@@ -100,10 +105,12 @@ def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
         raise FileNotFoundError(f"prepared runtime is missing: {mir}")
     active_profile_path = runtime / "personal-profile.json"
     previous_drop = 1.0
+    previous_balance = False
     previous_monster_spawns: list[str] = []
     if active_profile_path.exists():
         active_profile = json.loads(active_profile_path.read_text(encoding="utf-8"))
         previous_drop = float(active_profile.get("dropMultiplier", 1.0))
+        previous_balance = bool(active_profile.get("dropBalance", False))
         previous_monster_spawns = [str(line).strip() for line in active_profile.get("monsterSpawns", [])]
         if not 0.1 <= previous_drop <= 100:
             raise ValueError("active dropMultiplier must be between 0.1 and 100")
@@ -116,6 +123,9 @@ def apply_profile(profile_path: Path, runtime: Path, apply: bool) -> dict:
         replace_key(server, "RegenMonstersTime", changes["spawnDelayMultiplier"]["value"])
     effective_drop_scale = drop / previous_drop
     changed_monsters = scale_mon_items(mon_items, effective_drop_scale, apply)
+    if balance_mode or previous_balance:
+        changes["dropBalance"] = drop_balance.reconcile_tables(
+            mon_items, drop, bool(balance_mode), apply)
     monster_spawns = profile.get("monsterSpawns", [])
     if not isinstance(monster_spawns, list) or any(not isinstance(line, str) or len(line.split()) < 7 for line in monster_spawns):
         raise ValueError("monsterSpawns must contain complete MonGen lines")

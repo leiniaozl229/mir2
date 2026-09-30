@@ -4,10 +4,11 @@ using System.Text;
 namespace Mir2.WebGateway;
 
 public record ItemRange(byte min, byte max);
+public record ItemBonuses(byte ac, byte mac, byte dc, byte mc, byte sc);
 public record InventoryItem(string name, int makeIndex, ushort durability, ushort maxDurability, byte stdMode, byte weight, ushort looks,
     byte shape, ushort baseDurability, ItemRange ac, ItemRange mac, ItemRange dc, ItemRange mc, ItemRange sc,
     byte need, byte needLevel, int price, byte attackSpeed, byte agility, byte accuracy, byte magicAvoidance,
-    byte strong, byte undead, int hpAdd, int mpAdd, byte light);
+    byte strong, byte undead, int hpAdd, int mpAdd, byte light, ItemBonuses bonus);
 
 public static class InventoryProjection
 {
@@ -20,7 +21,7 @@ public static class InventoryProjection
             body[16], BinaryPrimitives.ReadUInt16LittleEndian(body[24..]), Range(body, 26), Range(body, 28), Range(body, 30),
             Range(body, 32), Range(body, 34), body[36], body[37], BinaryPrimitives.ReadInt32LittleEndian(body[40..]),
             body[48], body[49], body[50], body[51], body[52], body[53], BinaryPrimitives.ReadInt32LittleEndian(body[56..]),
-            BinaryPrimitives.ReadInt32LittleEndian(body[60..]), body[79]);
+            BinaryPrimitives.ReadInt32LittleEndian(body[60..]), body[79], Bonuses(body[15], body[108..122]));
     }
 
     public static object? Project(LegacyPacket packet)
@@ -76,4 +77,13 @@ public static class InventoryProjection
         ushort value = BinaryPrimitives.ReadUInt16LittleEndian(body[offset..]);
         return new((byte)(value & 255), (byte)(value >> 8));
     }
+
+    private static ItemBonuses Bonuses(byte stdMode, ReadOnlySpan<byte> desc) => stdMode switch
+    {
+        5 or 6 => new(0, 0, desc[0], desc[1], desc[2]),
+        10 or 11 or 15 or 16 or 19 or 20 or 21 or 22 or 23 or 24 or 26 =>
+            new(desc[0], desc[1], desc[2], desc[3], desc[4]),
+        52 or 54 => new(desc[0], desc[1], 0, 0, 0),
+        _ => new(0, 0, 0, 0, 0)
+    };
 }

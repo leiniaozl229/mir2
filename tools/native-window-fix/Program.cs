@@ -27,9 +27,19 @@ catch (ArgumentException)
 
 using (client)
 {
-    using var loginText = new LoginTextOverlay(processId);
+    // A scene switch briefly changes the game form from 800x600 to 640x480.
+    // Resize TDXDraw only after the form settles. Chasing each transient size
+    // makes dgVoodoo flash; leaving the child at 386x327 makes buttons inert.
+    var forceContinuousDrawRepair = Environment.GetEnvironmentVariable("MIR2_DRAW_REPAIR") == "continuous";
+    var settingsPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "native-helper-settings.ini"));
+    using var loginText = new LoginTextOverlay(processId, settingsPath);
     var deadline = DateTime.UtcNow.AddSeconds(25);
     var repaired = false;
+    var lastDrawGeometry = "";
+    var reportedDrawChanges = 0;
+    var lastMainWidth = 0;
+    var lastMainHeight = 0;
+    var mainSizeStableSince = DateTime.UtcNow;
     while (!client.HasExited)
     {
         var main = NativeWindow.FindMainWindow(processId);
@@ -42,6 +52,31 @@ using (client)
                 var height = area.Bottom - area.Top;
                 if (width > 0 && height > 0)
                 {
+                    var now = DateTime.UtcNow;
+                    if (width != lastMainWidth || height != lastMainHeight)
+                    {
+                        lastMainWidth = width;
+                        lastMainHeight = height;
+                        mainSizeStableSince = now;
+                    }
+                    // Windows can shrink this old DirectDraw client to an unreadable
+                    // minimum size. Keep border dragging available above 640x480.
+                    if (width < 640 || height < 480)
+                    {
+                        if (NativeWindow.GetWindowRect(main, out var frame) &&
+                            !NativeWindow.SetWindowPos(main, IntPtr.Zero, 0, 0,
+                                640 + frame.Right - frame.Left - width,
+                                480 + frame.Bottom - frame.Top - height,
+                                NativeWindow.SwpNoMove | NativeWindow.SwpNoZOrder |
+                                NativeWindow.SwpNoActivate))
+                        {
+                            Console.Error.WriteLine($"Could not restore the game minimum size (Win32 {Marshal.GetLastWin32Error()}).");
+                        }
+                        Thread.Sleep(50);
+                        client.Refresh();
+                        continue;
+                    }
+
                     var origin = new NativeWindow.Point();
                     if (!NativeWindow.ClientToScreen(main, ref origin))
                     {
@@ -58,17 +93,32 @@ using (client)
                     var needsRepair = current.Left != origin.X || current.Top != origin.Y ||
                                       current.Right - current.Left != width ||
                                       current.Bottom - current.Top != height;
-                    if (needsRepair)
+                    var drawIsBottom = NativeWindow.GetWindow(draw, NativeWindow.GwHwndNext) == IntPtr.Zero;
+                    var drawGeometry = $"{current.Right - current.Left}x{current.Bottom - current.Top} " +
+                                       $"inside {width}x{height}";
+                    if (drawGeometry != lastDrawGeometry && reportedDrawChanges < 20)
+                    {
+                        Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} TDXDraw {drawGeometry} for PID {processId}.");
+                        lastDrawGeometry = drawGeometry;
+                        reportedDrawChanges++;
+                    }
+                    var settleTime = width >= 800 && height >= 600
+                        ? TimeSpan.FromMilliseconds(500) : TimeSpan.FromSeconds(2);
+                    if ((needsRepair || !drawIsBottom) &&
+                        (forceContinuousDrawRepair || now - mainSizeStableSince >= settleTime))
                     {
                         // The packed client leaves TDXDraw at 386x327 while dgVoodoo renders
-                        // an 800x600 image. Mouse messages outside TDXDraw reach the form.
-                        if (!NativeWindow.SetWindowPos(draw, IntPtr.Zero, 0, 0, width, height,
-                                NativeWindow.SwpNoZOrder | NativeWindow.SwpNoActivate))
+                        // an 800x600 image. Keep it behind native edit controls so
+                        // login and character-name fields remain clickable.
+                        if (!NativeWindow.SetWindowPos(draw, NativeWindow.HwndBottom, 0, 0, width, height,
+                                NativeWindow.SwpNoActivate))
                         {
                             Console.Error.WriteLine($"Could not resize TDXDraw (Win32 {Marshal.GetLastWin32Error()}).");
                             return 1;
                         }
-                        Console.WriteLine($"Resized TDXDraw to {width}x{height} for PID {processId}.");
+                        Console.WriteLine($"{DateTime.Now:HH:mm:ss.fff} resized TDXDraw from " +
+                                          $"{current.Right - current.Left}x{current.Bottom - current.Top} " +
+                                          $"to {width}x{height} for PID {processId}.");
                     }
                     repaired = true;
                 }
@@ -80,7 +130,9 @@ using (client)
             Console.Error.WriteLine("The game window or TDXDraw child did not appear.");
             return 1;
         }
-        Thread.Sleep(250);
+        // Delphi recreates/resizes TDXDraw when scenes change. Poll for a stable
+        // form size so transient 640x480 frames do not trigger a resize loop.
+        Thread.Sleep(50);
         client.Refresh();
     }
 }
@@ -90,8 +142,11 @@ return 0;
 
 internal static class NativeWindow
 {
+    public static readonly IntPtr HwndBottom = new(1);
+    public const uint GwHwndNext = 2;
     public const uint SwpNoZOrder = 0x0004;
     public const uint SwpNoActivate = 0x0010;
+    public const uint SwpNoMove = 0x0002;
 
     [StructLayout(LayoutKind.Sequential)]
     public struct Point
@@ -155,6 +210,9 @@ internal static class NativeWindow
     public static extern bool SetWindowPos(IntPtr window, IntPtr insertAfter, int x, int y,
         int width, int height, uint flags);
 
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetWindow(IntPtr window, uint command);
+
     public static IntPtr FindMainWindow(int processId)
     {
         IntPtr found = IntPtr.Zero;
@@ -165,8 +223,10 @@ internal static class NativeWindow
             {
                 var title = new StringBuilder(64);
                 GetWindowText(window, title, title.Capacity);
+                // Continue tracking the form after the player drags it below 800x600.
+                // The old threshold silently disabled child-window repair there.
                 if (title.ToString() == "legend of mir2" && GetClientRect(window, out var client) &&
-                    client.Right - client.Left >= 780 && client.Bottom - client.Top >= 580)
+                    client.Right - client.Left >= 320 && client.Bottom - client.Top >= 240)
                 {
                     found = window;
                     return false;
@@ -194,7 +254,7 @@ internal static class NativeWindow
 
     public static bool IsForeground(IntPtr main) => GetForegroundWindow() == main && !IsIconic(main);
 
-    public static (Rect bounds, string text)[] ReadLoginFields(IntPtr main)
+    public static (Rect bounds, string text)[] ReadInputFields(IntPtr main)
     {
         var edits = new List<(IntPtr handle, Rect bounds)>();
         EnumChildWindows(main, (window, _) =>
@@ -207,13 +267,13 @@ internal static class NativeWindow
             }
             return true;
         }, IntPtr.Zero);
-        if (edits.Count != 2)
+        if (edits.Count is < 1 or > 2)
         {
             return [];
         }
 
         edits.Sort((first, second) => first.bounds.Top.CompareTo(second.bounds.Top));
-        var result = new (Rect bounds, string text)[2];
+        var result = new (Rect bounds, string text)[edits.Count];
         for (var index = 0; index < edits.Count; index++)
         {
             var value = new StringBuilder(128);

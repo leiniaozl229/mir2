@@ -1,6 +1,7 @@
 """Loopback-only old Mir2 6-bit codec bridge for the local OpenMir2 server."""
 import asyncio
 import base64
+import json
 import os
 import struct
 import sys
@@ -24,6 +25,11 @@ NEW_THIRD = bytes(((third | ((fourth << 2) & 0xC0)) ^ 0xAC)
                   for fourth in range(64) for third in range(64))
 TRACE = os.environ.get("MIR2_CODEC_TRACE") == "1"
 ITEM_MESSAGE_IDS = {200, 201, 203, 621}
+GROUND_ITEMS_PATH = os.environ.get("MIR2_GROUND_ITEMS_PATH")
+if LOCAL_PORT == 17200 and not GROUND_ITEMS_PATH:
+    GROUND_ITEMS_PATH = str(Path(os.environ["MIR2_NATIVE_CLIENT_EXE"]).resolve().parent.parent
+                            / "native-ground-items.json")
+ACTIVE_GROUND_TRACKER = None
 
 
 def file_checksum(path):
@@ -112,7 +118,36 @@ def convert(frame, to_server):
     if (LOCAL_PORT == 17200 and not to_server and len(body) >= 16
             and all(60 <= value <= 123 for value in body[:16])):
         header = new_decode(body[:16])
-        if len(header) == 12 and int.from_bytes(header[4:6], "little") == 621:
+        message_id = int.from_bytes(header[4:6], "little") if len(header) == 12 else -1
+        if message_id in (6, 7, 9, 10) and len(body) > 27:
+            # Turn and push messages append a separately encoded name after
+            # the eight-byte CharDesc (11 encoded bytes). Decoding the joined
+            # fields as one stream corrupts the Chinese actor name.
+            desc = body[16:27]
+            name = body[27:]
+            if all(60 <= value <= 123 for value in desc + name):
+                return (b"#" + old_encode(header) + old_encode(new_decode(desc))
+                        + old_encode(new_decode(name)) + b"!")
+        if message_id == 652:
+            # Shop details are encoded twice: the outer string contains a
+            # slash-delimited list of individually encoded ClientItem records.
+            # Convert both layers and the legacy item identity/price offsets.
+            inner = new_decode(body[16:])
+            fields = inner.split(b"/")
+            converted = []
+            for field in fields:
+                if not field:
+                    converted.append(field)
+                    continue
+                if any(value < 60 or value > 123 for value in field):
+                    return frame
+                item_blob = bytearray(new_decode(field))
+                if len(item_blob) != 124:
+                    return frame
+                item_blob[44:52] = item_blob[100:108]
+                converted.append(old_encode(item_blob))
+            return b"#" + old_encode(header) + old_encode(b"/".join(converted)) + b"!"
+        if message_id == 621:
             # The encoded header runs directly into a literal slot number;
             # the remaining fields alternate slot/item and end with '/'.
             fields = body[16:].split(b"/")
@@ -178,6 +213,157 @@ def relay_payload(frame, to_server):
     return outgoing
 
 
+class GroundItemTracker:
+    """Mirror ground items and monsters already visible to this client."""
+
+    def __init__(self, path):
+        self.path = Path(path)
+        self.actor_id = None
+        self.player_x = None
+        self.player_y = None
+        self.items = {}
+        self.monsters = {}
+        self.pending = None
+        self.failed = False
+        self.flush()
+
+    def observe(self, frame, to_server):
+        if not frame.startswith(b"#") or not frame.endswith(b"!"):
+            return
+        marker = frame[1:2] if to_server and frame[1:2] in b"123456789" else b""
+        body = frame[1 + len(marker):-1]
+        if len(body) < 16 or any(value < 60 or value > 123 for value in body[:16]):
+            return
+        header = old_decode(body[:16]) if to_server else new_decode(body[:16])
+        if len(header) != 12:
+            return
+        recog, message_id, x, y, _series = struct.unpack("<IHHHH", header)
+        changed = False
+        if to_server:
+            # CM_TURN/WALK/RUN pack destination X/Y into the 32-bit Recog.
+            # Param and Tag contain action controls, often 0 and direction.
+            target_x, target_y = recog & 0xFFFF, recog >> 16
+            if (message_id in (3010, 3011, 3013) and self.actor_id is not None
+                    and self._near_player(target_x, target_y, 3)):
+                changed = (self.player_x, self.player_y) != (target_x, target_y)
+                self.player_x, self.player_y = target_x, target_y
+        elif message_id in (50, 51, 634):
+            if recog and x and y:
+                self.actor_id = recog
+                self.player_x, self.player_y = x, y
+                self.items.clear()
+                self.monsters.clear()
+                changed = True
+        elif (message_id == 28 and recog == self.actor_id and
+              self._near_player(x, y, 3)) or (message_id in (801, 807) and
+              recog == self.actor_id and x and y):
+            changed = (self.player_x, self.player_y) != (x, y)
+            self.player_x, self.player_y = x, y
+        elif message_id == 633:
+            self.items.clear()
+            self.monsters.clear()
+            changed = True
+        elif message_id in (10, 11, 13, 801, 807):
+            if message_id in (10, 801, 807) and len(body) >= 27:
+                description = body[16:27]
+                if all(60 <= value <= 123 for value in description):
+                    feature = struct.unpack_from("<I", new_decode(description))[0]
+                    # The low feature byte is 0 for players and 50 for NPCs.
+                    if feature & 0xFF not in (0, 50) and recog != self.actor_id:
+                        previous = self.monsters.get(recog, {})
+                        name = self._actor_name(body[27:]) or previous.get("name", "")
+                        if name and not self._is_summon(name):
+                            self.monsters[recog] = {"id": recog, "x": x, "y": y,
+                                                    "name": name, "hp": previous.get("hp"),
+                                                    "maxHp": previous.get("maxHp")}
+                            changed = True
+                        elif recog in self.monsters:
+                            del self.monsters[recog]
+                            changed = True
+                    elif recog in self.monsters:
+                        del self.monsters[recog]
+                        changed = True
+            elif recog in self.monsters and (x, y) != (self.monsters[recog]["x"], self.monsters[recog]["y"]):
+                self.monsters[recog]["x"] = x
+                self.monsters[recog]["y"] = y
+                changed = True
+        elif message_id == 42 and recog in self.monsters:
+            name = self._actor_name(body[16:])
+            if name:
+                if self._is_summon(name):
+                    del self.monsters[recog]
+                else:
+                    self.monsters[recog]["name"] = name
+                changed = True
+        elif message_id == 31 and recog in self.monsters and y > 0:
+            hp = min(x, y)
+            if (self.monsters[recog]["hp"], self.monsters[recog]["maxHp"]) != (hp, y):
+                self.monsters[recog]["hp"] = hp
+                self.monsters[recog]["maxHp"] = y
+                changed = True
+        elif message_id in (29, 30, 32, 34, 800, 806):
+            changed = self.monsters.pop(recog, None) is not None
+        elif message_id == 610 and len(body) > 16:
+            encoded_name = body[16:]
+            if all(60 <= value <= 123 for value in encoded_name):
+                raw_name = new_decode(encoded_name).split(b"\0", 1)[0]
+                name = raw_name.decode("gbk", errors="replace").strip()
+                if name:
+                    self.items[recog] = {"id": recog, "x": x, "y": y, "name": name[:40]}
+                    changed = True
+        elif message_id == 611:
+            changed = self.items.pop(recog, None) is not None
+        if changed:
+            self.schedule_flush()
+
+    def _near_player(self, x, y, distance):
+        return (self.player_x is not None and self.player_y is not None and
+                x > 0 and y > 0 and
+                abs(x - self.player_x) <= distance and
+                abs(y - self.player_y) <= distance)
+
+    @staticmethod
+    def _actor_name(encoded):
+        if not encoded or any(value < 60 or value > 123 for value in encoded):
+            return ""
+        raw = new_decode(encoded).split(b"\0", 1)[0].split(b"/", 1)[0]
+        return raw.decode("gbk", errors="replace").strip()[:40]
+
+    @staticmethod
+    def _is_summon(name):
+        return name == "变异骷髅" or ("(" in name[:-1] and name.endswith(")"))
+
+    def schedule_flush(self):
+        if self.pending is None:
+            self.pending = asyncio.get_running_loop().call_later(0.05, self.flush)
+
+    def flush(self):
+        self.pending = None
+        if self is not ACTIVE_GROUND_TRACKER and ACTIVE_GROUND_TRACKER is not None:
+            return
+        document = {"actorId": self.actor_id, "x": self.player_x, "y": self.player_y,
+                    "items": list(self.items.values())[:256],
+                    "monsters": list(self.monsters.values())[:256]}
+        try:
+            self.path.parent.mkdir(parents=True, exist_ok=True)
+            temporary = self.path.with_suffix(self.path.suffix + ".tmp")
+            temporary.write_text(json.dumps(document, ensure_ascii=False), encoding="utf-8")
+            os.replace(temporary, self.path)
+        except OSError as error:
+            if not self.failed:
+                print(f"Ground item overlay state unavailable: {error}", file=sys.stderr)
+                self.failed = True
+
+    def close(self):
+        if self.pending is not None:
+            self.pending.cancel()
+            self.pending = None
+        self.player_x = self.player_y = None
+        self.items.clear()
+        self.monsters.clear()
+        self.flush()
+
+
 def trace_frame(frame, to_server, elapsed_ms):
     if not TRACE or not frame.startswith(b"#") or not frame.endswith(b"!"):
         return
@@ -199,11 +385,18 @@ def trace_frame(frame, to_server, elapsed_ms):
 
 
 async def handle(client_reader, client_writer):
+    global ACTIVE_GROUND_TRACKER
     try:
         server_reader, server_writer = await asyncio.open_connection("127.0.0.1", UPSTREAM_PORT)
     except OSError:
         client_writer.close()
         return
+
+    tracker = None
+    if LOCAL_PORT == 17200 and GROUND_ITEMS_PATH:
+        tracker = GroundItemTracker(GROUND_ITEMS_PATH)
+        ACTIVE_GROUND_TRACKER = tracker
+        tracker.flush()
 
     async def relay(reader, writer, direction):
         buffer = bytearray()
@@ -223,6 +416,8 @@ async def handle(client_reader, client_writer):
                     del buffer[:end]
                     began = time.perf_counter() if TRACE else 0
                     outgoing = relay_payload(frame, direction == "client_to_gate")
+                    if tracker is not None:
+                        tracker.observe(frame, direction == "client_to_gate")
                     if TRACE:
                         trace_frame(frame, direction == "client_to_gate", (time.perf_counter() - began) * 1000)
                     writer.write(outgoing)
@@ -235,6 +430,10 @@ async def handle(client_reader, client_writer):
     await asyncio.gather(relay(client_reader, server_writer, "client_to_gate"),
                          relay(server_reader, client_writer, "gate_to_client"),
                          return_exceptions=True)
+    if tracker is not None:
+        if ACTIVE_GROUND_TRACKER is tracker:
+            tracker.close()
+            ACTIVE_GROUND_TRACKER = None
 
 
 async def main():

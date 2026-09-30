@@ -1,0 +1,36 @@
+[@main]
+比奇练级传送：选择常用刷怪地图。\
+<沃玛森林/@forest> <毒蛇山谷/@snake>\
+<兽人古墓一层/@grave> <废矿入口/@mine>\
+<沃玛寺庙入口/@woma> <石墓入口/@tomb>\
+<关闭/@exit>
+
+[@forest]
+#ACT
+MAPMOVE 1 240 300
+BREAK
+
+[@snake]
+#ACT
+MAPMOVE 2 510 474
+BREAK
+
+[@grave]
+#ACT
+MAPMOVE D001 152 362
+BREAK
+
+[@mine]
+#ACT
+MAPMOVE D401 100 100
+BREAK
+
+[@woma]
+#ACT
+MAPMOVE D021 50 50
+BREAK
+
+[@tomb]
+#ACT
+MAPMOVE D710 25 25
+BREAK

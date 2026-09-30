@@ -66,7 +66,7 @@ class ActorAssetProfileTests(unittest.TestCase):
             'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text())
+        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text(encoding='utf-8'))
         self.assertEqual(set(profile['p0Baseline']['maps']), set(module._source_map_paths()))
         self.assertEqual(len(module._source_map_paths()), 570)
 
@@ -235,11 +235,103 @@ class ActorAssetProfileTests(unittest.TestCase):
             'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text())
+        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text(encoding='utf-8'))
         routes = set(profile['p0Baseline']['maps'])
         guide = module._build_extended_guide(module.CLASSIC_EXTRA_ROUTES)
         destinations = set(re.findall(r'^MAPMOVE\s+([^\s]+)', guide, re.M)) - {'0'}
-        self.assertEqual(destinations, routes - {'0'})
+        self.assertEqual(destinations, (routes - {'0'}) | set(module.CLASSIC_EXTRA_ROUTES))
+
+    def test_classic_catalog_menus_fit_native_dialogue_and_keep_links_reachable(self):
+        spec = importlib.util.spec_from_file_location(
+            'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        guide = module._build_extended_guide(module.CLASSIC_EXTRA_ROUTES)
+        sections = re.findall(r'^\[@([^\]]+)\]\n(.*?)(?=^\[@|\Z)', guide,
+                              re.M | re.S)
+        labels = {label for label, _ in sections}
+        directory_links = set()
+        route_links = set()
+        for label, body in sections:
+            if not (label == 'main' or label.startswith(('directory', 'page'))):
+                continue
+            rows = [line for line in body.splitlines() if line.strip()]
+            self.assertLessEqual(len(rows), 9, label)
+            links = re.findall(r'/@([A-Za-z0-9_]+)', body)
+            self.assertTrue(set(links) <= labels | {'exit'}, label)
+            if label == 'main' or label.startswith('directory'):
+                directory_links.update(link for link in links if link.startswith('page'))
+            else:
+                route_links.update(link for link in links if link.startswith('route'))
+                self.assertLessEqual(len([link for link in links if link.startswith('route')]),
+                                     6, label)
+        self.assertEqual(directory_links, {label for label in labels if label.startswith('page')})
+        self.assertEqual(route_links, {label for label in labels if label.startswith('route')})
+
+    def test_city_services_use_walkable_cells_and_clickable_region_pages(self):
+        spec = importlib.util.spec_from_file_location(
+            'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        maps = module._source_map_paths()
+        services = module.city_services
+        for _, map_id, shop_x, shop_y, travel_x, travel_y in services.CITY_HUBS:
+            world = module.ClassicMap(maps[map_id].read_bytes())
+            self.assertFalse(world.blocked(shop_x, shop_y), (map_id, shop_x, shop_y))
+            self.assertFalse(world.blocked(travel_x, travel_y), (map_id, travel_x, travel_y))
+            self.assertNotEqual((shop_x, shop_y), (travel_x, travel_y))
+        script = services.build_travel_script()
+        sections = dict(re.findall(r'^\[@([^\]]+)\]\n(.*?)(?=^\[@|\Z)', script, re.M | re.S))
+        for label, body in sections.items():
+            if label == 'main' or label.startswith('g'):
+                self.assertLessEqual(len([line for line in body.splitlines() if line.strip()]), 9, label)
+                self.assertTrue(set(re.findall(r'/@([A-Za-z0-9_]+)', body)) <= sections.keys() | {'exit'}, label)
+        self.assertEqual(len(re.findall(r'^MAPMOVE ', script, re.M)), 60)
+        for map_id, x, y in re.findall(r'^MAPMOVE\s+(\S+)\s+(\d+)\s+(\d+)$', script, re.M):
+            world = module.ClassicMap(maps[map_id].read_bytes())
+            self.assertFalse(world.blocked(int(x), int(y)), (map_id, x, y))
+        goods = (ROOT / 'content/classic-176/p0/city-general-merchant.txt').read_text(encoding='utf-8')
+        self.assertIn('回城石 30 3', goods)
+        self.assertIn('回城卷 50 3', goods)
+        self.assertNotIn('月卡', goods)
+
+    def test_quest_shop_conversion_keeps_quest_without_old_sale(self):
+        spec = importlib.util.spec_from_file_location(
+            'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        services = module.city_services
+        for (script_name, map_id), quest_name in services.QUEST_ONLY_SHOPS.items():
+            source = module.SOURCE / f'Mir200/Envir/Market_Def/{script_name}-{map_id}.txt'
+            converted = services.quest_only_script(module.read_text(source))
+            self.assertTrue(converted.startswith('[@main]'), script_name)
+            self.assertNotIn('[goods]', converted.lower(), script_name)
+            self.assertFalse(re.search(r'/@(?:buy|sell|repair|s_repair|yueka)',
+                                       converted, re.I), script_name)
+            self.assertTrue(any(label.startswith('rw') for label in
+                                re.findall(r'^\[@([^\]]+)\]', converted, re.M)), script_name)
+            self.assertIn(quest_name, services.normalize_merchant(
+                f'{script_name} {map_id} 1 1 原商人 0 5 0'))
+
+    def test_forest_return_npcs_are_accessible_and_go_to_bichon(self):
+        spec = importlib.util.spec_from_file_location(
+            'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        world = module.ClassicMap(module._source_map_paths()['1'].read_bytes())
+        occupied = set()
+        for source in ('Merchant.txt', 'Npcs.txt', 'GuardList.txt'):
+            for line in module.read_text(module.SOURCE / 'Mir200/Envir' / source).splitlines():
+                parts = line.split()
+                if len(parts) >= 4 and parts[1] == '1':
+                    occupied.add((int(parts[2]), int(parts[3])))
+        for _, x, y, _ in module.FOREST_SERVICE_NPCS:
+            self.assertFalse(world.blocked(x, y), (x, y))
+            self.assertNotIn((x, y), occupied)
+        script = (ROOT / 'content/classic-176/p0/forest-return.txt').read_text(encoding='utf-8')
+        self.assertIn('MAPMOVE 0 329 268', script)
+        self.assertIn('GIVE 回城石 3', script)
+        self.assertIn('<返回比奇/@home>', script)
 
     def test_every_source_route_has_a_walkable_spawn_candidate(self):
         spec = importlib.util.spec_from_file_location(

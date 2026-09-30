@@ -3,7 +3,8 @@ import {bagCellPositionFromLayout,bagGridFromLayout,classicUiLayout,nationalUses
 import itemAssets from '../../../content/classic-176/item-assets.json';
 
 export type ItemRange={min:number;max:number};
-export type InventoryItem={name:string;makeIndex:number;durability:number;maxDurability:number;stdMode:number;weight:number;looks:number;quantity?:number;count?:number;shape?:number;baseDurability?:number;ac?:ItemRange;mac?:ItemRange;dc?:ItemRange;mc?:ItemRange;sc?:ItemRange;need?:number;needLevel?:number;price?:number;attackSpeed?:number;agility?:number;accuracy?:number;magicAvoidance?:number;strong?:number;undead?:number;hpAdd?:number;mpAdd?:number;light?:number};
+export type ItemBonuses={ac:number;mac:number;dc:number;mc:number;sc:number};
+export type InventoryItem={name:string;makeIndex:number;durability:number;maxDurability:number;stdMode:number;weight:number;looks:number;quantity?:number;count?:number;shape?:number;baseDurability?:number;ac?:ItemRange;mac?:ItemRange;dc?:ItemRange;mc?:ItemRange;sc?:ItemRange;bonus?:ItemBonuses;need?:number;needLevel?:number;price?:number;attackSpeed?:number;agility?:number;accuracy?:number;magicAvoidance?:number;strong?:number;undead?:number;hpAdd?:number;mpAdd?:number;light?:number};
 type IconFrame={file:string;width:number;height:number;offsetX:number;offsetY:number};
 type Icons={frames:Record<string,IconFrame>};
 type InventoryActions={drop:(makeIndex:number)=>void;equip:(makeIndex:number,slot:number)=>void;use:(makeIndex:number)=>void;trade?:(makeIndex:number)=>void;layoutKey?:()=>string|undefined};
@@ -25,13 +26,23 @@ export function bagCellPosition(index:number,national=false){
 }
 
 export function itemDetailRows(item:InventoryItem){
- const rows:[string,string][]=[['类型',itemTypeName(item.stdMode)],['重量',String(item.weight)]];
+ const rows:[string,string,number?][]=[['类型',itemTypeName(item.stdMode)],['重量',String(item.weight)]];
  if(item.maxDurability>0)rows.push(['持久',`${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`]);
  if(item.needLevel)rows.push(['需要等级',String(item.needLevel)]);
- for(const [name,value] of [['防御',item.ac],['魔御',item.mac],['攻击',item.dc],['魔法',item.mc],['道术',item.sc]] as [string,ItemRange|undefined][]){if(value&&(value.min||value.max))rows.push([name,`${value.min}-${value.max}`]);}
+ for(const [name,value,bonus] of [['防御',item.ac,item.bonus?.ac],['魔御',item.mac,item.bonus?.mac],['攻击',item.dc,item.bonus?.dc],['魔法',item.mc,item.bonus?.mc],['道术',item.sc,item.bonus?.sc]] as [string,ItemRange|undefined,number|undefined][]){if(value&&(value.min||value.max))rows.push([name,`${value.min}-${value.max}`,bonus]);}
  for(const [name,value] of [['攻击速度',item.attackSpeed],['敏捷',item.agility],['准确',item.accuracy],['魔法躲避',item.magicAvoidance],['强度',item.strong],['生命',item.hpAdd],['魔法值',item.mpAdd],['光照',item.light]] as [string,number|undefined][]){if(value)rows.push([name,String(value)]);}
  if(item.price)rows.push(['价格',String(item.price)]);
  return rows;
+}
+
+function appendItemDetailRows(tooltip:HTMLElement,item:InventoryItem){
+ const document=tooltip.ownerDocument;
+ for(const [name,value,bonus] of itemDetailRows(item)){
+  const row=document.createElement('span'),key=document.createElement('em'),amount=document.createElement('b');
+  key.textContent=name;amount.textContent=value;
+  if(bonus){const extra=document.createElement('i');extra.className='item-bonus';extra.textContent=` +${bonus}`;amount.append(extra);}
+  row.append(key,amount);tooltip.append(row);
+ }
 }
 
 let nextServiceTooltipId=0;
@@ -46,10 +57,7 @@ export function attachItemTooltip(target:HTMLElement,item:InventoryItem,label=it
  const heading=document.createElement('strong');heading.textContent=item.name;tooltip.append(heading);
  const slot=document.createElement('span'),slotName=document.createElement('em'),slotValue=document.createElement('b');
  slotName.textContent='对象';slotValue.textContent=label;slot.append(slotName,slotValue);tooltip.append(slot);
- for(const [name,value] of itemDetailRows(item)){
-  const row=document.createElement('span'),key=document.createElement('em'),amount=document.createElement('b');
-  key.textContent=name;amount.textContent=value;row.append(key,amount);tooltip.append(row);
- }
+ appendItemDetailRows(tooltip,item);
  target.append(tooltip);
  target.setAttribute('aria-describedby',tooltip.id);
  const show=()=>{tooltip.hidden=false;};
@@ -122,7 +130,7 @@ export class InventoryView {
  private activate(item:InventoryItem){const slot=defaultSlot(item.stdMode);this.clearSelection();if(slot>=0)this.begin(item,()=>this.actions.equip(item.makeIndex,slot));else if(item.stdMode<=4||item.stdMode===31)this.begin(item,()=>this.actions.use(item.makeIndex));}
  private showTooltip(item:InventoryItem,cell:HTMLButtonElement){
   if(!this.tooltip)return;this.tooltip.replaceChildren();const document=this.element.ownerDocument;const heading=document.createElement('strong');heading.textContent=item.name;this.tooltip.append(heading);
-  for(const [label,value] of itemDetailRows(item)){const row=document.createElement('span'),name=document.createElement('em'),amount=document.createElement('b');name.textContent=label;amount.textContent=value;row.append(name,amount);this.tooltip.append(row);}
+  appendItemDetailRows(this.tooltip,item);
   this.tooltip.style.left=`${cell.offsetLeft+(cell.offsetLeft>160?-184:38)}px`;this.tooltip.style.top=`${Math.max(6,Math.min(150,cell.offsetTop))}px`;this.tooltip.hidden=false;
  }
  private hideTooltip(){if(this.tooltip)this.tooltip.hidden=true;}
@@ -220,7 +228,7 @@ export class EquipmentView {
  private showTooltip(item:InventoryItem,cell:HTMLButtonElement,label:string){
   if(!this.tooltip)return;this.tooltip.replaceChildren();const heading=document.createElement('strong');heading.textContent=item.name;this.tooltip.append(heading);
   const slot=document.createElement('span'),slotName=document.createElement('em'),slotValue=document.createElement('b');slotName.textContent='部位';slotValue.textContent=label;slot.append(slotName,slotValue);this.tooltip.append(slot);
-  for(const [name,value] of itemDetailRows(item)){const row=document.createElement('span'),key=document.createElement('em'),amount=document.createElement('b');key.textContent=name;amount.textContent=value;row.append(key,amount);this.tooltip.append(row);}
+  appendItemDetailRows(this.tooltip,item);
   const left=cell.offsetLeft+(cell.offsetLeft>150?-180:38),top=Math.max(6,Math.min(250,cell.offsetTop));this.tooltip.style.left=`${left}px`;this.tooltip.style.top=`${top}px`;this.tooltip.hidden=false;
  }
  private hideTooltip(){if(this.tooltip)this.tooltip.hidden=true;}

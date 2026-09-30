@@ -1,0 +1,36 @@
+[@main]
+比奇高级传送：选择远征地图。\
+<祖玛寺庙一层/@zuma> <白日门/@bairimen>\
+<赤月峡谷北/@red> <封魔谷/@fengmo>\
+<苍月岛/@cangyue> <幻境一层/@phantom>\
+<关闭/@exit>
+
+[@zuma]
+#ACT
+MAPMOVE D501 200 200
+BREAK
+
+[@bairimen]
+#ACT
+MAPMOVE 11 250 250
+BREAK
+
+[@red]
+#ACT
+MAPMOVE D10011 202 195
+BREAK
+
+[@fengmo]
+#ACT
+MAPMOVE 4 255 250
+BREAK
+
+[@cangyue]
+#ACT
+MAPMOVE 5 400 400
+BREAK
+
+[@phantom]
+#ACT
+MAPMOVE H001 75 75
+BREAK

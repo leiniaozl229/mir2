@@ -578,25 +578,67 @@ namespace M2Server.Player
 
         private static string ClientUseItemsGetUnbindItemName(int nShape)
         {
+            // These classic medicine packs have AniCount 1-3, which otherwise
+            // routes them to an absent QFunction label and consumes the pack.
+            // Several shapes are also missing or mislabelled in UnbindList.txt.
+            string packContent = nShape switch
+            {
+                100 => "强效金创药",
+                101 => "强效魔法药",
+                102 => "金创药(小量)",
+                103 => "魔法药(小量)",
+                104 => "金创药(中量)",
+                105 => "魔法药(中量)",
+                117 => "强效太阳水",
+                118 => "万年雪霜",
+                119 => "疗伤药",
+                156 => "金创药(特量)",
+                157 => "魔法药(特量)",
+                158 => "护身符",
+                162 => "金创药(大量)",
+                163 => "魔法药(大量)",
+                164 => "筹码",
+                _ => null
+            };
+            if (packContent != null)
+            {
+                return packContent;
+            }
             return M2Share.UnbindList.TryGetValue(nShape, out string result) ? result : string.Empty;
         }
 
-        private void ClientUseItemsGetUnBindItems(string sItemName, int nCount)
+        private bool ClientUseItemsGetUnBindItems(string sItemName, int nCount, int packIndex)
         {
+            if (string.IsNullOrEmpty(sItemName))
+            {
+                return false;
+            }
+            var unpacked = new List<UserItem>(nCount);
             for (int i = 0; i < nCount; i++)
             {
                 UserItem userItem = new UserItem();
                 if (SystemShare.ItemSystem.CopyToUserItemFromName(sItemName, ref userItem))
                 {
-                    ItemList.Add(userItem);
-                    SendAddItem(userItem);
+                    unpacked.Add(userItem);
                 }
                 else
                 {
                     Dispose(userItem);
-                    break;
+                    foreach (UserItem created in unpacked)
+                    {
+                        Dispose(created);
+                    }
+                    return false;
                 }
             }
+            Dispose(ItemList[packIndex]);
+            ItemList.RemoveAt(packIndex);
+            foreach (UserItem created in unpacked)
+            {
+                ItemList.Add(created);
+                SendAddItem(created);
+            }
+            return true;
         }
 
         private void ClientUseItems(int nItemIdx, string sItemName)
@@ -654,14 +696,20 @@ namespace M2Server.Player
                                         }
                                         break;
                                     case 31: // 解包物品
-                                        if (stdItem.AniCount == 0)
+                                        if (stdItem.AniCount == 0 || stdItem.Shape is 100 or 101 or 102 or 103 or 104 or 105 or 117 or 118 or 119 or 156 or 157 or 158 or 162 or 163)
                                         {
                                             if (ItemList.Count + 6 - 1 <= Grobal2.MaxBagItem)
                                             {
-                                                Dispose(userItem);
-                                                ItemList.RemoveAt(i);
-                                                ClientUseItemsGetUnBindItems(ClientUseItemsGetUnbindItemName(stdItem.Shape), 6);
-                                                eatSuccess = true;
+                                                eatSuccess = ClientUseItemsGetUnBindItems(
+                                                    ClientUseItemsGetUnbindItemName(stdItem.Shape), 6, i);
+                                                if (!eatSuccess)
+                                                {
+                                                    SysMsg("药包配置错误，药包未消耗。", MsgColor.Red, MsgType.Hint);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                SysMsg("背包空间不足，解包需要至少 5 个空格。", MsgColor.Red, MsgType.Hint);
                                             }
                                         }
                                         else

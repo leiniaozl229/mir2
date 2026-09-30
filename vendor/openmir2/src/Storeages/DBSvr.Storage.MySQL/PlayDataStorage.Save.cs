@@ -60,6 +60,8 @@ namespace DBSrv.Storage.MySQL
                 SaveItem(context, playerId, humanRcd.Data.HumItems);
                 SaveBagItem(context, playerId, humanRcd.Data.BagItems);
                 SaveStorageItem(context, playerId, humanRcd.Data.StorageItems);
+                ReplaceItemAttrs(context, playerId, humanRcd.Data.HumItems,
+                    humanRcd.Data.BagItems, humanRcd.Data.StorageItems);
                 SaveMagics(context, playerId, humanRcd.Data.Magic);
                 SaveBonusability(context, playerId, humanRcd.Data.BonusAbil);
                 SaveStatus(context, playerId, humanRcd.Data.StatusTimeArr);
@@ -232,15 +234,6 @@ namespace DBSrv.Storage.MySQL
                         command.Parameters.AddWithValue("@StdIndex", delItem[i].Index);
                         command.ExecuteNonQuery();
                     }
-                    try
-                    {
-                        ClearItemAttr(context, playerId, delItem.Where(x => x != null && x.MakeIndex > 0).Select(x => x.MakeIndex).ToList());
-                    }
-                    catch (Exception ex)
-                    {
-                        LogService.Error("[Exception] PlayDataStorage.SaveItem (Clear Item)");
-                        LogService.Error(ex.StackTrace);
-                    }
                 }
 
                 if (chgList.Length > 0)
@@ -260,15 +253,6 @@ namespace DBSrv.Storage.MySQL
                         command.Parameters.AddWithValue("@Dura", chgList[i].Dura);
                         command.Parameters.AddWithValue("@DuraMax", chgList[i].DuraMax);
                         command.ExecuteNonQuery();
-                    }
-                    try
-                    {
-                        UpdateItemAttr(context, playerId, chgList);
-                    }
-                    catch (Exception ex)
-                    {
-                        LogService.Error("[Exception] PlayDataStorage.SaveItem (Update Item)");
-                        LogService.Error(ex.StackTrace);
                     }
                 }
             }
@@ -310,15 +294,6 @@ namespace DBSrv.Storage.MySQL
                         command.Parameters.AddWithValue("@StdIndex", delItem[i].Index);
                         command.ExecuteNonQuery();
                     }
-                    try
-                    {
-                        ClearItemAttr(context, playerId, delItem.Where(x => x != null && x.MakeIndex > 0).Select(x => x.MakeIndex).ToList());
-                    }
-                    catch (Exception ex)
-                    {
-                        LogService.Error("[Exception] PlayDataStorage.UpdateBagItem (Delete Item)");
-                        LogService.Error(ex.StackTrace);
-                    }
                 }
                 if (chgList.Length > 0)
                 {
@@ -337,15 +312,6 @@ namespace DBSrv.Storage.MySQL
                         command.Parameters.AddWithValue("@Dura", chgList[i].Dura);
                         command.Parameters.AddWithValue("@DuraMax", chgList[i].DuraMax);
                         command.ExecuteNonQuery();
-                    }
-                    try
-                    {
-                        UpdateItemAttr(context, playerId, chgList);
-                    }
-                    catch (Exception ex)
-                    {
-                        LogService.Error("[Exception] PlayDataStorage.UpdateBagItem (Update Item)");
-                        LogService.Error(ex.StackTrace);
                     }
                 }
             }
@@ -386,15 +352,6 @@ namespace DBSrv.Storage.MySQL
                         command.Parameters.AddWithValue("@StdIndex", delItem[i].Index);
                         command.ExecuteNonQuery();
                     }
-                    try
-                    {
-                        ClearItemAttr(context, playerId, delItem.Where(x => x != null && x.MakeIndex > 0).Select(x => x.MakeIndex).ToList());
-                    }
-                    catch (Exception ex)
-                    {
-                        LogService.Error("[Exception] PlayDataStorage.SaveStorageItem (Delete Item)");
-                        LogService.Error(ex.StackTrace);
-                    }
                 }
 
                 if (chgList.Length > 0)
@@ -414,15 +371,6 @@ namespace DBSrv.Storage.MySQL
                         command.Parameters.AddWithValue("@Dura", chgList[i].Dura);
                         command.Parameters.AddWithValue("@DuraMax", chgList[i].DuraMax);
                         command.ExecuteNonQuery();
-                    }
-                    try
-                    {
-                        UpdateItemAttr(context, playerId, chgList);
-                    }
-                    catch (Exception ex)
-                    {
-                        LogService.Error("[Exception] PlayDataStorage.SaveStorageItem (Update Item)");
-                        LogService.Error(ex.StackTrace);
                     }
                 }
             }
@@ -552,35 +500,36 @@ namespace DBSrv.Storage.MySQL
             }
         }
 
-        private void UpdateItemAttr(StorageContext context, int playerId, ServerUserItem[] userItems)
+        // Equipment can move between worn, bag and storage slots during one save. Reconcile
+        // instance attributes only after all three slot tables have been updated, in the
+        // same transaction, so moving an item cannot erase its bonus.
+        private void ReplaceItemAttrs(StorageContext context, int playerId,
+            ServerUserItem[] wornItems, ServerUserItem[] bagItems, ServerUserItem[] storageItems)
         {
-            try
+            using (MySqlConnector.MySqlCommand delete = context.CreateCommand())
             {
-                const string updateItemAttrSql = "UPDATE characters_item_attr SET VALUE0={0},VALUE1={1},VALUE2={2},VALUE3={3},VALUE4={4},VALUE5={5},VALUE6={6},VALUE7={7},VALUE8={8},VALUE9={9},VALUE10={10},VALUE11={11},VALUE12={12},VALUE13={13} WHERE PlayerId={14} AND MakeIndex={15};";
-                List<string> strSqlList = new List<string>();
-                for (int i = 0; i < userItems.Length; i++)
-                {
-                    if (userItems[i] == null)
-                    {
-                        continue;
-                    }
-                    ServerUserItem userItem = userItems[i];
-                    strSqlList.Add(string.Format(updateItemAttrSql, userItem.Desc[0], userItem.Desc[1],
-                        userItem.Desc[2], userItem.Desc[3], userItem.Desc[4], userItem.Desc[5], userItem.Desc[6], userItem.Desc[7], userItem.Desc[8], userItem.Desc[9],
-                        userItem.Desc[10], userItem.Desc[11], userItem.Desc[12], userItem.Desc[13], playerId, userItem.MakeIndex));
-                }
-                if (strSqlList.Count <= 0)
-                {
-                    return;
-                }
-                MySqlConnector.MySqlCommand command = context.CreateCommand();
-                command.CommandText = string.Join("\r\n", strSqlList);
-                command.ExecuteNonQuery();
+                delete.CommandText = "DELETE FROM characters_item_attr WHERE PlayerId=@PlayerId";
+                delete.Parameters.AddWithValue("@PlayerId", playerId);
+                delete.ExecuteNonQuery();
             }
-            catch (Exception e)
+
+            IEnumerable<ServerUserItem> items = wornItems.Concat(bagItems).Concat(storageItems)
+                .Where(item => item != null && item.MakeIndex > 0 && item.Index > 0
+                    && item.Desc != null && item.Desc.Any(value => value != 0))
+                .DistinctBy(item => item.MakeIndex);
+            foreach (ServerUserItem item in items)
             {
-                LogService.Error("[Exception] PlayDataStorage.UpdateItemAttr (Update item attr)");
-                LogService.Error(e.StackTrace);
+                using MySqlConnector.MySqlCommand insert = context.CreateCommand();
+                insert.CommandText = "INSERT INTO characters_item_attr "
+                    + "(PlayerId,MakeIndex,VALUE0,VALUE1,VALUE2,VALUE3,VALUE4,VALUE5,VALUE6,VALUE7,VALUE8,VALUE9,VALUE10,VALUE11,VALUE12,VALUE13) "
+                    + "VALUES (@PlayerId,@MakeIndex,@Value0,@Value1,@Value2,@Value3,@Value4,@Value5,@Value6,@Value7,@Value8,@Value9,@Value10,@Value11,@Value12,@Value13)";
+                insert.Parameters.AddWithValue("@PlayerId", playerId);
+                insert.Parameters.AddWithValue("@MakeIndex", item.MakeIndex);
+                for (int index = 0; index < 14; index++)
+                {
+                    insert.Parameters.AddWithValue("@Value" + index, item.Desc[index]);
+                }
+                insert.ExecuteNonQuery();
             }
         }
 

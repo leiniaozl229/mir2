@@ -3,6 +3,7 @@
   "label": "个人试玩高倍率档",
   "experienceMultiplier": 20,
   "dropMultiplier": 20.0,
+  "dropBalance": "high-level-v1",
   "spawnDelayMultiplier": 1.0,
   "monsterSpawns": [
     "0 294 621 鸡 4 8 1",

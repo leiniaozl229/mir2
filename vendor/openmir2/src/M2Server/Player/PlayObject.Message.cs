@@ -765,6 +765,14 @@ namespace M2Server.Player
             }
 
             base.Run();
+            // Reuse the regular pickup path so ownership, bag space and weight rules
+            // remain identical to pressing the pickup key in the native client.
+            if (NativeHelperSettings.AutoPickup && !Death && !Dealing && Envir != null &&
+                Environment.TickCount64 - _nativeAutoPickupTick >= 500)
+            {
+                _nativeAutoPickupTick = Environment.TickCount64;
+                ClientPickUpItem();
+            }
         }
 
         protected override bool Operate(ProcessMessage processMsg)

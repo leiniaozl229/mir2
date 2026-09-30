@@ -1,5 +1,6 @@
 ﻿using M2Server.Monster;
 using M2Server.Monster.Monsters;
+using M2Server.Items;
 using OpenMir2.Enums;
 using SystemModule.Actors;
 using ThreadState = System.Threading.ThreadState;
@@ -201,9 +202,60 @@ namespace GameSrv.Word
             }
             LogService.Debug($"MonsterProcess Thread:{monsterThread.Id} Monsters:{mongenList.Count} starting work.");
 
+            // Keep occupied maps independent from the round-robin over every map.
+            // With thousands of MonGen rows, that round-robin can take minutes.
+            var spawnGroupsByMap = mongenList
+                .Where(gen => gen?.Envir != null)
+                .GroupBy(gen => gen.MapName, StringComparer.OrdinalIgnoreCase)
+                .ToDictionary(group => group.Key, group => group.ToList(), StringComparer.OrdinalIgnoreCase);
+            var previousMapPopulation = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var occupiedSpawnQueue = new Queue<MonGenInfo>();
+            var queuedSpawns = new HashSet<MonGenInfo>();
+            int occupiedScanTick = 0;
+            bool firstOccupiedScan = true;
+
             while (true)
             {
                 MonGenInfo monGen = null;
+                int spawnTick = HUtil32.GetTickCount();
+                if (firstOccupiedScan || unchecked(spawnTick - occupiedScanTick) >= 500)
+                {
+                    firstOccupiedScan = false;
+                    occupiedScanTick = spawnTick;
+                    foreach (var (mapName, spawns) in spawnGroupsByMap)
+                    {
+                        int population = spawns[0].Envir.HumCount;
+                        previousMapPopulation.TryGetValue(mapName, out int previousPopulation);
+                        previousMapPopulation[mapName] = population;
+                        if (population <= 0)
+                        {
+                            continue;
+                        }
+
+                        bool playerEntered = population > previousPopulation;
+                        foreach (MonGenInfo spawn in spawns)
+                        {
+                            int delay = MonsterSpawnPolicy.OccupiedDelay(GetMonstersZenTime(spawn.ZenTime));
+                            if ((playerEntered || spawn.StartTick == 0 || spawnTick - spawn.StartTick >= delay)
+                                && queuedSpawns.Add(spawn))
+                            {
+                                occupiedSpawnQueue.Enqueue(spawn);
+                            }
+                        }
+                    }
+                }
+
+                // Small batches fill a newly entered map promptly without pausing AI.
+                for (int priority = 0; priority < 2 && occupiedSpawnQueue.Count > 0; priority++)
+                {
+                    MonGenInfo occupiedSpawn = occupiedSpawnQueue.Dequeue();
+                    queuedSpawns.Remove(occupiedSpawn);
+                    if (occupiedSpawn.Envir.HumCount > 0)
+                    {
+                        TryRegenMonsters(occupiedSpawn, true, spawnGroupsByMap[occupiedSpawn.MapName].Count);
+                    }
+                }
+
                 if ((HUtil32.GetTickCount() - monsterThread.RegenMonstersTick) > SystemShare.Config.RegenMonstersTime)
                 {
                     monsterThread.RegenMonstersTick = HUtil32.GetTickCount();
@@ -223,32 +275,11 @@ namespace GameSrv.Word
                     {
                         monsterThread.CurrMonGenIdx = 0;
                     }
-                    if (monGen != null && !string.IsNullOrEmpty(monGen.MonName) && !SystemShare.Config.VentureServer)
+                    if (monGen != null && monGen.Envir?.HumCount <= 0 && !string.IsNullOrEmpty(monGen.MonName) && !SystemShare.Config.VentureServer)
                     {
                         if (monGen.StartTick == 0 || ((HUtil32.GetTickCount() - monGen.StartTick) > GetMonstersZenTime(monGen.ZenTime)))
                         {
-                            ushort nGenCount = monGen.ActiveCount; //取已刷出来的怪数量
-                            bool boRegened = true;
-                            int genModCount = HUtil32._MAX(1, HUtil32.Round(HUtil32._MAX(1, monGen.Count) / (SystemShare.Config.MonGenRate / 10.0)));//所需刷的怪总数
-                            SystemModule.Maps.IEnvirnoment map = SystemShare.MapMgr.FindMap(monGen.MapName);
-                            bool canCreate;
-                            if (map == null || map.Flag.boNOHUMNOMON && map.HumCount <= 0)
-                            {
-                                canCreate = false;
-                            }
-                            else
-                            {
-                                canCreate = true;
-                            }
-
-                            if (genModCount > nGenCount && canCreate)// 增加 控制刷怪数量比例
-                            {
-                                boRegened = RegenMonsters(monGen, genModCount - nGenCount);
-                            }
-                            if (boRegened)
-                            {
-                                monGen.StartTick = HUtil32.GetTickCount();
-                            }
+                            TryRegenMonsters(monGen, false, 0);
                         }
                     }
                 }
@@ -360,6 +391,28 @@ namespace GameSrv.Word
             }
         }
 
+        private void TryRegenMonsters(MonGenInfo monGen, bool occupied, int mapSpawnGroups)
+        {
+            if (SystemShare.Config.VentureServer || string.IsNullOrEmpty(monGen.MonName))
+            {
+                return;
+            }
+            SystemModule.Maps.IEnvirnoment map = monGen.Envir;
+            if (map == null || map.Flag.boNOHUMNOMON && map.HumCount <= 0)
+            {
+                return;
+            }
+
+            int baseTarget = HUtil32._MAX(1, HUtil32.Round(HUtil32._MAX(1, monGen.Count) / (SystemShare.Config.MonGenRate / 10.0)));
+            int target = MonsterSpawnPolicy.TargetCount(baseTarget, monGen.ZenTime, mapSpawnGroups, occupied);
+            bool regenerated = monGen.ActiveCount >= target || RegenMonsters(monGen, target - monGen.ActiveCount);
+            if (regenerated || occupied)
+            {
+                // A blocked spawn point must not retry every half-second.
+                monGen.StartTick = HUtil32.GetTickCount();
+            }
+        }
+
         /// <summary>
         /// 获取刷怪数量
         /// </summary>
@@ -453,7 +506,6 @@ namespace GameSrv.Word
         /// <returns></returns>
         private void MonGetRandomItems(IMonsterActor mon)
         {
-            string itemName = string.Empty;
             if (MonsterList.TryGetValue(mon.ChrName, out MonsterInfo monster))
             {
                 IList<MonsterDropItem> itemList = monster.ItemList;
@@ -471,13 +523,8 @@ namespace GameSrv.Word
                             }
                             else
                             {
-                                if (string.IsNullOrEmpty(itemName))
-                                {
-                                    itemName = monItem.ItemName;
-                                }
-
                                 UserItem userItem = null;
-                                if (SystemShare.ItemSystem.CopyToUserItemFromName(itemName, ref userItem))
+                                if (SystemShare.ItemSystem.CopyToUserItemFromName(monItem.ItemName, ref userItem))
                                 {
                                     userItem.Dura = (ushort)HUtil32.Round(userItem.DuraMax / 100.0 * (20 + M2Share.RandomNumber.Random(80)));
                                     StdItem stdItem = SystemShare.ItemSystem.GetStdItem(userItem.Index);
@@ -486,10 +533,6 @@ namespace GameSrv.Word
                                         continue;
                                     }
 
-                                    if (stdItem.StdMode > 0 && M2Share.RandomNumber.Random(SystemShare.Config.MonRandomAddValue) == 0) //极品掉落几率
-                                    {
-                                        SystemShare.ItemSystem.RandomUpgradeItem(stdItem, userItem);
-                                    }
                                     if (M2Share.StdModeMap.Contains(stdItem.StdMode))
                                     {
                                         if (stdItem.Shape == 130 || stdItem.Shape == 131 || stdItem.Shape == 132)
@@ -497,6 +540,8 @@ namespace GameSrv.Word
                                             SystemShare.ItemSystem.RandomSetUnknownItem(stdItem, userItem);
                                         }
                                     }
+                                    GameItemSystem.ApplyMonsterDropStatBonus(
+                                        stdItem, userItem, M2Share.RandomNumber.Random(101));
                                     mon.ItemList.Add(userItem);
                                 }
                             }
@@ -924,6 +969,27 @@ namespace GameSrv.Word
             monsterActor.NextHitTime = monster.AttackSpeed;
             monsterActor.NastyMode = monster.boAggro;
             monsterActor.NoTame = monster.boTame;
+        }
+    }
+
+    public static class MonsterSpawnPolicy
+    {
+        public static int TargetCount(int baseTarget, int originalDelay, int mapSpawnGroups, bool occupied)
+        {
+            if (!occupied || originalDelay >= 60 * 60 * 1000 && baseTarget <= 2)
+            {
+                // Long-cycle bosses retain their original cap.
+                return baseTarget;
+            }
+            // A small map may have dozens of one-monster points. Applying a
+            // per-point minimum there would flood the map and stall its AI.
+            int minimum = mapSpawnGroups <= 3 && originalDelay < 20 * 60 * 1000 ? 6 : 0;
+            return Math.Min(ushort.MaxValue, Math.Min(baseTarget + 24, Math.Max(minimum, baseTarget * 2)));
+        }
+
+        public static int OccupiedDelay(int originalDelay)
+        {
+            return Math.Max(15_000, originalDelay / 4);
         }
     }
 }

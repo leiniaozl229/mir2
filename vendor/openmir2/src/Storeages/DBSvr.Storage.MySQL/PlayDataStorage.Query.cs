@@ -648,24 +648,37 @@ namespace DBSrv.Storage.MySQL
 
         private void QueryItemAttr(StorageContext context, int playerId, ref ServerUserItem[] userItems)
         {
-            List<int> makeIndexs = userItems.Where(x => x != null && x.MakeIndex > 0).Select(x => x.MakeIndex).ToList();
-            if (!makeIndexs.Any())
+            Dictionary<int, ServerUserItem> itemsByMakeIndex = userItems
+                .Where(item => item != null && item.MakeIndex > 0)
+                .ToDictionary(item => item.MakeIndex);
+            if (itemsByMakeIndex.Count == 0)
             {
                 return;
             }
-            const string sSqlString = "SELECT * FROM characters_item_attr WHERE PlayerId=@PlayerId and MakeIndex in (@MakeIndex)";
             try
             {
                 MySqlConnector.MySqlCommand command = context.CreateCommand();
-                command.CommandText = sSqlString;
                 command.Parameters.AddWithValue("@PlayerId", playerId);
-                command.Parameters.AddWithValue("@MakeIndex", string.Join(",", makeIndexs));
+                string[] parameters = itemsByMakeIndex.Keys.Select((makeIndex, index) =>
+                {
+                    string name = "@MakeIndex" + index;
+                    command.Parameters.AddWithValue(name, makeIndex);
+                    return name;
+                }).ToArray();
+                command.CommandText = "SELECT * FROM characters_item_attr WHERE PlayerId=@PlayerId AND MakeIndex IN ("
+                    + string.Join(",", parameters) + ")";
                 using MySqlConnector.MySqlDataReader dr = command.ExecuteReader();
-                int nPosition = 0;
                 while (dr.Read())
                 {
-                    userItems[nPosition].Desc[nPosition] = dr.GetByte($"VALUE{nPosition}");
-                    nPosition++;
+                    int makeIndex = dr.GetInt32("MakeIndex");
+                    if (!itemsByMakeIndex.TryGetValue(makeIndex, out ServerUserItem item))
+                    {
+                        continue;
+                    }
+                    for (int index = 0; index < item.Desc.Length; index++)
+                    {
+                        item.Desc[index] = dr.GetByte($"VALUE{index}");
+                    }
                 }
                 dr.Close();
                 dr.Dispose();

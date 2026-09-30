@@ -66,7 +66,7 @@ namespace DBSrv.Storage.MySQL
 
         public void RollBack()
         {
-            if (_transaction == null)
+            if (_transaction != null)
             {
                 _transaction.Rollback();
             }

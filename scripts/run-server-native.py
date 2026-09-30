@@ -207,10 +207,13 @@ def supervise(dotnet):
         for name, directory, ports in configured_services():
             log = (LOGS / f"{name}.log").open("wb")
             logs.append(log)
+            service_env = os.environ.copy()
+            if name == "GameSrv":
+                service_env["MIR2_NATIVE_HELPER_SETTINGS"] = str(RUNTIME / "native-helper-settings.ini")
             process = subprocess.Popen([dotnet, f"{name}.dll"],
                 cwd=RUNTIME / "server" / directory, stdin=subprocess.PIPE,
                 stdout=log, stderr=subprocess.STDOUT,
-                creationflags=subprocess.CREATE_NO_WINDOW)
+                creationflags=subprocess.CREATE_NO_WINDOW, env=service_env)
             processes[name] = process
             state["services"][name] = process.pid
             write_state(state)

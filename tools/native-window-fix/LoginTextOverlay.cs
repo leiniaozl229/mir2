@@ -7,14 +7,23 @@ internal sealed class LoginTextOverlay : IDisposable
     private readonly ManualResetEventSlim _ready = new(false);
     private LoginTextForm? _form;
 
-    public LoginTextOverlay(int processId)
+    public LoginTextOverlay(int processId, string settingsPath)
     {
         _thread = new Thread(() =>
         {
             try
             {
                 Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
-                _form = new LoginTextForm(processId, _ready.Set);
+                _form = new LoginTextForm(processId, () =>
+                {
+                    var panel = new HelperControlPanel(processId, settingsPath);
+                    panel.Show();
+                    _form!.FormClosed += (_, _) =>
+                    {
+                        panel.Close();
+                    };
+                    _ready.Set();
+                });
                 Application.Run(_form);
             }
             catch (Exception error)
@@ -51,10 +60,7 @@ internal sealed class LoginTextForm : Form
 {
     private readonly int _processId;
     private readonly System.Windows.Forms.Timer _timer;
-    private NativeWindow.Rect _first;
-    private NativeWindow.Rect _second;
-    private string _account = string.Empty;
-    private string _passwordMask = string.Empty;
+    private (NativeWindow.Rect bounds, string text)[] _fields = [];
     private bool _initialShown;
     private bool _reportedError;
 
@@ -108,29 +114,45 @@ internal sealed class LoginTextForm : Form
                 return;
             }
 
-            var fields = NativeWindow.ReadLoginFields(main);
-            if (fields.Length != 2)
+            var fields = NativeWindow.ReadInputFields(main);
+            if (fields.Length == 0)
             {
                 Hide();
                 return;
             }
 
             var first = fields[0].bounds;
-            var second = fields[1].bounds;
-            if (Math.Abs(first.Left - second.Left) > 8 || second.Top - first.Top > 48)
+            if (fields.Length == 2)
             {
-                Hide();
-                return;
+                var second = fields[1].bounds;
+                if (Math.Abs(first.Left - second.Left) > 8 || second.Top - first.Top > 48)
+                {
+                    Hide();
+                    return;
+                }
+            }
+            else
+            {
+                // Character creation uses one TEdit in the upper half of the
+                // 800x600 scene. Do not cover the in-game chat input below it.
+                var origin = new NativeWindow.Point();
+                if (!NativeWindow.ClientToScreen(main, ref origin) ||
+                    !NativeWindow.GetClientRect(main, out var client) ||
+                    first.Top - origin.Y < 0 || first.Top - origin.Y > client.Bottom / 2 ||
+                    first.Left - origin.X < 0 || first.Right - origin.X > client.Right ||
+                    first.Bottom - first.Top > 40)
+                {
+                    Hide();
+                    return;
+                }
             }
 
-            var bounds = Rectangle.FromLTRB(Math.Min(first.Left, second.Left), first.Top,
-                Math.Max(first.Right, second.Right), second.Bottom);
-            var changed = Bounds != bounds || _account != fields[0].text ||
-                _passwordMask != fields[1].text;
-            _first = first;
-            _second = second;
-            _account = fields[0].text;
-            _passwordMask = fields[1].text;
+            var bounds = Rectangle.FromLTRB(fields.Min(field => field.bounds.Left),
+                fields.Min(field => field.bounds.Top), fields.Max(field => field.bounds.Right),
+                fields.Max(field => field.bounds.Bottom));
+            var changed = Bounds != bounds || _fields.Length != fields.Length ||
+                !_fields.Zip(fields).All(pair => pair.First.text == pair.Second.text);
+            _fields = fields;
             if (Bounds != bounds) Bounds = bounds;
             if (!Visible) Show();
             if (changed) Invalidate();
@@ -148,8 +170,10 @@ internal sealed class LoginTextForm : Form
     {
         base.OnPaint(e);
         e.Graphics.Clear(Color.Fuchsia);
-        DrawField(e.Graphics, _first, _account);
-        DrawField(e.Graphics, _second, _passwordMask);
+        foreach (var field in _fields)
+        {
+            DrawField(e.Graphics, field.bounds, field.text);
+        }
     }
 
     private void DrawField(Graphics graphics, NativeWindow.Rect field, string value)

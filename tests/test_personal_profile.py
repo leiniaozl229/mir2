@@ -1,5 +1,8 @@
 import json
+import importlib.util
+import re
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -8,6 +11,47 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class PersonalProfileTests(unittest.TestCase):
+    def test_high_level_drop_balance_trims_common_loot_and_promotes_rare_gear(self):
+        spec = importlib.util.spec_from_file_location(
+            "drop_balance", ROOT / "scripts/drop_balance.py")
+        balance = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(balance)
+        catalog = json.loads(balance.CATALOG.read_text(encoding="utf-8"))
+        for monster in ("祖玛教主", "牛魔王", "赤月恶魔", "牛魔战士"):
+            source = (balance.SOURCE / f"{monster}.txt").read_bytes().decode("gb18030")
+            rendered = balance.render_table(
+                source, multiplier=20, balanced=True,
+                monster=catalog["monsters"][monster], items=catalog["items"])
+            names = re.findall(r"^\d+/\d+\s+(\S+)", rendered, re.M)
+            self.assertTrue(set(names) <= set(catalog["items"]) | {"金币"}, monster)
+            self.assertNotIn("凌风", names, monster)
+            self.assertLessEqual(names.count("强效金创药"), 2, monster)
+            self.assertLessEqual(names.count("强效魔法药"), 2, monster)
+        boss = balance.render_table(
+            (balance.SOURCE / "祖玛教主.txt").read_bytes().decode("gb18030"),
+            multiplier=20, balanced=True,
+            monster=catalog["monsters"]["祖玛教主"], items=catalog["items"])
+        self.assertRegex(boss, r"(?m)^\d+/1000\s+裁决之杖$")
+        self.assertIn("修罗", balance.render_table(
+            (balance.SOURCE / "月魔蜘蛛.txt").read_bytes().decode("gb18030"),
+            multiplier=20, balanced=True,
+            monster=catalog["monsters"]["剧毒蜘蛛"], items=catalog["items"]))
+
+    def test_high_level_drop_tables_are_reversible_and_repeatable(self):
+        spec = importlib.util.spec_from_file_location(
+            "drop_balance", ROOT / "scripts/drop_balance.py")
+        balance = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(balance)
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            first = balance.reconcile_tables(directory, 20, True, True)
+            self.assertEqual(first["filesChanged"], first["monsters"])
+            self.assertEqual(balance.reconcile_tables(directory, 20, True, False)["filesChanged"], 0)
+            self.assertTrue((directory / "剧毒蜘蛛.txt").is_file())
+            restored = balance.reconcile_tables(directory, 1, False, True)
+            self.assertEqual(restored["filesChanged"], first["monsters"])
+            self.assertEqual(balance.reconcile_tables(directory, 1, False, False)["filesChanged"], 0)
+
     def test_apply_profile_scales_exp_drops_spawn_and_gm(self):
         with tempfile.TemporaryDirectory() as raw:
             runtime = Path(raw)
@@ -27,7 +71,7 @@ class PersonalProfileTests(unittest.TestCase):
                 "gm": {"enabled": True, "character": "SoloGM", "ip": "127.0.0.1"},
             }, ensure_ascii=False), encoding="utf-8")
             subprocess.run([
-                "python3", str(ROOT / "scripts/apply-personal-profile.py"),
+                sys.executable, str(ROOT / "scripts/apply-personal-profile.py"),
                 "--profile", str(profile), "--runtime", str(runtime), "--apply",
             ], check=True, cwd=ROOT, capture_output=True, text=True)
             self.assertIn("KillMonExpMultiple=2", (mir / "exps.conf").read_text(encoding="utf-8-sig"))
@@ -39,7 +83,7 @@ class PersonalProfileTests(unittest.TestCase):
             self.assertEqual((mir / "Envir/AdminList.txt").read_text(encoding="utf-8").strip(), "*SoloGM 127.0.0.1")
             self.assertTrue((runtime / "personal-profile.json").exists())
             subprocess.run([
-                "python3", str(ROOT / "scripts/apply-personal-profile.py"),
+                sys.executable, str(ROOT / "scripts/apply-personal-profile.py"),
                 "--profile", str(profile), "--runtime", str(runtime), "--apply",
             ], check=True, cwd=ROOT, capture_output=True, text=True)
             self.assertEqual((mir / "Envir/MonItems/鸡.txt").read_bytes().decode("gb18030").split()[0], "2/10")
@@ -53,7 +97,7 @@ class PersonalProfileTests(unittest.TestCase):
                 "spawnDelayMultiplier": 1,
             }), encoding="utf-8")
             subprocess.run([
-                "python3", str(ROOT / "scripts/apply-personal-profile.py"),
+                sys.executable, str(ROOT / "scripts/apply-personal-profile.py"),
                 "--profile", str(classic), "--runtime", str(runtime), "--apply",
             ], check=True, cwd=ROOT, capture_output=True, text=True)
             self.assertEqual((mir / "Envir/MonItems/鸡.txt").read_bytes().decode("gb18030").split()[0], "1/10")

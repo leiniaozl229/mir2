@@ -7,8 +7,8 @@ import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const uiLayout=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-layout.json'),'utf8'));
 const uiInteractions=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-interactions.json'),'utf8'));
-const layoutSource=fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8').replace(/^import .*;\n/gm,'');
-const source=`const itemAssets={iconIndexByName:{'祖玛井中月':48},fallbackIconIndexBySourceIndex:{1144:0,1582:0}};\nconst uiLayout=${JSON.stringify(uiLayout)};\nconst uiInteractions=${JSON.stringify(uiInteractions)};\n${layoutSource}\n`+fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8').replace(/^import .*;\n/gm,'');
+const layoutSource=fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8').replace(/^import .*;\r?\n/gm,'');
+const source=`const itemAssets={iconIndexByName:{'祖玛井中月':48},fallbackIconIndexBySourceIndex:{1144:0,1582:0}};\nconst uiLayout=${JSON.stringify(uiLayout)};\nconst uiInteractions=${JSON.stringify(uiInteractions)};\n${layoutSource}\n`+fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8').replace(/^import .*;\r?\n/gm,'');
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const mockDocument={createElement:tag=>new Element(tag)};
 class Element{
@@ -47,6 +47,8 @@ potionCell.ondblclick({preventDefault(){},stopPropagation(){}});
 if(used[0]!==101)throw new Error('double click does not use a consumable item');
 const details=context.exports.itemDetailRows(potion);
 if(!details.some(([name,value])=>name==='攻击'&&value==='2-5')||!details.some(([name,value])=>name==='价格'&&value==='1234'))throw new Error('inventory tooltip omits parsed item attributes');
+const boostedDetails=context.exports.itemDetailRows({...potion,bonus:{ac:0,mac:0,dc:3,mc:0,sc:0}});
+if(!boostedDetails.some(([name,,bonus])=>name==='攻击'&&bonus===3))throw new Error('inventory tooltip omits the rolled attack bonus');
 if(context.exports.NATIONAL_BAG_CELL.originX!==18||context.exports.NATIONAL_BAG_CELL.originY!==14||context.exports.NATIONAL_BAG_CELL.gapX!==0||context.exports.NATIONAL_BAG_CELL.gapY!==0)throw new Error('national inventory grid is not aligned to the imported frame');
 const nationalGrid=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-layout.json'),'utf8')).nationalInventoryGrid;
 if(nationalGrid.originX!==context.exports.NATIONAL_BAG_CELL.originX||nationalGrid.originY!==context.exports.NATIONAL_BAG_CELL.originY||nationalGrid.cellWidth!==context.exports.NATIONAL_BAG_CELL.width||nationalGrid.cellHeight!==context.exports.NATIONAL_BAG_CELL.height)throw new Error('frontend national inventory geometry diverges from the UI contract');
@@ -166,7 +168,7 @@ equipment.replace([{slot:5,item:{...candle,stdMode:24}}]);
 if(equipment.preferredSlot(5)!==6)throw new Error('second bracelet does not select the empty right slot');
 console.log('PASS frontend dual accessories select the empty paired slot');
 
-const playSource=fs.readFileSync(path.join(root,'apps/web/src/play.ts'),'utf8');
+const playSource=fs.readFileSync(path.join(root,'apps/web/src/play.ts'),'utf8').replace(/\r\n/g,'\n');
 const inventorySource=fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8');
 const playMarkup=fs.readFileSync(path.join(root,'apps/web/play.html'),'utf8');
 if(!playMarkup.includes('id="revive-panel" class="revive-panel classic-window utility-panel system-panel"')||!playSource.includes("classicHud.skinWindow(revivePanel,'system')"))throw new Error('production death modal does not use the national system-dialog skin');
@@ -254,7 +256,7 @@ const scaled=helper.mapPointFromClient(37.5,25,{left:0,top:0,width:75,height:50}
 if(scaled.x!==350||scaled.y!==350)throw new Error('scaled minimap pointer coordinates do not map to the center of the world');
 console.log('PASS minimap profile, pointer mapping and Tab modes are deterministic');
 
-const skillsSource=`const skillAssets={iconIndexByName:{}};\n${fs.readFileSync(path.join(root,'apps/web/src/skills.ts'),'utf8').replace(/^import .*;\n/gm,'')}`;
+const skillsSource=`const skillAssets={iconIndexByName:{}};\n${fs.readFileSync(path.join(root,'apps/web/src/skills.ts'),'utf8').replace(/^import .*;\r?\n/gm,'')}`;
 const skillsContext={exports:{},document:mockDocument,fetch:()=>new Promise(()=>{}),loadNationalUiLibrary:()=>new Promise(()=>{})};vm.createContext(skillsContext);
 vm.runInContext(ts.transpileModule(skillsSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,skillsContext);
 const sparseSkill={key:8,level:1,currentTrain:0,magicId:1,name:'攻杀剑术',effectType:0,effect:0,spell:1,power:1,trainLevels:[],maxTrain:[],job:0,delay:0,defSpell:0,defPower:0,maxPower:0,defMaxPower:0,description:''};
@@ -276,7 +278,7 @@ if(!inventorySource.includes('if(!this.pending.has(id))return false;')||!invento
 if(!playSource.includes("if(!shop.resolve(message.name,message.makeIndex,message.accepted))return;")||!playSource.includes("if(!shop.resolveSale(message.item,message.accepted))return;")||!playSource.includes("if(!repair.resolve(message.item,message.accepted))return;")||!playSource.includes("if(!storage.resolve(message.item,message.accepted))return;")||!playSource.includes('const quickBarHandled=itemQuickBar.resolve(message.makeIndex,message.accepted,true);')||!playSource.includes('if(!inventoryHandled&&!quickBarHandled)return;'))throw new Error('stale service or item responses still apply side effects after component rejection');
 console.log('PASS shop, repair and storage pending states time out and unlock');
 
-const quickBarSource=`const uiLayout=${JSON.stringify(uiLayout)};\nfunction classicUiLayout(){return uiLayout;}\n`+fs.readFileSync(path.join(root,'apps/web/src/item-quickbar.ts'),'utf8').replace(/^import .*;\n/gm,'');
+const quickBarSource=`const uiLayout=${JSON.stringify(uiLayout)};\nfunction classicUiLayout(){return uiLayout;}\n`+fs.readFileSync(path.join(root,'apps/web/src/item-quickbar.ts'),'utf8').replace(/^import .*;\r?\n/gm,'');
 const quickBarContext={exports:{},document:mockDocument,HTMLElement:Element,setTimeout,clearTimeout,loadFallbackItemIcons:()=>new Promise(()=>{}),loadNationalUiLibrary:()=>new Promise(()=>{}),nationalUiUrl:()=>'',uiUrl:()=>'',iconIndexOf:item=>item.looks};
 vm.createContext(quickBarContext);
 vm.runInContext(ts.transpileModule(quickBarSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,quickBarContext);
@@ -298,7 +300,7 @@ console.log('PASS item quickbar exposes six consumable slots, key use and manual
 const playPage=fs.readFileSync(path.join(root,'apps/web/play.html'),'utf8');
 const calibrationPage=fs.readFileSync(path.join(root,'apps/web/ui-calibration.html'),'utf8');
 if(!playPage.includes('data-hud-item-quickbar')||!calibrationPage.includes('data-hud-item-quickbar')||!playSource.includes("import {ItemQuickBar} from './item-quickbar';")||!playSource.includes("itemQuickBar.replace(message.items)"))throw new Error('production and calibration HUDs are missing the shared item quickbar wiring');
-const layoutHelperCompiled=ts.transpileModule(`const uiLayout=${JSON.stringify(uiLayout)};\nconst uiInteractions=${JSON.stringify(uiInteractions)};\n`+fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8').replace(/^import .*;\n/gm,''),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+const layoutHelperCompiled=ts.transpileModule(`const uiLayout=${JSON.stringify(uiLayout)};\nconst uiInteractions=${JSON.stringify(uiInteractions)};\n`+fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8').replace(/^import .*;\r?\n/gm,''),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const layoutHelperContext={exports:{}};vm.createContext(layoutHelperContext);
 vm.runInContext(layoutHelperCompiled,layoutHelperContext);
 const origin=layoutHelperContext.exports.bagCellPositionFromLayout(0,true);

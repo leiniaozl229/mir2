@@ -1,5 +1,7 @@
 """Compatibility checks for the 2003 client bridge."""
 import importlib.util
+import asyncio
+import json
 import os
 from pathlib import Path
 import struct
@@ -94,6 +96,19 @@ class OldClientCodecProxyTests(unittest.TestCase):
         self.assertEqual(self.proxy.new_decode(converted[2:-1]),
                          b"**tester01/warrior/1/20210101/0000000000")
 
+    def test_actor_name_after_char_desc_keeps_chinese_text(self):
+        desc = struct.pack("<II", 0x1234, 0x5678)
+        name = "边界武器店/5".encode("gbk")
+        for message_id in (6, 7, 9, 10):
+            header = struct.pack("<IHHHH", 123, message_id, 280, 609, 0)
+            frame = (b"#" + self.proxy.new_encode(header)
+                     + self.proxy.new_encode(desc) + self.proxy.new_encode(name) + b"!")
+            converted = self.proxy.convert(frame, False)
+            with self.subTest(message_id=message_id):
+                self.assertEqual(self.proxy.old_decode(converted[1:17]), header)
+                self.assertEqual(self.proxy.old_decode(converted[17:28]), desc)
+                self.assertEqual(self.proxy.old_decode(converted[28:-1]), name)
+
     def test_inventory_items_keep_real_instance_and_durability_for_legacy_client(self):
         item = bytearray(124)
         item[:5] = b"\x04Wood"
@@ -122,6 +137,109 @@ class OldClientCodecProxyTests(unittest.TestCase):
         self.assertEqual(parts[2], b"")
         self.assertEqual(self.proxy.old_decode(parts[0][:-1]), header)
         self.assertEqual(self.proxy.old_decode(parts[1])[44:52], item[100:108])
+
+    def test_shop_details_convert_both_codec_layers_and_legacy_item_fields(self):
+        item = bytearray(124)
+        item[:5] = b"\x04Wood"
+        item[100:108] = struct.pack("<IHH", 15802433, 7000, 55)
+        header = struct.pack("<IHHHH", 44, 652, 2, 0, 0)
+        inner = self.proxy.new_encode(item) + b"/" + self.proxy.new_encode(item) + b"/"
+        frame = b"#" + self.proxy.new_encode(header) + self.proxy.new_encode(inner) + b"!"
+        converted = self.proxy.convert(frame, False)
+        self.assertEqual(self.proxy.old_decode(converted[1:17]), header)
+        legacy_inner = self.proxy.old_decode(converted[17:-1])
+        fields = legacy_inner.split(b"/")
+        self.assertEqual(len(fields), 3)
+        self.assertEqual(fields[-1], b"")
+        for field in fields[:2]:
+            legacy_item = self.proxy.old_decode(field)
+            self.assertEqual(legacy_item[:44], item[:44])
+            self.assertEqual(legacy_item[44:52], item[100:108])
+
+    def test_ground_item_tracker_follows_visible_items_and_player(self):
+        async def scenario():
+            state_path = Path(self.temporary.name) / "ground-items.json"
+            tracker = self.proxy.GroundItemTracker(state_path)
+
+            def server_frame(message_id, recog, x=0, y=0, text=""):
+                header = struct.pack("<IHHHH", recog, message_id, x, y, 0)
+                return (b"#" + self.proxy.new_encode(header)
+                        + self.proxy.new_encode(text.encode("gbk")) + b"!")
+
+            def client_frame(message_id, x, y):
+                header = struct.pack("<IHHHH", x | (y << 16), message_id, 0, 3, 0)
+                return b"#1" + self.proxy.old_encode(header) + b"!"
+
+            tracker.observe(server_frame(50, 81, 100, 130), False)
+            tracker.observe(server_frame(610, 9001, 102, 131, "骷髅戒指"), False)
+            await asyncio.sleep(0.08)
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual((state["x"], state["y"]), (100, 130))
+            self.assertEqual(state["items"],
+                             [{"id": 9001, "x": 102, "y": 131, "name": "骷髅戒指"}])
+
+            tracker.observe(client_frame(3011, 101, 130), True)
+            await asyncio.sleep(0.08)
+            self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))["x"], 101)
+            self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))["items"][0]["name"], "骷髅戒指")
+            tracker.observe(client_frame(3011, 0, 1), True)
+            await asyncio.sleep(0.08)
+            self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))["x"], 101)
+            tracker.observe(server_frame(28, 999, 0, 5), False)
+            await asyncio.sleep(0.08)
+            self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))["x"], 101)
+            tracker.observe(server_frame(28, 81, 100, 130), False)
+            await asyncio.sleep(0.08)
+            self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))["x"], 100)
+            tracker.observe(server_frame(611, 9001, 102, 131), False)
+            await asyncio.sleep(0.08)
+            self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))["items"], [])
+            tracker.observe(server_frame(610, 9002, 103, 131, "乌木剑"), False)
+            tracker.observe(server_frame(634, 81, 200, 300), False)
+            await asyncio.sleep(0.08)
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(state["actorId"], 81)
+            self.assertEqual((state["x"], state["y"], state["items"]), (200, 300, []))
+            tracker.close()
+
+        asyncio.run(scenario())
+
+    def test_monster_overlay_uses_visible_actor_and_actual_hit_points(self):
+        async def scenario():
+            state_path = Path(self.temporary.name) / "monsters.json"
+            tracker = self.proxy.GroundItemTracker(state_path)
+
+            def frame(message_id, actor, x=0, y=0, feature=None, name=""):
+                header = self.proxy.new_encode(struct.pack("<IHHHH", actor, message_id, x, y, 0))
+                payload = b""
+                if feature is not None:
+                    payload += self.proxy.new_encode(struct.pack("<II", feature, 0))
+                if name:
+                    payload += self.proxy.new_encode(name.encode("gbk"))
+                return b"#" + header + payload + b"!"
+
+            tracker.observe(frame(50, 81, 100, 130), False)
+            tracker.observe(frame(10, 1001, 102, 130, 1, "稻草人/5"), False)
+            tracker.observe(frame(10, 1002, 101, 130, 50, "传送员/5"), False)
+            tracker.observe(frame(10, 1003, 103, 130, 1, "骷髅(主人)/254"), False)
+            await asyncio.sleep(0.08)
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+            self.assertEqual(state["monsters"],
+                             [{"id": 1001, "x": 102, "y": 130, "name": "稻草人",
+                               "hp": None, "maxHp": None}])
+
+            tracker.observe(frame(11, 1001, 103, 131), False)
+            tracker.observe(frame(31, 1001, 17, 40), False)
+            await asyncio.sleep(0.08)
+            monster = json.loads(state_path.read_text(encoding="utf-8"))["monsters"][0]
+            self.assertEqual((monster["x"], monster["y"], monster["hp"], monster["maxHp"]),
+                             (103, 131, 17, 40))
+            tracker.observe(frame(32, 1001), False)
+            await asyncio.sleep(0.08)
+            self.assertEqual(json.loads(state_path.read_text(encoding="utf-8"))["monsters"], [])
+            tracker.close()
+
+        asyncio.run(scenario())
 
 
 if __name__ == "__main__":

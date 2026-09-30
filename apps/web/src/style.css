@@ -53,6 +53,7 @@ body.classic-play .inventory-item-tooltip strong{display:block;margin-bottom:4px
 body.classic-play .inventory-item-tooltip span{display:flex;justify-content:space-between;gap:12px}
 body.classic-play .inventory-item-tooltip em{color:#a99972;font-style:normal}
 body.classic-play .inventory-item-tooltip b{color:#eee1bd;font-weight:normal;font-variant-numeric:tabular-nums}
+body.classic-play .inventory-item-tooltip .item-bonus{color:#73d86c;font-style:normal}
 .inventory-held-item{position:fixed;z-index:1000;width:36px;height:32px;overflow:visible;pointer-events:none;filter:drop-shadow(2px 3px 2px #000)}
 .inventory-held-item[hidden]{display:none}.inventory-held-item img{position:absolute;left:50%;top:50%;max-width:36px;max-height:32px;transform:translate(-50%,-50%);image-rendering:pixelated}.inventory-held-item .missing-item-icon{width:34px;height:30px}
 body.classic-play .equipment-appearance{position:absolute;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:auto}

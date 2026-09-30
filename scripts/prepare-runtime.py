@@ -11,7 +11,9 @@ import argparse
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from map_tool import ClassicMap, UnsupportedMap
+import city_services
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "vendor/mirserver-data"
@@ -125,6 +127,15 @@ CURATED_FIXTURE_MAPS = {
     "D710", "D711", "D712", "D713", "D714", "D715", "D716",
 }
 
+# The source forest elder occupies (235, 305), behind the building relative
+# to the Bichon arrival point. Keep a guide beside arrival and a return NPC
+# beside the current forest playtest area; both cells are walkable.
+FOREST_SERVICE_NPCS = (
+    ("测试/世界向导", 241, 300, "世界向导"),
+    ("测试/森林回城", 241, 307, "森林回城员"),
+    ("测试/森林回城", 256, 298, "森林回城员"),
+)
+
 
 def _map_names():
     """Return source MapInfo names keyed by a case-insensitive map id."""
@@ -234,19 +245,46 @@ def _build_extended_guide(routes):
     }
     catalog = {**fixture_routes, **routes}
     ordered = list(dict.fromkeys(["1", "2", "3", "D001"] + list(routes)))
-    page_size = 16
+    # The 2003 client only gives merchant dialogue about nine text rows.  A
+    # longer script still renders below the frame, but those links have no hit
+    # area and cannot be selected.
+    page_size = 6
+    directory_page_size = 8
     pages = [ordered[i:i + page_size] for i in range(0, len(ordered), page_size)]
-    lines = ["[@main]", "完整地图目录：请选择分页。\\"]
-    lines.extend(f"<第 {index + 1} 页/@page{index}>" for index in range(len(pages)))
-    lines.append("<返回比奇/@home> <关闭/@exit>")
+    directory_pages = [list(range(i, min(i + directory_page_size, len(pages))))
+                       for i in range(0, len(pages), directory_page_size)]
+    lines = []
+    for group_index, page_indices in enumerate(directory_pages):
+        lines.extend(["", "[@main]" if group_index == 0 else f"[@directory{group_index}]",
+                      f"地图目录 {group_index + 1}/{len(directory_pages)}：\\"])
+        for offset in range(0, len(page_indices), 2):
+            links = [f"<第 {page_index + 1} 页/@page{page_index}>"
+                     for page_index in page_indices[offset:offset + 2]]
+            lines.append(" ".join(links) + "\\")
+        navigation = []
+        if group_index > 0:
+            previous = "main" if group_index == 1 else f"directory{group_index - 1}"
+            navigation.append(f"<上一组/@{previous}>")
+        if group_index + 1 < len(directory_pages):
+            navigation.append(f"<下一组/@directory{group_index + 1}>")
+        if navigation:
+            lines.append(" ".join(navigation) + "\\")
+        lines.append("<返回比奇/@home> <关闭/@exit>")
     for index, page in enumerate(pages):
-        lines.extend(["", f"[@page{index}]"])
+        lines.extend(["", f"[@page{index}]", f"地图 {index + 1}/{len(pages)}：\\"])
         for offset, map_id in enumerate(page):
             meta = {"name": "兽人古墓一层"} if map_id == "D001" else catalog[map_id]
             lines.append(f"<{meta['name']}({map_id})/@route{index}_{offset}>\\")
+        navigation = []
+        if index > 0:
+            navigation.append(f"<上一页/@page{index - 1}>")
         if index + 1 < len(pages):
-            lines.append(f"<下一页/@page{index + 1}>\\")
-        lines.append("<返回目录/@main> <返回比奇/@home>")
+            navigation.append(f"<下一页/@page{index + 1}>")
+        directory_index = index // directory_page_size
+        directory = "main" if directory_index == 0 else f"directory{directory_index}"
+        navigation.append(f"<目录/@{directory}>")
+        lines.append(" ".join(navigation) + "\\")
+        lines.append("<返回比奇/@home> <关闭/@exit>")
         for offset, map_id in enumerate(page):
             meta = {"start": (168, 350)} if map_id == "D001" else catalog[map_id]
             lines.extend(["", f"[@route{index}_{offset}]", "#ACT",
@@ -615,6 +653,7 @@ def main():
                    # an unclean process exit. Normal shutdown still waits for
                    # the explicit database acknowledgement.
                    "SaveHumanRcdTime": 60_000},
+        "Setup": {"InSafeDisableDrop": 0},
         "Share": {"GuildFile": "GuildBase/GuildList.txt"},
     })
     configure("DBServer", "dbsvr.conf", "dbsvr.conf", {
@@ -673,8 +712,10 @@ def main():
         ) if route_mode else ""
         dynamic_routes = ((map_id, meta) for map_id, meta in CLASSIC_EXTRA_ROUTES.items()
                           if map_id not in CURATED_FIXTURE_MAPS)
+        city_start_overrides = {"5": (139, 330), "11": (187, 301)}
         extra_start_points = "".join(
-            f"{map_id} {meta['start'][0]} {meta['start'][1]}\n"
+            f"{map_id} {city_start_overrides.get(map_id, meta['start'])[0]} "
+            f"{city_start_overrides.get(map_id, meta['start'])[1]}\n"
             for map_id, meta in dynamic_routes
         ) if route_mode else ""
         dynamic_routes = ((map_id, meta) for map_id, meta in CLASSIC_EXTRA_ROUTES.items()
@@ -788,6 +829,9 @@ def main():
             else:
                 lines = [line for line in read_text(source_path).splitlines()
                          if len(line.split()) > 1 and line.split()[1] == "0"]
+            if name == "Merchant.txt":
+                lines = [normalized for line in lines
+                         if (normalized := city_services.normalize_merchant(line)) is not None]
             fixtures[name] = "\n".join(lines) + ("\n" if lines else "")
         fixtures["Merchant.txt"] += "比奇城/麦家铺子 0 286 609 边界仓库 0 9 0\n"
         fixtures["Merchant.txt"] += "测试/技能导师 0 284 609 边界导师 0 5 0\n"
@@ -801,26 +845,15 @@ def main():
         fixtures["Merchant.txt"] += "测试/铁匠试炼 0 649 628 银杏铁匠 0 5 0\n"
         fixtures["Merchant.txt"] += "测试/药剂筹备 0 334 266 比奇药师 0 5 0\n"
         fixtures["Merchant.txt"] += "测试/铁匠试炼 0 336 266 比奇铁匠 0 5 0\n"
-        boundary_shops = [
-            ("边界武器", 282, 609, "边界武器店", 1, "卫家店-0103.txt"),
-            ("边界服装", 280, 609, "边界服装店", 7, "安家布衣-0106.txt"),
-            ("边界药店", 282, 613, "边界药店", 1, "小药-0119.txt"),
-            ("边界戒指", 280, 613, "边界戒指店", 4, "戒指店-0105.txt"),
-            ("边界手镯", 280, 615, "边界手镯店", 5, "手镯店-0105.txt"),
-            ("边界项链", 282, 615, "边界项链店", 6, "项链店-0105.txt"),
-        ]
-        for script_name, x, y, display_name, appearance, _ in boundary_shops:
-            fixtures["Merchant.txt"] += (
-                f"测试/{script_name} 0 {x} {y} {display_name} 0 {appearance} 0\n"
-            )
+        for definition in city_services.service_definitions(set(route_maps)):
+            fixtures["Merchant.txt"] += definition + "\n"
         fixtures["Merchant.txt"] += "测试/古墓向导 D001 153 362 古墓向导 0 5 0\n"
         fixtures["Merchant.txt"] += "测试/首领测试官 D001 198 331 首领测试官 0 5 0\n"
         if route_mode:
-            fixtures["Merchant.txt"] += "测试/世界向导 0 326 270 世界向导 0 5 0\n"
-            fixtures["Merchant.txt"] += "测试/扩展向导 0 295 610 扩展路线向导 0 5 0\n"
-            fixtures["Merchant.txt"] += "测试/世界向导 1 235 305 世界向导 0 5 0\n"
-            fixtures["Merchant.txt"] += "测试/世界向导 2 507 468 世界向导 0 5 0\n"
-            fixtures["Merchant.txt"] += "测试/世界向导 3 327 327 世界向导 0 5 0\n"
+            for script_name, x, y, display_name in FOREST_SERVICE_NPCS:
+                fixtures["Merchant.txt"] += (
+                    f"{script_name} 1 {x} {y} {display_name} 0 5 0\n"
+                )
             fixtures["Merchant.txt"] += "测试/世界向导 D021 51 50 沃玛向导 0 5 0\n"
             fixtures["Merchant.txt"] += "测试/世界向导 D022 339 356 沃玛一层向导 0 5 0\n"
             fixtures["Merchant.txt"] += "测试/世界向导 D023 199 196 沃玛二层向导 0 5 0\n"
@@ -849,7 +882,7 @@ def main():
             fixtures["Merchant.txt"] += "测试/世界向导 D715 30 344 石墓深处向导 0 5 0\n"
             fixtures["Merchant.txt"] += "测试/世界向导 D716 25 26 石墓六层向导 0 5 0\n"
             for map_id, meta in CLASSIC_EXTRA_ROUTES.items():
-                if map_id in CURATED_FIXTURE_MAPS:
+                if map_id in CURATED_FIXTURE_MAPS or map_id in city_services.CITY_MAPS:
                     continue
                 fixtures["Merchant.txt"] += (
                     f"测试/世界向导 {map_id} {meta['npc'][0]} {meta['npc'][1]} "
@@ -874,11 +907,30 @@ def main():
         market_target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(SOURCE / "Mir200/Envir/Market_Def/比奇城/麦家铺子-0125.txt",
                         market_target)
+        city_shop_text = read_text(ROOT / "content/classic-176/p0/city-general-merchant.txt")
+        city_travel_text = city_services.build_travel_script()
+        for map_id in {hub[1] for hub in city_services.CITY_HUBS if hub[1] in route_maps}:
+            city_shop = SERVER / f"Mir200/Envir/Market_Def/测试/综合商人-{map_id}.txt"
+            city_travel = SERVER / f"Mir200/Envir/Market_Def/测试/区域传送-{map_id}.txt"
+            city_shop.parent.mkdir(parents=True, exist_ok=True)
+            city_shop.write_text(city_shop_text, encoding="gb18030")
+            city_travel.write_text(city_travel_text, encoding="gb18030")
+        for script_name, map_id in city_services.QUEST_ONLY_SHOPS:
+            if map_id not in route_maps:
+                continue
+            source_quest = SOURCE / f"Mir200/Envir/Market_Def/{script_name}-{map_id}.txt"
+            target_quest = SERVER / f"Mir200/Envir/Market_Def/{script_name}-{map_id}.txt"
+            target_quest.parent.mkdir(parents=True, exist_ok=True)
+            target_quest.write_text(
+                city_services.quest_only_script(read_text(source_quest)), encoding="gb18030"
+            )
         trainer = SERVER / "Mir200/Envir/Market_Def/测试/技能导师-0.txt"
         trainer.parent.mkdir(parents=True, exist_ok=True)
         trainer.write_text(read_text(ROOT / "content/classic-176/p0/skill-trainer.txt"), encoding="gb18030")
         supply = SERVER / "Mir200/Envir/Market_Def/测试/试玩补给员-2.txt"
         supply.write_text(read_text(ROOT / "content/classic-176/p0/skill-trainer.txt"), encoding="gb18030")
+        home_stone = SERVER / "Mir200/Envir/Market_Def/测试/回城补给-0.txt"
+        home_stone.write_text(read_text(ROOT / "content/classic-176/p0/bichon-home-stone.txt"), encoding="gb18030")
         tutorial = SERVER / "Mir200/Envir/Market_Def/测试/新手试炼-0.txt"
         tutorial.write_text(read_text(ROOT / "content/classic-176/p0/tutorial-quest.txt"), encoding="gb18030")
         hunter = SERVER / "Mir200/Envir/Market_Def/测试/猎人试炼-0.txt"
@@ -887,18 +939,13 @@ def main():
         potion.write_text(read_text(ROOT / "content/classic-176/p0/potion-quest.txt"), encoding="gb18030")
         weapon = SERVER / "Mir200/Envir/Market_Def/测试/铁匠试炼-0.txt"
         weapon.write_text(read_text(ROOT / "content/classic-176/p0/weapon-quest.txt"), encoding="gb18030")
-        shop_source = SOURCE / "Mir200/Envir/Market_Def/比奇城"
-        for script_name, _, _, _, _, source_name in boundary_shops:
-            shop_target = SERVER / f"Mir200/Envir/Market_Def/测试/{script_name}-0.txt"
-            shop_target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(shop_source / source_name, shop_target)
         guide = SERVER / "Mir200/Envir/Market_Def/测试/古墓向导-D001.txt"
         guide.write_text(read_text(ROOT / "content/classic-176/p0/cave-guide.txt"), encoding="gb18030")
         boss_examiner = SERVER / "Mir200/Envir/Market_Def/测试/首领测试官-D001.txt"
         boss_examiner.write_text(read_text(ROOT / "content/classic-176/p0/cave-guide.txt"), encoding="gb18030")
         if route_mode:
-            extended_guide = SERVER / "Mir200/Envir/Market_Def/测试/扩展向导-0.txt"
-            extended_guide.write_text(_build_extended_guide(CLASSIC_EXTRA_ROUTES), encoding="gb18030")
+            forest_return = SERVER / "Mir200/Envir/Market_Def/测试/森林回城-1.txt"
+            forest_return.write_text(read_text(ROOT / "content/classic-176/p0/forest-return.txt"), encoding="gb18030")
             for map_id in ["0", "1", "2", "3", "D021", "D022", "D023", "D024",
                            "D401", "D402", "D403", "D404", "D405", "D406", "D411", "D413", "D414",
                            "D421", "D422", "D501", "D502", "D503", "D504", "D505",

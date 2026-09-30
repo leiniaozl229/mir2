@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../vendor/openmir2/src/GameSrv/GameSrv.csproj" />
+    <Compile Include="../../services/web-gateway/LegacyCodec.cs" Link="LegacyCodec.cs" />
+    <Compile Include="../../services/web-gateway/InventoryProjection.cs" Link="InventoryProjection.cs" />
+  </ItemGroup>
+</Project>
