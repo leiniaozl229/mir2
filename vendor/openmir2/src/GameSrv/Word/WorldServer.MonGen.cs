@@ -27,6 +27,19 @@ namespace GameSrv.Word
         public MonsterThread[] MobThreads;
         private Thread[] MobThreading;
         private readonly object _locker = new object();
+        private readonly MonsterRefreshRequests monsterRefreshRequests = new();
+
+        public int RequestMonsterRefresh(string mapName)
+        {
+            if (SystemShare.Config.VentureServer || string.IsNullOrWhiteSpace(mapName)) return -1;
+            int groups = MonGenInfoThreadMap.Values.Sum(list => list.Count(gen => gen?.Envir != null &&
+                gen.Race > 0 && !string.IsNullOrEmpty(gen.MonName) &&
+                string.Equals(gen.MapName, mapName, StringComparison.OrdinalIgnoreCase)));
+            if (groups == 0) return -1;
+            if (!monsterRefreshRequests.Request(mapName, Environment.TickCount64)) return -2;
+            ProtocolTrace.Write($"MonsterRefresh requested map={mapName} groups={groups}");
+            return groups;
+        }
 
         public void InitializeMonster()
         {
@@ -119,18 +132,7 @@ namespace GameSrv.Word
 
         public void Stop()
         {
-            lock (_locker)
-            {
-                Monitor.PulseAll(_locker);
-            }
-            for (int i = 0; i < MobThreading.Length; i++)
-            {
-                if (MobThreading[i] != null &&
-                    MobThreading[i].ThreadState != ThreadState.Stopped && MobThreading[i].ThreadState != ThreadState.Unstarted)
-                {
-                    MobThreading[i].Interrupt();
-                }
-            }
+            RequestMonsterStop();
         }
 
         /// <summary>
@@ -211,10 +213,12 @@ namespace GameSrv.Word
             var previousMapPopulation = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
             var occupiedSpawnQueue = new Queue<MonGenInfo>();
             var queuedSpawns = new HashSet<MonGenInfo>();
+            var forcedSpawns = new HashSet<MonGenInfo>();
+            var observedRefreshes = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
             int occupiedScanTick = 0;
             bool firstOccupiedScan = true;
 
-            while (true)
+            while (!MonsterStopRequested)
             {
                 MonGenInfo monGen = null;
                 int spawnTick = HUtil32.GetTickCount();
@@ -224,6 +228,14 @@ namespace GameSrv.Word
                     occupiedScanTick = spawnTick;
                     foreach (var (mapName, spawns) in spawnGroupsByMap)
                     {
+                        if (monsterRefreshRequests.Observe(mapName, observedRefreshes))
+                        {
+                            foreach (var spawn in spawns)
+                            {
+                                forcedSpawns.Add(spawn);
+                                if (queuedSpawns.Add(spawn)) occupiedSpawnQueue.Enqueue(spawn);
+                            }
+                        }
                         int population = spawns[0].Envir.HumCount;
                         previousMapPopulation.TryGetValue(mapName, out int previousPopulation);
                         previousMapPopulation[mapName] = population;
@@ -250,7 +262,11 @@ namespace GameSrv.Word
                 {
                     MonGenInfo occupiedSpawn = occupiedSpawnQueue.Dequeue();
                     queuedSpawns.Remove(occupiedSpawn);
-                    if (occupiedSpawn.Envir.HumCount > 0)
+                    if (forcedSpawns.Remove(occupiedSpawn))
+                    {
+                        RefreshMonsterGroup(occupiedSpawn, spawnGroupsByMap[occupiedSpawn.MapName].Count);
+                    }
+                    else if (occupiedSpawn.Envir.HumCount > 0)
                     {
                         TryRegenMonsters(occupiedSpawn, true, spawnGroupsByMap[occupiedSpawn.MapName].Count);
                     }
@@ -315,11 +331,7 @@ namespace GameSrv.Word
                                         {
                                             if ((HUtil32.GetTickCount() - monster.ReAliveTick) > GetMonstersZenTime(monster.MonGen.ZenTime))
                                             {
-                                                if (monster.ReAliveEx(monster.MonGen))
-                                                {
-                                                    monster.ProcessRunCount = 0;
-                                                    monster.ReAliveTick = HUtil32.GetTickCount();
-                                                }
+                                                RespawnMonster(monster);
                                             }
                                         }
                                         if (!monster.IsVisibleActive && (monster.ProcessRunCount < SystemShare.Config.ProcessMonsterInterval))
@@ -391,14 +403,39 @@ namespace GameSrv.Word
             }
         }
 
-        private void TryRegenMonsters(MonGenInfo monGen, bool occupied, int mapSpawnGroups)
+        private bool RespawnMonster(IMonsterActor monster)
+        {
+            if (!monster.ReAliveEx(monster.MonGen)) return false;
+            // ReAliveEx clears the old bag/gold; each life needs fresh drop rolls.
+            MonGetRandomItems(monster);
+            monster.ProcessRunCount = 0;
+            monster.ReAliveTick = HUtil32.GetTickCount();
+            return true;
+        }
+
+        private void RefreshMonsterGroup(MonGenInfo spawn, int mapSpawnGroups)
+        {
+            // Reuse dead natural spawns (including bosses), preserving the
+            // existing count and rerolling loot through the normal revive path.
+            foreach (var monster in spawn.CertList)
+            {
+                if (monster == null || !monster.Death || monster.Ghost || !monster.CanReAlive ||
+                    monster.MonGen != spawn || monster.Envir != spawn.Envir || monster.Master != null) continue;
+                if (!monster.Invisible) monster.MakeGhost();
+                RespawnMonster(monster);
+            }
+            TryRegenMonsters(spawn, true, mapSpawnGroups, force: true);
+            ProtocolTrace.Write($"MonsterRefresh processed map={spawn.MapName} monster={spawn.MonName} slots={spawn.ActiveCount}");
+        }
+
+        private void TryRegenMonsters(MonGenInfo monGen, bool occupied, int mapSpawnGroups, bool force = false)
         {
             if (SystemShare.Config.VentureServer || string.IsNullOrEmpty(monGen.MonName))
             {
                 return;
             }
             SystemModule.Maps.IEnvirnoment map = monGen.Envir;
-            if (map == null || map.Flag.boNOHUMNOMON && map.HumCount <= 0)
+            if (map == null || !force && map.Flag.boNOHUMNOMON && map.HumCount <= 0)
             {
                 return;
             }
@@ -540,8 +577,14 @@ namespace GameSrv.Word
                                             SystemShare.ItemSystem.RandomSetUnknownItem(stdItem, userItem);
                                         }
                                     }
-                                    GameItemSystem.ApplyMonsterDropStatBonus(
-                                        stdItem, userItem, M2Share.RandomNumber.Random(101));
+                                    int quality = GameItemSystem.MonsterDropQualityMin +
+                                        M2Share.RandomNumber.Random(GameItemSystem.MonsterDropQualityMax -
+                                            GameItemSystem.MonsterDropQualityMin + 1);
+                                    int FlatRoll() => GameItemSystem.MonsterDropFlatMin +
+                                        M2Share.RandomNumber.Random(GameItemSystem.MonsterDropFlatMax -
+                                            GameItemSystem.MonsterDropFlatMin + 1);
+                                    GameItemSystem.ApplyMonsterDropBonusRoll(stdItem, userItem,
+                                        quality, FlatRoll(), FlatRoll(), FlatRoll(), FlatRoll(), FlatRoll());
                                     mon.ItemList.Add(userItem);
                                 }
                             }
@@ -555,11 +598,16 @@ namespace GameSrv.Word
         /// 创建对象
         /// </summary>
         /// <returns></returns>
-        private IMonsterActor CreateMonster(string sMapName, short nX, short nY, int nMonRace, string sMonName)
+        private IMonsterActor CreateMonster(string sMapName, short nX, short nY, int nMonRace, string sMonName, bool avoidSafeZone = false)
         {
             IMonsterActor cert = null;
             SystemModule.Maps.IEnvirnoment map = SystemShare.MapMgr.FindMap(sMapName);
             if (map == null)
+            {
+                return null;
+            }
+
+            if (avoidSafeZone && !MoveSpawnOutsideSafeZone(map, ref nX, ref nY))
             {
                 return null;
             }
@@ -824,7 +872,8 @@ namespace GameSrv.Word
                 int n1C = 0;
                 while (true)
                 {
-                    if (!cert.Envir.CanWalk(cert.CurrX, cert.CurrY, false))
+                    if (!cert.Envir.CanWalk(cert.CurrX, cert.CurrY, false) ||
+                        avoidSafeZone && M2Server.Actor.BaseObject.IsSafeZonePosition(cert.Envir, cert.CurrX, cert.CurrY))
                     {
                         if ((cert.Envir.Width - n24 - 1) > cert.CurrX)
                         {
@@ -863,6 +912,11 @@ namespace GameSrv.Word
             return cert;
         }
 
+        private static bool MoveSpawnOutsideSafeZone(SystemModule.Maps.IEnvirnoment map, ref short nX, ref short nY)
+        {
+            return M2Server.Actor.BaseObject.TryFindMonsterSpawnPosition(map, ref nX, ref nY);
+        }
+
         /// <summary>
         /// 创建怪物对象
         /// 在指定时间内创建完对象，则返加TRUE，如果超过指定时间则返回FALSE
@@ -886,7 +940,7 @@ namespace GameSrv.Word
                         nY = (short)(monGen.Y - monGen.Range + M2Share.RandomNumber.Random(monGen.Range * 2 + 1));
                         for (int i = 0; i < nCount; i++)
                         {
-                            cert = CreateMonster(monGen.MapName, (short)(nX - 10 + M2Share.RandomNumber.Random(20)), (short)(nY - 10 + M2Share.RandomNumber.Random(20)), monGen.Race, monGen.MonName);
+                            cert = CreateMonster(monGen.MapName, (short)(nX - 10 + M2Share.RandomNumber.Random(20)), (short)(nY - 10 + M2Share.RandomNumber.Random(20)), monGen.Race, monGen.MonName, M2Server.Actor.BaseObject.IsAggressiveMonsterRace(monGen.Race));
                             if (cert != null)
                             {
                                 cert.CanReAlive = true;
@@ -894,6 +948,10 @@ namespace GameSrv.Word
                                 cert.MonGen = monGen;
                                 monGen.ActiveCount++;
                                 monGen.TryAdd(cert);
+                            }
+                            else
+                            {
+                                return false;
                             }
                             if ((HUtil32.GetTickCount() - dwStartTick) > M2Share.ZenLimit)
                             {
@@ -908,7 +966,7 @@ namespace GameSrv.Word
                         {
                             nX = (short)((monGen.X - monGen.Range) + M2Share.RandomNumber.Random(monGen.Range * 2 + 1));
                             nY = (short)((monGen.Y - monGen.Range) + M2Share.RandomNumber.Random(monGen.Range * 2 + 1));
-                            cert = CreateMonster(monGen.MapName, nX, nY, monGen.Race, monGen.MonName);
+                            cert = CreateMonster(monGen.MapName, nX, nY, monGen.Race, monGen.MonName, M2Server.Actor.BaseObject.IsAggressiveMonsterRace(monGen.Race));
                             if (cert != null)
                             {
                                 cert.CanReAlive = true;
@@ -933,6 +991,7 @@ namespace GameSrv.Word
             catch
             {
                 LogService.Error(sExceptionMsg);
+                result = false;
             }
             return result;
         }

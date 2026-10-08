@@ -59,7 +59,8 @@ namespace SystemModule.MagicEvent
 
         public MapEvent(IEnvirnoment envir, short ntX, short ntY, byte nType, int dwETime, bool boVisible)
         {
-            //Id = M2Share.ActorMgr.GetNextIdentity();
+            // Each visible tile needs its own ID for SM_SHOWEVENT/SM_HIDEEVENT.
+            Id = SystemShare.ActorMgr.GetNextIdentity();
             OpenStartTick = HUtil32.GetTickCount();
             EventType = nType;
             EventParam = 0;

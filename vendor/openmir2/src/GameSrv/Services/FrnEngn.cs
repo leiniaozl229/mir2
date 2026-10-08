@@ -9,6 +9,27 @@ namespace GameSrv.Services
         public readonly IList<SavePlayerRcd> m_SaveRcdTempList;
         public IList<LoadDBInfo> m_LoadRcdTempList;
         public IList<LoadDBInfo> m_LoadRcdList;
+        private int _shutdownRequested;
+
+        public bool ShutdownRequested => Volatile.Read(ref _shutdownRequested) != 0;
+
+        public void BeginShutdown()
+        {
+            // Admission linearizes at the atomic flag. AddToLoad checks it under
+            // UserCriticalSection; an already admitted writer is drained normally.
+            // Do not wait behind a snapshot serializer before closing admission.
+            Interlocked.Exchange(ref _shutdownRequested, 1);
+        }
+
+        public int PendingLoadCount
+        {
+            get { lock (UserCriticalSection) return m_LoadRcdList.Count + m_LoadRcdTempList.Count; }
+        }
+
+        public int PendingGoldCount
+        {
+            get { lock (UserCriticalSection) return m_ChangeGoldList.Count; }
+        }
 
         public FrontEngine()
         {
@@ -60,12 +81,18 @@ namespace GameSrv.Services
             {
                 for (int j = 0; j < m_SaveRcdList.Count; j++)
                 {
-                    if (m_SaveRcdList[j].QueryId == queryId)
+                    if (queryId > 0 && m_SaveRcdList[j].QueryId == queryId && m_SaveRcdList[j].IsSaveing)
                     {
-                        if (m_SaveRcdList[j].PlayObject != null)
-                            m_SaveRcdList[j].PlayObject.RcdSaved = true;
+                        SavePlayerRcd saved = m_SaveRcdList[j];
                         ProtocolTrace.Write("database save acknowledged; release pending record");
                         m_SaveRcdList.RemoveAt(j);
+                        saved.IsSaveing = false;
+                        if (saved.PlayObject != null)
+                        {
+                            saved.PlayObject.RcdSaved = !m_SaveRcdList.Any(pending =>
+                                pending != null && string.Equals(pending.ChrName, saved.ChrName,
+                                    StringComparison.OrdinalIgnoreCase));
+                        }
                         break;
                     }
                 }
@@ -82,6 +109,7 @@ namespace GameSrv.Services
             HUtil32.EnterCriticalSection(UserCriticalSection);
             try
             {
+                m_SaveRcdTempList.Clear();
                 if (m_SaveRcdList.Any())
                 {
                     for (int i = 0; i < m_SaveRcdList.Count; i++)
@@ -115,7 +143,12 @@ namespace GameSrv.Services
                     {
                         continue;
                     }
-                    ChangeUserGoldInDB(goldChangeInfo);
+                    if (!ChangeUserGoldInDB(goldChangeInfo) && ShutdownRequested)
+                    {
+                        // This legacy operation may fail (its DB implementation is currently
+                        // absent). A shutdown drain must not convert that failure into idle.
+                        lock (UserCriticalSection) m_ChangeGoldList.Add(goldChangeInfo);
+                    }
                 }
             }
         }
@@ -140,15 +173,26 @@ namespace GameSrv.Services
 
         public void AddToLoadRcdList(LoadDBInfo loadRcdInfo)
         {
+            bool rejected;
             HUtil32.EnterCriticalSection(UserCriticalSection);
             try
             {
-                m_LoadRcdList.Add(loadRcdInfo);
+                rejected = ShutdownRequested;
+                if (!rejected) m_LoadRcdList.Add(loadRcdInfo);
             }
             finally
             {
                 HUtil32.LeaveCriticalSection(UserCriticalSection);
             }
+            if (rejected)
+                M2Share.NetChannel.SendOutConnectMsg(loadRcdInfo.GateIdx, loadRcdInfo.SocketId, loadRcdInfo.GSocketIdx);
+        }
+
+        internal void RequeueExistingLoad(LoadDBInfo loadRcdInfo)
+        {
+            // Only the storage consumer uses this path for an already admitted load.
+            // Closing admission must not discard a load waiting behind a save barrier.
+            lock (UserCriticalSection) m_LoadRcdList.Add(loadRcdInfo);
         }
 
         /// <summary>
@@ -189,7 +233,8 @@ namespace GameSrv.Services
                 sGetGoldUser = sGetGoldUserName,
                 nGold = nGold
             };
-            m_ChangeGoldList.Add(goldInfo);
+            lock (UserCriticalSection)
+                if (!ShutdownRequested) m_ChangeGoldList.Add(goldInfo);
         }
 
         /// <summary>
@@ -200,6 +245,30 @@ namespace GameSrv.Services
             HUtil32.EnterCriticalSection(UserCriticalSection);
             try
             {
+                if (SaveRcd == null)
+                    throw new ArgumentNullException(nameof(SaveRcd));
+                if (m_SaveRcdList.Contains(SaveRcd))
+                    return;
+                if (SaveRcd.PlayObject != null)
+                    SaveRcd.PlayObject.RcdSaved = false;
+                try
+                {
+                    // Actor arrays and item Desc buffers are shared by MakeSaveRcd. Freeze
+                    // the actual wire snapshot while keeping only the actor completion link.
+                    CharacterDataInfo frozen = SerializerUtil.Deserialize<CharacterDataInfo>(
+                        SerializerUtil.Serialize(SaveRcd.CharacterData));
+                    if (frozen == null)
+                        throw new InvalidOperationException("Missing save snapshot.");
+                    SaveRcd.CharacterData = frozen;
+                }
+                catch (Exception)
+                {
+                    // Keep the original record as a failed barrier. It has no native request
+                    // identity and must never be sent or declared saved after a clone failure.
+                    SaveRcd.IsSaveing = true;
+                    SaveRcd.QueryId = 0;
+                    LogService.Error("玩家保存快照冻结失败，保留记录并阻止重载.");
+                }
                 m_SaveRcdList.Add(SaveRcd);
             }
             finally
@@ -249,24 +318,31 @@ namespace GameSrv.Services
 
         public IList<SavePlayerRcd> GetSaveRcdList()
         {
-            return m_SaveRcdList;
+            lock (UserCriticalSection)
+            {
+                return m_SaveRcdList.ToArray();
+            }
         }
 
         public void ClearSaveList()
         {
-            for (int i = 0; i < m_SaveRcdList.Count; i++)
+            lock (UserCriticalSection)
             {
-                if (m_SaveRcdList[i] != null)
-                {
-                    m_SaveRcdList[i] = null;
-                }
+                // Clearing unresolved snapshots would make IsIdle lie about a failed drain.
+                if (m_SaveRcdList.Any(record => record != null))
+                    LogService.Warn("拒绝清除尚未确认的玩家保存记录.");
+                for (int index = m_SaveRcdList.Count - 1; index >= 0; index--)
+                    if (m_SaveRcdList[index] == null)
+                        m_SaveRcdList.RemoveAt(index);
             }
-            m_SaveRcdList.Clear();
         }
 
         public IList<SavePlayerRcd> GetTempSaveRcdList()
         {
-            return m_SaveRcdTempList;
+            lock (UserCriticalSection)
+            {
+                return m_SaveRcdTempList.ToArray();
+            }
         }
 
         public void ClearLoadList()
@@ -281,7 +357,10 @@ namespace GameSrv.Services
 
         public void ClearSaveRcdTempList()
         {
-            m_SaveRcdTempList.Clear();
+            lock (UserCriticalSection)
+            {
+                m_SaveRcdTempList.Clear();
+            }
         }
 
         public void ClearLoadRcdTempList()

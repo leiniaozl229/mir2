@@ -844,15 +844,40 @@ namespace M2Server.Player
 
         private void ClientChangeMagicKey(ushort nSkillIdx, char nKey)
         {
+            // Original FState.pas clears an occupied key before assigning it.
+            // Apply that change on the game thread so every client receives one
+            // authoritative snapshot, rather than guessing a +GOOD response.
+            if (nKey != '\0' && (nKey < '1' || nKey > '8'))
+            {
+                SendUseMagic();
+                return;
+            }
+            UserMagic target = null;
             for (int i = 0; i < MagicList.Count; i++)
             {
                 UserMagic userMagic = MagicList[i];
                 if (userMagic.Magic.MagicId == nSkillIdx)
                 {
-                    userMagic.Key = nKey;
+                    target = userMagic;
                     break;
                 }
             }
+            if (target != null)
+            {
+                if (nKey != '\0')
+                {
+                    for (int i = 0; i < MagicList.Count; i++)
+                    {
+                        UserMagic userMagic = MagicList[i];
+                        if (userMagic != target && userMagic.Key == nKey)
+                        {
+                            userMagic.Key = '\0';
+                        }
+                    }
+                }
+                target.Key = nKey;
+            }
+            SendUseMagic();
         }
 
         private void ClientGroupClose()

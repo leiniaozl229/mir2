@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import struct
 import subprocess
@@ -99,7 +100,7 @@ class WeMadeLibraryTests(unittest.TestCase):
             self.assertEqual(manifest["format"], "wil-classic")
             self.assertIn("0", manifest["frames"])
             self.assertTrue((root / "out" / "library.json").is_file())
-            self.assertEqual(json.loads((root / "out" / "library.json").read_text())["sourceFrameCount"], 1)
+            self.assertEqual(json.loads((root / "out" / "library.json").read_text(encoding="utf-8"))["sourceFrameCount"], 1)
 
     def test_import_command_exports_to_isolated_directory(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -108,11 +109,12 @@ class WeMadeLibraryTests(unittest.TestCase):
             output = root / "ui-national"
             result = subprocess.run([
                 sys.executable,
+                "-X", "utf8",
                 str(ROOT / "tools/import-national-ui.py"),
                 "--data-dir", str(root),
                 "--output", str(output),
                 "--family", "prguse",
-            ], capture_output=True, text=True)
+            ], capture_output=True, encoding="utf-8", env={**os.environ, "PYTHONIOENCODING": "utf-8"})
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertIn('"status": "imported"', result.stdout)
             self.assertTrue((output / "prguse" / "library.json").is_file())

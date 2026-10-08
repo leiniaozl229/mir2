@@ -137,7 +137,7 @@ namespace M2Server.Actor
             //    return;
             //}
             ushort chp = 0;
-            byte slaveExpLevel = ((MonsterObject)this).SlaveExpLevel;
+            byte slaveExpLevel = this is AnimalObject animal ? animal.SlaveExpLevel : (byte)0;
             if ((Race == ActorRace.WhiteSkeleton) || (Race == ActorRace.ElfMonster) || (Race == ActorRace.ElfWarriormon))
             {
                 WAbil.DC = HUtil32.MakeWord(HUtil32.LoByte(WAbil.DC), HUtil32.HiByte(Abil.DC));

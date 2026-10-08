@@ -67,7 +67,11 @@ try
 {
     DeleteTestRows();
     var item = new ServerUserItem { MakeIndex = makeIndex, Index = 42 };
+    item.Desc[0] = 10;
+    item.Desc[1] = 10;
     item.Desc[2] = 7;
+    item.Desc[3] = 50;
+    item.Desc[4] = 50;
     Save([], [item]);
     Check(ReadBonus() == 7, "first save did not insert the new equipment bonus");
 
@@ -80,7 +84,8 @@ try
         object[] loadArgs = [context, playerId, loaded];
         loadMethod.Invoke(storage, loadArgs);
     }
-    Check(loaded[0].Desc[2] == 7, "login reload lost the equipment bonus");
+    Check(loaded[0].Desc.Take(5).SequenceEqual(new byte[] { 10, 10, 7, 50, 50 }),
+        "login reload lost one or more independent equipment bonuses");
 
     using (var context = new StorageContext(option))
     {

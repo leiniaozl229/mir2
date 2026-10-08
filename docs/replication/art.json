@@ -1,0 +1,4141 @@
+{
+  "schemaVersion": 1,
+  "domain": "art",
+  "requirements": [
+    {
+      "id": "ART-001",
+      "title": "安装包/版本/原端环境证据链",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "content/classic-176/asset-sources.json",
+          "kind": "contract",
+          "scope": "326778386字节安装包与CAB/核心程序固定hash"
+        },
+        {
+          "path": ".runtime/native-client/native-client-manifest.json",
+          "kind": "source_review",
+          "scope": "实际安装路径/hash；runtime_verified:false为过时状态"
+        },
+        {
+          "path": "docs/local-playtest.md",
+          "kind": "source_review",
+          "scope": "历史原端运行记录，非每项当前关闭证据"
+        }
+      ],
+      "implementation": [
+        "content/classic-176/asset-sources.json",
+        "content/classic-176/national-ui-profile.json",
+        "docs/local-playtest.md"
+      ],
+      "acceptance": [
+        "安装包→CAB→核心程序→图库哈希链可复查",
+        "每次原端采样记录字体、DPI、兼容DLL、800×600有效绘图区、辅助补丁、服务端提交",
+        "原端与Web采样同一场景且不含凭据"
+      ],
+      "verification": [
+        {
+          "path": "content/classic-176/asset-sources.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "docs/local-playtest.md",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "manifest旧runtime_verified:false与后续历史运行记录不一致",
+        "原端辅助名称/血条等扩展应明确标记"
+      ]
+    },
+    {
+      "id": "ART-002",
+      "title": "WIL/WIX调色板/透明/锚点/尾索引",
+      "status": "implemented",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        }
+      ],
+      "implementation": [
+        "tools/wil_lib.py",
+        "tools/validate-national-ui.py",
+        "tools/import-national-ui.py"
+      ],
+      "acceptance": [
+        "逐库原索引、width/height、signed offset与PNG解码一致",
+        "调色板索引0透明、非零黑色不可误删",
+        "尾部EOF有rawIndexEntries及discardedTrailingOffsets而内部异常严格失败",
+        "备用WZL/PAK单独验证"
+      ],
+      "verification": [
+        {
+          "path": "tools/wil_lib.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tools/validate-national-ui.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tools/import-national-ui.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/python-events-final.log",
+          "kind": "unit_regression",
+          "scope": "132项122通过、9失败1错误，失败全列于配套文档"
+        },
+        {
+          "path": ".runtime/reports/national-ui-validation-exported.json",
+          "kind": "unit_regression",
+          "scope": "8库2760条目静态解码/哈希/几何无异常；不是用途/动画验收"
+        }
+      ],
+      "gaps": [
+        "本包WIL静态检查已有",
+        "绘制用途锚点仍由独立条目验收",
+        "备用格式不能继承本包结论"
+      ]
+    },
+    {
+      "id": "ART-003",
+      "title": "国服/候选资源命名空间与可重建源锁",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "content/classic-176/icon-usage.json",
+          "kind": "contract",
+          "scope": "第六批原参考取帧规则，物品精确Looks、技能Effect×2/+1；参考版本与同包二进制对应仍待验收。"
+        },
+        {
+          "path": "content/classic-176/map-asset-bindings.json",
+          "kind": "contract",
+          "scope": "第七批当前扩展场景精确map/layer/index选择；原national覆盖与历史配对独立保留。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "669fe0d73bcff81adabdc7cf050886f27d9c3fe5db62a356961dc86e8a2ab3b0"
+        }
+      ],
+      "implementation": [
+        "scripts/import-national-game-assets.py",
+        "scripts/import-map-assets.py",
+        "tools/content_audit.py",
+        "content/classic-176/asset-sources.json",
+        "scripts/import-national-map-assets.py",
+        "content/classic-176/active-asset-sources.json",
+        "docs/resource-consistency-2026-10-01.md",
+        "apps/web/src/icon-frames.ts",
+        "content/classic-176/icon-usage.json",
+        "docs/icon-source-usage-2026-10-01.md",
+        "tools/ga0_tiles_candidate_audit.py",
+        "tools/export_ga0_tiles_candidate.py",
+        "content/classic-176/ga0-tiles-candidate.json",
+        "apps/web/src/map-assets.ts",
+        "apps/web/src/map-view.ts",
+        "content/classic-176/map-asset-bindings.json",
+        "tools/map_asset_bindings.py",
+        "tests/test_map_asset_bindings.py",
+        "tests/map_assets_regression.mjs",
+        "tests/map_sources_regression.mjs",
+        "tests/map_sentinel_regression.mjs",
+        "docs/map-source-binding-review-2026-10-01.md",
+        "docs/map-sentinel-review-2026-10-01.md",
+        "docs/map-asset-selection-2026-10-01.md"
+      ],
+      "acceptance": [
+        "每生产资源显示真实原版或参考来源、hash与profile",
+        "版本不匹配先拒绝再写输出",
+        "国服导入和内容审计可从干净环境重建且不会覆盖为候选素材"
+      ],
+      "verification": [
+        {
+          "path": "scripts/import-national-game-assets.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "scripts/import-map-assets.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tools/content_audit.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/asset-sources.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "scripts/import-national-map-assets.py",
+          "kind": "source_review",
+          "scope": "新增独立地图入口静态阅读；本清单未执行大规模导出，结果待Root登记"
+        },
+        {
+          "path": ".runtime/reports/national-map-import.json",
+          "kind": "native_pixels",
+          "scope": "2026-10-01 本机真实apply：profile570、requestedUnique14882、alreadyPresent4635、exported9839、empty0、unresolved408（仅GA0）；completefalse/退出2。现manifest和9839输出文件存在性复核；不证明HTTP或浏览器画面"
+        },
+        {
+          "path": ".runtime/backups/national-map-frames-20261001",
+          "kind": "source_review",
+          "scope": "apply前现有三族manifest备份；保留导入前10247唯一缺帧基线"
+        },
+        {
+          "path": ".runtime/reports/replication-map-regression.log",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 11项地图导入夹具全部OK：source preflight/合并保留/幂等/范围外/缺map/损坏帧等；不证明原端/Web图像"
+        },
+        {
+          "path": ".runtime/reports/national-map-repeat-plan.json",
+          "kind": "unit_regression",
+          "scope": "apply后真实重复计划：requestedUnique14882/alreadyPresent14474/exportable0/empty0/unresolved408/exported0/completefalse；已补源内帧不会重复规划"
+        },
+        {
+          "path": ".runtime/reports/replication-python-full.log",
+          "kind": "unit_regression",
+          "scope": "apply后全量151项：141通过、9失败、1错误；地图首报GA0/Tiles10320，其余已记录契约/扩展/环境失败继续保留"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-checks.json",
+          "kind": "unit_regression",
+          "scope": "第五批当前源码：242组Node回归/21脚本；完整Python257项，失败1项；非浏览器。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "21c3ea1efd5d7e5d9ef5666174a9df9c8e113f537ea845e9fb288bad72a40a15"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "必需源/导出哈希、索引、偏移与内容目录；complete=false保留实际缺项，不是画面验收。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "bafc0ae626d68f2f4628fd74f09eb10369219be86bf012bd185658cd85eb51f0"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "第六批324组/27脚本实际模块/VM回归；含准确取帧/故障重试/旧回调/切图事务，非浏览器。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "92e395c7743b5b08f14440cf9e9b3a87fd63d7832cffc20d65998f76c0539ec8"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "完整Python279项/278通过，剩1项GA0当前source缺帧；独立内容CLI exit1。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "76ac993b7290640b1493d7ffdf1c056a0ea05e6dd4763360bc6df92a73afe23c"
+        },
+        {
+          "path": ".runtime/reports/ga0-tiles-source-freeze-sixth-final.json",
+          "kind": "unit_regression",
+          "scope": "候选408个索引逐像素解码一致、19专项、独立namespace及重复导出0写入；现国服/GA0文件4284项SHA未变，未激活candidate。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "8145b925b3c2b39292549776dc923129cc1f8c8c91801d000633a7b0091d911c"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "实际CLI遍历必需源/导出哈希与内容目录，complete=false；无原端、浏览器或历史配对完成声明。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "0b83b0f967d6c3edb823ddc248a7e5e9a212b82f60a27ba519d51e9216906715"
+        },
+        {
+          "path": ".runtime/reports/map-v7-sentinel-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "最终实际352组/30脚本模块/VM/Pixi回归；含源选择、54特殊引用nil路径和切图/失败恢复，非浏览器。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "eb7b538e7cd509990359d7d9e88775eccb556a30b4088845904fd60b62de73d0"
+        },
+        {
+          "path": ".runtime/reports/map-v7-final-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "修复默认源路径后完整Python339/339通过；current render与original fidelity分别断言，独立内容CLI继续exit1。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "f7a718724db196b2129ce8241e646bdb99d50aee537b7a5d47eae3ee42c238d7"
+        },
+        {
+          "path": ".runtime/reports/map-binding-seventh-source-freeze.json",
+          "kind": "unit_regression",
+          "scope": "MAP/blob/9chunk/source字节与408参考PNG、125国服保留帧逐解码核对；enabled参考选择，historical pairing=false。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "f2deb24cb8ad28b7fc87dca66ca035289450e4aaa43025a7ae70afb3b053085f"
+        },
+        {
+          "path": ".runtime/reports/map-v7-final-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "最终实际内容CLI，renderDependencyMissing空、原national GA0缺408与historicalFailure保持；complete=false。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "5adecd1e7f194d9cf8b96d6f1a57d40cec3f7377b6941cc00baa3a51c4e460a1"
+        }
+      ],
+      "gaps": [
+        "当前GA0明确选择408个参考Tiles原索引；国服125索引及9/14保持原源，候选与生效国服来源分开锁定。",
+        "目标MAP/图库历史原包配对仍未核实；参考源码与同包原端版本关系、浏览器/GPU动态比较继续开放。"
+      ]
+    },
+    {
+      "id": "ART-004",
+      "title": "42对原始图库全族/有效帧/用途归属",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/Data",
+          "kind": "native_pixels",
+          "scope": "实际安装Data42族，未导出族也列入范围"
+        }
+      ],
+      "implementation": [
+        "scripts/import-national-game-assets.py",
+        "tools/import-national-ui.py",
+        "content/classic-176/national-gameplay.json"
+      ],
+      "acceptance": [
+        "原安装Data42族均列源hash、有效/透明/重复/坏帧及生产消费者",
+        "28玩法/8UI/3地图库/Objects2–7分别审计且复用族不重复算进度",
+        "未知帧段有用途调查与独立关闭条件"
+      ],
+      "verification": [
+        {
+          "path": "scripts/import-national-game-assets.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tools/import-national-ui.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "103250帧与UI2760条目属于导出数量",
+        "Objects2–7未导出/映射，地图三库只部分索引"
+      ]
+    },
+    {
+      "id": "ART-005",
+      "title": "所有目标地图底图/地面依赖闭合",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/Map",
+          "kind": "native_pixels",
+          "scope": "原装528地图，522与服务端同hash、6不同"
+        },
+        {
+          "path": "vendor/mirserver-data/Mir200/Map",
+          "kind": "server_source",
+          "scope": "572份当前服务器地图；不全属原装像素版"
+        },
+        {
+          "path": "content/classic-176/icon-usage.json",
+          "kind": "contract",
+          "scope": "第六批原参考取帧规则，物品精确Looks、技能Effect×2/+1；参考版本与同包二进制对应仍待验收。"
+        },
+        {
+          "path": "content/classic-176/map-asset-bindings.json",
+          "kind": "contract",
+          "scope": "第七批当前扩展场景精确map/layer/index选择；原national覆盖与历史配对独立保留。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "669fe0d73bcff81adabdc7cf050886f27d9c3fe5db62a356961dc86e8a2ab3b0"
+        },
+        {
+          "path": ".runtime/reports/map-sentinel-seventh-source.json",
+          "kind": "source_review",
+          "scope": "固定GA0全部54高索引格子原始12byte、坐标/碰撞与参考源码越界nil路径；不推导所有地图或原端执行。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "7177f360ce3d9748fc8e5214e95434632bbd80d217f271bf0e2c53b0e8cfdbed"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/map-view.ts",
+        "tools/map_tool.py",
+        "scripts/import-map-assets.py",
+        "assets/web/libraries/Tiles/library.json",
+        "assets/web/libraries/SmTiles/library.json",
+        "scripts/import-national-map-assets.py",
+        "content/classic-176/map-server-extensions.json",
+        "scripts/export-server-extension-maps.py",
+        "docs/resource-consistency-2026-10-01.md",
+        "tools/ga0_tiles_candidate_audit.py",
+        "tools/export_ga0_tiles_candidate.py",
+        "content/classic-176/ga0-tiles-candidate.json",
+        "apps/web/src/play.ts",
+        "tests/map_loading_regression.mjs",
+        "docs/icon-source-usage-2026-10-01.md",
+        "apps/web/src/map-assets.ts",
+        "content/classic-176/map-asset-bindings.json",
+        "tools/map_asset_bindings.py",
+        "tests/test_map_asset_bindings.py",
+        "tests/map_assets_regression.mjs",
+        "tests/map_sources_regression.mjs",
+        "tests/map_sentinel_regression.mjs",
+        "docs/map-source-binding-review-2026-10-01.md",
+        "docs/map-sentinel-review-2026-10-01.md",
+        "docs/map-asset-selection-2026-10-01.md"
+      ],
+      "acceptance": [
+        "每目标地图hash、尺寸、12字节单元、x/y顺序、48×32格与原端一致",
+        "全部依赖进入有效帧/确认空帧/明确未解决三类",
+        "平原/城市/洞穴同场景像素比较无缺图裂缝",
+        "越界索引不能静默排除"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/map-view.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tools/map_tool.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "scripts/import-map-assets.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/python-events-final.log",
+          "kind": "unit_regression",
+          "scope": "132项122通过、9失败1错误，失败全列于配套文档"
+        },
+        {
+          "path": "scripts/import-national-map-assets.py",
+          "kind": "source_review",
+          "scope": "新增独立地图入口静态阅读；本清单未执行大规模导出，结果待Root登记"
+        },
+        {
+          "path": ".runtime/reports/national-map-import.json",
+          "kind": "native_pixels",
+          "scope": "2026-10-01 本机真实apply：profile570、requestedUnique14882、alreadyPresent4635、exported9839、empty0、unresolved408（仅GA0）；completefalse/退出2。现manifest和9839输出文件存在性复核；不证明HTTP或浏览器画面"
+        },
+        {
+          "path": ".runtime/backups/national-map-frames-20261001",
+          "kind": "source_review",
+          "scope": "apply前现有三族manifest备份；保留导入前10247唯一缺帧基线"
+        },
+        {
+          "path": ".runtime/reports/replication-map-regression.log",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 11项地图导入夹具全部OK：source preflight/合并保留/幂等/范围外/缺map/损坏帧等；不证明原端/Web图像"
+        },
+        {
+          "path": ".runtime/reports/national-map-repeat-plan.json",
+          "kind": "unit_regression",
+          "scope": "apply后真实重复计划：requestedUnique14882/alreadyPresent14474/exportable0/empty0/unresolved408/exported0/completefalse；已补源内帧不会重复规划"
+        },
+        {
+          "path": ".runtime/reports/replication-python-full.log",
+          "kind": "unit_regression",
+          "scope": "apply后全量151项：141通过、9失败、1错误；地图首报GA0/Tiles10320，其余已记录契约/扩展/环境失败继续保留"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-checks.json",
+          "kind": "unit_regression",
+          "scope": "第五批当前源码：242组Node回归/21脚本；完整Python257项，失败1项；非浏览器。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "21c3ea1efd5d7e5d9ef5666174a9df9c8e113f537ea845e9fb288bad72a40a15"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "必需源/导出哈希、索引、偏移与内容目录；complete=false保留实际缺项，不是画面验收。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "bafc0ae626d68f2f4628fd74f09eb10369219be86bf012bd185658cd85eb51f0"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "第六批324组/27脚本实际模块/VM回归；含准确取帧/故障重试/旧回调/切图事务，非浏览器。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "92e395c7743b5b08f14440cf9e9b3a87fd63d7832cffc20d65998f76c0539ec8"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "完整Python279项/278通过，剩1项GA0当前source缺帧；独立内容CLI exit1。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "76ac993b7290640b1493d7ffdf1c056a0ea05e6dd4763360bc6df92a73afe23c"
+        },
+        {
+          "path": ".runtime/reports/ga0-tiles-source-freeze-sixth-final.json",
+          "kind": "unit_regression",
+          "scope": "候选408个索引逐像素解码一致、19专项、独立namespace及重复导出0写入；现国服/GA0文件4284项SHA未变，未激活candidate。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "8145b925b3c2b39292549776dc923129cc1f8c8c91801d000633a7b0091d911c"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "实际CLI遍历必需源/导出哈希与内容目录，complete=false；无原端、浏览器或历史配对完成声明。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "0b83b0f967d6c3edb823ddc248a7e5e9a212b82f60a27ba519d51e9216906715"
+        },
+        {
+          "path": ".runtime/reports/map-v7-sentinel-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "最终实际352组/30脚本模块/VM/Pixi回归；含源选择、54特殊引用nil路径和切图/失败恢复，非浏览器。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "eb7b538e7cd509990359d7d9e88775eccb556a30b4088845904fd60b62de73d0"
+        },
+        {
+          "path": ".runtime/reports/map-v7-final-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "修复默认源路径后完整Python339/339通过；current render与original fidelity分别断言，独立内容CLI继续exit1。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "f7a718724db196b2129ce8241e646bdb99d50aee537b7a5d47eae3ee42c238d7"
+        },
+        {
+          "path": ".runtime/reports/map-binding-seventh-source-freeze.json",
+          "kind": "unit_regression",
+          "scope": "MAP/blob/9chunk/source字节与408参考PNG、125国服保留帧逐解码核对；enabled参考选择，historical pairing=false。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "f2deb24cb8ad28b7fc87dca66ca035289450e4aaa43025a7ae70afb3b053085f"
+        },
+        {
+          "path": ".runtime/reports/map-v7-final-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "最终实际内容CLI，renderDependencyMissing空、原national GA0缺408与historicalFailure保持；complete=false。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "5adecd1e7f194d9cf8b96d6f1a57d40cec3f7377b6941cc00baa3a51c4e460a1"
+        },
+        {
+          "path": ".runtime/reports/map-sentinel-seventh-review.json",
+          "kind": "unit_regression",
+          "scope": "5个实际生产模块/Pixi类回归覆盖54位置、高索引不请求纹理、碰撞保留及非目标否定案例。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "6de554b22a3bc261888f8d7bfb14392ac28a477ca3009fded35fd5a57ee779bf"
+        },
+        {
+          "path": ".runtime/reports/map-catalog-previews-2026-10-02/report.json",
+          "kind": "source_review",
+          "scope": "Offline source-bound render audit of all 572 exported maps and exact current tile/object bindings; 184512 drawn references, 0 unresolved/missing PNG/bad chunks/native 1x1 ground placeholders; DH02 has 8 out-of-range nil skips. Contact sheets were visually inspected. No browser or original-client comparison; 353 sample centers are dense ground windows, not verified spawn points.",
+          "recordedAt": "2026-10-02T09:17:11Z",
+          "environment": "Windows; bundled Python with Pillow and NumPy; offline renderer follows map-view grid/layer order; no browser/GPU or original-client capture",
+          "sha256": "932e819fb20603abd40709e0daf9cb9016faa2368c9729f7e168c5cbfd6e1452"
+        }
+      ],
+      "gaps": [
+        "572图范围保持；当前GA0规范依赖已用408参考索引补渲染，原国服408缺项与未核历史配对独立登记。",
+        "固定GA0的54条高索引引用按参考WIL越界nil行为跳过并单独计数；不是所有地图的通用保留值规则或原端执行证据。",
+        "原装528Map/服务端572的版本范围、6图hash差异、D718/D719扩展、真实路线与原端/浏览器画面仍待验收。"
+      ]
+    },
+    {
+      "id": "ART-006",
+      "title": "Objects/Objects2–7对象族与遮挡",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/Data/Objects2.wil",
+          "kind": "native_pixels",
+          "scope": "Objects2–7真实安装源，选择规则未核定"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/map-view.ts",
+        "assets/web/libraries/Objects/library.json"
+      ],
+      "acceptance": [
+        "从同版地图格式/原端建立图库选择与索引换算",
+        "逐族源hash和局部索引可追溯",
+        "树墙屋顶石柱与人怪/掉落前后遮挡逐方向逐帧正确",
+        "原端静态及经过遮挡物移动比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/map-view.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/python-events-final.log",
+          "kind": "unit_regression",
+          "scope": "132项122通过、9失败1错误，失败全列于配套文档"
+        },
+        {
+          "path": ".runtime/reports/national-map-import.json",
+          "kind": "native_pixels",
+          "scope": "2026-10-01 本机真实apply：profile570、requestedUnique14882、alreadyPresent4635、exported9839、empty0、unresolved408（仅GA0）；completefalse/退出2。现manifest和9839输出文件存在性复核；不证明HTTP或浏览器画面"
+        },
+        {
+          "path": ".runtime/backups/national-map-frames-20261001",
+          "kind": "source_review",
+          "scope": "apply前现有三族manifest备份；保留导入前10247唯一缺帧基线"
+        },
+        {
+          "path": ".runtime/reports/replication-map-regression.log",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 11项地图导入夹具全部OK：source preflight/合并保留/幂等/范围外/缺map/损坏帧等；不证明原端/Web图像"
+        },
+        {
+          "path": ".runtime/reports/national-map-repeat-plan.json",
+          "kind": "unit_regression",
+          "scope": "apply后真实重复计划：requestedUnique14882/alreadyPresent14474/exportable0/empty0/unresolved408/exported0/completefalse；已补源内帧不会重复规划"
+        },
+        {
+          "path": ".runtime/reports/replication-python-full.log",
+          "kind": "unit_regression",
+          "scope": "apply后全量151项：141通过、9失败、1错误；地图首报GA0/Tiles10320，其余已记录契约/扩展/环境失败继续保留"
+        },
+        {
+          "path": ".runtime/reports/map-catalog-previews-2026-10-02/report.json",
+          "kind": "source_review",
+          "scope": "Offline source-bound render audit of all 572 exported maps and exact current tile/object bindings; 184512 drawn references, 0 unresolved/missing PNG/bad chunks/native 1x1 ground placeholders; DH02 has 8 out-of-range nil skips. Contact sheets were visually inspected. No browser or original-client comparison; 353 sample centers are dense ground windows, not verified spawn points.",
+          "recordedAt": "2026-10-02T09:17:11Z",
+          "environment": "Windows; bundled Python with Pillow and NumPy; offline renderer follows map-view grid/layer order; no browser/GPU or original-client capture",
+          "sha256": "932e819fb20603abd40709e0daf9cb9016faa2368c9729f7e168c5cbfd6e1452"
+        }
+      ],
+      "gaps": [
+        "Objects源内6180个缺引用已补齐，现manifest9996帧；Objects2–7的原端图库选择/局部索引/导出和消费规则未建立",
+        "树墙屋顶石柱与人怪/掉落遮挡、signed锚点及同版地图画面仍缺原端/浏览器验证"
+      ]
+    },
+    {
+      "id": "ART-007",
+      "title": "地图动图计数/节拍/加色/偏移",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/MapUnit.pas",
+          "kind": "reference_source",
+          "scope": "参考地图字段和门组逻辑"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/PlayScn.pas",
+          "kind": "reference_source",
+          "scope": "SHA-256 0dcc555bf7fbd10fbd1ac240250bdc0bc28dead21ad188f664030c1af7426120; 50 ms shared counter and btAniTick+1; ordinary 48x32 foreground pass and additive GetObjsEx pass with per-frame offsets."
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/MShare.pas",
+          "kind": "reference_source",
+          "scope": "GetObjsEx returns each object image and its stored nPx/nPy drawing offsets."
+        }
+      ],
+      "implementation": [
+        "apps/web/src/map-view.ts",
+        "tools/map_tool.py"
+      ],
+      "acceptance": [
+        "水流火盆旗帜装饰各自btAniFrame低7位计数、btAniTick和高位混合有同版样本",
+        "逐帧索引/循环/偏移/色彩一致",
+        "切图与异步加载无旧帧和错误重启相位"
+      ],
+      "verification": [
+        {
+          "path": "tests/map_sources_regression.mjs",
+          "kind": "unit_regression",
+          "scope": "16 groups; production createMapView/Pixi covers 50 ms shared counter, btAniTick duration, delayed paints, 48x32 ordinary+additive passes and large-frame offsets."
+        },
+        {
+          "path": "tests/map_loading_regression.mjs",
+          "kind": "unit_regression",
+          "scope": "19 groups; map loading, collision and grouped door frame/collision transitions"
+        },
+        {
+          "path": ".runtime/reports/map-animation-cadence-2026-10-02.json",
+          "kind": "source_review",
+          "scope": "Source hash, regression logs, TypeScript and code-only Vite build; no native/browser frame-difference claim"
+        },
+        {
+          "path": ".runtime/reports/map-additive-composition-2026-10-02.json",
+          "kind": "source_review",
+          "scope": "Source/reference hashes, full 572-map high-bit coordinate audit, targeted regressions and Vite code build; no native/browser image-difference claim."
+        }
+      ],
+      "gaps": [
+        "Same-version native/browser screenshot and pixel comparison is still needed for blend arithmetic, animation phase, exact colors and per-frame positioning."
+      ]
+    },
+    {
+      "id": "ART-008",
+      "title": "门组开关/原图帧/碰撞",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/MapUnit.pas",
+          "kind": "reference_source",
+          "scope": "参考地图字段和门组逻辑"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/map-view.ts",
+        "services/web-gateway/WorldProjection.cs"
+      ],
+      "acceptance": [
+        "门组ID与doorOffset选择原关闭/打开帧且组内门格同步",
+        "真实服务器开关改变图像和通行",
+        "原端与浏览器开关/经过/切图重入场景一致"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/map-view.ts",
+          "kind": "source_review",
+          "scope": "2026-10-02: map cells read doorIndex/doorOffset; open frames follow low-seven-bit native offset and linked tiles synchronize within the reference client radius."
+        },
+        {
+          "path": "services/web-gateway/WorldProjection.cs",
+          "kind": "source_review",
+          "scope": "612/614 door events provide authoritative open/close state; gateway packet shape unchanged."
+        },
+        {
+          "path": ".runtime/reports/map-door-visual-regression-2026-10-02.log",
+          "kind": "unit_regression",
+          "scope": "19 map-loading groups pass, including native closed/open frame selection, group collision changes, close restoration, and actual play.ts door-message retry behavior. Fake Pixi only; no browser/original-client visual comparison.",
+          "recordedAt": "2026-10-02T09:52:45Z",
+          "environment": "Windows; Node.js VM running production map-view.ts and play.ts with fake Pixi; no browser or original executable",
+          "sha256": "e404106a3ee70c8f034c55a7995eaa53f200fb35210451d9ed9ececc0fda303a"
+        }
+      ],
+      "gaps": [
+        "Door frame selection/group synchronization still needs current browser and same-version original-client screenshot/gameplay comparison; door sound remains open."
+      ]
+    },
+    {
+      "id": "ART-009",
+      "title": "地图/角色/法术光照与暗区",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/MapUnit.pas",
+          "kind": "reference_source",
+          "scope": "参考地图字段和门组逻辑"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/clEvent.pas",
+          "kind": "reference_source",
+          "scope": "持续地面事件；非CUSTOM火墙1630..1635、40ms/图、light1"
+        },
+        {
+          "path": "docs/scene-lighting-death-implementation-2026-10-02.md",
+          "kind": "source_review",
+          "scope": "第十三批协议、默认死亡灰阶、灯光源文件与参考免蜡差异；当前生产fogApplied=false，不能当同版运行证明。"
+        },
+        {
+          "path": "assets/web/lighting/library.json",
+          "kind": "native_pixels",
+          "scope": "六份原lig0*.dat与原npal.idx逐字节导出和源锁；不是暗图启用或原端灯光半径证据。"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/map-view.ts",
+        "apps/web/src/online-actors.ts",
+        "apps/web/src/magic-effects.ts",
+        "docs/scene-lighting-death-implementation-2026-10-02.md",
+        "apps/web/src/world-tone.ts",
+        "apps/web/src/play.ts",
+        "content/classic-176/scene-lighting.json",
+        "apps/web/src/scene-lighting-data.ts",
+        "apps/web/src/scene-calibration.ts",
+        "apps/web/scene-calibration.html",
+        "scripts/export-scene-lighting.py",
+        "services/web-gateway/WorldProjection.cs",
+        "services/web-gateway/GatewaySession.cs"
+      ],
+      "acceptance": [
+        "采集洞穴环境亮度、地图btLight、人物light、火把和火墙半径/色彩",
+        "实现同版暗区光照并验证运动时光随实际帧脚点",
+        "亮度消息和切图重置正确"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/map-view.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/magic-effects.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/scene-v13-gateway-final.json",
+          "kind": "unit_regression",
+          "scope": "8entrypoints75PASSmarkers minus2summaries=73actualgroups;39stableinputs.Packedlight,zero/unknownlight,actualprivateTCP654/51/634darkness/generations.Fragment/coalesce;no original/native account.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "7968e1d833afe4f564206bb5fa5b13764dd85c2df0ffb584507d1f440d9db87a"
+        },
+        {
+          "path": ".runtime/reports/scene-v13-npal-comparison-final.json",
+          "kind": "unit_regression",
+          "scope": "196608originalheavy/light/dungeon tablecells independentlymatch written-order reference derivation and lockednationalpalette;notfogactivation/renderingproof.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "3d476485d13536ecf6a61e9347998f4f8e25c1628915db485c03005c8f9a4c29"
+        },
+        {
+          "path": ".runtime/reports/scene-v13-lighting-check.json",
+          "kind": "unit_regression",
+          "scope": "Sixoriginalmasks+npal+manifest8filesexact,0writes;source/importintegrityonly.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "e787e211f7116842ecbcdd666b888f94c34568040ec4a392350c2f4e1cd97fb5"
+        },
+        {
+          "path": ".runtime/reports/scene-v13-runtime.json",
+          "kind": "live_protocol",
+          "scope": "8source/HTTP/distidentities,6currentpages/modules,currentownedlisteners and actual5173/ws to new18801 pre-login envelopes/rejection/close. No authenticatednativegameplay orbrowser.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "ea1158a3dfdf83d37059fe4a8cd2e9332b337bc55aaffe020ffd304703f9fd59"
+        }
+      ],
+      "gaps": [
+        "演员light及入图darkLevel已有权威链，六遮罩/原暗度表已导入；地图btLight、演员/法术/火墙光源仍未进入生产视觉。",
+        "参考末尾强制免蜡与原端包原遮罩并存；须原端确认启用、半径/偏移/叠加、帧缓冲量化及移动脚点，不用现代泛光替代。"
+      ]
+    },
+    {
+      "id": "ART-010",
+      "title": "天气/时间/雾/屏幕色调",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/mir.dat",
+          "kind": "native_pixels",
+          "scope": "原程序作为目标能力和运行取证对象"
+        },
+        {
+          "path": "docs/scene-lighting-death-implementation-2026-10-02.md",
+          "kind": "source_review",
+          "scope": "第十三批协议、默认死亡灰阶、灯光源文件与参考免蜡差异；当前生产fogApplied=false，不能当同版运行证明。"
+        },
+        {
+          "path": "assets/web/lighting/library.json",
+          "kind": "native_pixels",
+          "scope": "六份原lig0*.dat与原npal.idx逐字节导出和源锁；不是暗图启用或原端灯光半径证据。"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/map-view.ts",
+        "docs/scene-lighting-death-implementation-2026-10-02.md",
+        "apps/web/src/world-tone.ts",
+        "apps/web/src/play.ts",
+        "content/classic-176/scene-lighting.json",
+        "apps/web/src/scene-lighting-data.ts",
+        "apps/web/src/scene-calibration.ts",
+        "apps/web/scene-calibration.html",
+        "scripts/export-scene-lighting.py"
+      ],
+      "acceptance": [
+        "先证明2003目标版本每模式存在或不存在及地图/消息控制",
+        "对存在效果实现同版密度/叠层/音效/色调与切图清理",
+        "有证据排除的模式记录版本与样本"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/map-view.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/scene-v13-web-accepted.json",
+          "kind": "unit_regression",
+          "scope": "41scripts488PASSmarkers,TSC/Vite and149stableinputs;WorldTone4actualPixi/TS/ASTgroups,lockedmaskdecoder/loader4groups.No actualshadercompilation or browserinteraction.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "b191f476d54cc5289532a1befc6a54bb413739e7123371c0205af3cd8ebb977f"
+        },
+        {
+          "path": ".runtime/reports/scene-v13-npal-comparison-final.json",
+          "kind": "unit_regression",
+          "scope": "196608originalheavy/light/dungeon tablecells independentlymatch written-order reference derivation and lockednationalpalette;notfogactivation/renderingproof.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "3d476485d13536ecf6a61e9347998f4f8e25c1628915db485c03005c8f9a4c29"
+        },
+        {
+          "path": ".runtime/reports/scene-v13-lighting-check.json",
+          "kind": "unit_regression",
+          "scope": "Sixoriginalmasks+npal+manifest8filesexact,0writes;source/importintegrityonly.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "e787e211f7116842ecbcdd666b888f94c34568040ec4a392350c2f4e1cd97fb5"
+        },
+        {
+          "path": ".runtime/reports/scene-v13-runtime.json",
+          "kind": "live_protocol",
+          "scope": "8source/HTTP/distidentities,6currentpages/modules,currentownedlisteners and actual5173/ws to new18801 pre-login envelopes/rejection/close. No authenticatednativegameplay orbrowser.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "ea1158a3dfdf83d37059fe4a8cd2e9332b337bc55aaffe020ffd304703f9fd59"
+        }
+      ],
+      "gaps": [
+        "默认死亡场景灰阶已接生产；可配置死亡颜色、原端/GPU/逐像素/帧预算与切图组合尚未验收。",
+        "天气、昼夜雾和目标版本存在/不存在证据未关闭；生产夜景尚未绘制，不能引入后期特效。"
+      ]
+    },
+    {
+      "id": "ART-011",
+      "title": "相机/深度排序/帧内脚点/裁切",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/map-view.ts",
+        "apps/web/src/online-actors.ts",
+        "apps/web/src/movement-visual.ts"
+      ],
+      "acceptance": [
+        "人物/怪物/标签/法术/掉落以同版signed锚点和相机规则同步",
+        "普通步跑/推退/切图/边缘的时间线与原端一致",
+        "大怪与同脚点对象遮挡正确"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/map-view.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/movement-visual.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "400/300中心、线性曲线、y*10000+x深度为当前实现",
+        "缺同版全场景比较"
+      ]
+    },
+    {
+      "id": "ART-012",
+      "title": "mmap小地图原像素/比例/标记",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "assets/web/ui-national/mmap/library.json",
+          "kind": "native_pixels",
+          "scope": "mmap原帧号/几何/signed偏移与源hash；不证明动态用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/minimap.ts",
+        "apps/web/src/minimap-profile.ts",
+        "assets/web/ui-national/mmap/library.json"
+      ],
+      "acceptance": [
+        "189帧逐一证明地图归属/世界坐标比例/方向",
+        "小/大/隐藏模式和每类标记像原端",
+        "真实浏览器不同DPI点击边缘仍落到正确格且未知地图明确反馈"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/minimap.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/minimap-profile.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "圆形标记颜色/半径和大量地图的mmap用途未同版校准",
+        "网格回退不算原版完成"
+      ]
+    },
+    {
+      "id": "ART-013",
+      "title": "Hum衣服/性别/形状原像素",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        },
+        {
+          "path": "assets/web/actors/NHum/library.json",
+          "kind": "native_pixels",
+          "scope": "Hum原帧号/几何/signed偏移与源hash；不证明动态用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/national-actors.ts",
+        "apps/web/src/online-actors.ts",
+        "assets/web/actors/NHum/library.json"
+      ],
+      "acceptance": [
+        "9衣服×男女×8方向逐动作核对600帧块和signed偏移",
+        "真实换装/出现/切图/死亡无旧外观",
+        "原端对应装备动作逐帧比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/national-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "10800帧导出存在，装备→形状→动作完整对应未全验收"
+      ]
+    },
+    {
+      "id": "ART-014",
+      "title": "Hair发型/性别/头发层级",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        },
+        {
+          "path": "assets/web/actors/NHair/library.json",
+          "kind": "native_pixels",
+          "scope": "Hair原帧号/几何/signed偏移与源hash；不证明动态用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/national-actors.ts",
+        "apps/web/src/online-actors.ts",
+        "assets/web/actors/NHair/library.json"
+      ],
+      "acceptance": [
+        "3600帧每发型/性别与Hum动作方向同步",
+        "发型/头盔/身体/武器层级和偏移逐方向一致",
+        "未知发型明确诊断并经真实换装重登比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/national-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "当前Math.min钳到hairShapes-1，超范围语义未证明"
+      ]
+    },
+    {
+      "id": "ART-015",
+      "title": "Weapon男女形状/WORDER逐帧层级",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        },
+        {
+          "path": "assets/web/actors/NWeapon/library.json",
+          "kind": "native_pixels",
+          "scope": "Weapon原帧号/几何/signed偏移与源hash；不证明动态用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/national-actors.ts",
+        "apps/web/src/online-actors.ts",
+        "assets/web/actors/NWeapon/library.json"
+      ],
+      "acceptance": [
+        "40855帧武器块/性别/方向/动作明确末尾不完整块",
+        "逐帧WORDER(sex,currentFrame)前后层级无穿身体",
+        "空手/长兵器/快速换装及非法形状经原端和浏览器比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/national-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "WORDER有参考依据",
+        "所有装备映射和尾部帧段未完整验收"
+      ]
+    },
+    {
+      "id": "ART-016",
+      "title": "人物所有动作序列/方向/时序",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        }
+      ],
+      "implementation": [
+        "content/classic-176/national-gameplay.json",
+        "apps/web/src/national-actors.ts",
+        "apps/web/src/online-actors.ts",
+        "apps/web/src/actors.ts"
+      ],
+      "acceptance": [
+        "standing/walking/running/warMode/rushLeft/rushRight/rushKung/attack/heavyAttack/wideAttack/spell/harvest/struck/dying/dead全部8方向逐帧采样",
+        "start/count/skip/interval有原端时间戳与协议触发",
+        "生产/校准同表且低高帧率总时长正确"
+      ],
+      "verification": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/national-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "动作表来自固定Actor.pas参考",
+        "原国服全动作逐帧比较未完成，契约存在不代表所有状态触发"
+      ]
+    },
+    {
+      "id": "ART-017",
+      "title": "冲撞/推退/撞墙回弹动画",
+      "status": "implemented",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/online-actors.ts",
+        "apps/web/src/national-actors.ts",
+        "apps/web/src/movement-visual.ts",
+        "services/web-gateway/WorldProjection.cs"
+      ],
+      "acceptance": [
+        "rush左右3帧交替、backstep倒序、blocked尝试/归位由权威消息触发",
+        "连续SM6/7保持消息顺序和原面向，清理旧移动队列且下次移动不跳格",
+        "原端/Web同场景测位移曲线、回弹幅度和总时长"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/national-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/movement-visual.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "services/web-gateway/WorldProjection.cs",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/world-events-live.json",
+          "kind": "live_protocol",
+          "scope": "11项真实网关/原生Gate事件与位移；非画面/伤害验证"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "真实协议与状态回归通过，浏览器/原端画面仍缺",
+        "implemented表示代码与针对性回归不代表视觉关闭"
+      ]
+    },
+    {
+      "id": "ART-018",
+      "title": "受击/采集/死亡/尸体/消失",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 78f2ee21cc3a0230074064f80062eb1ad5f0352221e7c06925b247f2cc6a05e3；3581传currentFrame-startFrame，3493重击零基frame5且digFragment才消耗一次，WEffect8*dir/3帧/80ms/击石91。"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/magiceff.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 6ec23619b46747b810fd9cc413efb3a0b9bc71f96a85f8f7cd05ba74a301a850；TMapEffect.Run严格>80ms每次一步；DrawEff用current格中心+px/py-24/-16和DrawBlend1(screen)，非add。"
+        },
+        {
+          "path": "assets/web/effects/Effect/library.json",
+          "kind": "native_pixels",
+          "scope": "Effect.wil SHA256 2d94f51ff7a7046daa65591e35c08cea0b23912f7aeeaae2aab0c7f24e37af90，WIX fe41b45a656df79ae9fd9e1fafc659fe0463c1fabaa08a86de0b9efce8c008d8；326源帧中8方向8*d+[0,1,2]24帧已逐原WIL重解码byte-equal现有PNG。"
+        },
+        {
+          "path": "assets/web/audio/91.wav",
+          "kind": "native_pixels",
+          "scope": "SoundUtil.pas s_strike_stone91；国服Wav/sound.lst实际91: wav/91.wav，原装/导出byte-equal SHA256 ebcb5e32521cdf7256c334be1951064edd21e080264823b327bc6803acdd38f1；不证明浏览器音频播放/同步。"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/SoundUtil.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 541c51db6af6acd2fadf33382e37370f7c617095b2d8b68296ab6318a8221397；s_strike_stone=91；LoadSoundList按数字索引加载sound.lst，PlaySound以列表真实路径播放。 原运行仍待验证。"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/ClMain.dfm",
+          "kind": "reference_source",
+          "scope": "SHA256 1b679b97adf288412e27a802ef0bc76084c4e3a675b8e4531c922150409ae56c；WEffectImg组件FileName绑定Data/Effect.wil；不猜与Magic混用。 原运行仍待验证。"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/PlayScn.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 0dcc555bf7fbd10fbd1ac240250bdc0bc28dead21ad188f664030c1af7426120；1328先actor.DrawEff再m_EffectList.DrawEff；1733/1734地图转屏幕格中心后TMapEffect减24/16，参考800x600下对应现世界格top-left+signed源偏移。 原运行仍待验证。"
+        },
+        {
+          "path": "docs/scene-lighting-death-implementation-2026-10-02.md",
+          "kind": "source_review",
+          "scope": "第十三批协议、默认死亡灰阶、灯光源文件与参考免蜡差异；当前生产fogApplied=false，不能当同版运行证明。"
+        },
+        {
+          "path": "assets/web/lighting/library.json",
+          "kind": "native_pixels",
+          "scope": "六份原lig0*.dat与原npal.idx逐字节导出和源锁；不是暗图启用或原端灯光半径证据。"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/online-actors.ts",
+        "services/web-gateway/WorldProjection.cs",
+        "content/classic-176/national-gameplay.json",
+        "apps/web/src/magic-effects.ts",
+        "apps/web/src/game-audio.ts",
+        "apps/web/src/play.ts",
+        "docs/scene-lighting-death-implementation-2026-10-02.md",
+        "apps/web/src/world-tone.ts",
+        "content/classic-176/scene-lighting.json",
+        "apps/web/src/scene-lighting-data.ts",
+        "apps/web/src/scene-calibration.ts",
+        "apps/web/scene-calibration.html",
+        "scripts/export-scene-lighting.py"
+      ],
+      "acceptance": [
+        "受击不误重播攻击，采集方向/持续/收尾像原端",
+        "dying末帧进入dead等待服务器hide/revive",
+        "复活/挖肉/尸体移除/重登逐方向完整验收",
+        "真实重击序号swingSequence每次独立，digFragment确认标记才在零基frame5/450ms发出一次当前格/方向矿碎屑回调；同序号刷新不得重放，无标记攻击不得触发；取消/死亡/销毁/切图以及完整动作后才加载的旧资源不得迟到播放",
+        "八方向矿碎屑8*d+0..2/80ms保持原signed偏移、screen和actor之后效果层；91号真实音与最后重击帧同步；原端/浏览器对应服务器DIG场景逐帧/音频比对，不据碎屑推断矿奖励"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "services/web-gateway/WorldProjection.cs",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        },
+        {
+          "path": ".runtime/reports/mining-native-assets.json",
+          "kind": "native_pixels",
+          "scope": "2026-10-01直接原Effect WIL/WIX解码24/24与现有PNG字节相同，signed尺寸/偏移/hash；91.wav原装byteEqual，sound.lst hash及参考Actor/magiceff/ClMainDFM/PlayScn/SoundUtil hash记录。只证明像素/原音文件与参考规则。"
+        },
+        {
+          "path": "tests/actor_status_regression.mjs",
+          "kind": "unit_regression",
+          "scope": "2026-10-01新增矿3组（共18）：真实OnlineActor+fakePixi/clock，450ms frame5一次、new/same/completed序号、只有真实DIG、末帧晚标记、取消/死亡/destroy/超过540ms异步load无迟到回调。"
+        },
+        {
+          "path": ".runtime/reports/actor-status-regression.log",
+          "kind": "unit_regression",
+          "scope": "2026-10-01共18组PASS的实际日志，包含矿3组；没有实际browser/native runtime。"
+        },
+        {
+          "path": "tests/mining_effects_regression.mjs",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 Root修复后最新9/9 PASS（初版8组通过后审查发现loading时钟缺口）：八方向24源frame/offset/nearest/screen/actor后层；strict>80三步/迟RAF只走一步；独立clock从impact即推进，240ms加载附当前frame2、243后不迟到附；单帧卡顿400仍frame1；clear/旧map/缺帧/manifest与texture重试。fakePixi，未证明GPU编译/browser/native runtime。"
+        },
+        {
+          "path": ".runtime/reports/mining-effects-review-regression.log",
+          "kind": "unit_regression",
+          "scope": "2026-10-01审查实跑最新9组PASS日志；初版8组曾漏loading clock，Root已删除名义240ms TTL并新增原tail时钟回归。非browser/native runtime/GPU编译。"
+        },
+        {
+          "path": "apps/web/src/game-audio.ts",
+          "kind": "source_review",
+          "scope": "miningStone→/audio/91.wav，遵守既有静音开关，play克隆音实例；源文件已byte-equal国服91，HTMLAudio真实播放/延迟/音量仍未实测。"
+        },
+        {
+          "path": "apps/web/src/play.ts",
+          "kind": "source_review",
+          "scope": "new OnlineActor第三参数回调→magicEffects.miningImpact(impact)+audio.play(miningStone)；heavyAttack通知递增swingSequence，miningFragment自有真实marker；clearWorld同时clear效果/destroy角色。仅静态阅读，不证明live_protocol/browser。"
+        },
+        {
+          "path": "apps/web/src/magic-effects.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 Root修复后独立MiningFragmentVisual从impact即clock/RAF，加载仅附当前仍live frame，strict>80每次一步并第3次前进移除；无固定240ms TTL。clear generations/取消，manifest/texture失败删除缓存重试；Effect24源索引/offset/nearest/screen/actor后z正确。原最终palette framebuffer和真实浏览器仍未验收。"
+        },
+        {
+          "path": ".runtime/reports/mining-effects-tail-review.json",
+          "kind": "unit_regression",
+          "scope": "2026-10-01额外只读生产复现3/3匹配参考clock，生产MagicEffects SHA256 96bf71d14b8ed47c4c616b602e9948bc202331aa14b64d99137b1ce44e49dbac：81/162后200ms加载→frame2、240ms加载→frame2尚活、只一次400ms tick后加载→frame1。运行fakePixi/clock，expected来自reference_source，不冒充native/browser。"
+        },
+        {
+          "path": ".runtime/reports/mining-live-final.json",
+          "kind": "live_protocol",
+          "scope": "2026-10-01 08:28:36.540Z–08:29:36.735Z真实WebSocket→18801→原服D401单一隔离战士67/67通过：22次挥锄、10次真实DIG投影通知，原SM200新增矿石实例19273520/rawDura4996；拾取及正常重登保持该实例和纯度。仅证明原服/网关WebSocket协议与物品结果，不证明生产浏览器450ms矿碎屑呈现、八方向层级、91.wav实际播放或同版原端对照。",
+          "recordedAt": "2026-10-01T08:29:36.735Z",
+          "environment": "本机Windows ws://127.0.0.1:18801/ws→原服；单一隔离战士D401(25,25)；运行M2Server.dll SHA256 7e0afb8903f05fad7b462f3d56f80539f8cc0c18ac0a90a203bc926bf6f9c776；Node协议探针，无浏览器或原客户端运行。",
+          "sha256": "c0742b020dccbf72765dec338aaf3a2a9dc3e393c9004b9de93f1996322ea2f3",
+          "sourceSha256": {
+            "tools/mining_probe.mjs": "531397eb7a94668a1e6bea6fef36d9fd288654f41f024a5856e50a3ca13370c8",
+            "tools/mining_probe_ground.mjs": "cdd1e8d63a409d49ba10e712a7251b9c669946fcd4b5cb5cb7384b9c26017340",
+            "services/web-gateway/MiningCommand.cs": "c900bf6c18ac9333593da4786cf9e03a0cc1b238903d52960319479b5455948e",
+            "services/web-gateway/GatewaySession.cs": "eeccd1b8f9694046fe28ef21999d36606fd38fdf65958e58938ff65697b38016",
+            "services/web-gateway/LegacyCodec.cs": "9cfe8c5d535bc076612168058d277d7ae4cee5bbc17e80a1cf4d5cb7888993a1",
+            "vendor/openmir2/src/M2Server/Maps/Envirnoment.cs": "ec6476c7ed1b5aa35974e90e9c26a0441c7696745773cb19f55486a08f888fe5",
+            "vendor/openmir2/src/M2Server/Player/PlayObject.Base.cs": "13ae36c656e7d23018f562f07f64eb0cfff681a19331422c703818156a4291eb"
+          }
+        },
+        {
+          "path": ".runtime/reports/scene-v13-web-accepted.json",
+          "kind": "unit_regression",
+          "scope": "41scripts488PASSmarkers,TSC/Vite and149stableinputs;WorldTone4actualPixi/TS/ASTgroups,lockedmaskdecoder/loader4groups.No actualshadercompilation or browserinteraction.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "b191f476d54cc5289532a1befc6a54bb413739e7123371c0205af3cd8ebb977f"
+        },
+        {
+          "path": ".runtime/reports/scene-v13-runtime.json",
+          "kind": "live_protocol",
+          "scope": "8source/HTTP/distidentities,6currentpages/modules,currentownedlisteners and actual5173/ws to new18801 pre-login envelopes/rejection/close. No authenticatednativegameplay orbrowser.",
+          "recordedAt": "2026-10-01T23:52:46.676169+00:00",
+          "environment": "Windows: productionTS/AST and actualPixi metadata with replacedGlProgram factory; isolatednet8 actualC# and privateTCP; currentloopbackHTTP/pre-loginWS. No browser/GPU/original executable/authenticatedrole/productionSQL.",
+          "sha256": "ea1158a3dfdf83d37059fe4a8cd2e9332b337bc55aaffe020ffd304703f9fd59"
+        }
+      ],
+      "gaps": [
+        "dying/dead基本逻辑存在，采集和尸体完整生命周期及音画时刻未验证",
+        "2026-10-01角色hook+Root Effect三帧与91音接线已落地，18状态组/9效果组+3独立tail场景回归通过；loading clock及固定240 TTL差异经审查后已修复。真实原服→网关WebSocket已确认10次DIG及SM200矿石实例19273520/rawDura4996；仍缺生产浏览器矿碎屑呈现与音频实际播放/同步/音量、同版原端矿场景逐帧/音频比较、screen原256色帧缓冲差分；矿奖励只认服务器物品事件",
+        "第十三批默认死亡调色、角色光/地图暗度或原始数据链已有分组证据；实际原端/浏览器与完整夜景/光源仍开放，详见本批主题。"
+      ]
+    },
+    {
+      "id": "ART-019",
+      "title": "Mon1–Mon18全种类/APPR/动作",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/monster-visuals.ts",
+        "apps/web/src/national-actors.ts",
+        "apps/web/src/online-actors.ts",
+        "content/classic-176/national-gameplay.json"
+      ],
+      "acceptance": [
+        "18族hash/原偏移、APPR库/stride/override逐怪可追溯",
+        "目标所有怪物所有方向standing/walking/attack/struck/dying/dead有表",
+        "未知race、空动作和Texture.EMPTY都被审计检出再以原端比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/monster-visuals.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/national-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/python-events-final.log",
+          "kind": "unit_regression",
+          "scope": "132项122通过、9失败1错误，失败全列于配套文档"
+        }
+      ],
+      "gaps": [
+        "705定义只有480可映射",
+        "MA9/25/30–47多表为空，P0名覆盖22不代表全世界"
+      ]
+    },
+    {
+      "id": "ART-020",
+      "title": "祖玛唤醒/石化/钻地/特殊大怪",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/national-actors.ts",
+        "apps/web/src/monster-visuals.ts",
+        "services/web-gateway/WorldProjection.cs"
+      ],
+      "acceptance": [
+        "休眠→触发→唤醒→攻击→死亡逐状态/方向/帧段取证",
+        "101/104不能默认MA19冒充",
+        "大怪多部位飞行喷火钻地有原端与服务器同步证据"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/national-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/monster-visuals.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "services/web-gateway/WorldProjection.cs",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "unverifiedRaces101/104尚存",
+        "多个特殊MA缺定义",
+        "服务端扩展需先判断目标版本"
+      ]
+    },
+    {
+      "id": "ART-021",
+      "title": "NPC造型/方向/待机动作",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        },
+        {
+          "path": "assets/web/actors/NPC00/library.json",
+          "kind": "native_pixels",
+          "scope": "npc原帧号/几何/signed偏移与源hash；不证明动态用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/online-actors.ts",
+        "assets/web/actors/NPC00/library.json"
+      ],
+      "acceptance": [
+        "npc2790帧按shape/方向/动画明确用途",
+        "真实说话/出售/关闭与NPC动作和热区像原端",
+        "守卫/商人/摆设锚点不被站位或marker替代"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "race50目前feature>>16直接staticPose，没有NPC动画"
+      ]
+    },
+    {
+      "id": "ART-022",
+      "title": "召唤/骷髅/神兽/宠物生命周期",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "固定哈希Delphi参考动作/叠层；不能冒充国服运行行为"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/online-actors.ts",
+        "apps/web/src/monster-visuals.ts",
+        "apps/web/src/magic-effects.ts"
+      ],
+      "acceptance": [
+        "召唤起手→地面效果→实体→跟随/变身/攻击/死亡→消失各阶段逐帧取证",
+        "各级形状/主人名/友军色像原端",
+        "真实召唤/重登/切图不留旧精灵"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/monster-visuals.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/magic-effects.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "slave识别/名称色和部分起手存在，完整生命周期尚未验收"
+      ]
+    },
+    {
+      "id": "ART-023",
+      "title": "隐身/中毒/石化/护盾多状态",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/actor-status.json",
+          "kind": "contract",
+          "scope": "2026-10-01 GAME-053/106/131与ART-023契约：盾mask/六源帧/120ms/层级/解除；毒色覆盖优先级；锁定Prguse全局调色板、22兼容WIL源哈希与参考来源。原端/真实GPU逐像素验收待执行。"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 78f2ee21cc3a0230074064f80062eb1ad5f0352221e7c06925b247f2cc6a05e3；MAGBUBBLEBASE=3890/STRUCKBASE=3900、THumActor状态0x00100000、120ms计时、受击状态限定；GetDrawEffectValue绿→红→蓝→黄→紫→灰覆盖；不冒充国服运行"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/cliUtil.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 e17f0604633636fb54c06503a285aa0f1837731f762e0a9daa73ed316ebb018d；BuildColorLevels以(r+g+b) div3，候选调色板索引1..255，Manhattan RGB且严格小于距离更新，平局取首索引；原index0保持0。DrawBlend1/Color256Anti的screen最终量化则候选0..255、Round，不能混为同一查表。规则是reference_source。"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/Data/Magic.wil",
+          "kind": "native_pixels",
+          "scope": "当前国服原装Magic.wil SHA256 be46a0258349b26db9ba7dba595abac1f0767d52fef11d9f508e704f2f6deaac；sourceFrameCount4010；3890–3892/3900–3902原索引均有效，原端用途/动态效果仍待运行确认"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/Data/Magic.wix",
+          "kind": "native_pixels",
+          "scope": "当前国服Magic.wix SHA256 7f95ff7ba4add42157e10eb0d43ee7c77fd3c5ac3ea1183e39971066a40dfc91；与当前Magic库同包，六帧实解码保持源索引/偏移/透明度"
+        },
+        {
+          "path": "assets/web/effects/Magic/library.json",
+          "kind": "native_pixels",
+          "scope": "同包六原PNG存在，3890/91/92=92×110@(-21,-78)，3900=88×118@(-19,-78)，3901=92×120@(-21,-81)，3902=92×114@(-21,-78)；逐hash/PNG头/直接WIL重解码字节一致，不等同真实浏览器/原端显示"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/Data/Prguse.wil",
+          "kind": "native_pixels",
+          "scope": "全文件SHA256 88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2；classic WIL偏移56的1024原BGRA palette bytes SHA256 325fe725be263df66b47dbd9817dab2462d3fe54b3dc20bdf04971eb108c2b0f；256 RGB条目无重复。"
+        },
+        {
+          "path": "content/classic-176/actor-status-palette.json",
+          "kind": "native_pixels",
+          "scope": "可重建原palette+6色阶表；资源SHA256 8f46af647fc9de0a3b97286740c12cc1e2065821921851f60d76c5e05680e906；6144字节LUT SHA256 01b60beba3181bdaa7af752ba1271ef2e480801f7d1c33e2afac5855a809078d。NHumHum/NHairHair/NWeaponWeapon/NPC00npc/Mon1..18共22WIL全文件hash逐锁且原palette字节与Prguse相同；表规则来自参考源码，数据不证明原端运行。"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/ClMain.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 08c79ace18755ca96882079ed0c5a5ff71c91bd8bb2de6ab539d90272355c74e；996–1005由g_WMainImages.MainPalette赋DxDraw.ColorTable再BuildColorLevels。"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/MShare.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 b0b27f8e7802171caae5098b861f4e82b400ccab9a1eee5c3ba9ece5a846d2a2；g_WMainImages源MAINIMAGEFILE。"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Share.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 e25154998cd50b1ad1c08f8c123bd10e575bbabbb011cd96c570f7317d1af8c2；MAINIMAGEFILE=Data/Prguse.wil。"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/WIL.pas",
+          "kind": "reference_source",
+          "scope": "SHA256 662fa57702187698953d74c81464ba995fe05668125100a4f39a57f3119186ec；MainPalette读256TRGBQuad并写indexed DIB色表；GDI实际向全局表映射仍需原端验证。"
+        },
+        {
+          "path": "docs/actor-palette-source-path-2026-10-01.md",
+          "kind": "source_review",
+          "scope": "调色板导出默认使用active契约nationalData；原装22源精确SHA与bundled LUT一致，mutable原端装备工作副本继续被拒绝。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "71042486a241f15b158f154577a83306755f04d08b81f5c4aacc3e9bbac82d52"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/online-actors.ts",
+        "content/classic-176/actor-status.json",
+        "apps/web/src/magic-effects.ts",
+        "services/web-gateway/WorldProjection.cs",
+        "apps/web/src/actor-palette.ts",
+        "content/classic-176/actor-status-palette.json",
+        "scripts/export-actor-status-palette.py",
+        "tests/test_actor_palette_export.py",
+        "docs/actor-palette-source-path-2026-10-01.md"
+      ],
+      "acceptance": [
+        "真实服务端授予0x00100000才显示持续盾，单独施法动画不得授予；国服原端与Web同时对照3890–3892每120ms循环，无前端TTL，八方向移动与signed源偏移/前武器后层级一致",
+        "新SM_STRUCK/health通知序号重播3900–3902每120ms；status/resources同受击序号不重播；角色受击动作结束即回常态，延迟资源加载仍在当前时钟相位；原端逐帧证明实际可见帧段",
+        "真实服务端撤销盾、dying/dead、销毁/切图/断线均清层；在manifest/texture迟到及撤销后重新授予的竞态中，仅当前世代可附加精灵；旧远端移动队列不可复活已撤销状态",
+        "0x40000000红毒与0x80000000绿毒分别显示红/绿，两位同时存在红优先，更高蓝/黄/紫/灰状态依参考覆盖；body与hair同变色，weapon/盾/名字不染色；真实服务器应用/解除逐状态后原端/Web比较",
+        "同包NHumHum/NHairHair/Mon/NPC原调色板源像素在六色阶逐一匹配：floor(sumRGB/3)、非零候选1..255、Manhattan距离与平局首索引；index0透明，body/hair共享滤镜但不写入原纹理，解除/死亡/多actor销毁不破坏共享LUT；GL与WebGPU两后端实编译并与原端截图逐像素比对，涵盖非3整除亮度/透明边缘",
+        "用原端截帧检验调色板最近色、screen量化/透明边界、本人与他人隐身/石化/焦点效果；RGBA矩阵或本地alpha值不得替代像素验收"
+      ],
+      "verification": [
+        {
+          "path": ".runtime/reports/actor-status-native-assets.json",
+          "kind": "native_pixels",
+          "scope": "2026-10-01 6/6：原装Magic WIL/WIX源hash核实，逐源索引解码PNG与现有导出byte-equal，signed偏移/尺寸/透明与不透明像素确认；只证明像素来源"
+        },
+        {
+          "path": "tests/actor_status_regression.mjs",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 最新18组PASS：原15组盾/动作/状态/异步/queue生命周期通过，颜色断言已改为实际原palette查表；追加3组生产矿回调450ms、dig标记/重复序号及取消/死亡/销毁/超时加载。fakePixi/时钟，不等同真实浏览器/原端。"
+        },
+        {
+          "path": ".runtime/reports/actor-status-regression.log",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 最新18组实运行PASS日志；历史首批15组后，新增矿3组并用原palette替换矩阵断言。没有实际HTTP/原端/浏览器画面验收。"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 持续盾z3/screen/源偏移nearest、confirmed状态即时覆盖；毒色改为createActorPaletteFilter原256表，body/hair同filter，纹理不染改；struckSequence重启盾/角色受击帧。首批RGBA矩阵只是历史步骤，当前生产已替换。"
+        },
+        {
+          "path": "services/web-gateway/WorldProjection.cs",
+          "kind": "source_review",
+          "scope": "本批前端只消费已投影status/health/action；此路径静态来源，不证明真实服务器逐状态场景"
+        },
+        {
+          "path": ".runtime/reports/actor-palette-export.json",
+          "kind": "native_pixels",
+          "scope": "2026-10-01真实导出：锁定Prguse文件/1024palette和22actor WIL文件/同palette，1536brightness+1536sourceIndex表；resource/LUT hash记录。只证实来源与数据。"
+        },
+        {
+          "path": ".runtime/reports/actor-palette-check.json",
+          "kind": "native_pixels",
+          "scope": "2026-10-01 --check真实只读重建，23源库hash与生成JSON精确相同，compatibleSourceCount22，sourceIndex1536/brightness1536；非浏览器像素。"
+        },
+        {
+          "path": "tests/actor_palette_regression.mjs",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 4组PASS：独立Manhattan/first-tie/div推导全部1536+1536项、source alpha/index0、6144bytes/hash；真实Pixi Filter/BufferImageSource/UniformGroup/GpuProgram资源绑定和vertex属性解析，销毁仍保留共享LUT/program。GL factory替身，GPU未编译，shader公式仅source_review。"
+        },
+        {
+          "path": ".runtime/reports/actor-palette-regression.log",
+          "kind": "unit_regression",
+          "scope": "2026-10-01同次4组PASS日志，明确无browser_runtime/native_runtime/visual_comparison。"
+        },
+        {
+          "path": "tests/test_actor_palette_export.py",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 Python8/8 PASS：候选排除0/平局首索引、非法palette/header/size、BGR/保留bytes与完整source hash、拒绝解锁和坏源不写出、--check只读差异、真实23国服库重建与当前JSON相同。"
+        },
+        {
+          "path": ".runtime/reports/actor-palette-export-regression.log",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 Python8/8实运行日志，包含本机原装数据重建；不证明原端用途/画面。"
+        },
+        {
+          "path": "apps/web/src/actor-palette.ts",
+          "kind": "source_review",
+          "scope": "GL高精度/nearest 256×6查表、RGB byte恢复后floor/div并alpha重乘；WGSL显式textureSampleLevel避免非均匀透明分支的导数要求，资源/vertex属性已由安装的Pixi8.13.2解析。真实GLSL/WGSL编译、GPU输出仍待浏览器。"
+        },
+        {
+          "path": ".runtime/reports/map-v7-sentinel-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "最终实际352组/30脚本模块/VM/Pixi回归；含源选择、54特殊引用nil路径和切图/失败恢复，非浏览器。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "eb7b538e7cd509990359d7d9e88775eccb556a30b4088845904fd60b62de73d0"
+        },
+        {
+          "path": ".runtime/reports/map-v7-final-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "修复默认源路径后完整Python339/339通过；current render与original fidelity分别断言，独立内容CLI继续exit1。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "f7a718724db196b2129ce8241e646bdb99d50aee537b7a5d47eae3ee42c238d7"
+        },
+        {
+          "path": ".runtime/reports/actor-palette-seventh-repaired.json",
+          "kind": "unit_regression",
+          "scope": "原安装22源实际--check通过、默认源/显式错误源边界回归；bundled palette与全部SHA锁未改，无浏览器/GPU/原端运行证明。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "324d7f0c19490b12eb9d722edd82e729fff208147824dd3fdc52b11a8e081b42"
+        }
+      ],
+      "gaps": [
+        "原端与真实浏览器尚未对照盾八方向/装备遮挡、120ms及受击动作真实可见帧；假Pixi只验证生产生命周期，未标verified",
+        "毒色integer floor和原Prguse nearest/first-index LUT已实施并通过规则/源hash回归；GLSL/WGSL未在真实浏览器GPU编译或截图差分，RGBA滤镜中间缓冲的透明/舍入边界与原端实际输出仍待确认",
+        "screen虽有逐通道公式，Magic自身palette SHA256 059647cd8b9c6b6a823c9d449e3627cffe4f9e65625c4f2e7d9a47b9e639d597与Prguse不同；原GDI源表→全局表映射、受光/暗场景屏幕索引、Color256Anti Round和候选0..255最终量化尚未实现/验证。不能拿actor毒色非零候选LUT复用来声称盾/光效screen已精确",
+        "隐身alpha0.38及bit0灰色石化回退仍是既有浏览器推断；本人/他人、焦点高亮与石化具体渲染/组合未闭合",
+        "真实服务器授予/解除、重复受击、死亡、切图、重登与断线的协议+浏览器联合场景待执行；本批没有HTTP/browser_runtime通过声明"
+      ]
+    },
+    {
+      "id": "ART-024",
+      "title": "名字/掉落标签/血条/选择反馈",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/online-actors.ts",
+        "apps/web/src/ground-items.ts",
+        "apps/web/src/play.ts"
+      ],
+      "acceptance": [
+        "原版默认显示/hover与辅助常显分别记录",
+        "名称色/黑边/基线/光标离开/遮挡/多标签不偏移",
+        "血条用权威HP并逐怪确认样式",
+        "目标/强制攻击反馈经原端/Web比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/ground-items.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/play.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "血条自绘、nameFill色值和翻避规则多属推断",
+        "原端辅助名称补丁不能算原版默认"
+      ]
+    },
+    {
+      "id": "ART-025",
+      "title": "Magic/Magic2逐技能起手帧",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/magiceff.pas",
+          "kind": "reference_source",
+          "scope": "参考EffectBase与法术流程，仍需原国服运行对照"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/magic-effects.ts",
+        "content/classic-176/skill-assets.json",
+        "content/classic-176/national-gameplay.json"
+      ],
+      "acceptance": [
+        "每目标技能cast/flight/hit/attached/ground列库/start/count/direction/interval",
+        "起手与角色spell和成功/失败同步",
+        "所有被引用源段可用且有原端录像"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/magic-effects.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/skill-assets.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "目前核心15与部分additional是固定10帧60ms表，不是完整经典技能覆盖"
+      ]
+    },
+    {
+      "id": "ART-026",
+      "title": "弹道16方向/速度/目标运动",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/magiceff.pas",
+          "kind": "reference_source",
+          "scope": "参考EffectBase与法术流程，仍需原国服运行对照"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/magic-effects.ts"
+      ],
+      "acceptance": [
+        "火球/大火球/灵魂火符各16方向帧段/角度边界像原端",
+        "起飞/每格速度/运动目标/消失/落空/爆炸正确",
+        "两端逐帧位置测量不以命中消息替代画面"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/magic-effects.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "固定420ms延迟、distance*50ms、6帧循环未原端对照"
+      ]
+    },
+    {
+      "id": "ART-027",
+      "title": "雷电/范围攻击/爆炸/受击时刻",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/magiceff.pas",
+          "kind": "reference_source",
+          "scope": "参考EffectBase与法术流程，仍需原国服运行对照"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/magic-effects.ts",
+        "apps/web/src/online-actors.ts",
+        "services/web-gateway/WorldProjection.cs"
+      ],
+      "acceptance": [
+        "每effectType/effect映射正确帧段与真实落点",
+        "范围技能可见全部作用格",
+        "雷电/爆炸/HP/受击首末帧时间与原端比较",
+        "目标死/消失/空格施法不错误回退Caster"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/magic-effects.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "services/web-gateway/WorldProjection.cs",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/gameplay-live-check.json",
+          "kind": "live_protocol",
+          "scope": "空格雷电真实effect接收；不证明爆炸图像或时间"
+        }
+      ],
+      "gaps": [
+        "resolve只覆盖部分类型且固定延迟/80ms",
+        "真实空格雷电回effect只能证明协议"
+      ]
+    },
+    {
+      "id": "ART-028",
+      "title": "火墙五格持续事件/播放/移除",
+      "status": "implemented",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/clEvent.pas",
+          "kind": "reference_source",
+          "scope": "持续地面事件；非CUSTOM火墙1630..1635、40ms/图、light1"
+        },
+        {
+          "path": "assets/web/effects/Magic/library.json",
+          "kind": "native_pixels",
+          "scope": "Magic原帧号/几何/signed偏移与源hash；不证明动态用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/magic-effects.ts",
+        "apps/web/src/play.ts",
+        "services/web-gateway/WorldProjection.cs"
+      ],
+      "acceptance": [
+        "五格独立事件ID/十字坐标正确，重复SHOW不重启，HIDE/切图移除",
+        "Magic1630–1635原偏移40ms/帧，异步HIDE不复活",
+        "同版原端/Web比较加色/层级/相位/持续时长，灯光由ART-009验收"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/magic-effects.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/play.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "services/web-gateway/WorldProjection.cs",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/world-events-live.json",
+          "kind": "live_protocol",
+          "scope": "11项真实网关/原生Gate事件与位移；非画面/伤害验证"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "协议与异步race回归通过，实际画面/灯光/伤害对照仍缺"
+      ]
+    },
+    {
+      "id": "ART-029",
+      "title": "其他持续地图/附体法术",
+      "status": "missing",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/magiceff.pas",
+          "kind": "reference_source",
+          "scope": "参考EffectBase与法术流程，仍需原国服运行对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/clEvent.pas",
+          "kind": "reference_source",
+          "scope": "持续地面事件；非CUSTOM火墙1630..1635、40ms/图、light1"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/magic-effects.ts",
+        "services/web-gateway/WorldProjection.cs"
+      ],
+      "acceptance": [
+        "逐eventType列原端帧段/锚点/混合/光亮/生命周期",
+        "困魔咒/护盾/隐身等目标法术按服务器创建/删除/更新驱动",
+        "重入视野/断线/切图无残留和错误固定TTL"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/magic-effects.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "services/web-gateway/WorldProjection.cs",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "只有eventType5有sprite，其他仅记录",
+        "附体持续效果和组合规则不完整"
+      ]
+    },
+    {
+      "id": "ART-030",
+      "title": "烈火/刺杀/半月/攻杀/重击剑光",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/melee-visual.json",
+          "kind": "contract",
+          "scope": "锁定四技能32方向组、192原帧几何/hash、ActHit200/6/85与音效frame2；同请求预测clock adoption为Web网络适配，不能冒充原端CM触发时间线"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/Actor.pas",
+          "kind": "reference_source",
+          "scope": "SHA78f2ee21cc3a0230074064f80062eb1ad5f0352221e7c06925b247f2cc6a05e3；四专属均ActHit200+dir*8、6帧85ms、strict>单tick，Magic base+dir*10+frame在盾后DrawBlend1；heavy264/6/90与big328/8/70无该剑光；RunActSound frame2与weapon div2。参考源码不证明目标原端运行"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/magiceff.pas",
+          "kind": "reference_source",
+          "scope": "SHA6ec23619b46747b810fd9cc413efb3a0b9bc71f96a85f8f7cd05ba74a301a850；HitEffectBase power800/thrusting1410/halfMoon1700/fire3480，均Magic库"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/SoundUtil.pas",
+          "kind": "reference_source",
+          "scope": "SHA541c51db6af6acd2fadf33382e37370f7c617095b2d8b68296ab6318a8221397；武器50..57与专属130/131/132/133/137号音效常量，真实播放由声音领域另验"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/Data/Magic.wil",
+          "kind": "native_pixels",
+          "scope": "本机国服WIL SHAbe46a0258349b26db9ba7dba595abac1f0767d52fef11d9f508e704f2f6deaac，WIX SHA7f95ff7ba4add42157e10eb0d43ee7c77fd3c5ac3ea1183e39971066a40dfc91，4010帧；只确认原像素/alpha/原索引/signed偏移，不确认动作用途/混合或时序"
+        },
+        {
+          "path": "assets/web/effects/Magic/library.json",
+          "kind": "native_pixels",
+          "scope": "四剑光192帧已在旧导出库，本轮重解码国服原WIL并逐帧核验PNG字节、几何与RGBA；未新增public PNG"
+        },
+        {
+          "path": "services/web-gateway/WorldProjection.cs",
+          "kind": "server_source",
+          "scope": "真实SM14/15/16/18/19/24/8分别投影normal/heavy/big/power/thrusting/halfMoon/fire；四专属action attack、heavy heavyAttack、big wideAttack；self/actionId由网关关联当前请求，不从开关/ACK推剑光"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/melee-visual.ts",
+        "apps/web/src/online-actors.ts",
+        "content/classic-176/melee-visual.json",
+        "scripts/import-national-melee-assets.py",
+        "services/web-gateway/WorldProjection.cs",
+        "services/web-gateway/MeleeSkills.cs"
+      ],
+      "acceptance": [
+        "逐技能采集准备状态、人物/武器/剑光原帧段和8方向；攻杀800、刺杀1410、半月1700、烈火3480各base+dir*10+[0..5]，192帧必须与锁定国服源PNG/alpha/尺寸/signed偏移一致",
+        "四专属使用ActHit200+dir*8六帧与人体/武器/头发同一strict>85ms单tick clock，源偏移、WORDER、盾后screen剑光、毒色只作用人体/头发；重击与大击不得凭开关新增剑光",
+        "一次消耗、刺杀二格、半月范围由真实确认攻击种类驱动；拒绝、降级普通与仅ACK不能伪造专属Sword或技能声，真实经济/伤害另以GAME证据关闭",
+        "同请求self普通预测→确认四专属仅adopt当前已处理frame/frameAt，不重播人体、不做elapsed floor；不同请求/远端/取消/死亡/重击/大击重置，完结后迟到确认不得复活旧剑光",
+        "正常击打frame2武器声至多一次，四专属确认后同frame可补仅技能声，越过frame2不重放旧声；重击frame2武器声与真实DIG frame5石声分离",
+        "同sequence刷新、资源迟到/失败重试、旧异步任务、死亡/销毁/切图均无重复声/残留光；共享纹理不得被单角色销毁，人体原帧缺失时不浮剑光",
+        "拒绝/空挥/命中/多人、准备状态、原端光照/混合/音轨与浏览器32种技能方向的逐帧画面和时刻比较"
+      ],
+      "verification": [
+        {
+          "path": ".runtime/reports/melee-native-assets.json",
+          "kind": "native_pixels",
+          "scope": "2026-10-01T09:31:34.032853+00:00，本机Python WeMadeLibrary直接原WIL/WIX check；requested192/matched192/repaired0/complete true，全部PNG byteEqual/geometryEqual并记录RGBAhash。报告SHAc59c3872aa6ff257e5c02e9629be5d79f6775c975e54c2f9d790b8584e1df1c3；不含HTTP/GPU/浏览器/原可执行程序"
+        },
+        {
+          "path": ".runtime/reports/melee-visual-regression.json",
+          "kind": "unit_regression",
+          "scope": "2026-10-01T09:31:01.598597+00:00，Windows Node/Python；19生产模块/OnlineActor fakePixi时钟组、7素材测试、既有Actor18/world4及tsc均exit0；记录6个own source SHA与命令/log hash。报告SHA39ccd08b2d1f562c5bebf0312fbcb211e06c5af113a4682bd4516e4c47c8ce4c；不含GPU/浏览器/原端运行"
+        },
+        {
+          "path": ".runtime/reports/melee-visual-regression.log",
+          "kind": "unit_regression",
+          "scope": "19组：四技能8方向six-frame/source offsets/screen层级；strict时钟/人体武器头发同步；预测确认adoption/声parts各一次；取消/死亡/新请求/资源异步race/共享纹理/缺人体帧；重击frame2武器与frame5DIG独立。Fake Pixi未编译GPU"
+        },
+        {
+          "path": ".runtime/reports/melee-import-regression.log",
+          "kind": "unit_regression",
+          "scope": "7测试：隔离4010帧合成WIL fixture、默认只读、明确apply增量修复并保留其他索引/元数据、源hash与契约拒绝、空原帧拒绝；其中本机实际国服192帧检验确已运行"
+        },
+        {
+          "path": ".runtime/reports/melee-source-freeze.json",
+          "kind": "unit_regression",
+          "scope": "2026-10-01T09:34:35.458573+00:00，网关7/原服生产类隔离fixture6的源指纹；真实SM种类及self扩展回传由GAME批次追踪，不是DB/live/browser或原国服二进制取证"
+        },
+        {
+          "path": ".runtime/reports/gameplay-live-check.json",
+          "kind": "live_protocol",
+          "scope": "历史战士开关/准备/消耗/到期；不证明本轮剑光、原端时序或伤害"
+        }
+      ],
+      "gaps": [
+        "尚无目标国服原可执行程序与真实浏览器32个技能方向的逐帧差分、GPU screen编译/合成、所有武器衣服WORDER/盾/红绿毒/隐身并存以及拒绝/空挥/多人场景对照；192原帧校验和fakePixi不能关闭这些门槛",
+        "参考special攻击m_nMagLight=2动态光照尚未实现；DrawWeaponGlimmer3390 ready-fire段在参考中被注释，准备泛光用途不能仅由素材/flag臆造",
+        "screen当前浏览器RGBA混合未证明原256调色板帧缓冲量化一致；Magic palette与人体调色板的完整合成仍需ART-023/光照原端取证",
+        "参考远端m_boMsgMuch积压队列可Round(85*2/3)加速；当前只实现普通strict85单tick剑光clock，完整远端动作队列节拍尚未闭合",
+        "同请求预测人体重播已修；self确认kind迟到时只在当前帧加入剑光且不重放错过技能声，这是网络适配。原端自身从CM动作启动且过滤自身SM，新增native self SM回传与目标原端输入/声光触发时刻仍需真实比较",
+        "原50..57/130..133/137文件、播放音量/失焦/可信手势与实际武器声叠加由Root声音批次另验；本轮callback回归仅确认选择parts与一次时序，不证明浏览器音轨"
+      ]
+    },
+    {
+      "id": "ART-031",
+      "title": "Effect通用/升级/传送/入图效果",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/magiceff.pas",
+          "kind": "reference_source",
+          "scope": "参考EffectBase与法术流程，仍需原国服运行对照"
+        },
+        {
+          "path": "assets/web/effects/Effect/library.json",
+          "kind": "native_pixels",
+          "scope": "Effect原帧号/几何/signed偏移与源hash；不证明动态用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/magic-effects.ts",
+        "assets/web/effects/Effect/library.json"
+      ],
+      "acceptance": [
+        "Effect326帧每段用途经原端确认",
+        "升级/传送/入图/状态变化各有事件映射",
+        "原偏移/人物背景名字层级/混合逐帧正确且失败/切图无残留"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/magic-effects.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "Effect已导出，但MagicEffects只消费Magic/Magic2，多数通用效果无消费路径"
+      ]
+    },
+    {
+      "id": "ART-032",
+      "title": "Items背包/商店/快捷栏图标",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "assets/web/ui-national/items/library.json",
+          "kind": "native_pixels",
+          "scope": "Items原帧号/几何/signed偏移与源hash；不证明动态用途"
+        },
+        {
+          "path": "content/classic-176/icon-usage.json",
+          "kind": "contract",
+          "scope": "第六批原参考取帧规则，物品精确Looks、技能Effect×2/+1；参考版本与同包二进制对应仍待验收。"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/inventory.ts",
+        "apps/web/src/classic-ui.ts",
+        "tools/resource_catalog.py",
+        "content/classic-176/item-assets.json",
+        "assets/web/ui-national/items/library.json",
+        "docs/resource-consistency-2026-10-01.md",
+        "apps/web/src/icon-frames.ts",
+        "content/classic-176/icon-usage.json",
+        "docs/icon-source-usage-2026-10-01.md",
+        "apps/web/src/item-icons.ts",
+        "tests/item_icon_consumers_regression.mjs"
+      ],
+      "acceptance": [
+        "每目标物品imgIndex/名字override对应原有效图，未知图明确诊断",
+        "缩放/居中/透明边界正确且各窗口共享实例图源",
+        "装备药品书籍材料逐图与原端核对"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/inventory.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/classic-ui.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tools/resource_catalog.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/item-assets.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/python-events-final.log",
+          "kind": "unit_regression",
+          "scope": "132项122通过、9失败1错误，失败全列于配套文档"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-checks.json",
+          "kind": "unit_regression",
+          "scope": "第五批当前源码：242组Node回归/21脚本；完整Python257项，失败1项；非浏览器。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "21c3ea1efd5d7e5d9ef5666174a9df9c8e113f537ea845e9fb288bad72a40a15"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "必需源/导出哈希、索引、偏移与内容目录；complete=false保留实际缺项，不是画面验收。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "bafc0ae626d68f2f4628fd74f09eb10369219be86bf012bd185658cd85eb51f0"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "第六批324组/27脚本实际模块/VM回归；含准确取帧/故障重试/旧回调/切图事务，非浏览器。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "92e395c7743b5b08f14440cf9e9b3a87fd63d7832cffc20d65998f76c0539ec8"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "完整Python279项/278通过，剩1项GA0当前source缺帧；独立内容CLI exit1。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "76ac993b7290640b1493d7ffdf1c056a0ea05e6dd4763360bc6df92a73afe23c"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "实际CLI遍历必需源/导出哈希与内容目录，complete=false；无原端、浏览器或历史配对完成声明。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "0b83b0f967d6c3edb823ddc248a7e5e9a212b82f60a27ba519d51e9216906715"
+        }
+      ],
+      "gaps": [
+        "按原Looks准确映射后1000物品有401图标；599缺项为576越界/23占位，旧40名称+2通用替换不参与选图。",
+        "扩展物品内容身份与同族图库源、原端/浏览器像素及锚点比较尚未闭合。"
+      ]
+    },
+    {
+      "id": "ART-033",
+      "title": "DnItems掉落精灵/偏移/堆叠",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "assets/web/ui-national/dnitems/library.json",
+          "kind": "native_pixels",
+          "scope": "DnItems原帧号/几何/signed偏移与源hash；不证明动态用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/ground-items.ts",
+        "assets/web/ui-national/dnitems/library.json",
+        "content/classic-176/item-assets.json"
+      ],
+      "acceptance": [
+        "每目标物品地面索引/原偏移/脚点像原端",
+        "多物同格/hover/常显/遮挡/移除正确",
+        "相机移动与拾取确认期间标签不跳格不先删图"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/ground-items.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/item-assets.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "565原帧存在，扩展缺图和默认标签风格未全比"
+      ]
+    },
+    {
+      "id": "ART-034",
+      "title": "stateitem与装备纸娃娃",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "assets/web/ui-national/stateitem/library.json",
+          "kind": "native_pixels",
+          "scope": "stateitem原帧号/几何/signed偏移与源hash；不证明动态用途"
+        },
+        {
+          "path": "content/classic-176/icon-usage.json",
+          "kind": "contract",
+          "scope": "第六批原参考取帧规则，物品精确Looks、技能Effect×2/+1；参考版本与同包二进制对应仍待验收。"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/paperdoll.ts",
+        "apps/web/src/classic-hud.ts",
+        "assets/web/ui-national/stateitem/library.json",
+        "apps/web/src/icon-frames.ts",
+        "content/classic-176/icon-usage.json",
+        "docs/icon-source-usage-2026-10-01.md",
+        "apps/web/src/item-icons.ts",
+        "tests/item_icon_consumers_regression.mjs",
+        "apps/web/src/inventory.ts"
+      ],
+      "acceptance": [
+        "560帧衣服/武器/头盔实际用途与Hum世界动画区分",
+        "男女每类装备换装/摘下/拒绝由权威确认",
+        "原端窗口逐图验证纸娃娃锚点/武器头盔层级"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/paperdoll.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/classic-hud.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "第六批324组/27脚本实际模块/VM回归；含准确取帧/故障重试/旧回调/切图事务，非浏览器。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "92e395c7743b5b08f14440cf9e9b3a87fd63d7832cffc20d65998f76c0539ec8"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "完整Python279项/278通过，剩1项GA0当前source缺帧；独立内容CLI exit1。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "76ac993b7290640b1493d7ffdf1c056a0ea05e6dd4763360bc6df92a73afe23c"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "实际CLI遍历必需源/导出哈希与内容目录，complete=false；无原端、浏览器或历史配对完成声明。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "0b83b0f967d6c3edb823ddc248a7e5e9a212b82f60a27ba519d51e9216906715"
+        }
+      ],
+      "gaps": [
+        "服装/武器/首饰已按原Looks选择stateitem且保留该族signed偏移；>=10000的StN独立扩展库尚未注册。",
+        "基础人体与头发页面仍需与同版原端匹配，纸娃娃层级/锚点/动作及真实浏览器比较未闭合。"
+      ]
+    },
+    {
+      "id": "ART-035",
+      "title": "Prguse/Prguse2全部UI底图族",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        },
+        {
+          "path": "assets/web/ui-national/prguse/library.json",
+          "kind": "native_pixels",
+          "scope": "Prguse原帧号/几何/signed偏移与源hash；不证明动态用途"
+        },
+        {
+          "path": "content/classic-176/system-dialog.json",
+          "kind": "contract",
+          "scope": "第八批原帧/源/几何锁；布局拟合与字体/版本/状态语义未核分别登记。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "14dc6bb09c058eae87625852cdf829d77a51a74f35046e2c968c2ccb3de6b1df"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/classic-ui.ts",
+        "tools/import-national-ui.py",
+        "content/classic-176/ui-layout.json",
+        "apps/web/src/system-dialog.ts",
+        "apps/web/src/system-dialog.css",
+        "content/classic-176/system-dialog.json",
+        "docs/system-auth-implementation-2026-10-01.md",
+        "apps/web/src/password-change.ts",
+        "apps/web/src/password-change.css",
+        "apps/web/src/classic-auth.ts",
+        "apps/web/play.html",
+        "content/classic-176/auth-actions.json",
+        "services/web-gateway/PasswordChange.cs",
+        "services/web-gateway/GatewaySession.cs"
+      ],
+      "acceptance": [
+        "510/14每个有效帧段有窗口/控件/状态/坐标证据",
+        "窗口原尺寸与透明边界正确",
+        "optional NewopUI/Prguse3/ui1/ui3缺失按目标包证明而非异版替换"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/classic-ui.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tools/import-national-ui.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "docs/system-auth-implementation-2026-10-01.md",
+          "kind": "source_review",
+          "scope": "当前第八批行为、修正、源依据和验收边界；不是原端或浏览器运行证据。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "f0349d771ca1fe34c2311a4e1505107a2ddd6e9dae3805b6f9307630a888e7bb"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "33脚本420实际断言组：完整canonical后仅frame身份guard变更，32不变脚本复用、系统27组重跑；VM/fakeDOM/Pixi/media，非浏览器。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "b0fabf0ac33279a662420c0f2f9c4dd23629f40c3c1f11d89383a482516fb584"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-checks.json",
+          "kind": "unit_regression",
+          "scope": "最终TSC/Vite通过；当前所有Web TS/CSS输入指纹、integer-div、字体契约、模态层与frame精确身份修正。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "013061929d107f4bdbe942c370236f956f4414082d66965153b93e0736ee2a57"
+        },
+        {
+          "path": ".runtime/reports/system-auth-eighth-native-assets-final.json",
+          "kind": "unit_regression",
+          "scope": "原安装Prguse16帧实际重解码，PNG bytes/RGBA/透明/偏移相等；18专项通过，字体/动态/历史配对仍unknown。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "984db2ec7ae2ef7cc1eaf878aae5f117fb47ab5b5390fb773bedeb0d4d593d47"
+        }
+      ],
+      "gaps": [
+        "新增16帧已锁源并与原WIL像素相同；整个Prguse/Prguse2族的用途、所有热区、目标版动态和全帧视觉比较仍待完成。"
+      ]
+    },
+    {
+      "id": "ART-036",
+      "title": "ChrSel登录/选服/选角/建角",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        },
+        {
+          "path": "assets/web/ui-national/chrsel/library.json",
+          "kind": "native_pixels",
+          "scope": "ChrSel原帧号/几何/signed偏移与源hash；不证明动态用途"
+        },
+        {
+          "path": "content/classic-176/auth-actions.json",
+          "kind": "contract",
+          "scope": "第八批原帧/源/几何锁；布局拟合与字体/版本/状态语义未核分别登记。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "167431582aa48a053f024d4bfa3c4d035a994127be705a8f239e24dd38b3fbcc"
+        },
+        {
+          "path": "docs/selection-delete-implementation-2026-10-02.md",
+          "kind": "source_review",
+          "scope": "第十四批参考删除/控件绘制、原图来源与原服假成功分支；没有同版原端或真实删除完成声明。"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/classic-auth.ts",
+        "content/classic-176/ui-layout.json",
+        "assets/web/ui-national/chrsel/library.json",
+        "apps/web/src/password-change.ts",
+        "apps/web/src/password-change.css",
+        "apps/web/play.html",
+        "content/classic-176/auth-actions.json",
+        "services/web-gateway/PasswordChange.cs",
+        "services/web-gateway/GatewaySession.cs",
+        "docs/system-auth-implementation-2026-10-01.md",
+        "docs/selection-delete-implementation-2026-10-02.md",
+        "content/classic-176/selection-actions.json",
+        "apps/web/src/character-delete.ts",
+        "services/web-gateway/GatewaySession.CharacterDelete.cs",
+        "tests/character_delete_regression.mjs",
+        "tests/CharacterDeleteGatewayRegression/Program.cs"
+      ],
+      "acceptance": [
+        "登录背景输入弹框/选服/空槽/选中/删除/创建每状态有同版截图",
+        "六画像40/80/120/160/200/240的动作与高亮段逐帧取证",
+        "hover/pressed/disabled/pending/rejected/close/IME真实浏览器比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/classic-auth.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        },
+        {
+          "path": "docs/system-auth-implementation-2026-10-01.md",
+          "kind": "source_review",
+          "scope": "当前第八批行为、修正、源依据和验收边界；不是原端或浏览器运行证据。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "f0349d771ca1fe34c2311a4e1505107a2ddd6e9dae3805b6f9307630a888e7bb"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "33脚本420实际断言组：完整canonical后仅frame身份guard变更，32不变脚本复用、系统27组重跑；VM/fakeDOM/Pixi/media，非浏览器。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "b0fabf0ac33279a662420c0f2f9c4dd23629f40c3c1f11d89383a482516fb584"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-checks.json",
+          "kind": "unit_regression",
+          "scope": "最终TSC/Vite通过；当前所有Web TS/CSS输入指纹、integer-div、字体契约、模态层与frame精确身份修正。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "013061929d107f4bdbe942c370236f956f4414082d66965153b93e0736ee2a57"
+        },
+        {
+          "path": ".runtime/reports/password-change-eighth-regression.json",
+          "kind": "unit_regression",
+          "scope": "15组真实生产类/TCP/GatewaySession.Run，原生5.1秒等待、506/507和取消/超时/并行；fixture原生端，不冒充原服成功验收。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "c1e38005516bbed85aff05dac68882597e39bb8815f4764443b3393d12322701"
+        },
+        {
+          "path": ".runtime/reports/password-change-live-rejection-v8.json",
+          "kind": "live_protocol",
+          "scope": "真实生产控制器VM→WebSocket18801→LoginGate，仅未知账号507/0；11组，实测5190ms，SELECT前后账号/角色/索引全0；没有506成功、新旧密码登录或浏览器。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "4ac526b1bf292bc4b4f81ef02025b5f9d4c080806e70e352e38a72e47bf585bf"
+        },
+        {
+          "path": ".runtime/reports/system-auth-eighth-native-assets-final.json",
+          "kind": "unit_regression",
+          "scope": "原安装Prguse16帧实际重解码，PNG bytes/RGBA/透明/偏移相等；18专项通过，字体/动态/历史配对仍unknown。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "984db2ec7ae2ef7cc1eaf878aae5f117fb47ab5b5390fb773bedeb0d4d593d47"
+        },
+        {
+          "path": ".runtime/reports/selection-v14-web-final.json",
+          "kind": "unit_regression",
+          "scope": "42canonical scripts497PASS markers,TSC/Vite;9actual deletion controller/markup/play AST groups. FakeDOM/transport; no browser.",
+          "recordedAt": "2026-10-02T00:38:25.351670+00:00",
+          "environment": "Windows: productionTS/AST/fakeDOM and actualC#Run/privateTCP/net8-compatible isolatedbuild; real loopback pre-login HTTP/WS. No production account/SQL/original/browser/GPU.",
+          "sha256": "b3af2b5c5f00cdd21679d1b83efd22dcc31df18a494f3188230f69c617abc697"
+        },
+        {
+          "path": ".runtime/reports/selection-v14-gateway-accepted.json",
+          "kind": "unit_regression",
+          "scope": "9actual production gateway entries82markers minus2summaries=80groups;7deletion Run/privateTCP groups. No real original/native account or SQL.",
+          "recordedAt": "2026-10-02T00:38:25.351670+00:00",
+          "environment": "Windows: productionTS/AST/fakeDOM and actualC#Run/privateTCP/net8-compatible isolatedbuild; real loopback pre-login HTTP/WS. No production account/SQL/original/browser/GPU.",
+          "sha256": "ebd946e14b925e6c58dabfee08ca983ff181d73561d0744dcdc6563054f9b6ab"
+        },
+        {
+          "path": ".runtime/reports/selection-v14-preview.json",
+          "kind": "unit_regression",
+          "scope": "4actual calibration constructor/bind/reset AST branches with shared controller and realAuth markup; fakeDOM/timers, no real page interaction.",
+          "recordedAt": "2026-10-02T00:38:25.351670+00:00",
+          "environment": "Windows: productionTS/AST/fakeDOM and actualC#Run/privateTCP/net8-compatible isolatedbuild; real loopback pre-login HTTP/WS. No production account/SQL/original/browser/GPU.",
+          "sha256": "d14915271b88077785528636a52ac49016fef3977811a806e2d3232a8b4e19a3"
+        },
+        {
+          "path": ".runtime/reports/selection-v14-runtime-deferred.json",
+          "kind": "live_protocol",
+          "scope": "5native source/HTTP/dist identities,6transformed modules, actual current5173/ws to existing18801. New deletion gateway staged only; cutover deferred due established clients.",
+          "recordedAt": "2026-10-02T00:38:25.351670+00:00",
+          "environment": "Windows: productionTS/AST/fakeDOM and actualC#Run/privateTCP/net8-compatible isolatedbuild; real loopback pre-login HTTP/WS. No production account/SQL/original/browser/GPU.",
+          "sha256": "36adff4700a9a82b5e74ca3cec4a87715d744f1c098a9a0288614b08a567c757"
+        },
+        {
+          "path": ".runtime/reports/selection-v14-stage-ws.json",
+          "kind": "live_protocol",
+          "scope": "Fresh full ASP.NET net8-compatible publish, actual private ephemeralHTTP/WS advertises deletion and rejects pre-login command with matching requestId. Owned process stopped; no authentication/nativeTCP/SQL.",
+          "recordedAt": "2026-10-02T00:38:25.351670+00:00",
+          "environment": "Windows: productionTS/AST/fakeDOM and actualC#Run/privateTCP/net8-compatible isolatedbuild; real loopback pre-login HTTP/WS. No production account/SQL/original/browser/GPU.",
+          "sha256": "8c9c62cc62c6580ddfde28653edf8a906c70c707fc9b8d301d4cbf6e0b37d502"
+        }
+      ],
+      "gaps": [
+        "新增国服50/53改密入口与像素内拟合字段；原端入口位置、字段/按钮热区、字体、按下态及完整登录/选服/选角/建角场景未逐项关闭。",
+        "第十四批Prguse68/69/70/72逐字节锁定和参考控件尺寸已核；同版原端悬停/按下/禁用/字体、点击音、制作群及全部选角动画未关闭。"
+      ]
+    },
+    {
+      "id": "ART-037",
+      "title": "HUD血蓝球/经验负重/数字/聊天",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        },
+        {
+          "path": "assets/web/ui-national/prguse/library.json",
+          "kind": "native_pixels",
+          "scope": "Prguse原帧号/几何/signed偏移与源hash；不证明动态用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/classic-hud.ts",
+        "apps/web/src/classic-layout.ts",
+        "content/classic-176/ui-layout.json"
+      ],
+      "acceptance": [
+        "Prguse1原800×251在0,349绘制",
+        "血蓝0/半/满、升级、耗蓝、超重的裁切/数值位置/颜色逐图比较",
+        "每聊天频道颜色/滚动/输入条像原端"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/classic-hud.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/classic-layout.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "多数nationalHud坐标/热区仍proposed",
+        "白底绿系统字只有历史单场景证据"
+      ]
+    },
+    {
+      "id": "ART-038",
+      "title": "全部按钮状态帧/等待/失败",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        },
+        {
+          "path": "content/classic-176/system-dialog.json",
+          "kind": "contract",
+          "scope": "第八批原帧/源/几何锁；布局拟合与字体/版本/状态语义未核分别登记。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "14dc6bb09c058eae87625852cdf829d77a51a74f35046e2c968c2ccb3de6b1df"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/classic-auth.ts",
+        "apps/web/src/classic-hud.ts",
+        "apps/web/src/style.css",
+        "content/classic-176/ui-interactions.json",
+        "apps/web/src/system-dialog.ts",
+        "apps/web/src/system-dialog.css",
+        "content/classic-176/system-dialog.json",
+        "docs/system-auth-implementation-2026-10-01.md",
+        "apps/web/src/password-change.ts",
+        "apps/web/src/password-change.css",
+        "apps/web/play.html",
+        "content/classic-176/auth-actions.json",
+        "services/web-gateway/PasswordChange.cs",
+        "services/web-gateway/GatewaySession.cs"
+      ],
+      "acceptance": [
+        "每控件normal/hover/pressed/selected/disabled/pending/rejected/closed列原帧或同版无独立帧证据",
+        "CSS状态明确proposal",
+        "按住移出/pointercancel/blur/focus/超时/重复点击全部真实浏览器原端对照"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/classic-auth.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/classic-hud.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/style.css",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        },
+        {
+          "path": "docs/system-auth-implementation-2026-10-01.md",
+          "kind": "source_review",
+          "scope": "当前第八批行为、修正、源依据和验收边界；不是原端或浏览器运行证据。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "f0349d771ca1fe34c2311a4e1505107a2ddd6e9dae3805b6f9307630a888e7bb"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "33脚本420实际断言组：完整canonical后仅frame身份guard变更，32不变脚本复用、系统27组重跑；VM/fakeDOM/Pixi/media，非浏览器。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "b0fabf0ac33279a662420c0f2f9c4dd23629f40c3c1f11d89383a482516fb584"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-checks.json",
+          "kind": "unit_regression",
+          "scope": "最终TSC/Vite通过；当前所有Web TS/CSS输入指纹、integer-div、字体契约、模态层与frame精确身份修正。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "013061929d107f4bdbe942c370236f956f4414082d66965153b93e0736ee2a57"
+        },
+        {
+          "path": ".runtime/reports/system-auth-eighth-native-assets-final.json",
+          "kind": "unit_regression",
+          "scope": "原安装Prguse16帧实际重解码，PNG bytes/RGBA/透明/偏移相等；18专项通过，字体/动态/历史配对仍unknown。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "984db2ec7ae2ef7cc1eaf878aae5f117fb47ab5b5390fb773bedeb0d4d593d47"
+        }
+      ],
+      "gaps": [
+        "系统四按钮361–368已使用原正常/按下帧；53/64相邻54/65已排除，改密嵌入按钮按下/hover复用仍未知。",
+        "全部按钮disabled/等待/失败、原端鼠标动态与声音、当前浏览器比较仍需全量验收。"
+      ]
+    },
+    {
+      "id": "ART-039",
+      "title": "角色/背包/技能窗口及tooltip",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        },
+        {
+          "path": "content/classic-176/icon-usage.json",
+          "kind": "contract",
+          "scope": "第六批原参考取帧规则，物品精确Looks、技能Effect×2/+1；参考版本与同包二进制对应仍待验收。"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/classic-hud.ts",
+        "apps/web/src/inventory.ts",
+        "apps/web/src/skills.ts",
+        "apps/web/src/style.css",
+        "apps/web/src/icon-frames.ts",
+        "content/classic-176/icon-usage.json",
+        "docs/icon-source-usage-2026-10-01.md",
+        "apps/web/src/item-icons.ts",
+        "tests/item_icon_consumers_regression.mjs",
+        "tests/skill_icons_regression.mjs",
+        "docs/skill-icon-reference-2026-10-01.md"
+      ],
+      "acceptance": [
+        "角色256×359、背包336×270、8×5格、金币65,190及每页内容像原端",
+        "持久/需求/属性/空格/选中/拿起/tooltip翻边正确",
+        "拖动边界/窗口组合/关闭取消逐状态比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/classic-hud.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/inventory.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/skills.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/style.css",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "第六批324组/27脚本实际模块/VM回归；含准确取帧/故障重试/旧回调/切图事务，非浏览器。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "92e395c7743b5b08f14440cf9e9b3a87fd63d7832cffc20d65998f76c0539ec8"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "完整Python279项/278通过，剩1项GA0当前source缺帧；独立内容CLI exit1。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "76ac993b7290640b1493d7ffdf1c056a0ea05e6dd4763360bc6df92a73afe23c"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "实际CLI遍历必需源/导出哈希与内容目录，complete=false；无原端、浏览器或历史配对完成声明。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "0b83b0f967d6c3edb823ddc248a7e5e9a212b82f60a27ba519d51e9216906715"
+        }
+      ],
+      "gaps": [
+        "几何已有测量，内容文字/tooltip/技能窗全状态未全确认"
+      ]
+    },
+    {
+      "id": "ART-040",
+      "title": "NPC/买卖/修理/仓库服务内容",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/play.ts",
+        "apps/web/src/shop.ts",
+        "apps/web/src/repair.ts",
+        "apps/web/src/storage.ts",
+        "apps/web/src/style.css"
+      ],
+      "acceptance": [
+        "每目标服务独立取证底图/商品格/价目/持久条/数量框/基线",
+        "库存空/钱不足/条件不足/等待/取消/关闭提示和按钮像原端",
+        "生产和校准同组件热区对齐"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/play.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/shop.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/repair.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/storage.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/style.css",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "402内两列商品/单列修理/四列仓库是proposal",
+        "不能套现代服务流程推断1.76"
+      ]
+    },
+    {
+      "id": "ART-041",
+      "title": "队伍/行会/交易/任务/系统/模式窗",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        },
+        {
+          "path": "content/classic-176/system-dialog.json",
+          "kind": "contract",
+          "scope": "第八批原帧/源/几何锁；布局拟合与字体/版本/状态语义未核分别登记。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "14dc6bb09c058eae87625852cdf829d77a51a74f35046e2c968c2ccb3de6b1df"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/play.ts",
+        "apps/web/src/classic-hud.ts",
+        "apps/web/src/style.css",
+        "apps/web/src/system-dialog.ts",
+        "apps/web/src/system-dialog.css",
+        "content/classic-176/system-dialog.json",
+        "docs/system-auth-implementation-2026-10-01.md"
+      ],
+      "acceptance": [
+        "逐类确认同版是窗口/菜单还是聊天命令及真正底图/列表/按钮",
+        "交易双方格/金币/锁定、组队邀请、行会权限、任务进度每状态取证",
+        "空列表/长中文/多页/拒绝/等待/断线关闭比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/play.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/classic-hud.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/style.css",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        },
+        {
+          "path": "docs/system-auth-implementation-2026-10-01.md",
+          "kind": "source_review",
+          "scope": "当前第八批行为、修正、源依据和验收边界；不是原端或浏览器运行证据。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "f0349d771ca1fe34c2311a4e1505107a2ddd6e9dae3805b6f9307630a888e7bb"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "33脚本420实际断言组：完整canonical后仅frame身份guard变更，32不变脚本复用、系统27组重跑；VM/fakeDOM/Pixi/media，非浏览器。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "b0fabf0ac33279a662420c0f2f9c4dd23629f40c3c1f11d89383a482516fb584"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-checks.json",
+          "kind": "unit_regression",
+          "scope": "最终TSC/Vite通过；当前所有Web TS/CSS输入指纹、integer-div、字体契约、模态层与frame精确身份修正。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "013061929d107f4bdbe942c370236f956f4414082d66965153b93e0736ee2a57"
+        },
+        {
+          "path": ".runtime/reports/system-auth-eighth-native-assets-final.json",
+          "kind": "unit_regression",
+          "scope": "原安装Prguse16帧实际重解码，PNG bytes/RGBA/透明/偏移相等；18专项通过，字体/动态/历史配对仍unknown。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "984db2ec7ae2ef7cc1eaf878aae5f117fb47ab5b5390fb773bedeb0d4d593d47"
+        }
+      ],
+      "gaps": [
+        "系统三框/四结果和统一生产校准组件已接入；原版字体/焦点/热区、其他队伍/行会/交易/任务/模式窗口的完整同版比较仍未闭合。"
+      ]
+    },
+    {
+      "id": "ART-042",
+      "title": "拖动图/物品快捷栏/技能绑定反馈",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        },
+        {
+          "path": "content/classic-176/icon-usage.json",
+          "kind": "contract",
+          "scope": "第六批原参考取帧规则，物品精确Looks、技能Effect×2/+1；参考版本与同包二进制对应仍待验收。"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/item-quickbar.ts",
+        "apps/web/src/inventory.ts",
+        "apps/web/src/skills.ts",
+        "apps/web/src/window-drag.ts",
+        "apps/web/src/play.ts",
+        "apps/web/src/icon-frames.ts",
+        "content/classic-176/icon-usage.json",
+        "docs/icon-source-usage-2026-10-01.md",
+        "apps/web/src/item-icons.ts",
+        "tests/item_icon_consumers_regression.mjs",
+        "apps/web/src/classic-hud.ts",
+        "tests/skill_icons_regression.mjs",
+        "docs/skill-icon-reference-2026-10-01.md"
+      ],
+      "acceptance": [
+        "拿起/交换/丢弃/绑定图及鼠标偏移/透明有同版依据",
+        "F1–F8稀疏槽和1–6物品槽的选中/按下/蓄力/冷却/拒绝视觉一致",
+        "跨窗拖动和Escape/blur时图像及实例正确"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/item-quickbar.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/inventory.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/skills.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/window-drag.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/play.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "第六批324组/27脚本实际模块/VM回归；含准确取帧/故障重试/旧回调/切图事务，非浏览器。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "92e395c7743b5b08f14440cf9e9b3a87fd63d7832cffc20d65998f76c0539ec8"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "完整Python279项/278通过，剩1项GA0当前source缺帧；独立内容CLI exit1。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "76ac993b7290640b1493d7ffdf1c056a0ea05e6dd4763360bc6df92a73afe23c"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "实际CLI遍历必需源/导出哈希与内容目录，complete=false；无原端、浏览器或历史配对完成声明。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "0b83b0f967d6c3edb823ddc248a7e5e9a212b82f60a27ba519d51e9216906715"
+        }
+      ],
+      "gaps": [
+        "功能回归存在，原版拖动手势/光标图/高亮冷却美术未确认"
+      ]
+    },
+    {
+      "id": "ART-043",
+      "title": "中文字体/编码/基线/IME",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        },
+        {
+          "path": "content/classic-176/system-dialog.json",
+          "kind": "contract",
+          "scope": "第八批原帧/源/几何锁；布局拟合与字体/版本/状态语义未核分别登记。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "14dc6bb09c058eae87625852cdf829d77a51a74f35046e2c968c2ccb3de6b1df"
+        }
+      ],
+      "implementation": [
+        "content/classic-176/national-ui-profile.json",
+        "apps/web/src/style.css",
+        "apps/web/src/online-actors.ts",
+        "services/web-gateway/LegacyCodec.cs",
+        "apps/web/src/system-dialog.ts",
+        "apps/web/src/system-dialog.css",
+        "content/classic-176/system-dialog.json",
+        "docs/system-auth-implementation-2026-10-01.md",
+        "apps/web/src/password-change.ts",
+        "apps/web/src/password-change.css",
+        "apps/web/src/classic-auth.ts"
+      ],
+      "acceptance": [
+        "记录原端实际字体/许可/12px字形/间距/黑边/基线",
+        "旧编码转Unicode正确",
+        "中文ASCII全角标点长名换行输入各DPI和IME组合与原端比较且不发半成品"
+      ],
+      "verification": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/style.css",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "services/web-gateway/LegacyCodec.cs",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "docs/system-auth-implementation-2026-10-01.md",
+          "kind": "source_review",
+          "scope": "当前第八批行为、修正、源依据和验收边界；不是原端或浏览器运行证据。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "f0349d771ca1fe34c2311a4e1505107a2ddd6e9dae3805b6f9307630a888e7bb"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "33脚本420实际断言组：完整canonical后仅frame身份guard变更，32不变脚本复用、系统27组重跑；VM/fakeDOM/Pixi/media，非浏览器。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "b0fabf0ac33279a662420c0f2f9c4dd23629f40c3c1f11d89383a482516fb584"
+        },
+        {
+          "path": ".runtime/reports/system-v8-release-checks.json",
+          "kind": "unit_regression",
+          "scope": "最终TSC/Vite通过；当前所有Web TS/CSS输入指纹、integer-div、字体契约、模态层与frame精确身份修正。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "013061929d107f4bdbe942c370236f956f4414082d66965153b93e0736ee2a57"
+        },
+        {
+          "path": ".runtime/reports/system-auth-eighth-native-assets-final.json",
+          "kind": "unit_regression",
+          "scope": "原安装Prguse16帧实际重解码，PNG bytes/RGBA/透明/偏移相等；18专项通过，字体/动态/历史配对仍unknown。",
+          "recordedAt": "2026-10-01T14:46:53.428945+00:00",
+          "environment": "Windows; actual production VM/modules, compatible NET8 TCP/Run and explicitly scoped live protocol/HTTP; no browser/original executable/GPU comparison",
+          "sha256": "984db2ec7ae2ef7cc1eaf878aae5f117fb47ab5b5390fb773bedeb0d4d593d47"
+        }
+      ],
+      "gaps": [
+        "系统/改密字体与14行距从合同读取但仍为proposed，四密码字段maxlength字符与严格GBK字节规则分开。",
+        "同版字体栅格、baseline、中文IME、全控件编码/输入与实际浏览器事件比较尚缺。"
+      ]
+    },
+    {
+      "id": "ART-044",
+      "title": "国服CUR光标/热点/状态切换",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-ui-profile.json",
+          "kind": "contract",
+          "scope": "目标版本/固定800×600/字体候选/参考场景"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "contract",
+          "scope": "含asset与proposed/参考用途，须逐项分开"
+        },
+        {
+          "path": "content/classic-176/ui-interactions.json",
+          "kind": "contract",
+          "scope": "状态帧表；CSS回退明确为proposal"
+        },
+        {
+          "path": "assets/web/ui/Cursors/provenance.json",
+          "kind": "reference_source",
+          "scope": "7CUR固定Crystal来源且原国服比较pending"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/mir.dat",
+          "kind": "native_pixels",
+          "scope": "原PE游标候选，不自动确定用途"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/online-actors.ts",
+        "apps/web/src/style.css",
+        "assets/web/ui/Cursors/provenance.json",
+        "content/classic-176/ui-layout.json",
+        "content/classic-176/active-asset-sources.json",
+        "docs/resource-consistency-2026-10-01.md"
+      ],
+      "acceptance": [
+        "从同版PE或运行画面确认7种像素/尺寸/热点与用途",
+        "默认NPC正常/强攻/文本/垃圾/升级与死亡/窗口遮挡切换一致",
+        "真实浏览器DPI缩放下命中点正确"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/online-actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/style.css",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "content/classic-176/ui-layout.json",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/python-events-final.log",
+          "kind": "unit_regression",
+          "scope": "132项122通过、9失败1错误，失败全列于配套文档"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-checks.json",
+          "kind": "unit_regression",
+          "scope": "第五批当前源码：242组Node回归/21脚本；完整Python257项，失败1项；非浏览器。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "21c3ea1efd5d7e5d9ef5666174a9df9c8e113f537ea845e9fb288bad72a40a15"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "必需源/导出哈希、索引、偏移与内容目录；complete=false保留实际缺项，不是画面验收。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "bafc0ae626d68f2f4628fd74f09eb10369219be86bf012bd185658cd85eb51f0"
+        }
+      ],
+      "gaps": [
+        "当前7CUR固定hash Crystal参考，nationalRuntimeComparison:pending",
+        "原PE游标身份未逐项映射"
+      ]
+    },
+    {
+      "id": "ART-045",
+      "title": "544WAV原资源及移动/地表/性别声",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/SoundUtil.pas",
+          "kind": "reference_source",
+          "scope": "音效编号与BGM阶段参考，不证明全同版"
+        },
+        {
+          "path": "assets/web/audio/manifest.json",
+          "kind": "native_pixels",
+          "scope": "544原WAV hash；kind在此表示原始媒体来源"
+        }
+      ],
+      "implementation": [
+        "scripts/import-national-game-assets.py",
+        "apps/web/src/game-audio.ts",
+        "assets/web/audio/manifest.json"
+      ],
+      "acceptance": [
+        "544WAV保留hash/采样率/声道/时长/用途与空重复统计",
+        "走跑/地表/男女声以原端确定触发帧频率重叠",
+        "真实浏览器首手势/音量静音重登后录音比较"
+      ],
+      "verification": [
+        {
+          "path": "scripts/import-national-game-assets.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/game-audio.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "GameAudio只movement/swing/struck/skeletonAttack四Clip",
+        "levelUp未映射，有文件不等于完整事件音效"
+      ]
+    },
+    {
+      "id": "ART-046",
+      "title": "武器/怪物/技能/门/升级/UI音效",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/SoundUtil.pas",
+          "kind": "reference_source",
+          "scope": "音效编号与BGM阶段参考，不证明全同版"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/game-audio.ts",
+        "apps/web/src/play.ts",
+        "assets/web/audio/manifest.json",
+        "content/classic-176/audio-playback.json",
+        "docs/audio-reference-2026-10-01.md",
+        "tests/audio_playback_regression.mjs",
+        "tools/validate-native-audio.py"
+      ],
+      "acceptance": [
+        "每武器/怪物APPR动作/技能各阶段/拾取/门/升级/UI有同版编号与时刻",
+        "成功失败取消死亡并发不重复错播",
+        "原端音轨/协议/Web音频时间线逐族比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/game-audio.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/play.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/audio-playback-final-2026-10-01.log",
+          "kind": "unit_regression",
+          "scope": "生产GameAudio、实际ClassicAuth/play回调12组PASS：场景循环/切换、40并发回收、静音、异步过期、首手势当前BGM重试、play/media失败、失焦/隐藏/页面生命周期、销毁与frame2武器/专属文件选择，同场景清声后恢复与旧播放Abort隔离。fake media/events；不证明浏览器声音输出或原端混音。",
+          "recordedAt": "2026-10-01T10:12:24.086232+00:00",
+          "environment": "Windows Node24.19.0 production TypeScript VM/AST + fake media/events",
+          "sha256": "1469b0a209d8355c4571c2e11ea4926cf26ba22ba6232c7c02334cec9a8013ae"
+        },
+        {
+          "path": ".runtime/reports/audio-native-assets-2026-10-01.json",
+          "kind": "native_pixels",
+          "scope": "原装544 WAV、assets/web publicDir与dist/web逐文件byte/SHA相同，manifest544与20角色/19唯一文件映射核验；不证明触发、听感、时序。",
+          "recordedAt": "2026-10-01T10:12:24.086232+00:00",
+          "environment": "Local Python stdlib read-only native WAV/resource copies",
+          "sha256": "9d7acac5cf0d15cc6fa0d4878db6663a3f3aa97c8515a053074afb528217d003"
+        }
+      ],
+      "gaps": [
+        "七类人体近战已有frame2武器声、四专属真实SM额外声，挖矿frame5石声独立；骷髅400-2以外多数怪物/法术/门/升级/UI仍缺路由",
+        "原端与浏览器实际声轨、距离混音与动态时序未比较"
+      ]
+    },
+    {
+      "id": "ART-047",
+      "title": "登录/选角/死亡/地图BGM",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/SoundUtil.pas",
+          "kind": "reference_source",
+          "scope": "音效编号与BGM阶段参考，不证明全同版"
+        },
+        {
+          "path": "C:/Program Files (x86)/shanda/Legend of Mir/Wav",
+          "kind": "native_pixels",
+          "scope": "原装包含登录/选角/结束BGM文件"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/game-audio.ts",
+        "apps/web/src/classic-auth.ts",
+        "assets/web/audio/manifest.json",
+        "content/classic-176/audio-playback.json",
+        "apps/web/src/play.ts",
+        "docs/audio-reference-2026-10-01.md",
+        "tests/audio_playback_regression.mjs",
+        "tools/validate-native-audio.py"
+      ],
+      "acceptance": [
+        "原Log-in-long2/sellect-loop2/Game over2各阶段和地图音乐有同版映射",
+        "循环接缝/切换停止/返回选角/重连/死亡复活不重叠",
+        "原端与浏览器长录音比较"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/game-audio.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/classic-auth.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/audio-playback-final-2026-10-01.log",
+          "kind": "unit_regression",
+          "scope": "生产GameAudio、实际ClassicAuth/play回调12组PASS：场景循环/切换、40并发回收、静音、异步过期、首手势当前BGM重试、play/media失败、失焦/隐藏/页面生命周期、销毁与frame2武器/专属文件选择，同场景清声后恢复与旧播放Abort隔离。fake media/events；不证明浏览器声音输出或原端混音。",
+          "recordedAt": "2026-10-01T10:12:24.086232+00:00",
+          "environment": "Windows Node24.19.0 production TypeScript VM/AST + fake media/events",
+          "sha256": "1469b0a209d8355c4571c2e11ea4926cf26ba22ba6232c7c02334cec9a8013ae"
+        },
+        {
+          "path": ".runtime/reports/audio-native-assets-2026-10-01.json",
+          "kind": "native_pixels",
+          "scope": "原装544 WAV、assets/web publicDir与dist/web逐文件byte/SHA相同，manifest544与20角色/19唯一文件映射核验；不证明触发、听感、时序。",
+          "recordedAt": "2026-10-01T10:12:24.086232+00:00",
+          "environment": "Local Python stdlib read-only native WAV/resource copies",
+          "sha256": "9d7acac5cf0d15cc6fa0d4878db6663a3f3aa97c8515a053074afb528217d003"
+        }
+      ],
+      "gaps": [
+        "登录/选角已有原WAV循环与切换清理，原端与真实浏览器循环接缝/长录音/重连各阶段尚未对照",
+        "地图背景声、game over2触发尚无同版依据；参考Field2常量不等于目标触发且原包没有该文件",
+        "音乐/效果独立选项UI与目标默认音量/焦点行为尚未验收"
+      ]
+    },
+    {
+      "id": "ART-048",
+      "title": "音频混音/并发/空间/生命周期",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/DXSounds.pas",
+          "kind": "reference_source",
+          "scope": "并发缓冲/volume/pan参考"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/game-audio.ts",
+        "content/classic-176/audio-playback.json",
+        "apps/web/src/play.ts",
+        "docs/audio-reference-2026-10-01.md",
+        "tests/audio_playback_regression.mjs",
+        "tools/validate-native-audio.py"
+      ],
+      "acceptance": [
+        "按原端确定最大同时声数、重复音限制、音量距离衰减和声像",
+        "群怪连击/火墙/切图/失焦/断线不留实例",
+        "首手势自动播放限制与载入失败可诊断可恢复"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/game-audio.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/audio-playback-final-2026-10-01.log",
+          "kind": "unit_regression",
+          "scope": "生产GameAudio、实际ClassicAuth/play回调12组PASS：场景循环/切换、40并发回收、静音、异步过期、首手势当前BGM重试、play/media失败、失焦/隐藏/页面生命周期、销毁与frame2武器/专属文件选择，同场景清声后恢复与旧播放Abort隔离。fake media/events；不证明浏览器声音输出或原端混音。",
+          "recordedAt": "2026-10-01T10:12:24.086232+00:00",
+          "environment": "Windows Node24.19.0 production TypeScript VM/AST + fake media/events",
+          "sha256": "1469b0a209d8355c4571c2e11ea4926cf26ba22ba6232c7c02334cec9a8013ae"
+        },
+        {
+          "path": ".runtime/reports/audio-native-assets-2026-10-01.json",
+          "kind": "native_pixels",
+          "scope": "原装544 WAV、assets/web publicDir与dist/web逐文件byte/SHA相同，manifest544与20角色/19唯一文件映射核验；不证明触发、听感、时序。",
+          "recordedAt": "2026-10-01T10:12:24.086232+00:00",
+          "environment": "Local Python stdlib read-only native WAV/resource copies",
+          "sha256": "9d7acac5cf0d15cc6fa0d4878db6663a3f3aa97c8515a053074afb528217d003"
+        }
+      ],
+      "gaps": [
+        "已有独立voices及结束/失败/静音/死亡/切图/断线清理、当前BGM首手势重试，真实浏览器媒体行为及原端混音对照尚未完成",
+        "原端群怪并发、重复音限制、目标音量/距离衰减/声像仍需同版依据与实测",
+        "当前失焦/隐藏暂停、一次性声音清理与单个开关属于明确Web适配；原版独立选项UI待复刻"
+      ]
+    },
+    {
+      "id": "ART-049",
+      "title": "最近邻/800×600/DPI/帧预算",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        }
+      ],
+      "implementation": [
+        "apps/web/src/classic-stage.ts",
+        "apps/web/src/map-view.ts",
+        "apps/web/src/perf.ts",
+        "apps/web/src/style.css"
+      ],
+      "acceptance": [
+        "逻辑800×600仅整体缩放不改坐标热区",
+        "nearest/roundPixels/DOM pixelated在DPI和非整数缩放清晰度比较",
+        "完整人怪/窗口/动画/灯光/音效30/60fps总时长不变"
+      ],
+      "verification": [
+        {
+          "path": "apps/web/src/classic-stage.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/map-view.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/perf.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/style.css",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/frontend-events-final.log",
+          "kind": "unit_regression",
+          "scope": "42项前端回归；逐项查看测试范围，不能代替当前浏览器/原端画面"
+        }
+      ],
+      "gaps": [
+        "固定画布/nearest已实现，跨浏览器DPI和全资产压力未全验收"
+      ]
+    },
+    {
+      "id": "ART-050",
+      "title": "逐场景原端/Web图片录像音频关闭包",
+      "status": "missing",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        }
+      ],
+      "implementation": [
+        "tools/ui_visual_diff.py",
+        "apps/web/src/ui-calibration.ts",
+        "apps/web/src/actors.ts"
+      ],
+      "acceptance": [
+        "两端同800×600区域/角色地图装备状态步骤和时间戳",
+        "静态差分保留输入hash/阈值/噪声mask/MAE/比例和人工复核",
+        "动画按协议关键帧对齐逐帧比位置方向层级时长音轨",
+        "每窗口状态×动作×资源族都具关闭包"
+      ],
+      "verification": [
+        {
+          "path": "tools/ui_visual_diff.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/ui-calibration.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "apps/web/src/actors.ts",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        }
+      ],
+      "gaps": [
+        "当前新增火墙冲撞只有协议/单元证据",
+        "历史截图不证明当前dirty worktree",
+        "mask不得遮待验收细节"
+      ]
+    },
+    {
+      "id": "ART-051",
+      "title": "美术/内容审计基线与扩展版本边界",
+      "status": "partial",
+      "sourceEvidence": [
+        {
+          "path": "content/classic-176/national-gameplay.json",
+          "kind": "contract",
+          "scope": "国服原图哈希与参考动作表；动画/时序尚未原端逐帧对照"
+        },
+        {
+          "path": "content/classic-176/icon-usage.json",
+          "kind": "contract",
+          "scope": "第六批原参考取帧规则，物品精确Looks、技能Effect×2/+1；参考版本与同包二进制对应仍待验收。"
+        },
+        {
+          "path": "content/classic-176/map-asset-bindings.json",
+          "kind": "contract",
+          "scope": "第七批当前扩展场景精确map/layer/index选择；原national覆盖与历史配对独立保留。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "669fe0d73bcff81adabdc7cf050886f27d9c3fe5db62a356961dc86e8a2ab3b0"
+        }
+      ],
+      "implementation": [
+        "tools/content_audit.py",
+        "tools/resource_catalog.py",
+        "tests/test_asset_profile.py",
+        "tests/test_resource_catalog.py",
+        "tests/test_content_audit.py",
+        "docs/resource-consistency-2026-10-01.md",
+        "tools/ga0_tiles_candidate_audit.py",
+        "tools/export_ga0_tiles_candidate.py",
+        "content/classic-176/ga0-tiles-candidate.json",
+        "apps/web/src/icon-frames.ts",
+        "content/classic-176/icon-usage.json",
+        "docs/icon-source-usage-2026-10-01.md",
+        "apps/web/src/map-assets.ts",
+        "apps/web/src/map-view.ts",
+        "content/classic-176/map-asset-bindings.json",
+        "tools/map_asset_bindings.py",
+        "tests/test_map_asset_bindings.py",
+        "tests/map_assets_regression.mjs",
+        "tests/map_sources_regression.mjs",
+        "tests/map_sentinel_regression.mjs",
+        "docs/map-source-binding-review-2026-10-01.md",
+        "docs/map-sentinel-review-2026-10-01.md",
+        "docs/map-asset-selection-2026-10-01.md",
+        "tools/classic_version_boundary_audit.py",
+        "tests/test_classic_version_boundary_audit.py",
+        "docs/classic-version-boundary-2026-10-01.md"
+      ],
+      "acceptance": [
+        "国服目标/服务器扩展/参考fallback分别审计源hash、缺帧、缺映射与待验收种类",
+        "解决当前9失败1错误真实原因，不删断言或改常量掩盖资源",
+        "所有ART关闭包齐备才称完整"
+      ],
+      "verification": [
+        {
+          "path": "tools/content_audit.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tools/resource_catalog.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tests/test_asset_profile.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tests/test_resource_catalog.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": "tests/test_content_audit.py",
+          "kind": "source_review",
+          "scope": "2026-10-01 当前文件静态阅读；不证明浏览器画面"
+        },
+        {
+          "path": ".runtime/reports/python-events-final.log",
+          "kind": "unit_regression",
+          "scope": "132项122通过、9失败1错误，失败全列于配套文档"
+        },
+        {
+          "path": ".runtime/reports/national-map-import.json",
+          "kind": "native_pixels",
+          "scope": "2026-10-01 本机真实apply：profile570、requestedUnique14882、alreadyPresent4635、exported9839、empty0、unresolved408（仅GA0）；completefalse/退出2。现manifest和9839输出文件存在性复核；不证明HTTP或浏览器画面"
+        },
+        {
+          "path": ".runtime/backups/national-map-frames-20261001",
+          "kind": "source_review",
+          "scope": "apply前现有三族manifest备份；保留导入前10247唯一缺帧基线"
+        },
+        {
+          "path": ".runtime/reports/replication-map-regression.log",
+          "kind": "unit_regression",
+          "scope": "2026-10-01 11项地图导入夹具全部OK：source preflight/合并保留/幂等/范围外/缺map/损坏帧等；不证明原端/Web图像"
+        },
+        {
+          "path": ".runtime/reports/national-map-repeat-plan.json",
+          "kind": "unit_regression",
+          "scope": "apply后真实重复计划：requestedUnique14882/alreadyPresent14474/exportable0/empty0/unresolved408/exported0/completefalse；已补源内帧不会重复规划"
+        },
+        {
+          "path": ".runtime/reports/replication-python-full.log",
+          "kind": "unit_regression",
+          "scope": "apply后全量151项：141通过、9失败、1错误；地图首报GA0/Tiles10320，其余已记录契约/扩展/环境失败继续保留"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-checks.json",
+          "kind": "unit_regression",
+          "scope": "第五批当前源码：242组Node回归/21脚本；完整Python257项，失败1项；非浏览器。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "21c3ea1efd5d7e5d9ef5666174a9df9c8e113f537ea845e9fb288bad72a40a15"
+        },
+        {
+          "path": ".runtime/reports/resources-v5-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "必需源/导出哈希、索引、偏移与内容目录；complete=false保留实际缺项，不是画面验收。",
+          "recordedAt": "2026-10-01T10:52:52.460235+00:00",
+          "environment": "Windows/Python/Node; no browser or original-client rendering",
+          "sha256": "bafc0ae626d68f2f4628fd74f09eb10369219be86bf012bd185658cd85eb51f0"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "第六批324组/27脚本实际模块/VM回归；含准确取帧/故障重试/旧回调/切图事务，非浏览器。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "92e395c7743b5b08f14440cf9e9b3a87fd63d7832cffc20d65998f76c0539ec8"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "完整Python279项/278通过，剩1项GA0当前source缺帧；独立内容CLI exit1。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "76ac993b7290640b1493d7ffdf1c056a0ea05e6dd4763360bc6df92a73afe23c"
+        },
+        {
+          "path": ".runtime/reports/ga0-tiles-source-freeze-sixth-final.json",
+          "kind": "unit_regression",
+          "scope": "候选408个索引逐像素解码一致、19专项、独立namespace及重复导出0写入；现国服/GA0文件4284项SHA未变，未激活candidate。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "8145b925b3c2b39292549776dc923129cc1f8c8c91801d000633a7b0091d911c"
+        },
+        {
+          "path": ".runtime/reports/icons-v6-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "实际CLI遍历必需源/导出哈希与内容目录，complete=false；无原端、浏览器或历史配对完成声明。",
+          "recordedAt": "2026-10-01T11:46:25.819911+00:00",
+          "environment": "Windows; actual production modules/CLI and HTTP where stated; no original-client/browser/GPU comparison",
+          "sha256": "0b83b0f967d6c3edb823ddc248a7e5e9a212b82f60a27ba519d51e9216906715"
+        },
+        {
+          "path": ".runtime/reports/map-v7-sentinel-web-tests.json",
+          "kind": "unit_regression",
+          "scope": "最终实际352组/30脚本模块/VM/Pixi回归；含源选择、54特殊引用nil路径和切图/失败恢复，非浏览器。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "eb7b538e7cd509990359d7d9e88775eccb556a30b4088845904fd60b62de73d0"
+        },
+        {
+          "path": ".runtime/reports/map-v7-final-python-checks.json",
+          "kind": "unit_regression",
+          "scope": "修复默认源路径后完整Python339/339通过；current render与original fidelity分别断言，独立内容CLI继续exit1。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "f7a718724db196b2129ce8241e646bdb99d50aee537b7a5d47eae3ee42c238d7"
+        },
+        {
+          "path": ".runtime/reports/map-binding-seventh-source-freeze.json",
+          "kind": "unit_regression",
+          "scope": "MAP/blob/9chunk/source字节与408参考PNG、125国服保留帧逐解码核对；enabled参考选择，historical pairing=false。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "f2deb24cb8ad28b7fc87dca66ca035289450e4aaa43025a7ae70afb3b053085f"
+        },
+        {
+          "path": ".runtime/reports/map-v7-final-content-audit.json",
+          "kind": "unit_regression",
+          "scope": "最终实际内容CLI，renderDependencyMissing空、原national GA0缺408与historicalFailure保持；complete=false。",
+          "recordedAt": "2026-10-01T13:14:09.038405+00:00",
+          "environment": "Windows; actual modules, CLI and HTTP only; no original executable/browser/GPU comparison",
+          "sha256": "5adecd1e7f194d9cf8b96d6f1a57d40cec3f7377b6941cc00baa3a51c4e460a1"
+        }
+      ],
+      "gaps": [
+        "完整内容CLI保持exit1/complete=false：原国服GA0 408及历史配对、599物品/63技能缺图与MagID48冲突未闭合。",
+        "参考渲染接入不增加39个生效国服库；1000物品/108技能逐行版本边界保持unknown历史状态，未解析入口和条件不能用于删减目标。",
+        "同版原端、当前浏览器、GPU、逐像素/时序/音画与适用异常持久化验收逐条开放。"
+      ]
+    }
+  ]
+}

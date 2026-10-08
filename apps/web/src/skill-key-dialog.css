@@ -1,0 +1,13 @@
+.classic-skill-key-overlay{position:absolute;inset:0;width:800px;height:600px;z-index:2147483646;pointer-events:auto;background:transparent}
+.classic-skill-key-overlay[hidden]{display:none}
+.classic-skill-key-overlay .classic-skill-key-dialog{position:absolute;box-sizing:border-box;margin:0;padding:0;border:0;max-width:none;max-height:none;overflow:visible;background:#17120d no-repeat;image-rendering:pixelated;outline:none;pointer-events:auto}
+.classic-skill-key-dialog[data-resource-state=ready]{background-color:transparent}
+.skill-key-dialog-title,.skill-key-dialog-icon{position:absolute;margin:0;padding:0;pointer-events:none}
+.skill-key-dialog-title{white-space:nowrap;text-shadow:1px 1px #000}
+.classic-skill-key-dialog .skill-key-dialog-choice,.classic-skill-key-dialog .skill-key-dialog-ok{position:absolute;box-sizing:border-box;margin:0;padding:0;border:0;border-radius:0;background:transparent;touch-action:none;user-select:none;cursor:default}
+.skill-key-dialog-choice img{position:absolute;pointer-events:none;image-rendering:pixelated;max-width:none}
+.skill-key-dialog-choice img[hidden],.skill-key-dialog-icon[hidden]{display:none}
+.skill-key-dialog-choice:focus-visible,.skill-key-dialog-ok:focus-visible{outline:1px dotted #c0c0c0;outline-offset:-1px}
+.skill-key-dialog-status{position:absolute;left:12px;bottom:8px;color:#fff;font:12px/14px KaiTi,serif}
+.classic-skill-key-dialog .skill-key-dialog-retry{position:absolute;right:12px;bottom:6px;font:12px/14px KaiTi,serif}
+.skill-key-dialog-retry[hidden]{display:none}

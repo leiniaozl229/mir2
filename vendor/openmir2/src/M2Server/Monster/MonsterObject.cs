@@ -129,61 +129,6 @@ namespace M2Server.Monster
             return null;
         }
 
-        /// <summary>
-        /// 更新自身视野对象（可见对象）
-        /// </summary>
-        /// <param name="acrotId"></param>
-        private void UpdateMonsterVisible(int acrotId)
-        {
-            if ((HUtil32.GetTickCount() - SearchTick) <= SearchTime)
-            {
-                return;
-            }
-
-            SearchTick = HUtil32.GetTickCount();
-            bool boIsVisible = false;
-            VisibleBaseObject visibleBaseObject;
-            IActor baseObject = SystemShare.ActorMgr.Get(acrotId);
-            if ((baseObject.Race == ActorRace.Play) || (baseObject.Master != null))// 如果是人物或宝宝则置TRUE
-            {
-                IsVisibleActive = true;
-            }
-            for (int i = 0; i < VisibleActors.Count; i++)
-            {
-                visibleBaseObject = VisibleActors[i];
-                if (visibleBaseObject == null)
-                {
-                    continue;
-                }
-                if (visibleBaseObject.BaseObject == baseObject)
-                {
-                    visibleBaseObject.VisibleFlag = VisibleFlag.Invisible;
-                    boIsVisible = true;
-                    break;
-                }
-            }
-            if (boIsVisible)
-            {
-                return;
-            }
-            visibleBaseObject = new VisibleBaseObject
-            {
-                VisibleFlag = VisibleFlag.Show,
-                BaseObject = baseObject
-            };
-            VisibleActors.Add(visibleBaseObject);
-        }
-
-        protected override bool Operate(ProcessMessage processMsg)
-        {
-            if (processMsg.wIdent == Messages.RM_UPDATEVIEWRANGE)
-            {
-                UpdateMonsterVisible(processMsg.wParam);
-                return true;
-            }
-            return base.Operate(processMsg);
-        }
-
         private bool Think()
         {
             bool result = false;
@@ -196,7 +141,7 @@ namespace M2Server.Monster
                 }
                 if (!IsProperTarget(TargetCret))
                 {
-                    TargetCret = null;
+                    DelTargetCreat();
                 }
             }
             if (DupMode)
@@ -220,6 +165,11 @@ namespace M2Server.Monster
         protected virtual bool AttackTarget()
         {
             byte btDir = 0;
+            if (TargetCret != null && !IsCombatTarget(TargetCret, ChaseRange))
+            {
+                DelTargetCreat();
+                return false;
+            }
             if (TargetCret != null)
             {
                 if (GetAttackDir(TargetCret, ref btDir))
@@ -250,6 +200,12 @@ namespace M2Server.Monster
 
         public override void Run()
         {
+            // Validate before the common AI attacks or moves towards a stale target.
+            if (TargetCret != null && (!IsCombatTarget(TargetCret, ChaseRange) ||
+                HUtil32.GetTickCount() - TargetFocusTick > 30000))
+            {
+                DelTargetCreat();
+            }
             if (CanMove() && !FixedHideMode && !StoneMode)
             {
                 if (Think())

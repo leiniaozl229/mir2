@@ -10,6 +10,8 @@ namespace DBSrv.Services.Impl
     {
         private readonly TcpClient _clientScoket;
         private readonly IList<GlobaSessionInfo> _globaSessionList = null;
+        // Claim, release and all list mutations share one gate. Socket I/O stays outside.
+        private readonly object _sessionSync = new();
         private readonly SettingsModel _setting;
         private string _sockMsg = string.Empty;
 
@@ -50,9 +52,9 @@ namespace DBSrv.Services.Impl
 
         public void Stop()
         {
-            for (int i = 0; i < _globaSessionList.Count; i++)
+            lock (_sessionSync)
             {
-                _globaSessionList[i] = null;
+                _globaSessionList.Clear();
             }
         }
 
@@ -117,75 +119,132 @@ namespace DBSrv.Services.Impl
 
         public bool CheckSession(string account, string sIPaddr, int sessionId)
         {
-            bool result = false;
-            for (int i = 0; i < _globaSessionList.Count; i++)
+            lock (_sessionSync)
             {
-                GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
-                if (globaSessionInfo != null)
+                bool result = false;
+                for (int i = 0; i < _globaSessionList.Count; i++)
                 {
-                    if ((globaSessionInfo.Account == account) && (globaSessionInfo.SessionID == sessionId))
+                    GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
+                    if (globaSessionInfo != null)
                     {
-                        result = true;
-                        break;
+                        if ((globaSessionInfo.Account == account) && (globaSessionInfo.SessionID == sessionId))
+                        {
+                            result = true;
+                            break;
+                        }
                     }
                 }
+                return result;
             }
-            return result;
+        }
+
+        /// <summary>
+        /// Read the first matching session's record state without acquiring or releasing it.
+        /// An unlocked result is only a hint; CheckSessionLoadRcd performs the actual claim.
+        /// </summary>
+        public bool IsSessionRecordLoaded(string account, int sessionId)
+        {
+            lock (_sessionSync)
+            {
+                for (int i = 0; i < _globaSessionList.Count; i++)
+                {
+                    GlobaSessionInfo session = _globaSessionList[i];
+                    if (session != null && session.Account == account && session.SessionID == sessionId)
+                    {
+                        return session.LoadRcd;
+                    }
+                }
+                return false;
+            }
         }
 
         public int CheckSessionLoadRcd(string sAccount, string sIPaddr, int nSessionId, ref bool boFoundSession)
         {
-            int result = -1;
-            boFoundSession = false;
-            for (int i = 0; i < _globaSessionList.Count; i++)
+            lock (_sessionSync)
             {
-                GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
-                if (globaSessionInfo != null)
+                int result = -1;
+                boFoundSession = false;
+                for (int i = 0; i < _globaSessionList.Count; i++)
                 {
-                    if ((globaSessionInfo.Account == sAccount) && (globaSessionInfo.SessionID == nSessionId))
+                    GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
+                    if (globaSessionInfo != null)
                     {
-                        boFoundSession = true;
-                        if (!globaSessionInfo.LoadRcd)
+                        if ((globaSessionInfo.Account == sAccount) && (globaSessionInfo.SessionID == nSessionId))
                         {
-                            globaSessionInfo.LoadRcd = true;
-                            result = 1;
+                            boFoundSession = true;
+                            if (!globaSessionInfo.LoadRcd)
+                            {
+                                globaSessionInfo.LoadRcd = true;
+                                result = 1;
+                            }
+                            break;
                         }
-                        break;
                     }
                 }
+                return result;
             }
-            return result;
         }
 
         public bool SetSessionSaveRcd(string sAccount)
         {
-            bool result = false;
-            for (int i = 0; i < _globaSessionList.Count; i++)
+            lock (_sessionSync)
             {
-                GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
-                if (globaSessionInfo != null)
+                bool result = false;
+                for (int i = 0; i < _globaSessionList.Count; i++)
                 {
-                    if ((globaSessionInfo.Account == sAccount))
+                    GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
+                    if (globaSessionInfo != null)
                     {
-                        globaSessionInfo.LoadRcd = false;
-                        result = true;
+                        if ((globaSessionInfo.Account == sAccount))
+                        {
+                            globaSessionInfo.LoadRcd = false;
+                            result = true;
+                        }
                     }
                 }
+                return result;
             }
-            return result;
+        }
+
+        /// <summary>
+        /// Release the load state only for the session whose save has committed.
+        /// A delayed save from an older login must not unlock a replacement session.
+        /// </summary>
+        public bool SetSessionSaveRcd(string sAccount, int sessionId)
+        {
+            lock (_sessionSync)
+            {
+                if (string.IsNullOrEmpty(sAccount) || sessionId <= 0)
+                {
+                    return false;
+                }
+                for (int i = 0; i < _globaSessionList.Count; i++)
+                {
+                    GlobaSessionInfo session = _globaSessionList[i];
+                    if (session != null && session.Account == sAccount && session.SessionID == sessionId)
+                    {
+                        session.LoadRcd = false;
+                        return true;
+                    }
+                }
+                return false;
+            }
         }
 
         public void SetGlobaSessionNoPlay(int nSessionId)
         {
-            for (int i = 0; i < _globaSessionList.Count; i++)
+            lock (_sessionSync)
             {
-                GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
-                if (globaSessionInfo != null)
+                for (int i = 0; i < _globaSessionList.Count; i++)
                 {
-                    if ((globaSessionInfo.SessionID == nSessionId))
+                    GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
+                    if (globaSessionInfo != null)
                     {
-                        globaSessionInfo.StartPlay = false;
-                        break;
+                        if ((globaSessionInfo.SessionID == nSessionId))
+                        {
+                            globaSessionInfo.StartPlay = false;
+                            break;
+                        }
                     }
                 }
             }
@@ -193,15 +252,18 @@ namespace DBSrv.Services.Impl
 
         public void SetGlobaSessionPlay(int nSessionId)
         {
-            for (int i = 0; i < _globaSessionList.Count; i++)
+            lock (_sessionSync)
             {
-                GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
-                if (globaSessionInfo != null)
+                for (int i = 0; i < _globaSessionList.Count; i++)
                 {
-                    if ((globaSessionInfo.SessionID == nSessionId))
+                    GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
+                    if (globaSessionInfo != null)
                     {
-                        globaSessionInfo.StartPlay = true;
-                        break;
+                        if ((globaSessionInfo.SessionID == nSessionId))
+                        {
+                            globaSessionInfo.StartPlay = true;
+                            break;
+                        }
                     }
                 }
             }
@@ -209,36 +271,42 @@ namespace DBSrv.Services.Impl
 
         public bool GetGlobaSessionStatus(int nSessionId)
         {
-            bool result = false;
-            for (int i = 0; i < _globaSessionList.Count; i++)
+            lock (_sessionSync)
             {
-                GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
-                if (globaSessionInfo != null)
+                bool result = false;
+                for (int i = 0; i < _globaSessionList.Count; i++)
                 {
-                    if ((globaSessionInfo.SessionID == nSessionId))
+                    GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
+                    if (globaSessionInfo != null)
                     {
-                        result = globaSessionInfo.StartPlay;
-                        break;
+                        if ((globaSessionInfo.SessionID == nSessionId))
+                        {
+                            result = globaSessionInfo.StartPlay;
+                            break;
+                        }
                     }
                 }
+                return result;
             }
-            return result;
         }
 
         public void CloseSession(string sAccount, int nSessionId)
         {
-            for (int i = 0; i < _globaSessionList.Count; i++)
+            lock (_sessionSync)
             {
-                GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
-                if (globaSessionInfo != null)
+                for (int i = 0; i < _globaSessionList.Count; i++)
                 {
-                    if ((globaSessionInfo.SessionID == nSessionId))
+                    GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
+                    if (globaSessionInfo != null)
                     {
-                        if (globaSessionInfo.Account == sAccount)
+                        if ((globaSessionInfo.SessionID == nSessionId))
                         {
-                            globaSessionInfo = null;
-                            _globaSessionList.RemoveAt(i);
-                            break;
+                            if (globaSessionInfo.Account == sAccount)
+                            {
+                                globaSessionInfo = null;
+                                _globaSessionList.RemoveAt(i);
+                                break;
+                            }
                         }
                     }
                 }
@@ -266,7 +334,10 @@ namespace DBSrv.Services.Impl
             globaSessionInfo.LoadRcd = false;
             globaSessionInfo.AddTick = HUtil32.GetTickCount();
             globaSessionInfo.AddDate = DateTime.Now;
-            _globaSessionList.Add(globaSessionInfo);
+            lock (_sessionSync)
+            {
+                _globaSessionList.Add(globaSessionInfo);
+            }
             LogService.Debug($"同步账号服务[{sAccount}]同步会话消息...");
         }
 
@@ -275,37 +346,28 @@ namespace DBSrv.Services.Impl
             string sAccount = string.Empty;
             sData = HUtil32.GetValidStr3(sData, ref sAccount, HUtil32.Backslash);
             int nSessionId = HUtil32.StrToInt(sData, 0);
-            for (int i = 0; i < _globaSessionList.Count; i++)
-            {
-                GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
-                if (globaSessionInfo != null)
-                {
-                    if ((globaSessionInfo.SessionID == nSessionId) && (globaSessionInfo.Account == sAccount))
-                    {
-                        globaSessionInfo = null;
-                        _globaSessionList.RemoveAt(i);
-                        break;
-                    }
-                }
-            }
+            CloseSession(sAccount, nSessionId);
         }
 
         public bool GetSession(string sAccount, string sIPaddr)
         {
-            bool result = false;
-            for (int i = 0; i < _globaSessionList.Count; i++)
+            lock (_sessionSync)
             {
-                GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
-                if (globaSessionInfo != null)
+                bool result = false;
+                for (int i = 0; i < _globaSessionList.Count; i++)
                 {
-                    if ((globaSessionInfo.Account == sAccount) && (globaSessionInfo.IPaddr == sIPaddr))
+                    GlobaSessionInfo globaSessionInfo = _globaSessionList[i];
+                    if (globaSessionInfo != null)
                     {
-                        result = true;
-                        break;
+                        if ((globaSessionInfo.Account == sAccount) && (globaSessionInfo.IPaddr == sIPaddr))
+                        {
+                            result = true;
+                            break;
+                        }
                     }
                 }
+                return result;
             }
-            return result;
         }
 
         private static void ProcessGetOnlineCount(string sData)

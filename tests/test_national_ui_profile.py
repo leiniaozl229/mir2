@@ -1,4 +1,5 @@
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -13,7 +14,7 @@ CHECKER = ROOT / "tools/validate-national-ui.py"
 
 class NationalUiProfileTests(unittest.TestCase):
     def test_profile_locks_the_2003_national_ui_contract(self):
-        profile = json.loads(PROFILE.read_text())
+        profile = json.loads(PROFILE.read_text(encoding="utf-8"))
         self.assertEqual(profile["id"], "shanda-2003-1.76-cn")
         self.assertEqual(profile["canvas"], {"width": 800, "height": 600, "coordinateOrigin": "top-left", "scalePolicy": "integer-preferred"})
         self.assertEqual(profile["keyboard"]["inventory"], "F9")
@@ -23,7 +24,8 @@ class NationalUiProfileTests(unittest.TestCase):
         self.assertGreaterEqual(len(profile["sourceContract"]["families"]), 12)
 
     def test_checker_reports_missing_reference_assets_without_claiming_ready(self):
-        result = subprocess.run([sys.executable, str(CHECKER)], capture_output=True, text=True)
+        result = subprocess.run([sys.executable, "-X", "utf8", str(CHECKER)], capture_output=True,
+                                encoding="utf-8", env={**os.environ, "PYTHONIOENCODING": "utf-8"})
         self.assertEqual(result.returncode, 2)
         report = json.loads(result.stdout)
         self.assertFalse(report["ok"])
@@ -32,13 +34,15 @@ class NationalUiProfileTests(unittest.TestCase):
         self.assertIn("prguse", report["missingFamilies"])
 
     def test_checker_accepts_one_complete_variant_per_family(self):
-        profile = json.loads(PROFILE.read_text())
+        profile = json.loads(PROFILE.read_text(encoding="utf-8"))
         with tempfile.TemporaryDirectory() as temporary:
             data_dir = Path(temporary)
             for family in profile["sourceContract"]["families"]:
                 for name in family["variants"][0]:
                     (data_dir / name).write_bytes(b"fixture")
-            result = subprocess.run([sys.executable, str(CHECKER), "--data-dir", str(data_dir)], capture_output=True, text=True)
+            result = subprocess.run([sys.executable, "-X", "utf8", str(CHECKER), "--data-dir", str(data_dir)],
+                                    capture_output=True, encoding="utf-8",
+                                    env={**os.environ, "PYTHONIOENCODING": "utf-8"})
             self.assertEqual(result.returncode, 0, result.stdout)
             report = json.loads(result.stdout)
             self.assertTrue(report["ok"])

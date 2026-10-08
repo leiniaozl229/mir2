@@ -4,7 +4,10 @@
   "source": "Shared 800x600 layout with static shanda-2003-1.76-cn asset import; window purpose and runtime coordinates remain measured/inferred until original client capture",
   "fallbackProfile": "crystal-candidate",
   "status": "asset-imported-awaiting-runtime-reference",
-  "canvas": {"width": 800, "height": 600},
+  "canvas": {
+    "width": 800,
+    "height": 600
+  },
   "libraries": {
     "Prguse": "Prguse.Lib",
     "Prguse2": "Prguse2.Lib",
@@ -40,11 +43,51 @@
     "y": 551
   },
   "buttons": {
-    "character": {"library": "Prguse", "index": 1900, "hover": 1901, "pressed": 1902, "x": 681, "y": 524, "window": "character"},
-    "inventory": {"library": "Prguse", "index": 1903, "hover": 1904, "pressed": 1905, "x": 704, "y": 524, "window": "inventory"},
-    "skills": {"library": "Prguse", "index": 1906, "hover": 1907, "pressed": 1908, "x": 727, "y": 524, "window": "skills"},
-    "quest": {"library": "Prguse", "index": 1909, "hover": 1910, "pressed": 1911, "x": 750, "y": 524, "window": "quest"},
-    "option": {"library": "Prguse", "index": 1912, "hover": 1913, "pressed": 1914, "x": 773, "y": 524, "window": "attack"}
+    "character": {
+      "library": "Prguse",
+      "index": 1900,
+      "hover": 1901,
+      "pressed": 1902,
+      "x": 681,
+      "y": 524,
+      "window": "character"
+    },
+    "inventory": {
+      "library": "Prguse",
+      "index": 1903,
+      "hover": 1904,
+      "pressed": 1905,
+      "x": 704,
+      "y": 524,
+      "window": "inventory"
+    },
+    "skills": {
+      "library": "Prguse",
+      "index": 1906,
+      "hover": 1907,
+      "pressed": 1908,
+      "x": 727,
+      "y": 524,
+      "window": "skills"
+    },
+    "quest": {
+      "library": "Prguse",
+      "index": 1909,
+      "hover": 1910,
+      "pressed": 1911,
+      "x": 750,
+      "y": 524,
+      "window": "quest"
+    },
+    "option": {
+      "library": "Prguse",
+      "index": 1912,
+      "hover": 1913,
+      "pressed": 1914,
+      "x": 773,
+      "y": 524,
+      "window": "attack"
+    }
   },
   "skillBar": {
     "library": "Prguse",
@@ -58,17 +101,32 @@
   "itemQuickBar": {
     "library": "prguse",
     "index": 1,
-    "x": 280,
-    "y": 50,
-    "slotWidth": 38,
-    "slotHeight": 35,
-    "slotStep": 46,
+    "x": 285,
+    "y": 59,
+    "slotWidth": 32,
+    "slotHeight": 29,
+    "slotStep": 43,
     "count": 6,
-    "keys": ["1", "2", "3", "4", "5", "6"],
+    "keys": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6"
+    ],
     "relativeTo": "mainDialog",
-    "frameOrigin": {"x": 0, "y": 349},
-    "source": "Prguse#1 six pocket boundaries measured from imported 800x251 frame",
-    "evidence": "asset"
+    "frameOrigin": {
+      "x": 0,
+      "y": 349
+    },
+    "source": "FState.pas DBelt1..6 reference rectangles; native 2026-10-07 occupied pocket centers and successful clicks agree with 43px spacing. Exact edge hot areas remain pending.",
+    "evidence": "reference_source+native_runtime_centers",
+    "inventoryModel": "shared-instance-locations",
+    "layoutVersion": "native-pockets-v1",
+    "admissionMaxStdMode": 3,
+    "singleClick": "pick-place-carry-displaced",
+    "cancelEvidence": "Browser Escape is supplemental; original Escape/right-click release not observed in this session. Reference right-click cancellation still requires native input review."
   },
   "nationalHud": {
     "source": "Prguse#1 imported 800x251 frame plus current production HUD placement; original-runtime capture pending",
@@ -82,6 +140,15 @@
       "height": 251,
       "evidence": "asset"
     },
+    "soundToggle": {
+      "library": "prguse",
+      "index": 11,
+      "x": 764,
+      "y": 11,
+      "width": 24,
+      "height": 23,
+      "evidence": "reference_source"
+    },
     "chatPunch": {
       "left": 207,
       "right": 594,
@@ -92,44 +159,166 @@
     },
     "orbs": {
       "relativeTo": "mainDialog",
-      "hp": {"x": 42, "y": 85, "width": 46, "height": 90, "imageOffsetX": 0, "evidence": "proposed"},
-      "mp": {"x": 88, "y": 85, "width": 46, "height": 90, "imageOffsetX": -46, "evidence": "proposed"},
+      "hp": {
+        "x": 40,
+        "y": 91,
+        "width": 45,
+        "height": 90,
+        "imageOffsetX": 0,
+        "evidence": "reference_source"
+      },
+      "mp": {
+        "x": 87,
+        "y": 91,
+        "width": 44,
+        "height": 90,
+        "imageOffsetX": -47,
+        "evidence": "reference_source"
+      },
       "fillImageWidth": 92,
-      "fillImageHeight": 90
+      "fillImageHeight": 90,
+      "splitIndex": 4,
+      "warrior": {
+        "job": 0,
+        "levelBelow": 28,
+        "emptyIndex": 5,
+        "fillIndex": 6,
+        "x": 38,
+        "y": 90,
+        "width": 94,
+        "height": 92,
+        "imageWidth": 96,
+        "imageHeight": 92,
+        "evidence": "reference_source"
+      },
+      "reference": "Client/FState.pas DBottomDirectPaint 3608-3637; crop Right=width/2-1 and Left=width/2+1; explicit positions ignore stored WIL offset"
     },
     "experienceBar": {
       "library": "prguse",
       "index": 7,
-      "x": 664,
-      "y": 176,
+      "x": 666,
+      "y": 178,
       "width": 76,
       "height": 13,
       "relativeTo": "mainDialog",
-      "evidence": "proposed"
+      "evidence": "reference_source",
+      "reference": "DBottomDirectPaint: frame7 source prefix, draw at (666,527)"
     },
     "weightBar": {
-      "x": 664,
-      "y": 209,
+      "x": 666,
+      "y": 211,
       "width": 76,
       "height": 13,
       "relativeTo": "mainDialog",
-      "evidence": "proposed"
+      "evidence": "reference_source",
+      "library": "prguse",
+      "index": 7,
+      "reference": "DBottomDirectPaint: frame7 source prefix, draw at (666,560)"
     },
     "fields": {
-      "hp": {"x": 42, "y": 118, "width": 46, "evidence": "proposed"},
-      "mp": {"x": 88, "y": 118, "width": 46, "evidence": "proposed"},
-      "name": {"x": 24, "y": 196, "width": 120, "evidence": "proposed"},
-      "job": {"x": 630, "y": 152, "evidence": "proposed"},
-      "status": {"x": 742, "y": 206, "maxWidth": 48, "evidence": "proposed"},
-      "exp": {"x": 642, "y": 160, "width": 110, "evidence": "proposed"},
-      "gold": {"x": 630, "y": 228, "width": 142, "evidence": "proposed"}
+      "hp": {
+        "x": 42,
+        "y": 118,
+        "width": 46,
+        "evidence": "proposed"
+      },
+      "mp": {
+        "x": 88,
+        "y": 118,
+        "width": 46,
+        "evidence": "proposed"
+      },
+      "level": {
+        "x": 660,
+        "y": 147,
+        "width": 76,
+        "evidence": "reference_source",
+        "reference": "Client/FState.pas DBottomDirectPaint: PomiTextOut(660, SCREENHEIGHT - 104); parent mainDialog y=349",
+        "remaining": "same-version executable, font and raster alignment require original/browser comparison"
+      },
+      "job": {
+        "x": 630,
+        "y": 152,
+        "evidence": "proposed"
+      },
+      "status": {
+        "x": 742,
+        "y": 206,
+        "maxWidth": 48,
+        "evidence": "proposed"
+      },
+      "exp": {
+        "x": 642,
+        "y": 160,
+        "width": 110,
+        "evidence": "proposed"
+      },
+      "gold": {
+        "x": 630,
+        "y": 228,
+        "width": 142,
+        "evidence": "proposed"
+      }
     },
     "windowButtons": [
-      {"id": "character", "window": "character", "x": 640, "y": 410, "width": 32, "height": 32, "backgroundX": 3, "backgroundY": 0, "control": "hud.window.character", "evidence": "proposed"},
-      {"id": "inventory", "window": "inventory", "x": 678, "y": 390, "width": 32, "height": 32, "backgroundX": 4, "backgroundY": 0, "control": "hud.window.inventory", "evidence": "proposed"},
-      {"id": "skills", "window": "skills", "x": 718, "y": 370, "width": 32, "height": 32, "backgroundX": 4, "backgroundY": 0, "control": "hud.window.skills", "evidence": "proposed"},
-      {"id": "targets", "window": "targets", "x": 748, "y": 400, "width": 32, "height": 32, "remapFrom": "quest", "evidence": "proposed"},
-      {"id": "attack", "window": "attack", "x": 760, "y": 360, "width": 32, "height": 32, "backgroundX": 4, "backgroundY": 0, "control": "hud.window.attack", "evidence": "proposed"}
+      {
+        "id": "character",
+        "window": "character",
+        "x": 640,
+        "y": 410,
+        "width": 32,
+        "height": 32,
+        "backgroundX": 3,
+        "backgroundY": 0,
+        "control": "hud.window.character",
+        "evidence": "proposed"
+      },
+      {
+        "id": "inventory",
+        "window": "inventory",
+        "x": 678,
+        "y": 390,
+        "width": 32,
+        "height": 32,
+        "backgroundX": 4,
+        "backgroundY": 0,
+        "control": "hud.window.inventory",
+        "evidence": "proposed"
+      },
+      {
+        "id": "skills",
+        "window": "skills",
+        "x": 718,
+        "y": 370,
+        "width": 32,
+        "height": 32,
+        "backgroundX": 4,
+        "backgroundY": 0,
+        "control": "hud.window.skills",
+        "evidence": "proposed"
+      },
+      {
+        "id": "targets",
+        "window": "targets",
+        "x": 748,
+        "y": 400,
+        "width": 32,
+        "height": 32,
+        "remapFrom": "quest",
+        "evidence": "proposed"
+      },
+      {
+        "id": "attack",
+        "window": "attack",
+        "x": 760,
+        "y": 360,
+        "width": 32,
+        "height": 32,
+        "backgroundX": 4,
+        "backgroundY": 0,
+        "control": "hud.window.attack",
+        "evidence": "proposed"
+      }
     ],
     "chat": {
       "x": 207,
@@ -137,8 +326,219 @@
       "width": 387,
       "height": 123,
       "logHeight": 100,
-      "input": {"x": 4, "y": 104, "width": 378, "height": 16},
+      "input": {
+        "x": 4,
+        "y": 104,
+        "width": 378,
+        "height": 16
+      },
+      "colors": {
+        "background": "#ffffff",
+        "text": "#000000",
+        "system": "#008000",
+        "inputBackground": "#ffffff",
+        "inputText": "#000000",
+        "evidence": "original-runtime screenshot: national client entered Bichon, 800x600; non-system channel colors remain provisional"
+      },
       "evidence": "proposed"
+    },
+    "daylight": {
+      "library": "prguse",
+      "x": 748,
+      "y": 79,
+      "width": 32,
+      "height": 54,
+      "initialPhase": 3,
+      "phases": [
+        {
+          "phase": 0,
+          "index": 15,
+          "label": "早晨"
+        },
+        {
+          "phase": 1,
+          "index": 12,
+          "label": "白天"
+        },
+        {
+          "phase": 2,
+          "index": 13,
+          "label": "傍晚"
+        },
+        {
+          "phase": 3,
+          "index": 14,
+          "label": "夜晚"
+        }
+      ],
+      "evidence": "reference_source",
+      "reference": "FState DBottomDirectPaint 3595-3604; ClMain SM_DAYCHANGING Param phase, Tag darkness; initial g_nDayBright=3"
+    },
+    "hunger": {
+      "library": "prguse",
+      "x": 754,
+      "y": 204,
+      "width": 28,
+      "height": 27,
+      "firstIndex": 16,
+      "states": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "evidence": "reference_source",
+      "reference": "FState DBottomDirectPaint 3681-3686, absolute (754,553); SM_MYSTATUS Param; unsupported values do not draw"
+    },
+    "toolbar": [
+      {
+        "id": "minimap",
+        "x": 219,
+        "y": 453,
+        "width": 28,
+        "height": 13,
+        "normal": 130,
+        "hover": 131,
+        "evidence": "native-pixels+reference-source; positions agree with historical 800x600 Bichon capture; live same-version interactions remain unverified"
+      },
+      {
+        "id": "trade",
+        "x": 249,
+        "y": 453,
+        "width": 28,
+        "height": 13,
+        "normal": 132,
+        "hover": 133,
+        "evidence": "native-pixels+reference-source; positions agree with historical 800x600 Bichon capture; live same-version interactions remain unverified"
+      },
+      {
+        "id": "guild",
+        "x": 279,
+        "y": 453,
+        "width": 28,
+        "height": 13,
+        "normal": 134,
+        "hover": 135,
+        "evidence": "native-pixels+reference-source; positions agree with historical 800x600 Bichon capture; live same-version interactions remain unverified"
+      },
+      {
+        "id": "group",
+        "x": 309,
+        "y": 453,
+        "width": 28,
+        "height": 13,
+        "normal": 128,
+        "hover": 129,
+        "evidence": "native-pixels+reference-source; positions agree with historical 800x600 Bichon capture; live same-version interactions remain unverified"
+      },
+      {
+        "id": "reselect",
+        "x": 530,
+        "y": 453,
+        "width": 28,
+        "height": 13,
+        "normal": 136,
+        "hover": 137,
+        "evidence": "native-pixels+reference-source; positions agree with historical 800x600 Bichon capture; live same-version interactions remain unverified"
+      },
+      {
+        "id": "exit",
+        "x": 560,
+        "y": 453,
+        "width": 28,
+        "height": 13,
+        "normal": 138,
+        "hover": 139,
+        "evidence": "native-pixels+reference-source; positions agree with historical 800x600 Bichon capture; live same-version interactions remain unverified"
+      }
+    ],
+    "labels": {
+      "level": {
+        "firstDigitX": 8,
+        "advance": 8,
+        "height": 14,
+        "digitFirstFrame": 30,
+        "evidence": "original-runtime: native frame180 level29, 560 RGB pixels equal; other digits asset-inspected; advance matches ClMain.PomiTextOut"
+      },
+      "location": {
+        "x": 4,
+        "y": 229,
+        "width": 600,
+        "height": 18,
+        "drawLeft": 4,
+        "drawTop": 2,
+        "font": "kaiti-12",
+        "color": "#ffffff",
+        "outline": true,
+        "evidence": "original-runtime: native frame180 Bichon title/coordinates, 2880 RGB pixels equal; full long names pending"
+      },
+      "art": {
+        "library": "prguse",
+        "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+        "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+        "frames": {
+          "30": {
+            "file": "30.c906ff1762d037ec.png",
+            "sha256": "c906ff1762d037ecaed03b1b42d853d0e25846aa18240f52bc10e92c1351cf0a",
+            "width": 12,
+            "height": 10
+          },
+          "31": {
+            "file": "31.7df8c5de8609e542.png",
+            "sha256": "7df8c5de8609e542cd394ded127a320c8f02ecae10899ee1f58d9b7df53f9b69",
+            "width": 12,
+            "height": 10
+          },
+          "32": {
+            "file": "32.d2040d5138438e86.png",
+            "sha256": "d2040d5138438e866e581e15a33c96ecfa53d25e0e70a13fe7e306c7e474b336",
+            "width": 12,
+            "height": 10
+          },
+          "33": {
+            "file": "33.dba6b3db51c8f11a.png",
+            "sha256": "dba6b3db51c8f11a8d37f459e43d1da6b7ffe987f1e72505087cf7e9eb6b68e9",
+            "width": 12,
+            "height": 10
+          },
+          "34": {
+            "file": "34.fac60e480ae80a4a.png",
+            "sha256": "fac60e480ae80a4a9d09f3644b8d7739a60ca8ead24e24d0c8ee7111efe4e705",
+            "width": 12,
+            "height": 10
+          },
+          "35": {
+            "file": "35.7d25c4315e5fce10.png",
+            "sha256": "7d25c4315e5fce1023967c60d0f2ca7f8b4ebd744c4511461cb1121a784233da",
+            "width": 12,
+            "height": 10
+          },
+          "36": {
+            "file": "36.0b9d11edeb02da44.png",
+            "sha256": "0b9d11edeb02da447c2a7155fe96b7c2a979d986796cf9d86e795b7c0be25cd1",
+            "width": 12,
+            "height": 10
+          },
+          "37": {
+            "file": "37.ea20bdcf2d78df2d.png",
+            "sha256": "ea20bdcf2d78df2d514b18ad790106658c7ab7f88887b154a55dbde0ca16f9b0",
+            "width": 12,
+            "height": 10
+          },
+          "38": {
+            "file": "38.d3199074f1936bf2.png",
+            "sha256": "d3199074f1936bf282b8f54b566ef1001a7a459956997c252784fc8c05bab0cd",
+            "width": 12,
+            "height": 10
+          },
+          "39": {
+            "file": "39.3dd457ad64602f13.png",
+            "sha256": "3dd457ad64602f13bda9f967a5862b27c7b3d8f08c02512fcbe59ce5afdda7c8",
+            "width": 12,
+            "height": 10
+          }
+        }
+      }
     }
   },
   "miniMap": {
@@ -170,28 +570,154 @@
     "y": 488
   },
   "windows": {
-    "character": {"library": "Title", "index": 504, "x": 536, "y": 0, "closeLibrary": "Prguse2", "closeIndex": 360, "closeX": 241, "closeY": 3},
-    "inventory": {"library": "Title", "index": 196, "x": 0, "y": 185, "closeLibrary": "Prguse2", "closeIndex": 360, "closeX": 289, "closeY": 3},
-    "npc": {"library": "Prguse", "index": 995, "x": 5, "y": 40, "closeLibrary": "Prguse2", "closeIndex": 360, "closeX": 413, "closeY": 3}
+    "character": {
+      "library": "Title",
+      "index": 504,
+      "x": 536,
+      "y": 0,
+      "closeLibrary": "Prguse2",
+      "closeIndex": 360,
+      "closeX": 241,
+      "closeY": 3
+    },
+    "inventory": {
+      "library": "Title",
+      "index": 196,
+      "x": 0,
+      "y": 185,
+      "closeLibrary": "Prguse2",
+      "closeIndex": 360,
+      "closeX": 289,
+      "closeY": 3
+    },
+    "npc": {
+      "library": "Prguse",
+      "index": 995,
+      "x": 5,
+      "y": 40,
+      "closeLibrary": "Prguse2",
+      "closeIndex": 360,
+      "closeX": 413,
+      "closeY": 3
+    }
   },
   "nationalWindowContracts": {
-    "character": {"frame": "prguse#380", "width": 256, "height": 359, "content": "paperdoll-or-status", "evidence": "asset"},
-    "inventory": {"frame": "prguse#3", "width": 336, "height": 270, "content": "8x5-grid", "evidence": "asset"},
-    "npc": {"frame": "prguse#402", "width": 416, "height": 347, "content": "title-body-options", "evidence": "asset"},
-    "shop": {"frame": "prguse#402", "width": 416, "height": 347, "content": "goods-two-column-details", "evidence": "asset-frame+interaction-proposal"},
-    "repair": {"frame": "prguse#402", "width": 416, "height": 347, "content": "durability-list-single-column", "evidence": "asset-frame+interaction-proposal"},
-    "storage": {"frame": "prguse#402", "width": 416, "height": 347, "content": "storage-grid-four-column", "evidence": "asset-frame+interaction-proposal"},
-    "quest": {"frame": "prguse#402", "width": 416, "height": 347, "content": "quest-progress-list", "evidence": "asset-frame+interaction-proposal"},
-    "attack": {"frame": "prguse#402", "width": 416, "height": 347, "content": "attack-mode-select", "evidence": "asset-frame+interaction-proposal"},
-    "targets": {"frame": "prguse#402", "width": 416, "height": 347, "content": "nearby-target-list", "evidence": "asset-frame+interaction-proposal"},
-    "ground": {"frame": "prguse#402", "width": 416, "height": 347, "content": "ground-item-list", "evidence": "asset-frame+interaction-proposal"},
-    "group": {"frame": "prguse#402", "width": 416, "height": 347, "content": "party-members-and-actions", "evidence": "asset-frame+interaction-proposal"},
-    "guild": {"frame": "prguse#402", "width": 416, "height": 347, "content": "guild-members-and-actions", "evidence": "asset-frame+interaction-proposal"},
-    "system": {"frame": "prguse#402", "width": 416, "height": 347, "content": "modal-confirmation", "evidence": "asset-frame+interaction-proposal"},
-    "chat": {"frame": "prguse#402", "width": 416, "height": 347, "content": "channel-log-and-input", "evidence": "asset-frame+interaction-proposal"},
-    "trade": {"frame": "prguse#402", "width": 416, "height": 347, "content": "two-party-items-and-confirmation", "evidence": "asset-frame+interaction-proposal"}
+    "character": {
+      "frame": "prguse#380",
+      "width": 256,
+      "height": 359,
+      "content": "paperdoll-or-status",
+      "evidence": "asset"
+    },
+    "inventory": {
+      "frame": "prguse#3",
+      "width": 336,
+      "height": 270,
+      "content": "8x5-grid",
+      "evidence": "asset"
+    },
+    "npc": {
+      "frame": "prguse#402",
+      "width": 416,
+      "height": 347,
+      "content": "title-body-options",
+      "evidence": "asset"
+    },
+    "shop": {
+      "frame": "prguse#385",
+      "sellFrame": "prguse#392",
+      "width": 308,
+      "height": 205,
+      "content": "menu-or-sell-single-item-slot",
+      "layout": "service-ui.json",
+      "evidence": "native-pixels+reference-source+proposed-geometry"
+    },
+    "repair": {
+      "frame": "prguse#392",
+      "width": 140,
+      "height": 181,
+      "content": "repair-single-item-slot",
+      "layout": "service-ui.json",
+      "evidence": "native-pixels+reference-source+proposed-geometry"
+    },
+    "storage": {
+      "frame": "prguse#385",
+      "storeFrame": "prguse#392",
+      "width": 308,
+      "height": 205,
+      "content": "take-menu-or-store-single-item-slot",
+      "layout": "service-ui.json",
+      "evidence": "native-pixels+reference-source+proposed-geometry"
+    },
+    "quest": {
+      "frame": "prguse#402",
+      "width": 416,
+      "height": 347,
+      "content": "quest-progress-list",
+      "evidence": "asset-frame+interaction-proposal"
+    },
+    "attack": {
+      "frame": "prguse#402",
+      "width": 416,
+      "height": 347,
+      "content": "attack-mode-select",
+      "evidence": "asset-frame+interaction-proposal"
+    },
+    "targets": {
+      "frame": "prguse#402",
+      "width": 416,
+      "height": 347,
+      "content": "nearby-target-list",
+      "evidence": "asset-frame+interaction-proposal"
+    },
+    "ground": {
+      "frame": "prguse#402",
+      "width": 416,
+      "height": 347,
+      "content": "ground-item-list",
+      "evidence": "asset-frame+interaction-proposal"
+    },
+    "group": {
+      "frame": "prguse#120",
+      "width": 276,
+      "height": 242,
+      "content": "allow-party-members-and-actions",
+      "evidence": "asset-frame+interaction-proposal"
+    },
+    "guild": {
+      "frame": "prguse#180",
+      "width": 628,
+      "height": 453,
+      "content": "guild-members-and-actions",
+      "evidence": "asset-frame+interaction-proposal"
+    },
+    "system": {
+      "frame": "prguse#402",
+      "width": 416,
+      "height": 347,
+      "content": "modal-confirmation",
+      "evidence": "asset-frame+interaction-proposal"
+    },
+    "chat": {
+      "frame": "prguse#402",
+      "width": 416,
+      "height": 347,
+      "content": "channel-log-and-input",
+      "evidence": "asset-frame+interaction-proposal"
+    },
+    "trade": {
+      "frame": "prguse#389+390",
+      "width": 456,
+      "height": 175,
+      "content": "paired-local-remote-offer-grids-and-confirmation",
+      "evidence": "native-asset-frame+reference-source-layout-proposal"
+    }
   },
-  "classIcons": {"warrior": 100, "wizard": 101, "taoist": 102},
+  "classIcons": {
+    "warrior": 100,
+    "wizard": 101,
+    "taoist": 102
+  },
   "inventoryGrid": {
     "columns": 8,
     "visible": 40,
@@ -212,32 +738,514 @@
     "originY": 14,
     "gapX": 0,
     "gapY": 0,
-    "gold": {"x": 65, "y": 190, "width": 136, "height": 16},
+    "iconAlignment": {
+      "method": "floor-centered",
+      "offsetX": 1,
+      "offsetY": 0,
+      "scale": "native-size",
+      "evidence": "Lossless original 305s resting samples: Items 400/396/404/16/148/191/211/145/37 have integer source-frame origins. Items37 is drawn at natural 40x30, larger than the 36px hit cell.",
+      "limits": "Sample-bounded resting geometry; hover, held, disabled, all remaining frame sizes and complete hit boundaries remain pending."
+    },
+    "gold": {
+      "x": 65,
+      "y": 190,
+      "width": 136,
+      "height": 16
+    },
+    "goldIcon": {
+      "index": 29,
+      "x": 10,
+      "y": 190,
+      "width": 36,
+      "height": 21,
+      "frameEvidence": "native runtime 2026-10-07 screenshot 43; masked template comparison selects Prguse#29 at (10,190)",
+      "interactionEvidence": "native-runtime-2026-10-07 screenshots 53-60: click coin then world opens quantity; empty bag retains carried gold. Center hit verified; boundary and pressed states remain unverified"
+    },
+    "description": {
+      "x": 70,
+      "y": 215,
+      "width": 232,
+      "height": 42,
+      "lineHeight": 14,
+      "fontFamily": "KaiTi, '楷体', serif",
+      "fontProfile": "kaiti-12",
+      "glyphEvidence": "Lossless original potion description sample: 3712 pixels equal over Prguse#3 with yellow name, white detail and one 6px space; all other item types remain unqualified",
+      "fontEvidence": "current native-client/mir.ini: FontName=楷体; configured runtime, not universal client default",
+      "evidence": "native-runtime-2026-10-07; screenshots 35,37,39,40"
+    },
     "evidence": "asset"
   },
   "nationalInventoryWindow": {
     "index": 3,
-    "x": 232,
-    "y": 165,
+    "x": 0,
+    "y": 0,
     "width": 336,
     "height": 270,
-    "close": {"x": 310, "y": 203, "width": 16, "height": 23},
+    "close": {
+      "x": 310,
+      "y": 203,
+      "width": 16,
+      "height": 23
+    },
     "frameEvidence": "asset",
-    "placementEvidence": "proposed"
+    "placementEvidence": "2026-10-07 installed mir.dat runtime screenshots; 802x634 window, game origin (1,33); static frame matching, full dynamic acceptance pending",
+    "positionVersion": "native-176-20261007"
+  },
+  "nationalUtilityWindows": {
+    "group": {
+      "library": "prguse",
+      "index": 120,
+      "x": 262,
+      "y": 179,
+      "width": 276,
+      "height": 242,
+      "padding": "0px",
+      "close": {
+        "x": 260,
+        "y": 2,
+        "width": 16,
+        "height": 23,
+        "paint": false
+      },
+      "buttons": {
+        "create": {
+          "index": 123,
+          "x": 20,
+          "y": 201,
+          "evidence": "reference-source+native-pixels"
+        },
+        "add": {
+          "index": 124,
+          "x": 171,
+          "y": 201,
+          "evidence": "reference-source+native-pixels"
+        },
+        "remove": {
+          "index": 125,
+          "x": 97,
+          "y": 201,
+          "evidence": "reference-source+native-pixels"
+        }
+      },
+      "content": "party-permission-and-member-list",
+      "frameEvidence": "asset",
+      "placementEvidence": "800x600 centered proposal"
+    },
+    "guild": {
+      "library": "prguse",
+      "index": 180,
+      "x": 0,
+      "y": -3,
+      "width": 628,
+      "height": 453,
+      "padding": "30px 44px 10px 12px",
+      "close": {
+        "x": 585,
+        "y": 5,
+        "width": 17,
+        "height": 23,
+        "paint": false
+      },
+      "scrollButtons": {
+        "stepRows": 3,
+        "lineHeight": 14,
+        "up": {
+          "x": 588,
+          "y": 230,
+          "width": 40,
+          "height": 40
+        },
+        "down": {
+          "x": 588,
+          "y": 280,
+          "width": 40,
+          "height": 40
+        },
+        "evidence": "Prguse#180 embedded arrow art; FState.pas DGDUpClick/DGDDownClick change GuildTopLine by three rows"
+      },
+      "content": "guild-members-and-management-actions",
+      "frameEvidence": "asset",
+      "placementEvidence": "reference-source: FState.pas TFrmDlg.ShowGuildDlg sets Left=0, Top=-3; target executable version match remains unverified",
+      "buttons": {
+        "open": {
+          "normal": 198,
+          "hover": 199,
+          "geometry": {
+            "x": 27,
+            "y": 387,
+            "width": 64,
+            "height": 16
+          }
+        },
+        "members": {
+          "normal": 200,
+          "hover": 201,
+          "geometry": {
+            "x": 27,
+            "y": 407,
+            "width": 64,
+            "height": 16
+          }
+        },
+        "chat": {
+          "normal": 190,
+          "hover": 191,
+          "geometry": {
+            "x": 112,
+            "y": 407,
+            "width": 64,
+            "height": 16
+          }
+        },
+        "add": {
+          "normal": 182,
+          "hover": 183,
+          "geometry": {
+            "x": 235,
+            "y": 387,
+            "width": 64,
+            "height": 16
+          }
+        },
+        "ally": {
+          "normal": 184,
+          "hover": 185,
+          "geometry": {
+            "x": 404,
+            "y": 387,
+            "width": 64,
+            "height": 16
+          }
+        },
+        "breakAlly": {
+          "normal": 186,
+          "hover": 187,
+          "geometry": {
+            "x": 404,
+            "y": 407,
+            "width": 64,
+            "height": 16
+          }
+        },
+        "remove": {
+          "normal": 192,
+          "hover": 193,
+          "geometry": {
+            "x": 235,
+            "y": 407,
+            "width": 64,
+            "height": 16
+          }
+        },
+        "ranks": {
+          "normal": 194,
+          "hover": 195,
+          "geometry": {
+            "x": 320,
+            "y": 407,
+            "width": 64,
+            "height": 16
+          }
+        },
+        "notice": {
+          "normal": 196,
+          "hover": 197,
+          "geometry": {
+            "x": 320,
+            "y": 387,
+            "width": 64,
+            "height": 16
+          }
+        },
+        "war": {
+          "normal": 202,
+          "hover": 203,
+          "geometry": {
+            "x": 488,
+            "y": 387,
+            "width": 64,
+            "height": 16
+          }
+        }
+      }
+    },
+    "trade": {
+      "library": "prguse",
+      "index": 389,
+      "x": 564,
+      "y": 0,
+      "width": 236,
+      "height": 175,
+      "padding": "0px",
+      "close": {
+        "x": 220,
+        "y": 42,
+        "width": 16,
+        "height": 23,
+        "paint": false
+      },
+      "remote": {
+        "library": "prguse",
+        "index": 390,
+        "left": -220,
+        "top": 0,
+        "width": 220,
+        "height": 175
+      },
+      "grid": {
+        "columns": 5,
+        "rows": 2,
+        "left": 21,
+        "top": 56,
+        "cellWidth": 36,
+        "cellHeight": 33,
+        "evidence": "reference_source",
+        "reference": "Crystal FState.pas DDealDlg/DDGrid and DDealRemoteDlg/DDRGrid setup, lines 1459-1487"
+      },
+      "confirm": {
+        "index": 391,
+        "left": 155,
+        "top": 128,
+        "width": 44,
+        "height": 16,
+        "evidence": "reference_source"
+      },
+      "gold": {
+        "index": 28,
+        "left": 11,
+        "top": 137,
+        "evidence": "reference_source"
+      },
+      "frameEvidence": "asset",
+      "placementEvidence": "reference_source proposal"
+    }
   },
   "nationalCharacterWindow": {
-    "index": 380,
-    "x": 272,
-    "y": 80,
-    "width": 256,
-    "height": 359,
-    "close": {"x": 240, "y": 0, "width": 16, "height": 23, "paint": true, "index": 371},
-    "tabs": {"x": 8, "y": 28, "width": 56, "height": 18, "step": 60, "labels": ["装备", "属性", "状态", "技能"], "evidence": "proposed"},
-    "statusPage": {"index": 370, "x": 12, "y": 52, "width": 232, "height": 325, "evidence": "proposed"},
-    "skillsPage": {"x": 12, "y": 52, "width": 232, "height": 295, "evidence": "proposed"},
-    "statValues": {"x": 104, "width": 76, "tops": [90, 111, 132, 153, 174, 195, 216], "hideLabels": true, "evidence": "proposed"},
+    "index": 370,
+    "x": 568,
+    "y": 0,
+    "width": 232,
+    "height": 325,
+    "close": {
+      "x": 8,
+      "y": 39,
+      "width": 16,
+      "height": 23,
+      "paint": false,
+      "index": 371
+    },
+    "statusPage": {
+      "x": 0,
+      "y": 0,
+      "width": 232,
+      "height": 325,
+      "evidence": "2026-10-07 installed mir.dat runtime screenshots; 802x634 window, game origin (1,33); static frame matching, full dynamic acceptance pending"
+    },
+    "skillsPage": {
+      "x": 38,
+      "y": 52,
+      "width": 168,
+      "height": 199,
+      "evidence": "2026-10-07 installed mir.dat runtime screenshots; 802x634 window, game origin (1,33); static frame matching, full dynamic acceptance pending",
+      "index": 383
+    },
+    "statValues": {
+      "x": 112,
+      "width": 64,
+      "align": "left",
+      "font": {
+        "profile": "kaiti-12",
+        "color": "#ffffff",
+        "outline": false,
+        "height": 12
+      },
+      "tops": [
+        99,
+        119,
+        139,
+        159,
+        179,
+        199,
+        219
+      ],
+      "hideLabels": true,
+      "evidence": "Installed mir.dat lossless runtime video frame at 405s: seven observed numeric strings match source-bound kaiti-12 glyphs, white, no outline, draw origin game(680,99+20*row); 5,544 interior pixels RGB equal. Window origin (568,0); full dynamic acceptance pending."
+    },
     "frameEvidence": "asset",
-    "placementEvidence": "proposed"
+    "placementEvidence": "2026-10-07 installed mir.dat runtime screenshots; 802x634 window, game origin (1,33); static frame matching, full dynamic acceptance pending",
+    "positionVersion": "native-176-20261007",
+    "pageButtons": {
+      "previous": {
+        "x": 0,
+        "y": 122,
+        "width": 38,
+        "height": 35
+      },
+      "next": {
+        "x": 0,
+        "y": 180,
+        "width": 38,
+        "height": 35
+      }
+    },
+    "statePage": {
+      "x": 38,
+      "y": 52,
+      "width": 168,
+      "height": 199,
+      "evidence": "2026-10-07 installed mir.dat runtime screenshots; 802x634 window, game origin (1,33); static frame matching, full dynamic acceptance pending",
+      "index": 382
+    },
+    "name": {
+      "x": 38,
+      "y": 22,
+      "width": 168,
+      "height": 14,
+      "font": {
+        "profile": "kaiti-12",
+        "color": "#ffffff",
+        "outline": false,
+        "align": "center",
+        "drawTop": 1
+      },
+      "evidence": "Installed mir.dat lossless video450s title Mir35448bf1: white kaiti-12/no outline, origin game657/23, 1,260 pixels equal; other names and dynamic browser centering pending."
+    },
+    "stateRows": {
+      "labelX": 20,
+      "valueX": 105,
+      "rowTop": 10,
+      "rowStep": 14,
+      "font": {
+        "profile": "kaiti-12",
+        "color": "#c0c0c0",
+        "outline": false,
+        "height": 14
+      },
+      "evidence": "Installed mir.dat lossless runtime video frame at 420s: four labels and four observed values match source-bound kaiti-12 glyphs, silver, no outline; 6,720 pixels RGB equal. Draw origins game x626/711, y62+14*row; full dynamic acceptance pending."
+    },
+    "evidence": "2026-10-07 installed mir.dat runtime screenshots; 802x634 window, game origin (1,33); static frame matching, full dynamic acceptance pending",
+    "secondaryPercentMultiplier": 10,
+    "secondaryEvidence": "FState.pas DStateDirectPaint page2 multiplies raw antiMagic/antiPoison/poisonRecover/healthRecover/spellRecover by10; gateway SM752 preserves raw values. Installed runtime screenshot13 shows +10% magic defence.",
+    "skillRows": {
+      "count": 5,
+      "step": 37,
+      "width": 168,
+      "font": {
+        "profile": "kaiti-12",
+        "color": "#c0c0c0",
+        "outline": false,
+        "height": 14
+      },
+      "name": {
+        "x": 48,
+        "y": 8,
+        "width": 95
+      },
+      "levelLabel": {
+        "frame": 112,
+        "x": 48,
+        "y": 23
+      },
+      "trainLabel": {
+        "frame": 111,
+        "x": 74,
+        "y": 23
+      },
+      "levelValue": {
+        "x": 64,
+        "y": 23,
+        "width": 10
+      },
+      "trainValue": {
+        "x": 94,
+        "y": 23,
+        "width": 74
+      },
+      "key": {
+        "x": 145,
+        "y": 8,
+        "width": 20,
+        "height": 16,
+        "frames": [
+          248,
+          249,
+          250,
+          251,
+          252,
+          253,
+          254,
+          255
+        ],
+        "evidence": "Installed video450s F1/F3/F4 whole-frame RGB equal, 960pixels; remaining numbered sprites are asset-inspected with runtime states/hotareas pending."
+      },
+      "evidence": "Installed lossless video450s: five skill names and five Lv3/Exp- compositions equal in 12,600pixels; row origin name654/60+37*row, Prguse383 page origin606/52. Other levels/train values, scrolling and complete hotareas pending.",
+      "art": {
+        "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+        "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+        "frames": {
+          "111": {
+            "file": "111.bad1584919c08a17.png",
+            "sha256": "bad1584919c08a174f0695fbafc1a0257f1df390c5a7e7611fffaa4c4c95b0a7",
+            "width": 20,
+            "height": 12
+          },
+          "112": {
+            "file": "112.79d7ae2773d42c94.png",
+            "sha256": "79d7ae2773d42c94683277bf054f82b0564a632cb7e56084cd55a10268a0421e",
+            "width": 16,
+            "height": 11
+          },
+          "248": {
+            "file": "248.0f8bcecb03cad84b.png",
+            "sha256": "0f8bcecb03cad84b00c4ff3b953b191f0e86b47871f75d2b7bc7a32de2d1ebfc",
+            "width": 20,
+            "height": 16
+          },
+          "249": {
+            "file": "249.0fc266d8e684f3a7.png",
+            "sha256": "0fc266d8e684f3a78a807e35b4d2be9c66b9b00706dd7be7773f3793505ed62d",
+            "width": 20,
+            "height": 16
+          },
+          "250": {
+            "file": "250.bd2ffe621675e697.png",
+            "sha256": "bd2ffe621675e6973907cf7a626d0624af9a03ab4ed5196f41acfc3bec3ff6bd",
+            "width": 20,
+            "height": 16
+          },
+          "251": {
+            "file": "251.c5bf9c83473cfe8b.png",
+            "sha256": "c5bf9c83473cfe8b9cba08dad6dc78f6c07a7013330cbfc2863d0403a22f29e9",
+            "width": 20,
+            "height": 16
+          },
+          "252": {
+            "file": "252.62657c6bdc2e0052.png",
+            "sha256": "62657c6bdc2e0052282056634e177bea3bb3a701895a70cc058701b05b7264a8",
+            "width": 20,
+            "height": 16
+          },
+          "253": {
+            "file": "253.1f0029c9e3ff13de.png",
+            "sha256": "1f0029c9e3ff13de139ae3c9b5b663bed51fe49a1d70d3e7036440ba72439da1",
+            "width": 20,
+            "height": 16
+          },
+          "254": {
+            "file": "254.1c5ae4a7c840397b.png",
+            "sha256": "1c5ae4a7c840397be8d6d13c328809dae2cfe813dfef3ae86d261a331e6f9839",
+            "width": 20,
+            "height": 16
+          },
+          "255": {
+            "file": "255.ea3115a0d9c9991c.png",
+            "sha256": "ea3115a0d9c9991c6e97e06386e2d23bb43bcc36932e295e45f648eacf8bb2c5",
+            "width": 20,
+            "height": 16
+          }
+        }
+      }
+    }
   },
   "inventoryInteraction": {
     "source": "Crystal InventoryDialog and MirItemCell behavior reference",
@@ -249,43 +1257,211 @@
     "persistGridOrder": true,
     "persistWindowPosition": true
   },
-  "characterPage": {"library": "Prguse", "index": 340, "x": 8, "y": 90},
-  "nationalCharacterPage": {"library": "prguse", "index": 378, "x": 44, "y": 72},
-  "paperdollActor": {"x": 70, "y": 150, "direction": 4},
-  "nationalPaperdollActor": {"x": 128, "y": 184, "direction": 4, "scale": 1},
+  "characterPage": {
+    "library": "Prguse",
+    "index": 340,
+    "x": 8,
+    "y": 90
+  },
+  "nationalCharacterPage": {
+    "library": "prguse",
+    "index": 378,
+    "x": 38,
+    "y": 52,
+    "evidence": "2026-10-07 installed mir.dat runtime screenshots; 802x634 window, game origin (1,33); static frame matching, full dynamic acceptance pending"
+  },
+  "paperdollActor": {
+    "x": 70,
+    "y": 150,
+    "direction": 4
+  },
+  "nationalPaperdollActor": {
+    "x": 38,
+    "y": 52,
+    "direction": 4,
+    "scale": 1,
+    "evidence": "native Prguse#376/#377 sex-specific body art origin; world actor sprites must not stand in for character paperdoll"
+  },
   "characterTabs": [
-    {"id": "paperdoll", "library": "Title", "index": 500, "x": 8, "y": 70, "width": 64, "height": 20},
-    {"id": "status", "library": "Title", "index": 501, "x": 70, "y": 70, "width": 64, "height": 20},
-    {"id": "state", "library": "Title", "index": 502, "x": 132, "y": 70, "width": 64, "height": 20},
-    {"id": "skills", "library": "Title", "index": 503, "x": 194, "y": 70, "width": 64, "height": 20}
+    {
+      "id": "paperdoll",
+      "library": "Title",
+      "index": 500,
+      "x": 8,
+      "y": 70,
+      "width": 64,
+      "height": 20
+    },
+    {
+      "id": "status",
+      "library": "Title",
+      "index": 501,
+      "x": 70,
+      "y": 70,
+      "width": 64,
+      "height": 20
+    },
+    {
+      "id": "state",
+      "library": "Title",
+      "index": 502,
+      "x": 132,
+      "y": 70,
+      "width": 64,
+      "height": 20
+    },
+    {
+      "id": "skills",
+      "library": "Title",
+      "index": 503,
+      "x": 194,
+      "y": 70,
+      "width": 64,
+      "height": 20
+    }
   ],
   "equipmentCells": [
-    {"slot": 1, "name": "武器", "x": 123, "y": 7},
-    {"slot": 0, "name": "衣服", "x": 163, "y": 7},
-    {"slot": 4, "name": "头盔", "x": 203, "y": 7},
-    {"slot": 3, "name": "项链", "x": 203, "y": 98},
-    {"slot": 2, "name": "右手", "x": 203, "y": 134},
-    {"slot": 5, "name": "左手镯", "x": 8, "y": 170},
-    {"slot": 6, "name": "右手镯", "x": 203, "y": 170},
-    {"slot": 7, "name": "左戒指", "x": 8, "y": 206},
-    {"slot": 8, "name": "右戒指", "x": 203, "y": 206},
-    {"slot": 9, "name": "护身符", "x": 8, "y": 242},
-    {"slot": 11, "name": "靴子", "x": 48, "y": 242},
-    {"slot": 10, "name": "腰带", "x": 88, "y": 242},
-    {"slot": 12, "name": "宝石", "x": 128, "y": 242}
+    {
+      "slot": 1,
+      "name": "武器",
+      "x": 123,
+      "y": 7
+    },
+    {
+      "slot": 0,
+      "name": "衣服",
+      "x": 163,
+      "y": 7
+    },
+    {
+      "slot": 4,
+      "name": "头盔",
+      "x": 203,
+      "y": 7
+    },
+    {
+      "slot": 3,
+      "name": "项链",
+      "x": 203,
+      "y": 98
+    },
+    {
+      "slot": 2,
+      "name": "右手",
+      "x": 203,
+      "y": 134
+    },
+    {
+      "slot": 5,
+      "name": "左手镯",
+      "x": 8,
+      "y": 170
+    },
+    {
+      "slot": 6,
+      "name": "右手镯",
+      "x": 203,
+      "y": 170
+    },
+    {
+      "slot": 7,
+      "name": "左戒指",
+      "x": 8,
+      "y": 206
+    },
+    {
+      "slot": 8,
+      "name": "右戒指",
+      "x": 203,
+      "y": 206
+    },
+    {
+      "slot": 9,
+      "name": "护身符",
+      "x": 8,
+      "y": 242
+    },
+    {
+      "slot": 11,
+      "name": "靴子",
+      "x": 48,
+      "y": 242
+    },
+    {
+      "slot": 10,
+      "name": "腰带",
+      "x": 88,
+      "y": 242
+    },
+    {
+      "slot": 12,
+      "name": "宝石",
+      "x": 128,
+      "y": 242
+    }
   ],
+  "nationalEquipmentAppearanceOrigin": {
+    "x": 31,
+    "y": 96,
+    "evidence": "2026-10-07 runtime screenshot 11-character-equipment, stateitem#37/#62/#100 sparse opaque pixel matching; offsets are relative to the 232x325 window"
+  },
   "nationalEquipmentAppearance": [
-    {"slot": 0, "name": "衣服", "layer": "clothes", "z": 1},
-    {"slot": 1, "name": "武器", "layer": "weapon", "z": 3},
-    {"slot": 4, "name": "头盔", "layer": "helmet", "z": 4}
+    {
+      "slot": 0,
+      "name": "衣服",
+      "layer": "clothes",
+      "z": 1
+    },
+    {
+      "slot": 1,
+      "name": "武器",
+      "layer": "weapon",
+      "z": 3
+    },
+    {
+      "slot": 4,
+      "name": "头盔",
+      "layer": "helmet",
+      "z": 4
+    }
   ],
   "nationalEquipmentCells": [
-    {"slot": 3, "name": "项链", "x": 131, "y": 36},
-    {"slot": 2, "name": "蜡烛", "x": 131, "y": 72},
-    {"slot": 5, "name": "左手镯", "x": 4, "y": 125},
-    {"slot": 6, "name": "右手镯", "x": 131, "y": 125},
-    {"slot": 7, "name": "左戒指", "x": 4, "y": 161},
-    {"slot": 8, "name": "右戒指", "x": 131, "y": 161}
+    {
+      "slot": 3,
+      "name": "项链",
+      "x": 131,
+      "y": 36
+    },
+    {
+      "slot": 2,
+      "name": "蜡烛",
+      "x": 131,
+      "y": 72
+    },
+    {
+      "slot": 5,
+      "name": "左手镯",
+      "x": 131,
+      "y": 125
+    },
+    {
+      "slot": 6,
+      "name": "右手镯",
+      "x": 4,
+      "y": 125
+    },
+    {
+      "slot": 7,
+      "name": "左戒指",
+      "x": 4,
+      "y": 161
+    },
+    {
+      "slot": 8,
+      "name": "右戒指",
+      "x": 131,
+      "y": 161
+    }
   ],
   "cursors": {
     "default": "Cursor_Default.CUR",
@@ -297,53 +1473,302 @@
     "upgrade": "Cursor_Upgrade.CUR"
   },
   "requiredFrames": {
-    "Prguse": [0, 4, 7, 44, 65, 73, 76, 100, 101, 102, 340, 995, 1084, 1900, 1903, 1906, 1909, 1912, 2035, 2090, 2190, 2201, 2420, 2426, 2429, 2432],
-    "Prguse2": [360],
-    "Title": [20, 30, 31, 32, 40, 196, 280, 320, 323, 340, 343, 352, 360, 500, 501, 502, 503, 504, 506, 507, 508, 660, 661, 662, 665, 666, 667],
-    "ChrSel": [0, 20, 40, 60, 300, 320, 340],
-    "MagIcon": [1, 2, 3]
+    "Prguse": [
+      0,
+      4,
+      7,
+      11,
+      44,
+      65,
+      73,
+      76,
+      100,
+      101,
+      102,
+      340,
+      995,
+      1084,
+      1900,
+      1903,
+      1906,
+      1909,
+      1912,
+      2035,
+      2090,
+      2190,
+      2201,
+      2420,
+      2426,
+      2429,
+      2432
+    ],
+    "Prguse2": [
+      360
+    ],
+    "Title": [
+      20,
+      30,
+      31,
+      32,
+      40,
+      196,
+      280,
+      320,
+      323,
+      340,
+      343,
+      352,
+      360,
+      500,
+      501,
+      502,
+      503,
+      504,
+      506,
+      507,
+      508,
+      660,
+      661,
+      662,
+      665,
+      666,
+      667
+    ],
+    "ChrSel": [
+      0,
+      20,
+      40,
+      60,
+      300,
+      320,
+      340
+    ],
+    "MagIcon": [
+      1,
+      2,
+      3
+    ]
   },
   "login": {
     "library": "ChrSel",
     "index": 0,
-    "dialog": {"library": "Prguse", "index": 1084, "x": 236, "y": 190},
-    "title": {"library": "Title", "index": 30, "x": 113, "y": 12},
-    "accountLabel": {"library": "Title", "index": 31, "x": 52, "y": 83},
-    "passwordLabel": {"library": "Title", "index": 32, "x": 43, "y": 105},
-    "accountInput": {"x": 85, "y": 85, "width": 136, "height": 15},
-    "passwordInput": {"x": 85, "y": 108, "width": 136, "height": 15},
-    "ok": {"library": "Title", "index": 320, "hover": 321, "pressed": 322, "x": 227, "y": 81},
-    "register": {"library": "Title", "index": 323, "hover": 324, "pressed": 325, "x": 60, "y": 163}
+    "dialog": {
+      "library": "Prguse",
+      "index": 1084,
+      "x": 236,
+      "y": 190
+    },
+    "title": {
+      "library": "Title",
+      "index": 30,
+      "x": 113,
+      "y": 12
+    },
+    "accountLabel": {
+      "library": "Title",
+      "index": 31,
+      "x": 52,
+      "y": 83
+    },
+    "passwordLabel": {
+      "library": "Title",
+      "index": 32,
+      "x": 43,
+      "y": 105
+    },
+    "accountInput": {
+      "x": 85,
+      "y": 85,
+      "width": 136,
+      "height": 15
+    },
+    "passwordInput": {
+      "x": 85,
+      "y": 108,
+      "width": 136,
+      "height": 15
+    },
+    "ok": {
+      "library": "Title",
+      "index": 320,
+      "hover": 321,
+      "pressed": 322,
+      "x": 227,
+      "y": 81
+    },
+    "register": {
+      "library": "Title",
+      "index": 323,
+      "hover": 324,
+      "pressed": 325,
+      "x": 60,
+      "y": 163
+    }
   },
   "select": {
     "library": "Prguse",
     "index": 65,
-    "title": {"library": "Title", "index": 40, "x": 468, "y": 20},
-    "portrait": {"x": 260, "y": 420},
-    "portraits": {"20": [0, 0], "40": [1, 0], "60": [2, 0], "300": [0, 1], "320": [1, 1], "340": [2, 1]},
-    "slot": {"library": "Prguse", "index": 44, "filledLibrary": "Title", "filledIndex": 660, "x": 504, "y": 140, "step": 80, "count": 4},
-    "start": {"library": "Title", "index": 340, "hover": 341, "pressed": 342, "x": 110, "y": 568},
-    "create": {"library": "Title", "index": 343, "hover": 344, "pressed": 345, "x": 230, "y": 568},
-    "exit": {"library": "Title", "index": 352, "hover": 353, "pressed": 354, "x": 590, "y": 568}
+    "title": {
+      "library": "Title",
+      "index": 40,
+      "x": 468,
+      "y": 20
+    },
+    "portrait": {
+      "x": 260,
+      "y": 420
+    },
+    "portraits": {
+      "20": [
+        0,
+        0
+      ],
+      "40": [
+        1,
+        0
+      ],
+      "60": [
+        2,
+        0
+      ],
+      "300": [
+        0,
+        1
+      ],
+      "320": [
+        1,
+        1
+      ],
+      "340": [
+        2,
+        1
+      ]
+    },
+    "slot": {
+      "library": "Prguse",
+      "index": 44,
+      "filledLibrary": "Title",
+      "filledIndex": 660,
+      "x": 504,
+      "y": 140,
+      "step": 80,
+      "count": 4
+    },
+    "start": {
+      "library": "Title",
+      "index": 340,
+      "hover": 341,
+      "pressed": 342,
+      "x": 110,
+      "y": 568
+    },
+    "create": {
+      "library": "Title",
+      "index": 343,
+      "hover": 344,
+      "pressed": 345,
+      "x": 230,
+      "y": 568
+    },
+    "exit": {
+      "library": "Title",
+      "index": 352,
+      "hover": 353,
+      "pressed": 354,
+      "x": 590,
+      "y": 568
+    }
   },
   "newCharacter": {
     "library": "Prguse",
     "index": 73,
     "x": 106,
     "y": 70,
-    "title": {"library": "Title", "index": 20, "x": 206, "y": 11},
-    "nameInput": {"x": 325, "y": 268, "width": 240, "height": 20},
-    "ok": {"library": "Title", "index": 360, "hover": 361, "pressed": 362, "x": 160, "y": 425},
-    "cancel": {"library": "Title", "index": 280, "hover": 281, "pressed": 282, "x": 425, "y": 425},
+    "title": {
+      "library": "Title",
+      "index": 20,
+      "x": 206,
+      "y": 11
+    },
+    "nameInput": {
+      "x": 325,
+      "y": 268,
+      "width": 240,
+      "height": 20
+    },
+    "ok": {
+      "library": "Title",
+      "index": 360,
+      "hover": 361,
+      "pressed": 362,
+      "x": 160,
+      "y": 425
+    },
+    "cancel": {
+      "library": "Title",
+      "index": 280,
+      "hover": 281,
+      "pressed": 282,
+      "x": 425,
+      "y": 425
+    },
     "jobs": [
-      {"job": 0, "library": "Prguse", "index": 2426, "active": 2427, "hover": 2427, "pressed": 2428, "x": 323, "y": 296},
-      {"job": 1, "library": "Prguse", "index": 2429, "active": 2430, "hover": 2430, "pressed": 2431, "x": 373, "y": 296},
-      {"job": 2, "library": "Prguse", "index": 2432, "active": 2433, "hover": 2433, "pressed": 2434, "x": 423, "y": 296}
+      {
+        "job": 0,
+        "library": "Prguse",
+        "index": 2426,
+        "active": 2427,
+        "hover": 2427,
+        "pressed": 2428,
+        "x": 323,
+        "y": 296
+      },
+      {
+        "job": 1,
+        "library": "Prguse",
+        "index": 2429,
+        "active": 2430,
+        "hover": 2430,
+        "pressed": 2431,
+        "x": 373,
+        "y": 296
+      },
+      {
+        "job": 2,
+        "library": "Prguse",
+        "index": 2432,
+        "active": 2433,
+        "hover": 2433,
+        "pressed": 2434,
+        "x": 423,
+        "y": 296
+      }
     ],
     "sexes": [
-      {"sex": 0, "library": "Prguse", "index": 2420, "active": 2421, "hover": 2421, "pressed": 2422, "x": 323, "y": 343},
-      {"sex": 1, "library": "Prguse", "index": 2423, "active": 2424, "hover": 2424, "pressed": 2425, "x": 373, "y": 343}
+      {
+        "sex": 0,
+        "library": "Prguse",
+        "index": 2420,
+        "active": 2421,
+        "hover": 2421,
+        "pressed": 2422,
+        "x": 323,
+        "y": 343
+      },
+      {
+        "sex": 1,
+        "library": "Prguse",
+        "index": 2423,
+        "active": 2424,
+        "hover": 2424,
+        "pressed": 2425,
+        "x": 373,
+        "y": 343
+      }
     ],
-    "portrait": {"x": 120, "y": 250}
+    "portrait": {
+      "x": 120,
+      "y": 250
+    }
   }
 }

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <ChatTestFramework Condition="'$(ChatTestFramework)' == ''">net10.0</ChatTestFramework>
+    <TargetFramework>$(ChatTestFramework)</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../services/web-gateway/ChatCommand.cs" Link="ChatCommand.cs" />
+    <Compile Include="../../services/web-gateway/LegacyCodec.cs" Link="LegacyCodec.cs" />
+  </ItemGroup>
+</Project>

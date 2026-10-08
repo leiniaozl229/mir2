@@ -145,6 +145,8 @@
   ],
   "fallback": {
     "id": "crystal-candidate",
+    "automatic": false,
+    "runtimePolicy": "Production and calibration load original national-client assets only; missing assets remain visible diagnostics and may be retried. Legacy candidate metadata is retained for source history.",
     "layout": "content/classic-176/ui-layout.json",
     "allowedFor": ["interaction-smoke-test", "asset-pipeline-development"],
     "visualClaim": "candidate-only"

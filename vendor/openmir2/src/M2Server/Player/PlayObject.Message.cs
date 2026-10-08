@@ -857,7 +857,7 @@ namespace M2Server.Player
                                         //LogService.Warn(Format(CommandHelp.BunOverSpeed, ChrName, delayTime, nMsgCount));
                                     }
                                 }
-                                SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");// 如果超速则发送攻击失败信息
+                                SendActionFailed();// 如果超速则发送攻击失败信息
                             }
                             else
                             {
@@ -1032,7 +1032,7 @@ namespace M2Server.Player
                     {
                         if (delayTime == 0)
                         {
-                            SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                            SendActionFailed();
                         }
                         else
                         {
@@ -1052,7 +1052,7 @@ namespace M2Server.Player
                                         //LogService.Warn(Format(CommandHelp.BunOverSpeed, ChrName, delayTime, nMsgCount));
                                     }
                                 }
-                                SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");// 如果超速则发送攻击失败信息
+                                SendActionFailed();// 如果超速则发送攻击失败信息
                             }
                             else
                             {
@@ -1083,7 +1083,7 @@ namespace M2Server.Player
                     {
                         if (delayTime == 0)
                         {
-                            SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                            SendActionFailed();
                         }
                         else
                         {
@@ -1103,7 +1103,7 @@ namespace M2Server.Player
                                         //LogService.Warn(Format(CommandHelp.WalkOverSpeed, ChrName, delayTime, nMsgCount));
                                     }
                                 }
-                                SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");// 如果超速则发送攻击失败信息
+                                SendActionFailed();// 如果超速则发送攻击失败信息
                                 if (TestSpeedMode)
                                 {
                                     SysMsg(Format("速度异常 Ident: {0} Time: {1}", processMsg.wIdent, delayTime), MsgColor.Red, MsgType.Hint);
@@ -1113,7 +1113,7 @@ namespace M2Server.Player
                             {
                                 if (delayTime > SystemShare.Config.DropOverSpeed && SystemShare.Config.SpeedControlMode == 1 && IsFilterAction)
                                 {
-                                    SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                                    SendActionFailed();
                                     if (TestSpeedMode)
                                     {
                                         SysMsg(Format("速度异常 Ident: {0} Time: {1}", processMsg.wIdent, delayTime), MsgColor.Red, MsgType.Hint);
@@ -1142,7 +1142,7 @@ namespace M2Server.Player
                     {
                         if (delayTime == 0)
                         {
-                            SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                            SendActionFailed();
                         }
                         else
                         {
@@ -1162,7 +1162,7 @@ namespace M2Server.Player
                                         // LogService.Warn(Format(CommandHelp.RunOverSpeed, ChrName, delayTime, nMsgCount));
                                     }
                                 }
-                                SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, ""); // 如果超速则发送攻击失败信息
+                                SendActionFailed(); // 如果超速则发送攻击失败信息
                                 if (TestSpeedMode)
                                 {
                                     SysMsg(Format("速度异常 Ident: {0} Time: {1}", processMsg.wIdent, delayTime), MsgColor.Red, MsgType.Hint);
@@ -1190,7 +1190,7 @@ namespace M2Server.Player
                     {
                         if (delayTime == 0)
                         {
-                            SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                            SendActionFailed();
                         }
                         else
                         {
@@ -1210,13 +1210,13 @@ namespace M2Server.Player
                                         //LogService.Warn(Format(CommandHelp.RunOverSpeed, ChrName, delayTime, nMsgCount));
                                     }
                                 }
-                                SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, ""); // 如果超速则发送攻击失败信息
+                                SendActionFailed(); // 如果超速则发送攻击失败信息
                             }
                             else
                             {
                                 if (delayTime > SystemShare.Config.DropOverSpeed && SystemShare.Config.SpeedControlMode == 1 && IsFilterAction)
                                 {
-                                    SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                                    SendActionFailed();
                                     if (TestSpeedMode)
                                     {
                                         SysMsg(Format("速度异常 Ident: {0} Time: {1}", processMsg.wIdent, delayTime), MsgColor.Red, MsgType.Hint);
@@ -1253,7 +1253,7 @@ namespace M2Server.Player
                     {
                         if (delayTime == 0)
                         {
-                            SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                            SendActionFailed();
                         }
                         else
                         {
@@ -1273,7 +1273,7 @@ namespace M2Server.Player
                                         //LogService.Warn(Format(CommandHelp.HitOverSpeed, ChrName, delayTime, nMsgCount));
                                     }
                                 }
-                                SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");// 如果超速则发送攻击失败信息
+                                SendActionFailed();// 如果超速则发送攻击失败信息
                             }
                             else
                             {
@@ -1308,7 +1308,7 @@ namespace M2Server.Player
                     {
                         if (delayTime == 0)
                         {
-                            SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                            SendActionFailed();
                         }
                         else
                         {
@@ -1328,7 +1328,7 @@ namespace M2Server.Player
                                         // LogService.Warn(Format(CommandHelp.BunOverSpeed, ChrName, delayTime, nMsgCount));
                                     }
                                 }
-                                SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");// 如果超速则发送攻击失败信息
+                                SendActionFailed();// 如果超速则发送攻击失败信息
                             }
                             else
                             {
@@ -1363,7 +1363,7 @@ namespace M2Server.Player
                     {
                         if (delayTime == 0)
                         {
-                            SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                            SendActionFailed();
                         }
                         else
                         {
@@ -1383,13 +1383,13 @@ namespace M2Server.Player
                                         // LogService.Warn(Format(CommandHelp.SpellOverSpeed, ChrName, delayTime, nMsgCount));
                                     }
                                 }
-                                SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");// 如果超速则发送攻击失败信息
+                                SendActionFailed();// 如果超速则发送攻击失败信息
                             }
                             else
                             {
                                 if (delayTime > SystemShare.Config.DropOverSpeed && SystemShare.Config.SpeedControlMode == 1 && IsFilterAction)
                                 {
-                                    SendRefMsg(Messages.RM_MOVEFAIL, 0, 0, 0, 0, "");
+                                    SendActionFailed();
                                     if (TestSpeedMode)
                                     {
                                         SysMsg(Format("速度异常 Ident: {0} Time: {1}", processMsg.wIdent, delayTime), MsgColor.Red, MsgType.Hint);
@@ -1458,7 +1458,8 @@ namespace M2Server.Player
                     if (processMsg.ActorId != ActorId)
                     {
                         ClientMsg = Messages.MakeMessage(Messages.SM_HEAVYHIT, processMsg.ActorId, processMsg.nParam1, processMsg.nParam2, processMsg.wParam);
-                        SendSocket(ClientMsg, processMsg.Msg);
+                        if (string.IsNullOrEmpty(processMsg.Msg)) SendSocket(ClientMsg);
+                        else SendSocket(ClientMsg, processMsg.Msg);
                     }
                     break;
                 case Messages.RM_BIGHIT:
@@ -1483,11 +1484,11 @@ namespace M2Server.Player
                     }
                     break;
                 case Messages.RM_MOVEFAIL:
-                    ClientMsg = Messages.MakeMessage(Messages.SM_MOVEFAIL, ActorId, CurrX, CurrY, Dir);
-                    CharDesc movefailmessage = default;
-                    movefailmessage.Feature = baseObject.GetFeatureToLong();
-                    movefailmessage.Status = baseObject.CharStatus;
-                    SendSocket(ClientMsg, EDCode.EncodePacket(movefailmessage));
+                    // Ignore another actor's obsolete broadcast failure.
+                    if (processMsg.ActorId == ActorId)
+                    {
+                        SendActionFailed();
+                    }
                     break;
                 case Messages.RM_LONGHIT:
                     if (processMsg.ActorId != ActorId)

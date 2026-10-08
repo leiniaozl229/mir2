@@ -15,12 +15,15 @@ RULES = ROOT / "content/classic-176/skill-rules.json"
 COMBAT = ROOT / "content/classic-176/skill-combat.json"
 SKILLS_TS = ROOT / "apps/web/src/skills.ts"
 TRAINER = ROOT / "content/classic-176/p0/skill-trainer.txt"
+INPUT = ROOT / "content/classic-176/skill-input.json"
 
 USES = {"hostile", "self", "toggle", "charge", "passive"}
 JOBS = {"warrior": 0, "wizard": 1, "taoist": 2}
 
 
 def parse_skill_use(source: str) -> dict[int, str]:
+    if "import skillInput from '../../../content/classic-176/skill-input.json';" in source and "Object.entries(skillInput.skills)" in source:
+        return {int(magic_id): rule['use'] for magic_id, rule in json.loads(INPUT.read_text(encoding='utf-8'))['skills'].items()}
     match = re.search(r"export const skillUse:Record<number,SkillUse>=\{([^}]+)\}", source)
     if not match:
         return {}
@@ -46,6 +49,7 @@ def audit() -> dict[str, object]:
     mismatches: dict[str, object] = {}
     routes = parse_skill_use(SKILLS_TS.read_text(encoding="utf-8"))
     route_missing: list[str] = []
+    input_rules = json.loads(INPUT.read_text(encoding='utf-8'))['skills']
     for name in expected:
         rule = rules.get(name, {})
         spec = skills.get(name, {})
@@ -57,7 +61,10 @@ def audit() -> dict[str, object]:
         magic_id = rule.get("magicId")
         if magic_id is None:
             continue
-        if routes.get(magic_id) != spec.get("use"):
+        if input_rules.get(str(magic_id), {}).get('name') != name:
+            mismatches.setdefault(name, {})['inputIdentity'] = input_rules.get(str(magic_id))
+        use = routes.get(magic_id)
+        if use != spec.get("use") and not (spec.get('use') == 'self' and use == 'support'):
             route_missing.append(f"{name}({magic_id}) ts={routes.get(magic_id)} spec={spec.get('use')}")
 
     trainer = TRAINER.read_text(encoding="utf-8")

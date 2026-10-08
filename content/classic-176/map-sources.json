@@ -1,0 +1,5268 @@
+{
+  "schemaVersion": 1,
+  "domain": "map-cells",
+  "reference": "repository-installed-national-2003-client",
+  "baseline": {
+    "submoduleCommit": "f38deae64c521a28f8e0d86f2bf24d4ba7c9ea5c",
+    "orderedMapIdsSha256": "30c5a3835b2c0ef07e496f867e1af5b3dd909e71de9f69ef49a04000ae52fcbd",
+    "maps": [
+      {
+        "id": "0",
+        "path": "vendor/mirserver-data/Mir200/Map/0.map",
+        "sha256": "183e9d545e284275d7955e56dfc4af301e8af9e54c46470a4c7817ee7c5742e7",
+        "bytes": 5880052,
+        "width": 700,
+        "height": 700,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "1",
+        "path": "vendor/mirserver-data/Mir200/Map/1.map",
+        "sha256": "a60373a2e2bd1e982dcb614ea40a8aa86638b4d2680fdb2f2ed1640654c61793",
+        "bytes": 4320052,
+        "width": 600,
+        "height": 600,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "2",
+        "path": "vendor/mirserver-data/Mir200/Map/2.map",
+        "sha256": "6174b98752bb5a8464d6bcea979aeb4a7824ca36cc60d617fc58df0f48c88297",
+        "bytes": 4320052,
+        "width": 600,
+        "height": 600,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "3",
+        "path": "vendor/mirserver-data/Mir200/Map/3.map",
+        "sha256": "5bb37afef0bb827e0ee47b71ed455d737ebd503917fabad4407d7361f0ca694f",
+        "bytes": 9600052,
+        "width": 1000,
+        "height": 800,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D001",
+        "path": "vendor/mirserver-data/Mir200/Map/D001.map",
+        "sha256": "0047842a53a4806562746f6580859b3b06e2d64a7c4bfeb1ead40831bea2fa24",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D002",
+        "path": "vendor/mirserver-data/Mir200/Map/D002.map",
+        "sha256": "ab03734fdc35327cee0f663eb5a020ff69d453e4d3e565483be81521cc7fbe3f",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D003",
+        "path": "vendor/mirserver-data/Mir200/Map/D003.map",
+        "sha256": "46f18a27b58bbf76087ddf4df679717beea06eafbe6c19de854fbc0a6cb79d81",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D011",
+        "path": "vendor/mirserver-data/Mir200/Map/D011.map",
+        "sha256": "cfe306b793ec8b7cace580ee1efcf67e1dcbd4b98b4541855a5e070a1b33c067",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D012",
+        "path": "vendor/mirserver-data/Mir200/Map/D012.map",
+        "sha256": "b6d301d103b3b6e87b1de46530913ca4c6b92c27f042bd469f356c4fb06147b2",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D021",
+        "path": "vendor/mirserver-data/Mir200/Map/D021.map",
+        "sha256": "65fc13c6e9055913b5ea8ba5be77178b2856832d1aa80cbab4ab40e3fe155894",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D022",
+        "path": "vendor/mirserver-data/Mir200/Map/D022.map",
+        "sha256": "c1e6620befd8563c26f4ee2d8f79ad238fdaa3b639a3bd0114e078c37ba93d2d",
+        "bytes": 3000052,
+        "width": 500,
+        "height": 500,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D023",
+        "path": "vendor/mirserver-data/Mir200/Map/D023.map",
+        "sha256": "889408a5b5cb4b73389b5212f5db05a17df0942974b57b9c627e3f6a9378ac6a",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D024",
+        "path": "vendor/mirserver-data/Mir200/Map/D024.map",
+        "sha256": "8712b9f37da480fe68ca1918134002c1d0886aa41c8710647eecd064c54646a4",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D401",
+        "path": "vendor/mirserver-data/Mir200/Map/D401.map",
+        "sha256": "81365b41fae7a2b1b45fa7db3f347caeb8bb6ae866299e410bc7cfb3d2da84b3",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D402",
+        "path": "vendor/mirserver-data/Mir200/Map/D402.map",
+        "sha256": "e311190e12dcf36943fc64c10148c8b147a622d03ce03c426779c5c5a26742d1",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D403",
+        "path": "vendor/mirserver-data/Mir200/Map/D403.map",
+        "sha256": "d079db48008b6edb31783ca6e7d463d4c8ac220bc520ac65f2dc59aadfb88c1b",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D404",
+        "path": "vendor/mirserver-data/Mir200/Map/D404.map",
+        "sha256": "1b09137d393d8fb3089fe81b5d0a9a1ca4e2b182b7c12a1545670cbe5d1e23f6",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D405",
+        "path": "vendor/mirserver-data/Mir200/Map/D405.map",
+        "sha256": "356baa4e6f73b0665d18c98ccf6e6a465eff27d53165a378f05d2b3b725b3abd",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D406",
+        "path": "vendor/mirserver-data/Mir200/Map/D406.map",
+        "sha256": "1f9c00df6b8b473c88787442c37b5fdd7be9f27e9a66b9039e149b1b93966e22",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D411",
+        "path": "vendor/mirserver-data/Mir200/Map/D411.map",
+        "sha256": "f0998cdbb67896b4ddcbff08891d4a68479896f2346037b65e1ecc807a8d5380",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D412",
+        "path": "vendor/mirserver-data/Mir200/Map/D412.map",
+        "sha256": "c06010d091585757486ab291826ae9deb55af0444a4f7f62d98a0315b1e96df3",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D413",
+        "path": "vendor/mirserver-data/Mir200/Map/D413.map",
+        "sha256": "bcd426bdc07df16d743bb987eefae6e809c2763cf1d1e34c2b114ad505cdf3a4",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D414",
+        "path": "vendor/mirserver-data/Mir200/Map/D414.map",
+        "sha256": "7e9a14cd35fe6154d0caf4ec5207a79924c686738085b82b21368eae99e6613e",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D415",
+        "path": "vendor/mirserver-data/Mir200/Map/D415.map",
+        "sha256": "a7a890b30e694260fa4c4443f212bae9104c8b3ce34be3ab142662cd55e39f50",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D416",
+        "path": "vendor/mirserver-data/Mir200/Map/D416.map",
+        "sha256": "b5d3a7a3bdf95f975736fc438d6960de14a8fadd326782e17ae269c7ed059dad",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D421",
+        "path": "vendor/mirserver-data/Mir200/Map/d421.map",
+        "sha256": "3a1247126b34cc8b3157d93e30b30168b8e7bc868756826252b9ed09ec834b98",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D422",
+        "path": "vendor/mirserver-data/Mir200/Map/d422.map",
+        "sha256": "1ca37da72c69cfc7b7a463bac494966973bfe058a185f86196d7428c37bb47fa",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D423",
+        "path": "vendor/mirserver-data/Mir200/Map/D423.map",
+        "sha256": "687421ff6a016df8ec94b73dbdcbd31c366f52d0fa726e42e78af50df44c4ce7",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D501",
+        "path": "vendor/mirserver-data/Mir200/Map/d501.map",
+        "sha256": "2b47998a77fdb705b1923e40c12208f71e06736f5ec8e541d687ceb7fd63e9e2",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D502",
+        "path": "vendor/mirserver-data/Mir200/Map/d502.map",
+        "sha256": "d9e6683e032146317072d0a647ba7a21b2e850b4ff4d9414c512890f5166e8fe",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D503",
+        "path": "vendor/mirserver-data/Mir200/Map/d503.map",
+        "sha256": "8caf32cc0218dc4bc10ad4fa29fb9b52a55adac5dc3e12d50f191a9a61e212b3",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D504",
+        "path": "vendor/mirserver-data/Mir200/Map/d504.map",
+        "sha256": "f0ebb72dbb07b0c49d49d2f4cc7cc89760ee208a5a2e4bcad0e3018965b77173",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D505",
+        "path": "vendor/mirserver-data/Mir200/Map/D505.map",
+        "sha256": "eb7c03a2a5efa85b770015f5a499738950af6ba89669f8c9b1dcec1e1feaf62a",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D511",
+        "path": "vendor/mirserver-data/Mir200/Map/d511.map",
+        "sha256": "093d6a952a355d02eb0261dcceb332dbe3daedc1f54728ba5fdf23237b2296dd",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D512",
+        "path": "vendor/mirserver-data/Mir200/Map/d512.map",
+        "sha256": "030a64c17eae2fc7380a38a61d959b1264c175171a69a7e4069815b792838ed0",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D513",
+        "path": "vendor/mirserver-data/Mir200/Map/d513.map",
+        "sha256": "093d6a952a355d02eb0261dcceb332dbe3daedc1f54728ba5fdf23237b2296dd",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D514",
+        "path": "vendor/mirserver-data/Mir200/Map/d514.map",
+        "sha256": "030a64c17eae2fc7380a38a61d959b1264c175171a69a7e4069815b792838ed0",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D515",
+        "path": "vendor/mirserver-data/Mir200/Map/d515.map",
+        "sha256": "430c1e953f3f28125a5663dc6d67213573dfd77f5157036d422bfa4fba052fcb",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D601",
+        "path": "vendor/mirserver-data/Mir200/Map/d601.map",
+        "sha256": "f9705528c429550ea71b68a5e02cb63024dceb0d4b4f0d738032b5f3cbabb268",
+        "bytes": 750052,
+        "width": 250,
+        "height": 250,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D602",
+        "path": "vendor/mirserver-data/Mir200/Map/d602.map",
+        "sha256": "7501ae3b56ffba3ff507c20483121135265f182cee70c6e0569774e576f8b0e3",
+        "bytes": 750052,
+        "width": 250,
+        "height": 250,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D603",
+        "path": "vendor/mirserver-data/Mir200/Map/d603.map",
+        "sha256": "530ef72cd358c86ae1c037922978355774243311046c5a6f6a50d166fbf046ff",
+        "bytes": 750052,
+        "width": 250,
+        "height": 250,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D604",
+        "path": "vendor/mirserver-data/Mir200/Map/d604.map",
+        "sha256": "e9a2d9bc934a45ce8246a22851319350111a753be454796be427da75eaba2b84",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D605",
+        "path": "vendor/mirserver-data/Mir200/Map/d605.map",
+        "sha256": "de88b2a397d8c346b7e4f127ab388dedf74117cc9d8426018579af6e9c50fdf4",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D606",
+        "path": "vendor/mirserver-data/Mir200/Map/d606.map",
+        "sha256": "f9049efd07de1e8a831c2cd8eed62fac9c8d58264d101abfdc709f1fdf31d322",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D607",
+        "path": "vendor/mirserver-data/Mir200/Map/d607.map",
+        "sha256": "d046133aee64915df6ce9ecd18626c260e325100b500f4ae5e1aa2440b94c43e",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D608",
+        "path": "vendor/mirserver-data/Mir200/Map/d608.map",
+        "sha256": "701fa5c2912a225eb1d919b6b425298570c055574918c60a33386883be60ff5a",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D609",
+        "path": "vendor/mirserver-data/Mir200/Map/d609.map",
+        "sha256": "7b32d271a9558fff1b6f935323cb2c7c8b7cfa91aed502c10281f264c8b912de",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D610",
+        "path": "vendor/mirserver-data/Mir200/Map/d610.map",
+        "sha256": "9dd4b8efd606149ac94a62b551b349273930ec596b2537228ee8bbfe9dd3bd64",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D611",
+        "path": "vendor/mirserver-data/Mir200/Map/d611.map",
+        "sha256": "f8c85ce13a24d4b2d79b1a28226994e827f06f6775ceaa00fa6939f6dec19fdb",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D612",
+        "path": "vendor/mirserver-data/Mir200/Map/D612.map",
+        "sha256": "d45fa63ce12a0a06163d700f958e4a12d91c911988c1cd9f97cfe3c63a8e734f",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D613",
+        "path": "vendor/mirserver-data/Mir200/Map/D613.map",
+        "sha256": "cd9b9fbb8a1ecbbca45cab2f782f8e38c5cb6e2138aeeb0ef25c02ea638b5c2e",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D614",
+        "path": "vendor/mirserver-data/Mir200/Map/D614.map",
+        "sha256": "7874cc52990973d9ac3cc6d09198d6012e2f6f7956268d8b82d615ba5bd51a38",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D615",
+        "path": "vendor/mirserver-data/Mir200/Map/D615.map",
+        "sha256": "eafc331d19da30a1d4638ada7e9802fcab217b9112c74559f117d4af350459ea",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D616",
+        "path": "vendor/mirserver-data/Mir200/Map/D616.map",
+        "sha256": "e9afd5f7a30d79c96e1ab34c4d6f56d97a2a7a88342d20af8617f2629e874381",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D617",
+        "path": "vendor/mirserver-data/Mir200/Map/D617.map",
+        "sha256": "eb783bbbd00ffb78d7eae7ca132fb84a985a1806cb6c3f8c51fdc880a237c84f",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D618",
+        "path": "vendor/mirserver-data/Mir200/Map/D618.map",
+        "sha256": "3421ff56644fb21a3acee3861157dc1e7ebcfd520053d23f45798d242d2e5529",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D619",
+        "path": "vendor/mirserver-data/Mir200/Map/D619.map",
+        "sha256": "ecdb9c6316132c63e7a6fe7d0f9c386f881af30d8e7272e039655b22fe0ed86c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D701",
+        "path": "vendor/mirserver-data/Mir200/Map/D701.map",
+        "sha256": "4f936f79b9ba0fb98c2f9727584a85b1065a85fa40c57ac8b59436f53c47b546",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D710",
+        "path": "vendor/mirserver-data/Mir200/Map/d710.map",
+        "sha256": "d1cc9f580ba0f4fd217aca7ba9f8ab6aa4309ea8102255f5dfe8a325b14bf31c",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D711",
+        "path": "vendor/mirserver-data/Mir200/Map/d711.map",
+        "sha256": "3321518ad2f337cabe4db323303cd39e6827f7f54c13c86a8dc5fa5552f90fe6",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D712",
+        "path": "vendor/mirserver-data/Mir200/Map/d712.map",
+        "sha256": "e3d071caf9cf18bbef18c10e27a7fa583ca78fdd0900261f47c745a72609cbab",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D713",
+        "path": "vendor/mirserver-data/Mir200/Map/d713.map",
+        "sha256": "899d522fa4cffe9b2918ab2db99302d8889d1e0a1d459266438d05e75e7f53c4",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D714",
+        "path": "vendor/mirserver-data/Mir200/Map/d714.map",
+        "sha256": "3dd6c8a733d9959bd933e77386eb1e72811ac449f2ee6ff724f1cc7dd12ad7d4",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D715",
+        "path": "vendor/mirserver-data/Mir200/Map/D715.map",
+        "sha256": "b52e14d3e3ec56924f6b2d504dae4b032ab811bb426abfaa4c9feddc69b24c27",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D716",
+        "path": "vendor/mirserver-data/Mir200/Map/D716.map",
+        "sha256": "ba23c1927691889738ae242c234b67b9eaf5c0857ddb167f01dd1daa853be88f",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D717",
+        "path": "vendor/mirserver-data/Mir200/Map/D717.map",
+        "sha256": "9633461c756c0d152f412d08e33012df6fa72c885509a57a85b81463070f0020",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "11",
+        "path": "vendor/mirserver-data/Mir200/Map/11.map",
+        "sha256": "d8493009ad70fbca5eda276988c7c9c8027ccdfbc4cbba4c433e8ad7a627e354",
+        "bytes": 3000052,
+        "width": 500,
+        "height": 500,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "12",
+        "path": "vendor/mirserver-data/Mir200/Map/12.map",
+        "sha256": "d469f6f10bbf2df38f1813faa38dfb551354f93d9cd9584c087f07ab174be034",
+        "bytes": 2100052,
+        "width": 350,
+        "height": 500,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10011",
+        "path": "vendor/mirserver-data/Mir200/Map/D10011.map",
+        "sha256": "8c1cc64d0a4f375bff60cfd41ddf8a359302fb6247d329a6f6d5ef1cdfb7c51d",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10012",
+        "path": "vendor/mirserver-data/Mir200/Map/D10012.map",
+        "sha256": "ac2ef34fa0a002d8d262ccc18398cf62219260490538220d447fc27055af579b",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10013",
+        "path": "vendor/mirserver-data/Mir200/Map/D10013.map",
+        "sha256": "ef563e4573ea588f4539e22267908297326da571ec73b3c90e17c4ce487d1b1d",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D1002",
+        "path": "vendor/mirserver-data/Mir200/Map/D1002.map",
+        "sha256": "1aa0fbf77f29201277cab5c60f9c5f6923cc183486eb27438c94aaa2bcad849f",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10031",
+        "path": "vendor/mirserver-data/Mir200/Map/D10031.map",
+        "sha256": "e282a23750074b7104af0dacff42a612b64913a7c894fb58c66c3c13b41b03c8",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10032",
+        "path": "vendor/mirserver-data/Mir200/Map/D10032.map",
+        "sha256": "cffe3b04b7e71d12c249cb090bdf40e8863af9a8f7187a2582df728fee6fe0c4",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D1004",
+        "path": "vendor/mirserver-data/Mir200/Map/D1004.map",
+        "sha256": "a767bdc650f1d29cb7f4db0354c7e350d5e8f53c255ab965b7ada4f85cf71b68",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10051",
+        "path": "vendor/mirserver-data/Mir200/Map/D10051.map",
+        "sha256": "aaf7f369cfbe1d3d2792dea4e40ea8f7e138023f7d75b0d41402e6b1757ad39e",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10052",
+        "path": "vendor/mirserver-data/Mir200/Map/D10052.map",
+        "sha256": "dc70e4fa3d6d9a86a7072097b78f400a3c776cfd3205c3b56ebb3f2b90366521",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10061",
+        "path": "vendor/mirserver-data/Mir200/Map/D10061.map",
+        "sha256": "d0a4011d93d7a5ec760ff036639d3ed9ec47feee5df1ad37c06caef9c5672a9c",
+        "bytes": 10852,
+        "width": 30,
+        "height": 30,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10062",
+        "path": "vendor/mirserver-data/Mir200/Map/D10062.map",
+        "sha256": "51d03037968154c5347d3f51f1ce6cb1c6adcc189f0139d59931fc253d322e0b",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "4",
+        "path": "vendor/mirserver-data/Mir200/Map/4.map",
+        "sha256": "0691c8ddb6854af00e846a4e64637006cac10da413fc153b75a39cb3fc1ed98f",
+        "bytes": 3000052,
+        "width": 500,
+        "height": 500,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2000",
+        "path": "vendor/mirserver-data/Mir200/Map/D2000.map",
+        "sha256": "81365b41fae7a2b1b45fa7db3f347caeb8bb6ae866299e410bc7cfb3d2da84b3",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2001",
+        "path": "vendor/mirserver-data/Mir200/Map/D2001.map",
+        "sha256": "972cd66c75a4fcb311d66d074c72a5f5c0548810a81c6edf4cab740b6e8e51a5",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2002",
+        "path": "vendor/mirserver-data/Mir200/Map/D2002.map",
+        "sha256": "54e1d3019c188d1f305fa2b1463781ad383d03bec0e208271757943d79141998",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2003",
+        "path": "vendor/mirserver-data/Mir200/Map/D2003.map",
+        "sha256": "3b8987e71f0c229460e99cf46e59f6adec7285ea17bf37645466156df06e4572",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2004",
+        "path": "vendor/mirserver-data/Mir200/Map/D2004.map",
+        "sha256": "efdb6ace882751075dc29416827667ff0a8eb114ac8da2939b9ccd97e01de92a",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2005",
+        "path": "vendor/mirserver-data/Mir200/Map/D2005.map",
+        "sha256": "23ded6f2844ecb5c92f58efc540174473c045213020db0d405e1e23fbade3edb",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2006",
+        "path": "vendor/mirserver-data/Mir200/Map/D2006.map",
+        "sha256": "67d1f0710afec528b83969a4b0eefdb40dd330c8f1ea09b89822950d38eecd70",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2007",
+        "path": "vendor/mirserver-data/Mir200/Map/D2007.map",
+        "sha256": "1b8e9bffaa88948df29e41bb1ff6ced2f26e1eedfb01249086f9df68c29e200e",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2008",
+        "path": "vendor/mirserver-data/Mir200/Map/D2008.map",
+        "sha256": "5018083c947f0b9df2b06297c73409b88d4766dc76509ff2a1aea89d9d8c4fb5",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2009",
+        "path": "vendor/mirserver-data/Mir200/Map/D2009.map",
+        "sha256": "bee66481040e12bfbb8f1fda6910ca176cb7a583688cd189d7f18c81fa909dd2",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2010",
+        "path": "vendor/mirserver-data/Mir200/Map/D2010.map",
+        "sha256": "fff6df935f995307b1cafe3192f45da1139ad3ac08d278051434bd7b816c5049",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2011",
+        "path": "vendor/mirserver-data/Mir200/Map/D2011.map",
+        "sha256": "92cc1b72590d7997ef7cf150cc26fe253bdf953eec861f934c3b5a6fa5f64204",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2012",
+        "path": "vendor/mirserver-data/Mir200/Map/D2012.map",
+        "sha256": "df0d8dbb90857c90639aff270265fb34bde422f2e2c50c13820f57d2d518310a",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2013",
+        "path": "vendor/mirserver-data/Mir200/Map/D2013.map",
+        "sha256": "208c48bd0f727201dd54bd00d529140e87818a021b935dfe225afe95cbe13481",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "5",
+        "path": "vendor/mirserver-data/Mir200/Map/5.map",
+        "sha256": "43b7344cce5caea49c09f909a3ad36ea7e30af701fd1a0c7be27a263d772b895",
+        "bytes": 7680052,
+        "width": 800,
+        "height": 800,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2051",
+        "path": "vendor/mirserver-data/Mir200/Map/D2051.map",
+        "sha256": "303c68a4842b29a12b70c28835c9e75220ea24c89c6682ef761d1dfaf73d12ed",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2052",
+        "path": "vendor/mirserver-data/Mir200/Map/D2052.map",
+        "sha256": "f88028c0fef53a30563b3175f340f518c6dfda2b3ef27541267b391023d0ef67",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2053",
+        "path": "vendor/mirserver-data/Mir200/Map/D2053.map",
+        "sha256": "9161ca0352cc15dd779e45c22362ac74f2440be8a4f00bfa4861a55090f9964b",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2061",
+        "path": "vendor/mirserver-data/Mir200/Map/D2061.map",
+        "sha256": "d8950d262c15278cf886ddd5fbb2e8b58674645f15b83e250ade00417a5f9eea",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2062",
+        "path": "vendor/mirserver-data/Mir200/Map/D2062.map",
+        "sha256": "86db08edfdfea09e786249ea69dfb77be56774b8dc4848fa41d963c8bef4d1de",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2063",
+        "path": "vendor/mirserver-data/Mir200/Map/D2063.map",
+        "sha256": "e1240782c949d12f330fefdfbcc39f695e584cb442bc6ff353540f5bbf6e29c0",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2064",
+        "path": "vendor/mirserver-data/Mir200/Map/D2064.map",
+        "sha256": "5b35ca3f7e34310e16c71d300d0862d43d7e8e31d8a15762aca70b979fd1f1da",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2067",
+        "path": "vendor/mirserver-data/Mir200/Map/D2067.map",
+        "sha256": "9d4c207e48365584dd90db37f66917518247c840e5a8ed0f16c32030ae8a26d5",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2070",
+        "path": "vendor/mirserver-data/Mir200/Map/D2070.map",
+        "sha256": "9e759b0eacaf223ef9889bcf3a05ed5a08eba37e9cc93408a1cc668433746762",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2071",
+        "path": "vendor/mirserver-data/Mir200/Map/D2071.map",
+        "sha256": "dca6f309940e9b3ed473ea5eeac90472622a124da997cefdf20361f55f965772",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2072",
+        "path": "vendor/mirserver-data/Mir200/Map/D2072.map",
+        "sha256": "edd686f7de0794bfee586997a14252bbaa518a804b070c892e51541bfa37d180",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2073",
+        "path": "vendor/mirserver-data/Mir200/Map/D2073.map",
+        "sha256": "185c283484ab8db25808512e08f146c471e87e53dd64e04cb35997d0b088b7a7",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2075",
+        "path": "vendor/mirserver-data/Mir200/Map/D2075.map",
+        "sha256": "736f2af34c1b3f738327ea1d179e1c750498b239f3ddfd2f22a3f23878e121f8",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2076",
+        "path": "vendor/mirserver-data/Mir200/Map/D2076.map",
+        "sha256": "2036682508e6a14940fcd554d757063088aedb5546e25fe769713c80e468037f",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2078",
+        "path": "vendor/mirserver-data/Mir200/Map/D2078.map",
+        "sha256": "147aae8881bfe40328cc502762f69f482cc8a452de483d60cb02f8e61e731acc",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2079",
+        "path": "vendor/mirserver-data/Mir200/Map/D2079.map",
+        "sha256": "163d2b588de81306d69c5f000af1c9a2e8c174ebfc27da1bdca673fc8409ae42",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "H001",
+        "path": "vendor/mirserver-data/Mir200/Map/H001.map",
+        "sha256": "3ed3f0e794b280b36ea3ee21fee4c74e79f9c374075f08fb8b933fb48d38a842",
+        "bytes": 270052,
+        "width": 150,
+        "height": 150,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H002",
+        "path": "vendor/mirserver-data/Mir200/Map/H002.map",
+        "sha256": "3321518ad2f337cabe4db323303cd39e6827f7f54c13c86a8dc5fa5552f90fe6",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H003",
+        "path": "vendor/mirserver-data/Mir200/Map/H003.map",
+        "sha256": "8712b9f37da480fe68ca1918134002c1d0886aa41c8710647eecd064c54646a4",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H004",
+        "path": "vendor/mirserver-data/Mir200/Map/H004.map",
+        "sha256": "f9049efd07de1e8a831c2cd8eed62fac9c8d58264d101abfdc709f1fdf31d322",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H005",
+        "path": "vendor/mirserver-data/Mir200/Map/H005.map",
+        "sha256": "9161ca0352cc15dd779e45c22362ac74f2440be8a4f00bfa4861a55090f9964b",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H006",
+        "path": "vendor/mirserver-data/Mir200/Map/H006.map",
+        "sha256": "9633461c756c0d152f412d08e33012df6fa72c885509a57a85b81463070f0020",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H007",
+        "path": "vendor/mirserver-data/Mir200/Map/H007.map",
+        "sha256": "eb7c03a2a5efa85b770015f5a499738950af6ba89669f8c9b1dcec1e1feaf62a",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H008",
+        "path": "vendor/mirserver-data/Mir200/Map/H008.map",
+        "sha256": "208c48bd0f727201dd54bd00d529140e87818a021b935dfe225afe95cbe13481",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H009",
+        "path": "vendor/mirserver-data/Mir200/Map/H009.map",
+        "sha256": "e282a23750074b7104af0dacff42a612b64913a7c894fb58c66c3c13b41b03c8",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H010",
+        "path": "vendor/mirserver-data/Mir200/Map/H010.map",
+        "sha256": "185c283484ab8db25808512e08f146c471e87e53dd64e04cb35997d0b088b7a7",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "0100",
+        "path": "vendor/mirserver-data/Mir200/Map/0100.map",
+        "sha256": "26c6465d5f2b287e4f0ac66476833b3544a8eb8d4c6508b3d132cc79b5b7e0d3",
+        "bytes": 3292,
+        "width": 15,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0101",
+        "path": "vendor/mirserver-data/Mir200/Map/0101.map",
+        "sha256": "dc813a28c3edad50a5f2818e2d77c916f3c31315ff1fcca36ecacc1b39f07f2c",
+        "bytes": 6772,
+        "width": 20,
+        "height": 28,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0102",
+        "path": "vendor/mirserver-data/Mir200/Map/0102.map",
+        "sha256": "7e8985dbc634a02cc5c5ff6b92f7f62b8c1712829cc38c9ebadbd6e824332cda",
+        "bytes": 2752,
+        "width": 15,
+        "height": 15,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0103",
+        "path": "vendor/mirserver-data/Mir200/Map/0103.map",
+        "sha256": "d314a54fea40b85eb0bd68d6b18a3fef6fc9221499697feb81f003ad9713da79",
+        "bytes": 9448,
+        "width": 27,
+        "height": 29,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0104",
+        "path": "vendor/mirserver-data/Mir200/Map/0104.map",
+        "sha256": "adea6fad4e8d2bc1c603055e74b078790c88d0c08b46553517f997212d75bc45",
+        "bytes": 2548,
+        "width": 13,
+        "height": 16,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0105",
+        "path": "vendor/mirserver-data/Mir200/Map/0105.map",
+        "sha256": "9de531bcf6f502482a809bcdbac50a38365f2c163202ba146b9f71b70519523e",
+        "bytes": 9448,
+        "width": 27,
+        "height": 29,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0106",
+        "path": "vendor/mirserver-data/Mir200/Map/0106.map",
+        "sha256": "eb5361adfcb1a7576759733386cff453d59e16388047fb32dbfa2c394c28a74c",
+        "bytes": 9448,
+        "width": 27,
+        "height": 29,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0107",
+        "path": "vendor/mirserver-data/Mir200/Map/0107.map",
+        "sha256": "3bf3ea73dc8f7b05004409e5299e58fec4adabc4c4cd9efc5a3628eb6ad594ed",
+        "bytes": 3292,
+        "width": 15,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0108",
+        "path": "vendor/mirserver-data/Mir200/Map/0108.map",
+        "sha256": "d6727ef204bf25df10c35a3c47d6a693827b8c1c3d0cac5a35d7cf1efb91b3b9",
+        "bytes": 3292,
+        "width": 15,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0109",
+        "path": "vendor/mirserver-data/Mir200/Map/0109.map",
+        "sha256": "939d34628c5f93b51c372c90487ca390216492b8523717c8f15774786f0801d9",
+        "bytes": 1852,
+        "width": 10,
+        "height": 15,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0110",
+        "path": "vendor/mirserver-data/Mir200/Map/0110.map",
+        "sha256": "0873c147e9a0e516988f2a58136e08081318dcaecb95d0665ac2a0a63e7b3047",
+        "bytes": 4336,
+        "width": 17,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0111",
+        "path": "vendor/mirserver-data/Mir200/Map/0111.map",
+        "sha256": "0873c147e9a0e516988f2a58136e08081318dcaecb95d0665ac2a0a63e7b3047",
+        "bytes": 4336,
+        "width": 17,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0112",
+        "path": "vendor/mirserver-data/Mir200/Map/0112.map",
+        "sha256": "0873c147e9a0e516988f2a58136e08081318dcaecb95d0665ac2a0a63e7b3047",
+        "bytes": 4336,
+        "width": 17,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0113",
+        "path": "vendor/mirserver-data/Mir200/Map/0113.map",
+        "sha256": "9bb00faac0ac7126361caa9663d2a98e636dbd848274aaf887f194d1e3796617",
+        "bytes": 4336,
+        "width": 17,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "01132",
+        "path": "vendor/mirserver-data/Mir200/Map/01132.map",
+        "sha256": "433dafceff05baf69ff6e9f5327975f518417d2d9dd177863c25c1ad99ecf97a",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0114",
+        "path": "vendor/mirserver-data/Mir200/Map/0114.map",
+        "sha256": "d4837a1ac91e5287982258413a5db6eef500286abece8488264c5960b913dcbc",
+        "bytes": 5572,
+        "width": 20,
+        "height": 23,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "01141",
+        "path": "vendor/mirserver-data/Mir200/Map/01141.map",
+        "sha256": "d4837a1ac91e5287982258413a5db6eef500286abece8488264c5960b913dcbc",
+        "bytes": 5572,
+        "width": 20,
+        "height": 23,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "01142",
+        "path": "vendor/mirserver-data/Mir200/Map/01142.map",
+        "sha256": "433dafceff05baf69ff6e9f5327975f518417d2d9dd177863c25c1ad99ecf97a",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0115",
+        "path": "vendor/mirserver-data/Mir200/Map/0115.map",
+        "sha256": "fae0fbdae739e0b0719a7e0d1c30e3a63d161d4bfdaddffd383b1caf8f89b532",
+        "bytes": 6652,
+        "width": 22,
+        "height": 25,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "01152",
+        "path": "vendor/mirserver-data/Mir200/Map/01152.map",
+        "sha256": "433dafceff05baf69ff6e9f5327975f518417d2d9dd177863c25c1ad99ecf97a",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0116",
+        "path": "vendor/mirserver-data/Mir200/Map/0116.map",
+        "sha256": "e6a03072ca5064c103274e5bfc2982c6320e01000a4ad393945f3851bd05df73",
+        "bytes": 6856,
+        "width": 21,
+        "height": 27,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0117",
+        "path": "vendor/mirserver-data/Mir200/Map/0117.map",
+        "sha256": "60e7dab5c6c2ec7719f9fb2c373ceda045211a413305295d52a6812e6817307c",
+        "bytes": 3832,
+        "width": 15,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0118",
+        "path": "vendor/mirserver-data/Mir200/Map/0118.map",
+        "sha256": "35647f2c735fa4201be233c1502874798be1f931272f1c93035f5136b505cb2c",
+        "bytes": 2740,
+        "width": 14,
+        "height": 16,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0119",
+        "path": "vendor/mirserver-data/Mir200/Map/0119.map",
+        "sha256": "7b7a6b28842b324fd7188058261b73967c4b03dba624fa2dc5e96b45f962a175",
+        "bytes": 6100,
+        "width": 21,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0120",
+        "path": "vendor/mirserver-data/Mir200/Map/0120.map",
+        "sha256": "d00b0dd9f4aec0863e92b48ea7760e93488d7b0a72751b7f478dd049c9c66b28",
+        "bytes": 4132,
+        "width": 17,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0121",
+        "path": "vendor/mirserver-data/Mir200/Map/0121.map",
+        "sha256": "49b34c0e0cd0dc56fae200cf8912189f738a2e697aadf4dcb78813e7d10aa4e2",
+        "bytes": 4372,
+        "width": 18,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0122",
+        "path": "vendor/mirserver-data/Mir200/Map/0122.map",
+        "sha256": "125bddf4dbf672014aaa709a3057cd8f2477732932c767d1f803fa4097e04d92",
+        "bytes": 33712,
+        "width": 51,
+        "height": 55,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0123",
+        "path": "vendor/mirserver-data/Mir200/Map/0123.map",
+        "sha256": "2cfa4b297ba8ee57ce1c9ce074aaa064dec74a86eaeb2f41ae4673e8259ec211",
+        "bytes": 4588,
+        "width": 18,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0124",
+        "path": "vendor/mirserver-data/Mir200/Map/0124.map",
+        "sha256": "bc5f14e3761fa61214fda54f409e5e2e9214a48ca98980fdb35d33a6d6661ee2",
+        "bytes": 2212,
+        "width": 12,
+        "height": 15,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0125",
+        "path": "vendor/mirserver-data/Mir200/Map/0125.map",
+        "sha256": "df3e52b4deff5e6cbd7313e5d602af2e78656ae53502ce1c4b0f553a3f23a5ed",
+        "bytes": 7252,
+        "width": 25,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0126",
+        "path": "vendor/mirserver-data/Mir200/Map/0126.map",
+        "sha256": "04c6e1e8db70fa0219a7c242e9e62a1c50a14446f4fd4b2d986d060dfd01ba10",
+        "bytes": 6964,
+        "width": 24,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0127",
+        "path": "vendor/mirserver-data/Mir200/Map/0127.map",
+        "sha256": "31d8c61e86e68b91e18f1caa84294ae057f52f6d13dd1eda71b3bb278f7bd3fa",
+        "bytes": 4336,
+        "width": 17,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0128",
+        "path": "vendor/mirserver-data/Mir200/Map/0128.map",
+        "sha256": "fcd53c3d032805c1af3fd96aed6c96caf61a2a31fdc277f07dfb38534dc8afd6",
+        "bytes": 1348,
+        "width": 9,
+        "height": 12,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0129",
+        "path": "vendor/mirserver-data/Mir200/Map/0129.map",
+        "sha256": "ec49091e44427ac2ae399efe3e0a5aa689234c5b9f423bfd90f03b5599b67ef8",
+        "bytes": 892,
+        "width": 7,
+        "height": 10,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0130",
+        "path": "vendor/mirserver-data/Mir200/Map/0130.map",
+        "sha256": "fd686f812082fb8dd0e1f11569132d88e4b4de5c50ee4fe530a68cd4575a51ed",
+        "bytes": 2356,
+        "width": 12,
+        "height": 16,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0131",
+        "path": "vendor/mirserver-data/Mir200/Map/0131.map",
+        "sha256": "29627481a498d9774fdcab25349a065963bc17908dcf448adf19e90b39c17c0d",
+        "bytes": 4336,
+        "width": 17,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0132",
+        "path": "vendor/mirserver-data/Mir200/Map/0132.map",
+        "sha256": "7351bb29eb3a7ff3095f16dc99bcdd1ee66850eb365f69ee4a41ca24d2ffd5e1",
+        "bytes": 6388,
+        "width": 22,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0133",
+        "path": "vendor/mirserver-data/Mir200/Map/0133.map",
+        "sha256": "b886930a893f16e7d613f242da54ec981c4ada43e1d97e93d94f594dc5e068e2",
+        "bytes": 1372,
+        "width": 10,
+        "height": 11,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0134",
+        "path": "vendor/mirserver-data/Mir200/Map/0134.map",
+        "sha256": "a3fe94ac6f09c546bf273e8d1797be8f6e648820ead9fb9cd45ad622de659e60",
+        "bytes": 2548,
+        "width": 13,
+        "height": 16,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0135",
+        "path": "vendor/mirserver-data/Mir200/Map/0135.map",
+        "sha256": "634ebc9f20c0b09f43b189207a3347fe9276a46bba0486354e21abb6c2bc47ec",
+        "bytes": 2068,
+        "width": 12,
+        "height": 14,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0136",
+        "path": "vendor/mirserver-data/Mir200/Map/0136.map",
+        "sha256": "e1b6816bd96a72df436ef8fa16063136bbdaf2ca5deb2569ffdb9e159e3919d4",
+        "bytes": 5524,
+        "width": 19,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0137",
+        "path": "vendor/mirserver-data/Mir200/Map/0137.map",
+        "sha256": "af987e96cd2b15a5eb3b6297a0465f031a3df63b21e50106d23328d6263c8b33",
+        "bytes": 11932,
+        "width": 30,
+        "height": 33,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0138",
+        "path": "vendor/mirserver-data/Mir200/Map/0138.map",
+        "sha256": "c45f9df83ccdddd8aa3a62185542cc07350c3c43d50fbdf7f1edf4b0253c4634",
+        "bytes": 3292,
+        "width": 15,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0139",
+        "path": "vendor/mirserver-data/Mir200/Map/0139.map",
+        "sha256": "36699b9738be5959ce3822d51fe26c5fd489542eb8e763bd42d455391e54120e",
+        "bytes": 27652,
+        "width": 46,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0140",
+        "path": "vendor/mirserver-data/Mir200/Map/0140.map",
+        "sha256": "679ffed7be2e314494f2be87f614a679ff3bc2e4e9974859deba5ba47b1659bb",
+        "bytes": 4132,
+        "width": 17,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0141",
+        "path": "vendor/mirserver-data/Mir200/Map/0141.map",
+        "sha256": "b7db75768cdb072cc2a7c3b916f2ec438a8762e396c9f463010d086996723ff2",
+        "bytes": 10420,
+        "width": 27,
+        "height": 32,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0142",
+        "path": "vendor/mirserver-data/Mir200/Map/0142.map",
+        "sha256": "05271504731d35dee621b81f9768279be7528027805e61e98ff9cc1e1838f28b",
+        "bytes": 2068,
+        "width": 12,
+        "height": 14,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0143",
+        "path": "vendor/mirserver-data/Mir200/Map/0143.map",
+        "sha256": "0434ca5bfba8f062d3f2582070dfe419f62f9997986997a05b8e46efeabff00d",
+        "bytes": 8116,
+        "width": 24,
+        "height": 28,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0144",
+        "path": "vendor/mirserver-data/Mir200/Map/0144.map",
+        "sha256": "9a6ef259a60a5665fafa598edb4ca3103752937c4fe7d983944a9190a2d1992d",
+        "bytes": 6676,
+        "width": 23,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0145",
+        "path": "vendor/mirserver-data/Mir200/Map/0145.map",
+        "sha256": "c7405a591e5b592719b3fde0262726dfb79b30233f0a08dd0ce8026e57d9252f",
+        "bytes": 5572,
+        "width": 20,
+        "height": 23,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0146",
+        "path": "vendor/mirserver-data/Mir200/Map/0146.map",
+        "sha256": "1b56569eaba5827d08f38e0ff48607468d05ad137224a3fe2081f721fcafca10",
+        "bytes": 5812,
+        "width": 20,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0147",
+        "path": "vendor/mirserver-data/Mir200/Map/0147.map",
+        "sha256": "d98da358c3db42c50fc1113e3e83c5e173e54df6320974deb92f2928a7cec5a9",
+        "bytes": 4132,
+        "width": 17,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0148",
+        "path": "vendor/mirserver-data/Mir200/Map/0148.map",
+        "sha256": "68f3b00230c0e468b1b99f446a6025ccad95d6206f77b149dbcc44a56b1597fe",
+        "bytes": 3472,
+        "width": 15,
+        "height": 19,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0149",
+        "path": "vendor/mirserver-data/Mir200/Map/0149.map",
+        "sha256": "090506fa56251caf4a959ccd2387f9228bb4cc03c347fbed4777027640c17845",
+        "bytes": 9772,
+        "width": 27,
+        "height": 30,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0150",
+        "path": "vendor/mirserver-data/Mir200/Map/0150.map",
+        "sha256": "fa7210d2f8386d54a7f8cec44d0d3d94bb9baae461e554dea1c78bc3365567b6",
+        "bytes": 7504,
+        "width": 23,
+        "height": 27,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0151",
+        "path": "vendor/mirserver-data/Mir200/Map/0151.map",
+        "sha256": "f28a76714817ab58469d034ef39eedf677b37f541cb41862157fca784d08a1b6",
+        "bytes": 6352,
+        "width": 21,
+        "height": 25,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0152",
+        "path": "vendor/mirserver-data/Mir200/Map/0152.map",
+        "sha256": "1febbb19602cccff29fda790d5b88940c7649ee68ba8fc3cb76d10839cd6d710",
+        "bytes": 4084,
+        "width": 16,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0153",
+        "path": "vendor/mirserver-data/Mir200/Map/0153.map",
+        "sha256": "e23d28fd26a53a064e3cabac01a3172b79a9faf75155cbc3c968024976ed5c36",
+        "bytes": 6352,
+        "width": 21,
+        "height": 25,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0154",
+        "path": "vendor/mirserver-data/Mir200/Map/0154.map",
+        "sha256": "d5ab2e00d09140fff591d214e6a64da6c718bf2d56b4b3c0ab5070c5d20512ae",
+        "bytes": 6052,
+        "width": 20,
+        "height": 25,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0155",
+        "path": "vendor/mirserver-data/Mir200/Map/0155.map",
+        "sha256": "5ce898addcfc8b6540e4a7a1e4e32a83f01072edf4444f9fb0f7417fd878ee59",
+        "bytes": 5812,
+        "width": 20,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0156",
+        "path": "vendor/mirserver-data/Mir200/Map/0156.map",
+        "sha256": "15d2460c14fd08c45eaf94ef4dc8c58de55e75532af4b8ff69e9920f04b81340",
+        "bytes": 4084,
+        "width": 16,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0157",
+        "path": "vendor/mirserver-data/Mir200/Map/0157.map",
+        "sha256": "5300e9c4d63f5dbb67de0de0ee7b67f97d0f0f4d0c92f9ec339a9c23e54ba46f",
+        "bytes": 11572,
+        "width": 30,
+        "height": 32,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0158",
+        "path": "vendor/mirserver-data/Mir200/Map/0158.map",
+        "sha256": "22f255c23cae8f5fac4004ed45853c04f957ad1da5d02d2f7fe4172c600a5ae5",
+        "bytes": 9724,
+        "width": 26,
+        "height": 31,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0159",
+        "path": "vendor/mirserver-data/Mir200/Map/0159.map",
+        "sha256": "14d01311f9f15cc5601a7d60d54bf4c3559c8562e33d32b429420765e422cbca",
+        "bytes": 5236,
+        "width": 18,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0160",
+        "path": "vendor/mirserver-data/Mir200/Map/0160.map",
+        "sha256": "32795ae0be5e33d6b2c03fe1aeeb7f2076e31f1930673da361845ff9dc2377de",
+        "bytes": 3016,
+        "width": 13,
+        "height": 19,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0161",
+        "path": "vendor/mirserver-data/Mir200/Map/0161.map",
+        "sha256": "da02de456099511feeaf3ec73da2c79632eda43fd97985be6ddc8266206aded6",
+        "bytes": 5068,
+        "width": 19,
+        "height": 22,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "0162",
+        "path": "vendor/mirserver-data/Mir200/Map/0162.map",
+        "sha256": "d98da358c3db42c50fc1113e3e83c5e173e54df6320974deb92f2928a7cec5a9",
+        "bytes": 4132,
+        "width": 17,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "1001",
+        "path": "vendor/mirserver-data/Mir200/Map/1001.map",
+        "sha256": "2ffb55f5964650aba49ddc65a80137e95a033d25e5ce692928e7a3c70c111e6d",
+        "bytes": 5860,
+        "width": 22,
+        "height": 22,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "1002",
+        "path": "vendor/mirserver-data/Mir200/Map/1002.map",
+        "sha256": "265940f9eed3d445cdd61fde2d8bdb4cb8c8a440b0927673fbda9ffc5e617144",
+        "bytes": 6964,
+        "width": 24,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "1003",
+        "path": "vendor/mirserver-data/Mir200/Map/1003.map",
+        "sha256": "dc15c91a12b2df862bd5daf8609df919423fe9cddb80f4f7810eea1f1a02251c",
+        "bytes": 6292,
+        "width": 20,
+        "height": 26,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "1004",
+        "path": "vendor/mirserver-data/Mir200/Map/1004.map",
+        "sha256": "03f7c904380b0a6bf3d8921865b7bf37467b142c1acb30a31a608bef3daaf24b",
+        "bytes": 6292,
+        "width": 20,
+        "height": 26,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "1005",
+        "path": "vendor/mirserver-data/Mir200/Map/1005.map",
+        "sha256": "e0f07a5b652c717e7af5388e0485dbaf2f1743c939adb5e125d6aa5a8033fb2f",
+        "bytes": 6292,
+        "width": 20,
+        "height": 26,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "1006",
+        "path": "vendor/mirserver-data/Mir200/Map/1006.map",
+        "sha256": "ecc1887ba7abd58285f5ddd0c07734939ffd8c690880fb1662bf1ed809980fdb",
+        "bytes": 6772,
+        "width": 28,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "1007",
+        "path": "vendor/mirserver-data/Mir200/Map/1007.map",
+        "sha256": "0c2916513195cd00feb388912a1f3185b04f3a9e7b8835b6d04a539df1e91895",
+        "bytes": 5812,
+        "width": 20,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "10123",
+        "path": "vendor/mirserver-data/Mir200/Map/10123.map",
+        "sha256": "2cfa4b297ba8ee57ce1c9ce074aaa064dec74a86eaeb2f41ae4673e8259ec211",
+        "bytes": 4588,
+        "width": 18,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "6",
+        "path": "vendor/mirserver-data/Mir200/Map/6.map",
+        "sha256": "da2d699c03b4db5ccafc64dc5a18b4e405f011c02005392839137b28a8c5524e",
+        "bytes": 3000052,
+        "width": 500,
+        "height": 500,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "61",
+        "path": "vendor/mirserver-data/Mir200/Map/61.map",
+        "sha256": "2afcb1dcc44b73e343fa5f75c88a5a0b39fd175d9cb957d9f141db42463f527a",
+        "bytes": 1200052,
+        "width": 200,
+        "height": 500,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "611",
+        "path": "vendor/mirserver-data/Mir200/Map/611.map",
+        "sha256": "1b6f9b9677442d49f25dfe17738c77d85d6a1ce8f07305b1eb368595fe637cbe",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "612",
+        "path": "vendor/mirserver-data/Mir200/Map/612.map",
+        "sha256": "3cf18fd52817d225e53fb86bf96f02cfe18d4fc87031bd2c792a5e46b36449e4",
+        "bytes": 1200052,
+        "width": 200,
+        "height": 500,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "613",
+        "path": "vendor/mirserver-data/Mir200/Map/613.map",
+        "sha256": "79c31c92792165f5a1bf5d23004a728fc66596d7736c4e24802ae368f271843b",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "62",
+        "path": "vendor/mirserver-data/Mir200/Map/62.map",
+        "sha256": "752885e5a6101ad83f8d8881cd9edd81af1777b03b3503d6acf6300f7772ef87",
+        "bytes": 1440052,
+        "width": 400,
+        "height": 300,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "621",
+        "path": "vendor/mirserver-data/Mir200/Map/621.map",
+        "sha256": "d13fa45f39eafa3e2cb62ab9e3141534e1111fdfe7c891214cfc2f215679f5a5",
+        "bytes": 960052,
+        "width": 400,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "622",
+        "path": "vendor/mirserver-data/Mir200/Map/622.map",
+        "sha256": "309129269581d5d6ad914cc1ffdc561c9dc00745c22ed5d691cb7d03c4d7110a",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "63",
+        "path": "vendor/mirserver-data/Mir200/Map/63.map",
+        "sha256": "37da4108cdb847a5aad6e6927e87c4e7978727d6e7581d066634950bee03bc95",
+        "bytes": 1440052,
+        "width": 300,
+        "height": 400,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "631",
+        "path": "vendor/mirserver-data/Mir200/Map/631.map",
+        "sha256": "c4a6e13a8992b1579ee5efa38544d4febb61d498015fa43d38fa6c8d3f018c42",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "632",
+        "path": "vendor/mirserver-data/Mir200/Map/632.map",
+        "sha256": "afde52a1d795e01b2215f4c66a9e5f00ad5ae6cbfb2f9eebb713792fb9bb168b",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "64",
+        "path": "vendor/mirserver-data/Mir200/Map/64.map",
+        "sha256": "06296a0220a3db40bd93412683598554afda0c300ef9476735dd844aa58702cf",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "65",
+        "path": "vendor/mirserver-data/Mir200/Map/65.map",
+        "sha256": "e971a2c62af44dbc0f9a2757a6dc59c195f600581b00c57a7b641cd9021298b9",
+        "bytes": 720052,
+        "width": 300,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "66",
+        "path": "vendor/mirserver-data/Mir200/Map/66.map",
+        "sha256": "4a09ffe84527c117cf299701e273623b7060d1c26d09324ee6cbaa81b1a259da",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "B010",
+        "path": "vendor/mirserver-data/Mir200/Map/B010.map",
+        "sha256": "4b362e94522829111d34baff5184d4fcde89b789fe1ac5fbd90f934f2b8b466d",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B011",
+        "path": "vendor/mirserver-data/Mir200/Map/B011.map",
+        "sha256": "5329b0e1ae64639630b9b2d2e372c9b573ed3ac3916ac7513f0fc45905e1537d",
+        "bytes": 3940,
+        "width": 18,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B012",
+        "path": "vendor/mirserver-data/Mir200/Map/B012.map",
+        "sha256": "6be1a3891c803b2a0daa731bbbd58d8192409273f74781a8808edc04a32a6cbb",
+        "bytes": 3940,
+        "width": 18,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B013",
+        "path": "vendor/mirserver-data/Mir200/Map/B013.map",
+        "sha256": "5329b0e1ae64639630b9b2d2e372c9b573ed3ac3916ac7513f0fc45905e1537d",
+        "bytes": 3940,
+        "width": 18,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B101",
+        "path": "vendor/mirserver-data/Mir200/Map/B101.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B102",
+        "path": "vendor/mirserver-data/Mir200/Map/B102.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B103",
+        "path": "vendor/mirserver-data/Mir200/Map/B103.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B104",
+        "path": "vendor/mirserver-data/Mir200/Map/B104.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B105",
+        "path": "vendor/mirserver-data/Mir200/Map/B105.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B106",
+        "path": "vendor/mirserver-data/Mir200/Map/B106.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B107",
+        "path": "vendor/mirserver-data/Mir200/Map/B107.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B108",
+        "path": "vendor/mirserver-data/Mir200/Map/B108.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B109",
+        "path": "vendor/mirserver-data/Mir200/Map/B109.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B110",
+        "path": "vendor/mirserver-data/Mir200/Map/B110.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B111",
+        "path": "vendor/mirserver-data/Mir200/Map/B111.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B112",
+        "path": "vendor/mirserver-data/Mir200/Map/B112.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B113",
+        "path": "vendor/mirserver-data/Mir200/Map/B113.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B114",
+        "path": "vendor/mirserver-data/Mir200/Map/B114.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B115",
+        "path": "vendor/mirserver-data/Mir200/Map/B115.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B116",
+        "path": "vendor/mirserver-data/Mir200/Map/B116.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B117",
+        "path": "vendor/mirserver-data/Mir200/Map/B117.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B118",
+        "path": "vendor/mirserver-data/Mir200/Map/B118.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B119",
+        "path": "vendor/mirserver-data/Mir200/Map/B119.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B120",
+        "path": "vendor/mirserver-data/Mir200/Map/B120.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B121",
+        "path": "vendor/mirserver-data/Mir200/Map/B121.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B122",
+        "path": "vendor/mirserver-data/Mir200/Map/B122.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B123",
+        "path": "vendor/mirserver-data/Mir200/Map/B123.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B124",
+        "path": "vendor/mirserver-data/Mir200/Map/B124.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B125",
+        "path": "vendor/mirserver-data/Mir200/Map/B125.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B126",
+        "path": "vendor/mirserver-data/Mir200/Map/B126.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B127",
+        "path": "vendor/mirserver-data/Mir200/Map/B127.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B128",
+        "path": "vendor/mirserver-data/Mir200/Map/B128.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B129",
+        "path": "vendor/mirserver-data/Mir200/Map/B129.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B130",
+        "path": "vendor/mirserver-data/Mir200/Map/B130.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B131",
+        "path": "vendor/mirserver-data/Mir200/Map/B131.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B132",
+        "path": "vendor/mirserver-data/Mir200/Map/B132.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B133",
+        "path": "vendor/mirserver-data/Mir200/Map/B133.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B134",
+        "path": "vendor/mirserver-data/Mir200/Map/B134.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B135",
+        "path": "vendor/mirserver-data/Mir200/Map/B135.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B136",
+        "path": "vendor/mirserver-data/Mir200/Map/B136.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B137",
+        "path": "vendor/mirserver-data/Mir200/Map/B137.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B138",
+        "path": "vendor/mirserver-data/Mir200/Map/B138.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B139",
+        "path": "vendor/mirserver-data/Mir200/Map/B139.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B140",
+        "path": "vendor/mirserver-data/Mir200/Map/B140.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B201",
+        "path": "vendor/mirserver-data/Mir200/Map/B201.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B202",
+        "path": "vendor/mirserver-data/Mir200/Map/B202.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B203",
+        "path": "vendor/mirserver-data/Mir200/Map/B203.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B204",
+        "path": "vendor/mirserver-data/Mir200/Map/B204.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B205",
+        "path": "vendor/mirserver-data/Mir200/Map/B205.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B206",
+        "path": "vendor/mirserver-data/Mir200/Map/B206.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B207",
+        "path": "vendor/mirserver-data/Mir200/Map/B207.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B208",
+        "path": "vendor/mirserver-data/Mir200/Map/B208.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B209",
+        "path": "vendor/mirserver-data/Mir200/Map/B209.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B210",
+        "path": "vendor/mirserver-data/Mir200/Map/B210.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B211",
+        "path": "vendor/mirserver-data/Mir200/Map/B211.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B212",
+        "path": "vendor/mirserver-data/Mir200/Map/B212.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B213",
+        "path": "vendor/mirserver-data/Mir200/Map/B213.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B214",
+        "path": "vendor/mirserver-data/Mir200/Map/B214.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B215",
+        "path": "vendor/mirserver-data/Mir200/Map/B215.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B216",
+        "path": "vendor/mirserver-data/Mir200/Map/B216.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B217",
+        "path": "vendor/mirserver-data/Mir200/Map/B217.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B218",
+        "path": "vendor/mirserver-data/Mir200/Map/B218.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B219",
+        "path": "vendor/mirserver-data/Mir200/Map/B219.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B220",
+        "path": "vendor/mirserver-data/Mir200/Map/B220.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B221",
+        "path": "vendor/mirserver-data/Mir200/Map/B221.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B222",
+        "path": "vendor/mirserver-data/Mir200/Map/B222.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B223",
+        "path": "vendor/mirserver-data/Mir200/Map/B223.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B224",
+        "path": "vendor/mirserver-data/Mir200/Map/B224.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B225",
+        "path": "vendor/mirserver-data/Mir200/Map/B225.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B226",
+        "path": "vendor/mirserver-data/Mir200/Map/B226.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B227",
+        "path": "vendor/mirserver-data/Mir200/Map/B227.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B228",
+        "path": "vendor/mirserver-data/Mir200/Map/B228.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B229",
+        "path": "vendor/mirserver-data/Mir200/Map/B229.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B230",
+        "path": "vendor/mirserver-data/Mir200/Map/B230.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B231",
+        "path": "vendor/mirserver-data/Mir200/Map/B231.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B232",
+        "path": "vendor/mirserver-data/Mir200/Map/B232.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B233",
+        "path": "vendor/mirserver-data/Mir200/Map/B233.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B234",
+        "path": "vendor/mirserver-data/Mir200/Map/B234.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B235",
+        "path": "vendor/mirserver-data/Mir200/Map/B235.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B236",
+        "path": "vendor/mirserver-data/Mir200/Map/B236.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B237",
+        "path": "vendor/mirserver-data/Mir200/Map/B237.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B238",
+        "path": "vendor/mirserver-data/Mir200/Map/B238.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B239",
+        "path": "vendor/mirserver-data/Mir200/Map/B239.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B240",
+        "path": "vendor/mirserver-data/Mir200/Map/B240.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B301",
+        "path": "vendor/mirserver-data/Mir200/Map/B301.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B302",
+        "path": "vendor/mirserver-data/Mir200/Map/B302.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B303",
+        "path": "vendor/mirserver-data/Mir200/Map/B303.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B304",
+        "path": "vendor/mirserver-data/Mir200/Map/B304.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B305",
+        "path": "vendor/mirserver-data/Mir200/Map/B305.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B306",
+        "path": "vendor/mirserver-data/Mir200/Map/B306.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B307",
+        "path": "vendor/mirserver-data/Mir200/Map/B307.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B308",
+        "path": "vendor/mirserver-data/Mir200/Map/B308.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B309",
+        "path": "vendor/mirserver-data/Mir200/Map/B309.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B310",
+        "path": "vendor/mirserver-data/Mir200/Map/B310.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B311",
+        "path": "vendor/mirserver-data/Mir200/Map/B311.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B312",
+        "path": "vendor/mirserver-data/Mir200/Map/B312.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B313",
+        "path": "vendor/mirserver-data/Mir200/Map/B313.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B314",
+        "path": "vendor/mirserver-data/Mir200/Map/B314.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B315",
+        "path": "vendor/mirserver-data/Mir200/Map/B315.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B316",
+        "path": "vendor/mirserver-data/Mir200/Map/B316.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B317",
+        "path": "vendor/mirserver-data/Mir200/Map/B317.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B318",
+        "path": "vendor/mirserver-data/Mir200/Map/B318.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B319",
+        "path": "vendor/mirserver-data/Mir200/Map/B319.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B320",
+        "path": "vendor/mirserver-data/Mir200/Map/B320.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B321",
+        "path": "vendor/mirserver-data/Mir200/Map/B321.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B322",
+        "path": "vendor/mirserver-data/Mir200/Map/B322.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B323",
+        "path": "vendor/mirserver-data/Mir200/Map/B323.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B324",
+        "path": "vendor/mirserver-data/Mir200/Map/B324.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B325",
+        "path": "vendor/mirserver-data/Mir200/Map/B325.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B326",
+        "path": "vendor/mirserver-data/Mir200/Map/B326.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B327",
+        "path": "vendor/mirserver-data/Mir200/Map/B327.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B328",
+        "path": "vendor/mirserver-data/Mir200/Map/B328.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B329",
+        "path": "vendor/mirserver-data/Mir200/Map/B329.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B330",
+        "path": "vendor/mirserver-data/Mir200/Map/B330.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B331",
+        "path": "vendor/mirserver-data/Mir200/Map/B331.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B332",
+        "path": "vendor/mirserver-data/Mir200/Map/B332.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B333",
+        "path": "vendor/mirserver-data/Mir200/Map/B333.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B334",
+        "path": "vendor/mirserver-data/Mir200/Map/B334.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B335",
+        "path": "vendor/mirserver-data/Mir200/Map/B335.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B336",
+        "path": "vendor/mirserver-data/Mir200/Map/B336.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B337",
+        "path": "vendor/mirserver-data/Mir200/Map/B337.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B338",
+        "path": "vendor/mirserver-data/Mir200/Map/B338.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B339",
+        "path": "vendor/mirserver-data/Mir200/Map/B339.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B340",
+        "path": "vendor/mirserver-data/Mir200/Map/B340.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B341",
+        "path": "vendor/mirserver-data/Mir200/Map/B341.map",
+        "sha256": "1e3b3a52a0d23dc9e5fbb98df4fc537ff6bfc9ace89e8e7793629c257758df4d",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B342",
+        "path": "vendor/mirserver-data/Mir200/Map/B342.map",
+        "sha256": "dc957de442b9309de329b1c934cdc8bc55b420c7a767f7223cd8c1fade12c0a4",
+        "bytes": 8788,
+        "width": 26,
+        "height": 28,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B343",
+        "path": "vendor/mirserver-data/Mir200/Map/B343.map",
+        "sha256": "289d414312c9dc29824a21334e9cf70c74f545c5d2ce2e8b6bbea50d725b947f",
+        "bytes": 8116,
+        "width": 24,
+        "height": 28,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B344",
+        "path": "vendor/mirserver-data/Mir200/Map/B344.map",
+        "sha256": "538c4579dbc513fe71e32d5553de4e5e9feb861d2c9434fcb9ea8d32984da371",
+        "bytes": 6964,
+        "width": 24,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B345",
+        "path": "vendor/mirserver-data/Mir200/Map/B345.map",
+        "sha256": "0fefb7d08c460fd105911fbb1c66b76e3a6669c8ed5c34b3281bbf5074bac21c",
+        "bytes": 6964,
+        "width": 24,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B346",
+        "path": "vendor/mirserver-data/Mir200/Map/B346.map",
+        "sha256": "8f98dab1230641be8a43f323ac99c009229eb462b26a73457094aea598a91c34",
+        "bytes": 6292,
+        "width": 20,
+        "height": 26,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B347",
+        "path": "vendor/mirserver-data/Mir200/Map/B347.map",
+        "sha256": "dc8da6d24809529a5be6b9c4cca59309f5d10d1c3fa3a7d5602111602a291bff",
+        "bytes": 6388,
+        "width": 22,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B351",
+        "path": "vendor/mirserver-data/Mir200/Map/B351.map",
+        "sha256": "64253af5072abdeae99d098d445417c1b0bc2cf240880b7c25d909e22e121748",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B352",
+        "path": "vendor/mirserver-data/Mir200/Map/B352.map",
+        "sha256": "49cb6f4412ed230d92811d1b8ffad0fd3c247454048a2ea9dbefbe16d2f8a49f",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B353",
+        "path": "vendor/mirserver-data/Mir200/Map/B353.map",
+        "sha256": "3010dd99a69bd4ca13cce6f19511e5cb24adce3dc7fc4f28bc171e5ab0d56ffb",
+        "bytes": 8116,
+        "width": 24,
+        "height": 28,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B354",
+        "path": "vendor/mirserver-data/Mir200/Map/B354.map",
+        "sha256": "dba69e1121d19a129ebf767a365e81495d253dbf1a6bffe614b2278f2cfd3317",
+        "bytes": 8164,
+        "width": 26,
+        "height": 26,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B355",
+        "path": "vendor/mirserver-data/Mir200/Map/B355.map",
+        "sha256": "aee27145327765b1031fe55772969ab08262e5e6a942c75d960aef0960c98bd0",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "B356",
+        "path": "vendor/mirserver-data/Mir200/Map/B356.map",
+        "sha256": "2c1ee82c90c938870d02b3b90dd08a704794cc3caab75b636a9a4a2b82e62e13",
+        "bytes": 6964,
+        "width": 24,
+        "height": 24,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D032",
+        "path": "vendor/mirserver-data/Mir200/Map/D032.map",
+        "sha256": "ce853867c5420fec6fb42bfc808751637c7f042b01596b49d639d7d91e96d2b1",
+        "bytes": 3000052,
+        "width": 500,
+        "height": 500,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D033",
+        "path": "vendor/mirserver-data/Mir200/Map/D033.map",
+        "sha256": "3a39ba6cdb326c140eb796a0779676e1c6bf90a394138b9874ed9aacc1102942",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D042",
+        "path": "vendor/mirserver-data/Mir200/Map/D042.map",
+        "sha256": "a73a4632a4d4cde184a583913f9670faa071b0bd4240207431da473b87d97144",
+        "bytes": 3000052,
+        "width": 500,
+        "height": 500,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D043",
+        "path": "vendor/mirserver-data/Mir200/Map/D043.map",
+        "sha256": "3ef7003fddf02659358c83b02d035bc88fdd03819faa56fc512de5540b4ed147",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D052",
+        "path": "vendor/mirserver-data/Mir200/Map/D052.map",
+        "sha256": "bc4b4f8a74c27f2432b23a5ba75e2077b9324740510bcb7c3e23271afc77c1e3",
+        "bytes": 3000052,
+        "width": 500,
+        "height": 500,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D053",
+        "path": "vendor/mirserver-data/Mir200/Map/D053.map",
+        "sha256": "ce7d878fe3994b3c8358042658e611e69b05a47621a15fe77ecd425fd5423c84",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D1003",
+        "path": "vendor/mirserver-data/Mir200/Map/D1003.map",
+        "sha256": "8c1cc64d0a4f375bff60cfd41ddf8a359302fb6247d329a6f6d5ef1cdfb7c51d",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10053",
+        "path": "vendor/mirserver-data/Mir200/Map/D10053.map",
+        "sha256": "01ea076179d2fb43c279f1effc32bb6897d4cade432d3696c417df50df6abdd6",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10054",
+        "path": "vendor/mirserver-data/Mir200/Map/D10054.map",
+        "sha256": "99dd7ed94b1716c40dfb354e166fbce939e07ab30fd7fee00d92b643b55bde5c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D10071",
+        "path": "vendor/mirserver-data/Mir200/Map/D10071.map",
+        "sha256": "23b65edaf45ac90f4a8b36da80bb08c8f3512f4e5cf47881da771d2781ea2c43",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D12",
+        "path": "vendor/mirserver-data/Mir200/Map/D12.map",
+        "sha256": "d469f6f10bbf2df38f1813faa38dfb551354f93d9cd9584c087f07ab174be034",
+        "bytes": 2100052,
+        "width": 350,
+        "height": 500,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2031",
+        "path": "vendor/mirserver-data/Mir200/Map/D2031.map",
+        "sha256": "5aa4e89274d685ea636e6c9104af8d09dc6e989b0e383a77d375d7c4aee10330",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2032",
+        "path": "vendor/mirserver-data/Mir200/Map/D2032.map",
+        "sha256": "6cc8bf87c27408e5597603f96a08576de6684231815a2da5314fd513a036561a",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2033",
+        "path": "vendor/mirserver-data/Mir200/Map/D2033.map",
+        "sha256": "2931f28b34f5a25eded736b167a7e6f1f589f94cb5beac0a4dd466d25682a70e",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2034",
+        "path": "vendor/mirserver-data/Mir200/Map/D2034.map",
+        "sha256": "a1bdd7fc2423099c5e84712b58e4592c8cd833007b93230a966688bb8f94b8a0",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2041",
+        "path": "vendor/mirserver-data/Mir200/Map/D2041.map",
+        "sha256": "40ed7e1f6b17ce273d8b58fba1d78303487b7e0c4beddd8e7318fe72b5d3f336",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2042",
+        "path": "vendor/mirserver-data/Mir200/Map/D2042.map",
+        "sha256": "40540421682dc69c55355380cdbc710772b02828c3bac1fd6a58debe638f2028",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2043",
+        "path": "vendor/mirserver-data/Mir200/Map/D2043.map",
+        "sha256": "4bf56290b91b129b9023eeac561bfa660b6d11704980bb0839d76af18e7b2872",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2044",
+        "path": "vendor/mirserver-data/Mir200/Map/D2044.map",
+        "sha256": "41a2b4af7ccb70c5943d2f2319c535120e5b4fbe19200da582819fef7e1b5ff5",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2054",
+        "path": "vendor/mirserver-data/Mir200/Map/D2054.map",
+        "sha256": "6d23ab081117bb49aded4cb39d665d8762a681a536510e1f825af024293dca3a",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2055",
+        "path": "vendor/mirserver-data/Mir200/Map/D2055.map",
+        "sha256": "90da585edfd68fe16c3601b8193916035802fe53b354626eebc7ca50d36f8021",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2056",
+        "path": "vendor/mirserver-data/Mir200/Map/D2056.map",
+        "sha256": "3b8b1ffb537e7d4e5e252d7b4c4c356466287112f709a8e0ed29c0f3b0bdd483",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2065",
+        "path": "vendor/mirserver-data/Mir200/Map/D2065.map",
+        "sha256": "fac4fa826586ab6d69a013ae5599bf07b84980c6b881b98388f163ebc88391f7",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2066",
+        "path": "vendor/mirserver-data/Mir200/Map/D2066.map",
+        "sha256": "a25a6aa2e60de531ab4d7c88105d6e0b084f957d7105906592cadc76301bfbbd",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2074",
+        "path": "vendor/mirserver-data/Mir200/Map/D2074.map",
+        "sha256": "f505e1809b32462971d70e387d755a9cedd06e4136dab44804aec65411861c27",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D2077",
+        "path": "vendor/mirserver-data/Mir200/Map/D2077.map",
+        "sha256": "1f062ac87b431428b441d976ffa66ce9e257ae1b6278109d5c2e94268170e73b",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5061",
+        "path": "vendor/mirserver-data/Mir200/Map/D5061.map",
+        "sha256": "54b0a1cd86faa15374f3d9a54c1e94e275695380efc4ef86af3b0180b504e83c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5062",
+        "path": "vendor/mirserver-data/Mir200/Map/D5062.map",
+        "sha256": "54b0a1cd86faa15374f3d9a54c1e94e275695380efc4ef86af3b0180b504e83c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5063",
+        "path": "vendor/mirserver-data/Mir200/Map/D5063.map",
+        "sha256": "54b0a1cd86faa15374f3d9a54c1e94e275695380efc4ef86af3b0180b504e83c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5064",
+        "path": "vendor/mirserver-data/Mir200/Map/D5064.map",
+        "sha256": "54b0a1cd86faa15374f3d9a54c1e94e275695380efc4ef86af3b0180b504e83c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5065",
+        "path": "vendor/mirserver-data/Mir200/Map/D5065.map",
+        "sha256": "54b0a1cd86faa15374f3d9a54c1e94e275695380efc4ef86af3b0180b504e83c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5066",
+        "path": "vendor/mirserver-data/Mir200/Map/D5066.map",
+        "sha256": "54b0a1cd86faa15374f3d9a54c1e94e275695380efc4ef86af3b0180b504e83c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5067",
+        "path": "vendor/mirserver-data/Mir200/Map/D5067.map",
+        "sha256": "54b0a1cd86faa15374f3d9a54c1e94e275695380efc4ef86af3b0180b504e83c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5068",
+        "path": "vendor/mirserver-data/Mir200/Map/D5068.map",
+        "sha256": "54b0a1cd86faa15374f3d9a54c1e94e275695380efc4ef86af3b0180b504e83c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5069",
+        "path": "vendor/mirserver-data/Mir200/Map/D5069.map",
+        "sha256": "54b0a1cd86faa15374f3d9a54c1e94e275695380efc4ef86af3b0180b504e83c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5071",
+        "path": "vendor/mirserver-data/Mir200/Map/D5071.map",
+        "sha256": "39b9d431cdd7bf04bf295a8b465790fb12c609d72707c57e72c71efb3afd7176",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5072",
+        "path": "vendor/mirserver-data/Mir200/Map/D5072.map",
+        "sha256": "c091ecfa8df388cc4e4d121b317f26418aadb85fa6dbe13238cf6161c8908f47",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5073",
+        "path": "vendor/mirserver-data/Mir200/Map/D5073.map",
+        "sha256": "a2102aa5025aa3310a71ca8bc35bd3d24a977880cc5d7f2653fbc609614ca757",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D5074",
+        "path": "vendor/mirserver-data/Mir200/Map/D5074.map",
+        "sha256": "d3a1239a30a6bda150f5ff7a759d8184ce87a548abff5abd3005a7bbd6e7f0f5",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71601",
+        "path": "vendor/mirserver-data/Mir200/Map/D71601.map",
+        "sha256": "68e2e3f69d3bfd8663409d3e386ece4d963cd1cc3aa84db9c004044f8b84d17e",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71602",
+        "path": "vendor/mirserver-data/Mir200/Map/D71602.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71603",
+        "path": "vendor/mirserver-data/Mir200/Map/D71603.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71604",
+        "path": "vendor/mirserver-data/Mir200/Map/D71604.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71605",
+        "path": "vendor/mirserver-data/Mir200/Map/D71605.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71606",
+        "path": "vendor/mirserver-data/Mir200/Map/D71606.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71607",
+        "path": "vendor/mirserver-data/Mir200/Map/D71607.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71608",
+        "path": "vendor/mirserver-data/Mir200/Map/D71608.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71609",
+        "path": "vendor/mirserver-data/Mir200/Map/D71609.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71610",
+        "path": "vendor/mirserver-data/Mir200/Map/D71610.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71611",
+        "path": "vendor/mirserver-data/Mir200/Map/D71611.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71612",
+        "path": "vendor/mirserver-data/Mir200/Map/D71612.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71613",
+        "path": "vendor/mirserver-data/Mir200/Map/D71613.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71614",
+        "path": "vendor/mirserver-data/Mir200/Map/D71614.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71615",
+        "path": "vendor/mirserver-data/Mir200/Map/D71615.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71616",
+        "path": "vendor/mirserver-data/Mir200/Map/D71616.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71617",
+        "path": "vendor/mirserver-data/Mir200/Map/D71617.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71618",
+        "path": "vendor/mirserver-data/Mir200/Map/D71618.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71619",
+        "path": "vendor/mirserver-data/Mir200/Map/D71619.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71620",
+        "path": "vendor/mirserver-data/Mir200/Map/D71620.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71621",
+        "path": "vendor/mirserver-data/Mir200/Map/D71621.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71622",
+        "path": "vendor/mirserver-data/Mir200/Map/D71622.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71623",
+        "path": "vendor/mirserver-data/Mir200/Map/D71623.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71624",
+        "path": "vendor/mirserver-data/Mir200/Map/D71624.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71625",
+        "path": "vendor/mirserver-data/Mir200/Map/D71625.map",
+        "sha256": "e3a01ca025a029ee726fc3706c2b5d247fb1661865f26a8e2cf378d7a537a00b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71650",
+        "path": "vendor/mirserver-data/Mir200/Map/D71650.map",
+        "sha256": "a1d6082e099677b1335b719c0d8d0503614829c8d52c2a349b276b1e6010c935",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71651",
+        "path": "vendor/mirserver-data/Mir200/Map/D71651.map",
+        "sha256": "a1d6082e099677b1335b719c0d8d0503614829c8d52c2a349b276b1e6010c935",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71652",
+        "path": "vendor/mirserver-data/Mir200/Map/D71652.map",
+        "sha256": "e19d16834af23269c660c0e901ca93bb5bfbdbf1670bdf24dcd17c537ffe5a4d",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D71653",
+        "path": "vendor/mirserver-data/Mir200/Map/D71653.map",
+        "sha256": "e19d16834af23269c660c0e901ca93bb5bfbdbf1670bdf24dcd17c537ffe5a4d",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "DH00",
+        "path": "vendor/mirserver-data/Mir200/Map/DH00.map",
+        "sha256": "23ccd720192e63061ab733a0908549ac5e032c5f70e9ed772e44eb50ead9e6e0",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "DH01",
+        "path": "vendor/mirserver-data/Mir200/Map/DH01.map",
+        "sha256": "f91f7a9c4ccd90d49f7f3ab305867ba71e3290de0b4c6c5ae7aae1e199806215",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "DH02",
+        "path": "vendor/mirserver-data/Mir200/Map/DH02.map",
+        "sha256": "24e73f39a80ec568887cd0a384f8b3d9731477dbcfad7ecd1812aa662eedc757",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "DH03",
+        "path": "vendor/mirserver-data/Mir200/Map/DH03.map",
+        "sha256": "c834896a1ab1c8b9b787cd5102776c7925cec42231c3c3b3913f96281d47d9fc",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "DH04",
+        "path": "vendor/mirserver-data/Mir200/Map/DH04.map",
+        "sha256": "3fd3e64ba35ef92ecdf8f37bf57ce6d27d353bf77c0295b3a683759a73279a01",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "DHF",
+        "path": "vendor/mirserver-data/Mir200/Map/DHF.map",
+        "sha256": "daa5be293c8df75a8701a3d98995427261f0bf33873a372663abf0c112137c48",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "DM001",
+        "path": "vendor/mirserver-data/Mir200/Map/DM001.map",
+        "sha256": "9354909f528a309d2211ee71d9a8221de5cd8599aa615744c6dd0c5f920e7eb4",
+        "bytes": 1456,
+        "width": 9,
+        "height": 13,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "DM002",
+        "path": "vendor/mirserver-data/Mir200/Map/DM002.map",
+        "sha256": "e904abafefacf62a1adf6c4d6a700b175ae0052e69252e485ec98704b481532a",
+        "bytes": 14644,
+        "width": 32,
+        "height": 38,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "DM011",
+        "path": "vendor/mirserver-data/Mir200/Map/DM011.map",
+        "sha256": "9354909f528a309d2211ee71d9a8221de5cd8599aa615744c6dd0c5f920e7eb4",
+        "bytes": 1456,
+        "width": 9,
+        "height": 13,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E001",
+        "path": "vendor/mirserver-data/Mir200/Map/E001.map",
+        "sha256": "6df65d0bae075b91557c7ceeaf21b8e7edf21b1d8921bcc5c1bfecf0e14c9ab6",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E002",
+        "path": "vendor/mirserver-data/Mir200/Map/E002.map",
+        "sha256": "26e4fa8baa4877508af64714fb619b5a18ec0b2eb85bcaa0f936886d1b614ca4",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E401",
+        "path": "vendor/mirserver-data/Mir200/Map/E401.map",
+        "sha256": "7b358a16662fcf6ff51f0f3be106a1d176296eb46e621edbd2aa1e0043094565",
+        "bytes": 145252,
+        "width": 110,
+        "height": 110,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E402",
+        "path": "vendor/mirserver-data/Mir200/Map/E402.map",
+        "sha256": "8b51e0a2de397060a0842a0316ac552c31c836d1fc6d2c13a7803e6e71f6df6e",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E403",
+        "path": "vendor/mirserver-data/Mir200/Map/E403.map",
+        "sha256": "7b3c9557ab43a4f3c2e10bd5a9219f01b94ff06991057f39acbc4dab629e550e",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E404",
+        "path": "vendor/mirserver-data/Mir200/Map/E404.map",
+        "sha256": "524ad9ce6d2fed1af1a6db5f5a67b6da72d2fb02cec59c80bb9d17ab5685b608",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E601",
+        "path": "vendor/mirserver-data/Mir200/Map/E601.map",
+        "sha256": "80dcd277ce3debf28d19c51165dd06dd6655b65b9fe5fc679934c55765529daf",
+        "bytes": 270052,
+        "width": 150,
+        "height": 150,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E602",
+        "path": "vendor/mirserver-data/Mir200/Map/E602.map",
+        "sha256": "3ed3f0e794b280b36ea3ee21fee4c74e79f9c374075f08fb8b933fb48d38a842",
+        "bytes": 270052,
+        "width": 150,
+        "height": 150,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E603",
+        "path": "vendor/mirserver-data/Mir200/Map/E603.map",
+        "sha256": "c5949c8e6a6d49d5da5a6c456055921cd49dec41548c22a401d1e212f61a8287",
+        "bytes": 529252,
+        "width": 210,
+        "height": 210,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E604",
+        "path": "vendor/mirserver-data/Mir200/Map/E604.map",
+        "sha256": "88a9ee85bdfae41e67fbb47c619d9be811d20bcb24fd63a010423d0ec3b33b77",
+        "bytes": 270052,
+        "width": 150,
+        "height": 150,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E605",
+        "path": "vendor/mirserver-data/Mir200/Map/E605.map",
+        "sha256": "e74f2d594a241918e01ac7d85a41371dcfa81575ce67a178d8a1a39e44124137",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E701",
+        "path": "vendor/mirserver-data/Mir200/Map/E701.map",
+        "sha256": "e51b937956e1034ed54f7913be02a5ce8066b9af41d3aaa451a03ac005c52f37",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E702",
+        "path": "vendor/mirserver-data/Mir200/Map/E702.map",
+        "sha256": "deb38ddd69875b458b01467fb139dc0eb2e11cd64bb8229f368d4f654f4549ae",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "E703",
+        "path": "vendor/mirserver-data/Mir200/Map/E703.map",
+        "sha256": "f13b4b78fb687948c28ed08a11dbe68f5ac43ef4dcc8e4384c4f072f5e0aa4c8",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F001",
+        "path": "vendor/mirserver-data/Mir200/Map/f001.map",
+        "sha256": "d0ce78b644fe763cfae2cc82d10913d5fee4c6545186d97c39ac08653d964766",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F002",
+        "path": "vendor/mirserver-data/Mir200/Map/f002.map",
+        "sha256": "64808461fd34901d2365891d9aa47404f9142fa5cb1ad2df0d7723bff7cd89f5",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F003",
+        "path": "vendor/mirserver-data/Mir200/Map/f003.map",
+        "sha256": "dd0e64f359fdd0f58ce26dea0806c2dcc4449e1ec65dffe3f79aeeac6c06d907",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F004",
+        "path": "vendor/mirserver-data/Mir200/Map/f004.map",
+        "sha256": "681ae0ed31720c2ceff33265508c4c37d27b8024da588ffe46f1b30ff5c22b37",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F005",
+        "path": "vendor/mirserver-data/Mir200/Map/f005.map",
+        "sha256": "fba0be6ebda387e118fce012a1e3e65eec2c0d987eb8a457f0bb9c4db940e908",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F006",
+        "path": "vendor/mirserver-data/Mir200/Map/F006.map",
+        "sha256": "5561f313b8b0f622a0a8c18795f1dc77bc4b3a680ac3295240cfa8e2808ea3f2",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F007",
+        "path": "vendor/mirserver-data/Mir200/Map/F007.map",
+        "sha256": "2cc39e7e51c84aa699d0c300bcb152773bcb9b6f61643306905fd5b153474679",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F008",
+        "path": "vendor/mirserver-data/Mir200/Map/f008.map",
+        "sha256": "72607ae028ada73d9f5ca3be568569335988367621ee5bfb3151deafd412b107",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F009",
+        "path": "vendor/mirserver-data/Mir200/Map/F009.map",
+        "sha256": "0cd86cfe2a6a9663904cdb4cd973eede373430ef707e10f5b79a52e7f7fd3ee4",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F010",
+        "path": "vendor/mirserver-data/Mir200/Map/F010.map",
+        "sha256": "3718442f99d2d78b551573c96d29ad8b0d5e38cb70c83e93e8d37539f201a489",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F011",
+        "path": "vendor/mirserver-data/Mir200/Map/F011.map",
+        "sha256": "86ef4683e5e695741369ba86607f7b5963533153d236189a0b7c62a2dcbc4282",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F012",
+        "path": "vendor/mirserver-data/Mir200/Map/F012.map",
+        "sha256": "47a0f8ddb775e5112e1887eb4b717d993851ab62aec28c571f4bf2b9cac7ba82",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "F013",
+        "path": "vendor/mirserver-data/Mir200/Map/F013.map",
+        "sha256": "e08f06af4bf124c946991d2de143b664531edeef3f36737be036b97186bd6ba1",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G001",
+        "path": "vendor/mirserver-data/Mir200/Map/G001.map",
+        "sha256": "f651e01448f5d97926bf6ab551b92ec68ec2cac248ea504180ba356246cd5b6c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G002",
+        "path": "vendor/mirserver-data/Mir200/Map/G002.map",
+        "sha256": "aa3cd90b821a0d8dcc193f607da58bacf349336bd1c635d391284e897812a68c",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G003",
+        "path": "vendor/mirserver-data/Mir200/Map/G003.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G004",
+        "path": "vendor/mirserver-data/Mir200/Map/G004.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G005",
+        "path": "vendor/mirserver-data/Mir200/Map/G005.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G006",
+        "path": "vendor/mirserver-data/Mir200/Map/G006.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G007",
+        "path": "vendor/mirserver-data/Mir200/Map/G007.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G008",
+        "path": "vendor/mirserver-data/Mir200/Map/G008.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G009",
+        "path": "vendor/mirserver-data/Mir200/Map/G009.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G010",
+        "path": "vendor/mirserver-data/Mir200/Map/G010.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G011",
+        "path": "vendor/mirserver-data/Mir200/Map/G011.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G012",
+        "path": "vendor/mirserver-data/Mir200/Map/G012.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G013",
+        "path": "vendor/mirserver-data/Mir200/Map/G013.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "G014",
+        "path": "vendor/mirserver-data/Mir200/Map/G014.map",
+        "sha256": "bf81d39ba461b684899b91819b8b49c5ba30b85cc5caf20858c5a1b497153b35",
+        "bytes": 76852,
+        "width": 80,
+        "height": 80,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "GA0",
+        "path": "vendor/mirserver-data/Mir200/Map/GA0.map",
+        "sha256": "231b29ef5afa24aa276d195c037fa576b268033726642f0750e8c5ae2bbe5c2f",
+        "bytes": 270052,
+        "width": 150,
+        "height": 150,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "GA2",
+        "path": "vendor/mirserver-data/Mir200/Map/GA2.map",
+        "sha256": "df00aa981ac8bba9ed4be320c144c1595a149cbde294a3ea72c7a30f1954c529",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H102",
+        "path": "vendor/mirserver-data/Mir200/Map/H102.map",
+        "sha256": "e3d071caf9cf18bbef18c10e27a7fa583ca78fdd0900261f47c745a72609cbab",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H104",
+        "path": "vendor/mirserver-data/Mir200/Map/H104.map",
+        "sha256": "de88b2a397d8c346b7e4f127ab388dedf74117cc9d8426018579af6e9c50fdf4",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H105",
+        "path": "vendor/mirserver-data/Mir200/Map/H105.map",
+        "sha256": "86db08edfdfea09e786249ea69dfb77be56774b8dc4848fa41d963c8bef4d1de",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H106",
+        "path": "vendor/mirserver-data/Mir200/Map/H106.map",
+        "sha256": "3e3b52fa584d5e9ab3806a61744475f77d5468614b815ce7dedfa0ecd6fd82c2",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H201",
+        "path": "vendor/mirserver-data/Mir200/Map/H201.map",
+        "sha256": "d079db48008b6edb31783ca6e7d463d4c8ac220bc520ac65f2dc59aadfb88c1b",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H202",
+        "path": "vendor/mirserver-data/Mir200/Map/H202.map",
+        "sha256": "c091ecfa8df388cc4e4d121b317f26418aadb85fa6dbe13238cf6161c8908f47",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H203",
+        "path": "vendor/mirserver-data/Mir200/Map/H203.map",
+        "sha256": "d3a1239a30a6bda150f5ff7a759d8184ce87a548abff5abd3005a7bbd6e7f0f5",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "H204",
+        "path": "vendor/mirserver-data/Mir200/Map/H204.map",
+        "sha256": "64808461fd34901d2365891d9aa47404f9142fa5cb1ad2df0d7723bff7cd89f5",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "L001",
+        "path": "vendor/mirserver-data/Mir200/Map/L001.map",
+        "sha256": "681ae0ed31720c2ceff33265508c4c37d27b8024da588ffe46f1b30ff5c22b37",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "L002",
+        "path": "vendor/mirserver-data/Mir200/Map/L002.map",
+        "sha256": "5018083c947f0b9df2b06297c73409b88d4766dc76509ff2a1aea89d9d8c4fb5",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "L003",
+        "path": "vendor/mirserver-data/Mir200/Map/L003.map",
+        "sha256": "1b8e9bffaa88948df29e41bb1ff6ced2f26e1eedfb01249086f9df68c29e200e",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "L004",
+        "path": "vendor/mirserver-data/Mir200/Map/L004.map",
+        "sha256": "df0d8dbb90857c90639aff270265fb34bde422f2e2c50c13820f57d2d518310a",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "L005",
+        "path": "vendor/mirserver-data/Mir200/Map/L005.map",
+        "sha256": "208c48bd0f727201dd54bd00d529140e87818a021b935dfe225afe95cbe13481",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "L006",
+        "path": "vendor/mirserver-data/Mir200/Map/L006.map",
+        "sha256": "64808461fd34901d2365891d9aa47404f9142fa5cb1ad2df0d7723bff7cd89f5",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "M001",
+        "path": "vendor/mirserver-data/Mir200/Map/M001.map",
+        "sha256": "5c0b5e1e210dd76377d4c9cca5655683fb18a0f3652608167e68017b31d658f4",
+        "bytes": 1920052,
+        "width": 400,
+        "height": 400,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "M100",
+        "path": "vendor/mirserver-data/Mir200/Map/M100.map",
+        "sha256": "3b8987e71f0c229460e99cf46e59f6adec7285ea17bf37645466156df06e4572",
+        "bytes": 1080052,
+        "width": 300,
+        "height": 300,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "M101",
+        "path": "vendor/mirserver-data/Mir200/Map/M101.map",
+        "sha256": "125bddf4dbf672014aaa709a3057cd8f2477732932c767d1f803fa4097e04d92",
+        "bytes": 33712,
+        "width": 51,
+        "height": 55,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "N109",
+        "path": "vendor/mirserver-data/Mir200/Map/n109.map",
+        "sha256": "6417be3951b7f115a1372f3afaf28f8ebd50d973c263b89ed7614febb444cc58",
+        "bytes": 58852,
+        "width": 70,
+        "height": 70,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "Q001",
+        "path": "vendor/mirserver-data/Mir200/Map/Q001.map",
+        "sha256": "ca5a28b0c7e07a5cc3c151b392b3ef8931e00b73aabbb5786c8d1b5fc1d5b619",
+        "bytes": 7552,
+        "width": 25,
+        "height": 25,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "Q002",
+        "path": "vendor/mirserver-data/Mir200/Map/Q002.map",
+        "sha256": "ca5a28b0c7e07a5cc3c151b392b3ef8931e00b73aabbb5786c8d1b5fc1d5b619",
+        "bytes": 7552,
+        "width": 25,
+        "height": 25,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "Q003",
+        "path": "vendor/mirserver-data/Mir200/Map/Q003.map",
+        "sha256": "ca5a28b0c7e07a5cc3c151b392b3ef8931e00b73aabbb5786c8d1b5fc1d5b619",
+        "bytes": 7552,
+        "width": 25,
+        "height": 25,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "Q004",
+        "path": "vendor/mirserver-data/Mir200/Map/Q004.map",
+        "sha256": "85e8b17aca127199ddc38b2eecb656191a86e81a9daf97e9602a12a5071200c8",
+        "bytes": 10852,
+        "width": 30,
+        "height": 30,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "Q011",
+        "path": "vendor/mirserver-data/Mir200/Map/Q011.map",
+        "sha256": "9fef883ec0ce32556a3c96e81e51704af795371c7abad3695e62203d65980898",
+        "bytes": 270052,
+        "width": 150,
+        "height": 150,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "Q012",
+        "path": "vendor/mirserver-data/Mir200/Map/Q012.map",
+        "sha256": "5360f0134fe9b6aec5cc8a6a525eb1270eeaf5a54df2b8fb624a5b00d395a864",
+        "bytes": 58852,
+        "width": 70,
+        "height": 70,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "Q013",
+        "path": "vendor/mirserver-data/Mir200/Map/Q013.map",
+        "sha256": "7f2993a16eb931bce7cbe741fb73c715126e3369486bc9595c93bc43eddd07cb",
+        "bytes": 58852,
+        "width": 70,
+        "height": 70,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "Q014",
+        "path": "vendor/mirserver-data/Mir200/Map/Q014.map",
+        "sha256": "7f2993a16eb931bce7cbe741fb73c715126e3369486bc9595c93bc43eddd07cb",
+        "bytes": 58852,
+        "width": 70,
+        "height": 70,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "Q015",
+        "path": "vendor/mirserver-data/Mir200/Map/Q015.map",
+        "sha256": "282373f0d5c778bd85c45184c518125355934605ad0bc3437194614c4147195d",
+        "bytes": 270052,
+        "width": 150,
+        "height": 150,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "Q016",
+        "path": "vendor/mirserver-data/Mir200/Map/Q016.map",
+        "sha256": "0a6cda850028a46cb964923a78a48f486732081adab270c290a2c49a025d1328",
+        "bytes": 14644,
+        "width": 32,
+        "height": 38,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "R001",
+        "path": "vendor/mirserver-data/Mir200/Map/r001.map",
+        "sha256": "3e3b52fa584d5e9ab3806a61744475f77d5468614b815ce7dedfa0ecd6fd82c2",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T0007",
+        "path": "vendor/mirserver-data/Mir200/Map/T0007.map",
+        "sha256": "d0ce78b644fe763cfae2cc82d10913d5fee4c6545186d97c39ac08653d964766",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T103",
+        "path": "vendor/mirserver-data/Mir200/Map/T103.map",
+        "sha256": "433dafceff05baf69ff6e9f5327975f518417d2d9dd177863c25c1ad99ecf97a",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T105",
+        "path": "vendor/mirserver-data/Mir200/Map/T105.map",
+        "sha256": "7e8985dbc634a02cc5c5ff6b92f7f62b8c1712829cc38c9ebadbd6e824332cda",
+        "bytes": 2752,
+        "width": 15,
+        "height": 15,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1061",
+        "path": "vendor/mirserver-data/Mir200/Map/T1061.map",
+        "sha256": "378e3e275b884e106fcea897180659cbf54802511bad0b4e994c7e0a4f5029a0",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1062",
+        "path": "vendor/mirserver-data/Mir200/Map/T1062.map",
+        "sha256": "378e3e275b884e106fcea897180659cbf54802511bad0b4e994c7e0a4f5029a0",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1063",
+        "path": "vendor/mirserver-data/Mir200/Map/T1063.map",
+        "sha256": "378e3e275b884e106fcea897180659cbf54802511bad0b4e994c7e0a4f5029a0",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T109",
+        "path": "vendor/mirserver-data/Mir200/Map/T109.map",
+        "sha256": "4287fb3b1b9f3694b9bea6f2e9f1e88b702b3f6b6190bf42c160d7184f56601e",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T115",
+        "path": "vendor/mirserver-data/Mir200/Map/T115.map",
+        "sha256": "2d7f53ecee40a5e5527bb28fff78036f57dcb7eaa038770be35571ab5956d9c7",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T119",
+        "path": "vendor/mirserver-data/Mir200/Map/T119.map",
+        "sha256": "47dc4def356de8cddf309130b5d2d8752bdbe5e392d6b9e431527e0ab34cfa2f",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T125",
+        "path": "vendor/mirserver-data/Mir200/Map/T125.map",
+        "sha256": "5017754f97a1d0f9bb0e8677fa9aef2f9c08bd55f6703652075aae3abc70466f",
+        "bytes": 3292,
+        "width": 15,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1281",
+        "path": "vendor/mirserver-data/Mir200/Map/T1281.map",
+        "sha256": "9c8056aa5ebb7ec5af4006b5d2889ce25bcb7ba21c786692e99eafb012697f6d",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1282",
+        "path": "vendor/mirserver-data/Mir200/Map/T1282.map",
+        "sha256": "9c8056aa5ebb7ec5af4006b5d2889ce25bcb7ba21c786692e99eafb012697f6d",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1283",
+        "path": "vendor/mirserver-data/Mir200/Map/T1283.map",
+        "sha256": "9c8056aa5ebb7ec5af4006b5d2889ce25bcb7ba21c786692e99eafb012697f6d",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T131",
+        "path": "vendor/mirserver-data/Mir200/Map/T131.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T132",
+        "path": "vendor/mirserver-data/Mir200/Map/T132.map",
+        "sha256": "7b32d271a9558fff1b6f935323cb2c7c8b7cfa91aed502c10281f264c8b912de",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T134",
+        "path": "vendor/mirserver-data/Mir200/Map/T134.map",
+        "sha256": "00fa79bbd227249ab404bdfc74fb851af8db4f0382c74caea5668b6b31ac957b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1341",
+        "path": "vendor/mirserver-data/Mir200/Map/T1341.map",
+        "sha256": "00fa79bbd227249ab404bdfc74fb851af8db4f0382c74caea5668b6b31ac957b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1342",
+        "path": "vendor/mirserver-data/Mir200/Map/T1342.map",
+        "sha256": "00fa79bbd227249ab404bdfc74fb851af8db4f0382c74caea5668b6b31ac957b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1343",
+        "path": "vendor/mirserver-data/Mir200/Map/T1343.map",
+        "sha256": "00fa79bbd227249ab404bdfc74fb851af8db4f0382c74caea5668b6b31ac957b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1361",
+        "path": "vendor/mirserver-data/Mir200/Map/T1361.map",
+        "sha256": "4387a590dc501e0cda9a9ce739e209656b3cbea734f048e9e3d948003336ddfe",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1362",
+        "path": "vendor/mirserver-data/Mir200/Map/T1362.map",
+        "sha256": "4387a590dc501e0cda9a9ce739e209656b3cbea734f048e9e3d948003336ddfe",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T1363",
+        "path": "vendor/mirserver-data/Mir200/Map/T1363.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T138",
+        "path": "vendor/mirserver-data/Mir200/Map/T138.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T139",
+        "path": "vendor/mirserver-data/Mir200/Map/T139.map",
+        "sha256": "c1c1992587adfa783ae869ba6b0c1e90f45a8b715252e53f40b98d9a9a2795c9",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T140",
+        "path": "vendor/mirserver-data/Mir200/Map/T140.map",
+        "sha256": "28a9689df4ee4021c73baed4619441a19d5a083be844144ffa1066509fb96832",
+        "bytes": 10852,
+        "width": 30,
+        "height": 30,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T203",
+        "path": "vendor/mirserver-data/Mir200/Map/T203.map",
+        "sha256": "433dafceff05baf69ff6e9f5327975f518417d2d9dd177863c25c1ad99ecf97a",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T205",
+        "path": "vendor/mirserver-data/Mir200/Map/T205.map",
+        "sha256": "7e8985dbc634a02cc5c5ff6b92f7f62b8c1712829cc38c9ebadbd6e824332cda",
+        "bytes": 2752,
+        "width": 15,
+        "height": 15,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T2061",
+        "path": "vendor/mirserver-data/Mir200/Map/T2061.map",
+        "sha256": "93450ea878e835354831914b4782855a547593adf2229a96897e10cad3cee652",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T2062",
+        "path": "vendor/mirserver-data/Mir200/Map/T2062.map",
+        "sha256": "93450ea878e835354831914b4782855a547593adf2229a96897e10cad3cee652",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T2063",
+        "path": "vendor/mirserver-data/Mir200/Map/T2063.map",
+        "sha256": "93450ea878e835354831914b4782855a547593adf2229a96897e10cad3cee652",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T209",
+        "path": "vendor/mirserver-data/Mir200/Map/T209.map",
+        "sha256": "4287fb3b1b9f3694b9bea6f2e9f1e88b702b3f6b6190bf42c160d7184f56601e",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T215",
+        "path": "vendor/mirserver-data/Mir200/Map/T215.map",
+        "sha256": "2d7f53ecee40a5e5527bb28fff78036f57dcb7eaa038770be35571ab5956d9c7",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T219",
+        "path": "vendor/mirserver-data/Mir200/Map/T219.map",
+        "sha256": "47dc4def356de8cddf309130b5d2d8752bdbe5e392d6b9e431527e0ab34cfa2f",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T225",
+        "path": "vendor/mirserver-data/Mir200/Map/T225.map",
+        "sha256": "5017754f97a1d0f9bb0e8677fa9aef2f9c08bd55f6703652075aae3abc70466f",
+        "bytes": 3292,
+        "width": 15,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T2281",
+        "path": "vendor/mirserver-data/Mir200/Map/T2281.map",
+        "sha256": "070aebe6ea8d113cf4dd1bbc9e9e9261e70da0370800baa55f7402ce5a62f168",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T2282",
+        "path": "vendor/mirserver-data/Mir200/Map/T2282.map",
+        "sha256": "070aebe6ea8d113cf4dd1bbc9e9e9261e70da0370800baa55f7402ce5a62f168",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T2283",
+        "path": "vendor/mirserver-data/Mir200/Map/T2283.map",
+        "sha256": "9c8056aa5ebb7ec5af4006b5d2889ce25bcb7ba21c786692e99eafb012697f6d",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T231",
+        "path": "vendor/mirserver-data/Mir200/Map/T231.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T232",
+        "path": "vendor/mirserver-data/Mir200/Map/T232.map",
+        "sha256": "7b32d271a9558fff1b6f935323cb2c7c8b7cfa91aed502c10281f264c8b912de",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T234",
+        "path": "vendor/mirserver-data/Mir200/Map/T234.map",
+        "sha256": "00fa79bbd227249ab404bdfc74fb851af8db4f0382c74caea5668b6b31ac957b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T2361",
+        "path": "vendor/mirserver-data/Mir200/Map/T2361.map",
+        "sha256": "4387a590dc501e0cda9a9ce739e209656b3cbea734f048e9e3d948003336ddfe",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T2362",
+        "path": "vendor/mirserver-data/Mir200/Map/T2362.map",
+        "sha256": "4387a590dc501e0cda9a9ce739e209656b3cbea734f048e9e3d948003336ddfe",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T2363",
+        "path": "vendor/mirserver-data/Mir200/Map/T2363.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T238",
+        "path": "vendor/mirserver-data/Mir200/Map/T238.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T239",
+        "path": "vendor/mirserver-data/Mir200/Map/T239.map",
+        "sha256": "c1c1992587adfa783ae869ba6b0c1e90f45a8b715252e53f40b98d9a9a2795c9",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T240",
+        "path": "vendor/mirserver-data/Mir200/Map/T240.map",
+        "sha256": "28a9689df4ee4021c73baed4619441a19d5a083be844144ffa1066509fb96832",
+        "bytes": 10852,
+        "width": 30,
+        "height": 30,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T303",
+        "path": "vendor/mirserver-data/Mir200/Map/T303.map",
+        "sha256": "433dafceff05baf69ff6e9f5327975f518417d2d9dd177863c25c1ad99ecf97a",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T305",
+        "path": "vendor/mirserver-data/Mir200/Map/T305.map",
+        "sha256": "7e8985dbc634a02cc5c5ff6b92f7f62b8c1712829cc38c9ebadbd6e824332cda",
+        "bytes": 2752,
+        "width": 15,
+        "height": 15,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T3061",
+        "path": "vendor/mirserver-data/Mir200/Map/T3061.map",
+        "sha256": "93450ea878e835354831914b4782855a547593adf2229a96897e10cad3cee652",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T3062",
+        "path": "vendor/mirserver-data/Mir200/Map/T3062.map",
+        "sha256": "93450ea878e835354831914b4782855a547593adf2229a96897e10cad3cee652",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T3063",
+        "path": "vendor/mirserver-data/Mir200/Map/T3063.map",
+        "sha256": "93450ea878e835354831914b4782855a547593adf2229a96897e10cad3cee652",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T309",
+        "path": "vendor/mirserver-data/Mir200/Map/T309.map",
+        "sha256": "4287fb3b1b9f3694b9bea6f2e9f1e88b702b3f6b6190bf42c160d7184f56601e",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T315",
+        "path": "vendor/mirserver-data/Mir200/Map/T315.map",
+        "sha256": "2d7f53ecee40a5e5527bb28fff78036f57dcb7eaa038770be35571ab5956d9c7",
+        "bytes": 480052,
+        "width": 200,
+        "height": 200,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T319",
+        "path": "vendor/mirserver-data/Mir200/Map/T319.map",
+        "sha256": "47dc4def356de8cddf309130b5d2d8752bdbe5e392d6b9e431527e0ab34cfa2f",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T325",
+        "path": "vendor/mirserver-data/Mir200/Map/T325.map",
+        "sha256": "5017754f97a1d0f9bb0e8677fa9aef2f9c08bd55f6703652075aae3abc70466f",
+        "bytes": 3292,
+        "width": 15,
+        "height": 18,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T3281",
+        "path": "vendor/mirserver-data/Mir200/Map/T3281.map",
+        "sha256": "070aebe6ea8d113cf4dd1bbc9e9e9261e70da0370800baa55f7402ce5a62f168",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T3282",
+        "path": "vendor/mirserver-data/Mir200/Map/T3282.map",
+        "sha256": "070aebe6ea8d113cf4dd1bbc9e9e9261e70da0370800baa55f7402ce5a62f168",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T3283",
+        "path": "vendor/mirserver-data/Mir200/Map/T3283.map",
+        "sha256": "9c8056aa5ebb7ec5af4006b5d2889ce25bcb7ba21c786692e99eafb012697f6d",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T331",
+        "path": "vendor/mirserver-data/Mir200/Map/T331.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T332",
+        "path": "vendor/mirserver-data/Mir200/Map/T332.map",
+        "sha256": "7b32d271a9558fff1b6f935323cb2c7c8b7cfa91aed502c10281f264c8b912de",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T334",
+        "path": "vendor/mirserver-data/Mir200/Map/T334.map",
+        "sha256": "00fa79bbd227249ab404bdfc74fb851af8db4f0382c74caea5668b6b31ac957b",
+        "bytes": 30052,
+        "width": 50,
+        "height": 50,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T3361",
+        "path": "vendor/mirserver-data/Mir200/Map/T3361.map",
+        "sha256": "4387a590dc501e0cda9a9ce739e209656b3cbea734f048e9e3d948003336ddfe",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T3362",
+        "path": "vendor/mirserver-data/Mir200/Map/T3362.map",
+        "sha256": "4387a590dc501e0cda9a9ce739e209656b3cbea734f048e9e3d948003336ddfe",
+        "bytes": 4852,
+        "width": 20,
+        "height": 20,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T3363",
+        "path": "vendor/mirserver-data/Mir200/Map/T3363.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T338",
+        "path": "vendor/mirserver-data/Mir200/Map/T338.map",
+        "sha256": "a3e2663e9b68727647e3f2a09dd8940b8472d45401d5fe17c14cc8b166ccd106",
+        "bytes": 5344,
+        "width": 21,
+        "height": 21,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T339",
+        "path": "vendor/mirserver-data/Mir200/Map/T339.map",
+        "sha256": "c1c1992587adfa783ae869ba6b0c1e90f45a8b715252e53f40b98d9a9a2795c9",
+        "bytes": 19252,
+        "width": 40,
+        "height": 40,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T340",
+        "path": "vendor/mirserver-data/Mir200/Map/T340.map",
+        "sha256": "28a9689df4ee4021c73baed4619441a19d5a083be844144ffa1066509fb96832",
+        "bytes": 10852,
+        "width": 30,
+        "height": 30,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "W0",
+        "path": "vendor/mirserver-data/Mir200/Map/W0.map",
+        "sha256": "9019067878cdd55893851c7411a3ebf54481cd19a929f20ad79f3f32dde0e75a",
+        "bytes": 14752,
+        "width": 35,
+        "height": 35,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "W1",
+        "path": "vendor/mirserver-data/Mir200/Map/W1.map",
+        "sha256": "9019067878cdd55893851c7411a3ebf54481cd19a929f20ad79f3f32dde0e75a",
+        "bytes": 14752,
+        "width": 35,
+        "height": 35,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "W2",
+        "path": "vendor/mirserver-data/Mir200/Map/W2.map",
+        "sha256": "9019067878cdd55893851c7411a3ebf54481cd19a929f20ad79f3f32dde0e75a",
+        "bytes": 14752,
+        "width": 35,
+        "height": 35,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "EM100",
+        "path": "vendor/mirserver-data/Mir200/Map/EM100.map",
+        "sha256": "1249c4a74d6fde860b4f3e267e89a5cff4d882b85ebb562af8752b0c6eaa1f5d",
+        "bytes": 20692,
+        "width": 30,
+        "height": 35,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "T118",
+        "path": "vendor/mirserver-data/Mir200/Map/T118.map",
+        "sha256": "1249c4a74d6fde860b4f3e267e89a5cff4d882b85ebb562af8752b0c6eaa1f5d",
+        "bytes": 20692,
+        "width": 30,
+        "height": 35,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T218",
+        "path": "vendor/mirserver-data/Mir200/Map/T218.map",
+        "sha256": "c00357ccc1c561ec8f0b7dc631228dc736f297a7771024e2fb664d616e7f3b4b",
+        "bytes": 20692,
+        "width": 30,
+        "height": 30,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "T318",
+        "path": "vendor/mirserver-data/Mir200/Map/T318.map",
+        "sha256": "c00357ccc1c561ec8f0b7dc631228dc736f297a7771024e2fb664d616e7f3b4b",
+        "bytes": 20692,
+        "width": 30,
+        "height": 30,
+        "originalClientMapPresent": true
+      },
+      {
+        "id": "D718",
+        "path": "vendor/mirserver-data/Mir200/Map/D718.MAP",
+        "sha256": "9633461c756c0d152f412d08e33012df6fa72c885509a57a85b81463070f0020",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": false
+      },
+      {
+        "id": "D719",
+        "path": "vendor/mirserver-data/Mir200/Map/D719.MAP",
+        "sha256": "9633461c756c0d152f412d08e33012df6fa72c885509a57a85b81463070f0020",
+        "bytes": 120052,
+        "width": 100,
+        "height": 100,
+        "originalClientMapPresent": false
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "id": "0",
+      "path": "assets/raw/native-maps/0.map",
+      "installedFile": "0.map",
+      "sha256": "ef70bd5f5425f7f9dc79cb1ea6957f771c7293d55a554b3ba6239aba372fa370",
+      "bytes": 5880052,
+      "width": 700,
+      "height": 700,
+      "previousServerSha256": "183e9d545e284275d7955e56dfc4af301e8af9e54c46470a4c7817ee7c5742e7"
+    },
+    {
+      "id": "2",
+      "path": "assets/raw/native-maps/2.map",
+      "installedFile": "2.map",
+      "sha256": "7ef574cd504954a35c8f26571b54a39787086fcb6603931fa76dd336aa2d5d4e",
+      "bytes": 4320052,
+      "width": 600,
+      "height": 600,
+      "previousServerSha256": "6174b98752bb5a8464d6bcea979aeb4a7824ca36cc60d617fc58df0f48c88297"
+    },
+    {
+      "id": "3",
+      "path": "assets/raw/native-maps/3.map",
+      "installedFile": "3.map",
+      "sha256": "d959f496351dcbb105f2356622890473193b57132e9c7b2e52230f551a2b0e04",
+      "bytes": 9600052,
+      "width": 1000,
+      "height": 800,
+      "previousServerSha256": "5bb37afef0bb827e0ee47b71ed455d737ebd503917fabad4407d7361f0ca694f"
+    },
+    {
+      "id": "11",
+      "path": "assets/raw/native-maps/11.map",
+      "installedFile": "11.map",
+      "sha256": "88da5fd548d8accf8277960dd417bb6a10d62e474dd5b9e4f5e279701c089533",
+      "bytes": 3000052,
+      "width": 500,
+      "height": 500,
+      "previousServerSha256": "d8493009ad70fbca5eda276988c7c9c8027ccdfbc4cbba4c433e8ad7a627e354"
+    },
+    {
+      "id": "4",
+      "path": "assets/raw/native-maps/4.map",
+      "installedFile": "4.map",
+      "sha256": "9242dd120ea448ae8b8de952cc32088389963366cd4f30aa5b48c168c50858e3",
+      "bytes": 3000052,
+      "width": 500,
+      "height": 500,
+      "previousServerSha256": "0691c8ddb6854af00e846a4e64637006cac10da413fc153b75a39cb3fc1ed98f"
+    },
+    {
+      "id": "5",
+      "path": "assets/raw/native-maps/5.map",
+      "installedFile": "5.map",
+      "sha256": "7cb06f4ad1300ed93cea6745d4991c853eea7bb00f3668f5360a48f7ccd7897a",
+      "bytes": 7680052,
+      "width": 800,
+      "height": 800,
+      "previousServerSha256": "43b7344cce5caea49c09f909a3ad36ea7e30af701fd1a0c7be27a263d772b895"
+    }
+  ],
+  "serverRoutesAbsentFromInstalledClient": [
+    "H001",
+    "H002",
+    "H003",
+    "H004",
+    "H005",
+    "H006",
+    "H007",
+    "H008",
+    "H009",
+    "H010",
+    "6",
+    "61",
+    "611",
+    "612",
+    "613",
+    "62",
+    "621",
+    "622",
+    "63",
+    "631",
+    "632",
+    "64",
+    "65",
+    "66",
+    "DH00",
+    "DH01",
+    "DH02",
+    "DH03",
+    "DH04",
+    "DHF",
+    "GA0",
+    "GA2",
+    "H102",
+    "H104",
+    "H105",
+    "H106",
+    "H201",
+    "H202",
+    "H203",
+    "H204",
+    "N109",
+    "EM100",
+    "D718",
+    "D719"
+  ],
+  "policy": "Use original installed-client bytes for every differing installed map. The other 522 installed maps match the pinned server pack byte for byte. Preserve 44 explicitly recorded server routes absent from this installation; historical status and native runtime acceptance remain pending."
+}

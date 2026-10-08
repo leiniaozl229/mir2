@@ -1538,26 +1538,22 @@ namespace M2Server.Player
         {
             bool result = false;
             string s1C = string.Empty;
-            StoneMineEvent mineEvent = (StoneMineEvent)Envir.GetEvent(nX, nY);
-            if (mineEvent != null && mineEvent.EventType == Grobal2.ET_MINE)
+            if (Envir.GetEvent(nX, nY) is StoneMineEvent mineEvent && mineEvent.EventType == Grobal2.ET_MINE)
             {
                 if (mineEvent.MineCount > 0)
                 {
                     mineEvent.MineCount -= 1;
                     if (M2Share.RandomNumber.Random(SystemShare.Config.MakeMineHitRate) == 0)
                     {
-                        PileStones pileEvent = (PileStones)Envir.GetEvent(CurrX, CurrY);
-                        if (pileEvent == null)
+                        var floorEvent = Envir.GetEvent(CurrX, CurrY);
+                        if (floorEvent == null)
                         {
-                            pileEvent = new PileStones(Envir, CurrX, CurrY, Grobal2.ET_PILESTONES, 5 * 60 * 1000);
-                            SystemShare.EventMgr.AddEvent(pileEvent);
+                            PileStones createdPile = new PileStones(Envir, CurrX, CurrY, Grobal2.ET_PILESTONES, 5 * 60 * 1000);
+                            SystemShare.EventMgr.AddEvent(createdPile);
                         }
-                        else
+                        else if (floorEvent is PileStones pileEvent && pileEvent.EventType == Grobal2.ET_PILESTONES)
                         {
-                            if (pileEvent.EventType == Grobal2.ET_PILESTONES)
-                            {
-                                pileEvent.AddEventParam();
-                            }
+                            pileEvent.AddEventParam();
                         }
                         if (M2Share.RandomNumber.Random(SystemShare.Config.MakeMineRate) == 0)
                         {
@@ -2245,14 +2241,8 @@ namespace M2Server.Player
                     break;
                 case 3:
                     SendRefMsg(Messages.RM_SPACEMOVE_FIRE, 0, 0, 0, 0, "");
-                    if (PvpLevel() < 2)
-                    {
-                        BaseObjectMove(HomeMap, HomeX, HomeY);
-                    }
-                    else
-                    {
-                        BaseObjectMove(SystemShare.Config.RedHomeMap, SystemShare.Config.RedHomeX, SystemShare.Config.RedHomeY);
-                    }
+                    // Home scrolls and the playtest home stone always return to Bichon.
+                    BaseObjectMove("0", 330, 266);
                     result = true;
                     break;
                 case 4:

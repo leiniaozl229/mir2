@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "id": "web-settings-logout",
+  "targetVersion": "2003-national-176",
+  "historicalSameVersion": "unknown",
+  "canvas": {
+    "width": 800,
+    "height": 600
+  },
+  "family": "prguse",
+  "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+  "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+  "frames": {
+    "64": {
+      "index": 64,
+      "width": 16,
+      "height": 23,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "64.6bdf8a5b7878a2f9.png",
+      "sha256": "6bdf8a5b7878a2f972152ad851897b61cd915169373f199ff41a2fd70d649fac"
+    },
+    "136": {
+      "index": 136,
+      "width": 28,
+      "height": 13,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "136.1becc0abe32844c4.png",
+      "sha256": "1becc0abe32844c4ec1052ab6e3396b0c966a3029e6f408534d2a6379fbd9684"
+    },
+    "137": {
+      "index": 137,
+      "width": 28,
+      "height": 13,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "137.a72662fd033d4c4d.png",
+      "sha256": "a72662fd033d4c4dd9c83055d57cb9baf205b5ab1e29e70d1ac80e17f9632af0"
+    },
+    "138": {
+      "index": 138,
+      "width": 28,
+      "height": 13,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "138.c24bc6639fd3ba37.png",
+      "sha256": "c24bc6639fd3ba37b9e8db9e61735eb0fea1e8676bffeab67bff088cb9fdeed4"
+    },
+    "139": {
+      "index": 139,
+      "width": 28,
+      "height": 13,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "139.d01d07fd5e5e0158.png",
+      "sha256": "d01d07fd5e5e0158274f9ee10706c9120e958e0b9fcfe53054b4f1449c208ecd"
+    },
+    "402": {
+      "index": 402,
+      "width": 416,
+      "height": 347,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "402.2b8c83a121142363.png",
+      "sha256": "2b8c83a1211423637ce5b294c621822e7d5297bac0fa9d1f368e1f9483bf7b6f"
+    }
+  },
+  "panel": {
+    "frame": 402,
+    "width": 416,
+    "height": 347,
+    "x": 192,
+    "y": 126,
+    "layoutEvidence": "proposed",
+    "textX": 30,
+    "contentY": 44,
+    "contentWidth": 356,
+    "rowHeight": 36,
+    "close": {
+      "frame": 64,
+      "x": 376,
+      "y": 8
+    },
+    "footerY": 284
+  },
+  "entry": {
+    "label": "设置",
+    "x": 710,
+    "y": 10,
+    "width": 44,
+    "height": 24,
+    "layoutEvidence": "proposed",
+    "sourceFrame": null
+  },
+  "buttons": {
+    "reselect": {
+      "normalFrame": 136,
+      "pressedFrame": 137,
+      "x": 32,
+      "y": 288,
+      "width": 28,
+      "height": 13
+    },
+    "login": {
+      "normalFrame": 138,
+      "pressedFrame": 139,
+      "x": 222,
+      "y": 288,
+      "width": 28,
+      "height": 13
+    }
+  },
+  "keyboard": {
+    "F12": {
+      "action": "toggle-total-sound",
+      "evidence": "reference_source"
+    },
+    "AltX": {
+      "action": "confirm-reselect",
+      "evidence": "reference_source"
+    },
+    "AltQ": {
+      "action": "confirm-login",
+      "evidence": "reference_source",
+      "webAdaptation": "returns to login rather than closing the native application"
+    },
+    "combatDelay": "unknown; extended reference custom forced ticks are not applied"
+  },
+  "displayOptions": {
+    "minimapMode": [
+      "compact",
+      "expanded",
+      "hidden"
+    ],
+    "chatLogVisible": true,
+    "evidence": "proposed"
+  },
+  "audioOptions": {
+    "enabled": "reference_source F12 total switch; original text says music",
+    "musicVolume": "proposed independent browser channel",
+    "effectsVolume": "proposed independent browser channel"
+  },
+  "persistence": {
+    "display": "mir2-web-display-v1",
+    "audioEnabled": "mir2-audio",
+    "audioLevels": "mir2-audio-levels"
+  },
+  "sourceEvidence": [
+    {
+      "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/FState.pas",
+      "sha256": "f685ca03af5a999858d5826e924ace25b404b2703107831027b59f6f2491e6b8",
+      "scope": "1194-1203 sound HUD image11; 1234-1239 logout frames136/138 configured coordinates; 3813-3821 sound toggle; 6754-6760 tooltip keys"
+    },
+    {
+      "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/ClMain.pas",
+      "sha256": "08c79ace18755ca96882079ed0c5a5ff71c91bd8bb2de6ab539d90272355c74e",
+      "scope": "1167-1194 OK/Cancel small/large exit; 1499-1507 F12 versus Ctrl+Alt+F12; 1575-1611 custom forced ticks excluded"
+    }
+  ],
+  "limits": [
+    "Prguse402 is a national generic frame; settings use and fitted controls are proposed, not the reference DConfig image182.",
+    "Signed WIL offsets are recorded only; UI uses full native pixels at local coordinates.",
+    "Logout terminal state does not prove SQL durability; browser login exit is an adaptation.",
+    "No same-version native runtime, screenshot or browser comparison established."
+  ]
+}

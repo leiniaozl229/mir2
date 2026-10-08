@@ -503,57 +503,67 @@ namespace DBSrv.Services.Impl
             SendUserSocket(userInfo.ConnectionId, userInfo.SessionId, sMsg);
         }
 
-        private int DelChrSnameToLevel(string sName)
+        private bool TryDeleteCharacter(string name, string account)
         {
-            QueryChr chrRecord = null;
-            int nIndex = _playDataStorage.Index(sName);
-            if (nIndex < 0)
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(account))
             {
-                return 0;
+                return false;
             }
-
-            if (_playDataStorage.GetQryChar(nIndex, ref chrRecord))
+            int index = _playRecordStorage.Index(name);
+            if (index < 0)
             {
-                return chrRecord.Level;
+                return false;
             }
-            return 0;
+            bool found = false;
+            PlayerRecordData record = _playRecordStorage.Get(index, ref found);
+            if (!found || record == null || record.Deleted || record.Header.Deleted
+                || !string.Equals(record.sAccount, account, StringComparison.Ordinal)
+                || !string.Equals(record.sChrName, name, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+            int dataIndex = _playDataStorage.Index(record.sChrName);
+            QueryChr character = null;
+            if (dataIndex < 0 || !_playDataStorage.GetQryChar(dataIndex, ref character)
+                || character == null
+                || !string.Equals(character.Name, record.sChrName, StringComparison.OrdinalIgnoreCase)
+                || character.Level >= _setting.DeleteMinLevel)
+            {
+                return false;
+            }
+            // Storage implementations may return a shared record. Publish a deletion
+            // only through Update, without mutating a fetched object on failure.
+            var deleted = new PlayerRecordData
+            {
+                Id = record.Id,
+                Header = record.Header,
+                sChrName = record.sChrName,
+                sAccount = record.sAccount,
+                Selected = record.Selected,
+                Deleted = true
+            };
+            deleted.Header.Deleted = true;
+            return _playRecordStorage.Update(index, ref deleted);
         }
 
         /// <summary>
-        /// 删除角色
+        /// 删除角色；仅存储更新成功时发送成功回执。
         /// </summary>
         private void DeleteChr(string sData, ref SessionUserInfo userInfo)
         {
-            CommandMessage msg;
-            string sChrName = EDCode.DeCodeString(sData);
-            bool boCheck = false;
-            int nIndex = _playRecordStorage.Index(sChrName);
-            if (nIndex >= 0)
+            bool deleted = false;
+            try
             {
-                PlayerRecordData humRecord = _playRecordStorage.Get(nIndex, ref boCheck);
-                if (boCheck)
-                {
-                    if (humRecord.sAccount == userInfo.sAccount)
-                    {
-                        int nLevel = DelChrSnameToLevel(sChrName);
-                        if (nLevel < _setting.DeleteMinLevel)
-                        {
-                            humRecord.Deleted = true;
-                            boCheck = _playRecordStorage.Update(nIndex, ref humRecord);
-                        }
-                    }
-                }
+                deleted = TryDeleteCharacter(EDCode.DeCodeString(sData), userInfo.sAccount);
             }
-            if (boCheck)
+            catch (Exception)
             {
-                msg = Messages.MakeMessage(Messages.SM_DELCHR_SUCCESS, 0, 0, 0, 0);
+                // Do not expose storage exception messages, account names or payloads.
+                LogService.Error("[Exception] UserService.DeleteChr");
             }
-            else
-            {
-                msg = Messages.MakeMessage(Messages.SM_DELCHR_FAIL, 0, 0, 0, 0);
-            }
-            string sMsg = EDCode.EncodeMessage(msg);
-            SendUserSocket(userInfo.ConnectionId, userInfo.SessionId, sMsg);
+            CommandMessage msg = Messages.MakeMessage(
+                deleted ? Messages.SM_DELCHR_SUCCESS : Messages.SM_DELCHR_FAIL, 0, 0, 0, 0);
+            SendUserSocket(userInfo.ConnectionId, userInfo.SessionId, EDCode.EncodeMessage(msg));
         }
 
         /// <summary>

@@ -3,6 +3,8 @@ using GameSrv.Word;
 using McMaster.Extensions.CommandLineUtils;
 using SystemModule.Enums;
 
+using Microsoft.Extensions.Hosting;
+
 namespace GameSrv
 {
     public class AppService : IHostedLifecycleService, IDisposable
@@ -12,11 +14,25 @@ namespace GameSrv
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly CommandLineApplication _application;
         private PeriodicTimer _timer;
-        private int _stopping;
+        private readonly object _shutdownGate = new object();
+        private readonly ShutdownOptions _shutdownOptions;
+        private readonly IHostApplicationLifetime _applicationLifetime;
+        private Task<ShutdownResult> _shutdownAttempt;
+        private Task _shutdownNotice;
+        private ShutdownResult _completedShutdown;
+        private int _admissionStopped;
 
-        public AppService(GameApp serverApp)
+        public ShutdownResult LastShutdownResult { get; private set; }
+
+        public AppService(GameApp serverApp, IHostApplicationLifetime applicationLifetime = null,
+            ShutdownOptions shutdownOptions = null)
         {
             _mirApp = serverApp;
+            _applicationLifetime = applicationLifetime;
+            _shutdownOptions = shutdownOptions ?? new ShutdownOptions();
+            if (_shutdownOptions.AttemptTimeout <= TimeSpan.Zero || _shutdownOptions.PollInterval <= TimeSpan.Zero ||
+                _shutdownOptions.AdmissionDelay < TimeSpan.Zero || _shutdownOptions.HostRetryDelay <= TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException(nameof(shutdownOptions));
             _application = new CommandLineApplication();
             LogService.Debug($"Starting with arguments: {string.Join(" ", Environment.GetCommandLineArgs())}");
 
@@ -39,26 +55,18 @@ namespace GameSrv
             _application.Command("save", command =>
             {
                 command.Description = "立即保存游戏数据";
-                command.OnExecute(SavePlayer);
+                command.OnExecuteAsync(async cancellationToken =>
+                {
+                    await SavePlayersAsync(cancellationToken);
+                });
             });
             _application.Command("drainstatus", command =>
             {
                 command.Description = "显示停服前的玩家、载入和存档队列数量";
                 command.OnExecute(() =>
                 {
-                    var front = (GameSrv.Services.FrontEngine)M2Share.FrontEngine;
-                    int loading;
-                    HUtil32.EnterCriticalSection(front.UserCriticalSection);
-                    try
-                    {
-                        loading = front.m_LoadRcdList.Count + front.m_LoadRcdTempList.Count
-                            + ((GameSrv.Word.WorldServer)SystemShare.WorldEngine).LoadPlayCount;
-                    }
-                    finally
-                    {
-                        HUtil32.LeaveCriticalSection(front.UserCriticalSection);
-                    }
-                    LogService.Info($"MIR2_DRAIN_STATUS players={SystemShare.WorldEngine.PlayObjectCount} loading={loading} saves={front.SaveListCount()}");
+                    ShutdownDrainState state = GameShare.CharacterDataProcessor.ObserveShutdownDrain();
+                    LogService.Info($"MIR2_DRAIN_STATUS players={SystemShare.WorldEngine.PlayObjectCount} loading={state.QueuedLoads + state.NativeLoads + state.WorldLoads} saves={state.Saves} nativeSaves={state.NativeSaves} unknown={state.UnknownSaves} gold={state.GoldChanges} work={state.RuntimeWork} frozen={state.Frozen} finalSnapshots={state.FinalSnapshotsComplete}");
                 });
             });
             _application.Command("gamestatus", command =>
@@ -72,19 +80,20 @@ namespace GameSrv
             _application.Command("exit", command =>
             {
                 command.Description = "停止游戏服务";
-                command.OnExecute(() =>
+                command.OnExecuteAsync(async cancellationToken =>
                 {
-                    StoppingAsync(_cancellationTokenSource.Token);
-                    return 0;
+                    ShutdownResult result = await RequestShutdownAsync(cancellationToken);
+                    if (result.Succeeded) _applicationLifetime?.StopApplication();
                 });
             });
             _application.Command("quit", command =>
             {
                 command.Description = "退出程序";
-                command.OnExecute(() =>
+                command.OnExecuteAsync(async cancellationToken =>
                 {
-                    Exit();
-                    return 0;
+                    if (!AnsiConsole.Confirm("Do you really want to exit?")) return;
+                    ShutdownResult result = await RequestShutdownAsync(cancellationToken);
+                    if (result.Succeeded) _applicationLifetime?.StopApplication();
                 });
             });
             _application.Command("status", command =>
@@ -147,131 +156,144 @@ namespace GameSrv
             _ = Task.Run(ProcessLoopAsync);
         }
 
-        public Task StopAsync(CancellationToken stoppingToken)
+        public async Task StopAsync(CancellationToken stoppingToken)
         {
+            await StoppingAsync(stoppingToken);
             LogService.Debug($"Exiting with return code: {_exitCode}");
-            return Task.CompletedTask;
         }
 
-        private void SavePlayer()
+        public async Task<bool> SavePlayersAsync(CancellationToken cancellationToken = default)
         {
-            if (SystemShare.WorldEngine.PlayObjectCount > 0) //服务器关闭，强制保存玩家数据
-            {
-                LogService.Info("正在保存在线玩家数据...");
-                IEnumerable<SystemModule.Actors.IPlayerActor> playObjectList = SystemShare.WorldEngine.GetPlayObjects();
-                foreach (SystemModule.Actors.IPlayerActor play in playObjectList)
-                {
-                    WorldServer.SaveHumanRcd(play);
-                }
-            }
-
+            if (((WorldServer)SystemShare.WorldEngine).IsShutdownFrozen)
+                throw new InvalidOperationException("The world is frozen for shutdown.");
+            foreach (var play in SystemShare.WorldEngine.GetPlayObjects().ToArray())
+                WorldServer.SaveHumanRcd(play);
             long deadline = Environment.TickCount64 + 10_000;
-            while (!M2Share.FrontEngine.IsIdle() && Environment.TickCount64 < deadline)
-            {
-                Thread.Sleep(50);
-            }
-            if (!M2Share.FrontEngine.IsIdle())
-            {
-                LogService.Error($"等待玩家数据写入数据库超时，队列剩余 {M2Share.FrontEngine.SaveListCount()} 条.");
-                return;
-            }
-            LogService.Info("玩家存档队列已写入数据库.");
+            while ((!M2Share.FrontEngine.IsIdle() || PlayerDataService.PendingSaveCount != 0) && Environment.TickCount64 < deadline)
+                await Task.Delay(_shutdownOptions.PollInterval, cancellationToken);
+            bool saved = M2Share.FrontEngine.IsIdle() && PlayerDataService.PendingSaveCount == 0;
+            LogService.Info(saved ? "Player save queue confirmed." : "Player save queue is still pending.");
+            return saved;
         }
 
-        private const string CloseTransferMessgae = "服务器关闭倒计时[{0}],无需下线或退出游戏,稍后自动回到安全区.";
-        private const string CloseServerMessage = "服务器关闭倒计时[{0}].";
-
-        private async Task StopService(string sIPaddr, int nPort, bool isTransfer)
+        public async Task<ShutdownResult> RequestShutdownAsync(CancellationToken cancellationToken = default)
         {
-            int playerCount = SystemShare.WorldEngine.PlayObjectCount;
-            if (playerCount == 0)
+            if (cancellationToken.IsCancellationRequested)
             {
-                LogService.Info("没有玩家在线，游戏引擎服务已停止...Bye!");
-                await _mirApp.Stopping(_cancellationTokenSource.Token);
-                return;
+                string reason;
+                lock (_shutdownGate)
+                {
+                    if (_completedShutdown != null) return _completedShutdown;
+                    reason = _shutdownAttempt == null ? "not_started" : "caller_result_unknown";
+                }
+                return new ShutdownResult(ShutdownOutcome.Cancelled,
+                    GameShare.CharacterDataProcessor.ObserveShutdownDrain(), reason);
             }
-            // 通知游戏网关暂停接收新的连接,发送消息后停止5秒,防止玩家在倒计时结束前进入游戏
-            await Task.Factory.StartNew(async () =>
+            Task<ShutdownResult> attempt;
+            lock (_shutdownGate)
             {
-                int shutdownSeconds = SystemShare.Config.ShutdownSeconds;
-                LogService.Debug("网关停止新玩家连接");
-                M2Share.NetChannel.SendServerStopMsg();//通知网关停止分配新的玩家连接
-                await Task.Delay(5000);//强制5秒延迟，防止玩家在倒计时结束前进入游戏
+                if (_completedShutdown != null) return _completedShutdown;
+                if (_shutdownAttempt == null || _shutdownAttempt.IsCompleted)
+                    _shutdownAttempt = ExecuteShutdownAttemptAsync();
+                attempt = _shutdownAttempt;
+            }
+            try
+            {
+                return cancellationToken.CanBeCanceled
+                    ? await attempt.WaitAsync(cancellationToken).ConfigureAwait(false)
+                    : await attempt.ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                // Cancellation only stops this waiter; an in-flight save cannot be rolled back here.
+                return new ShutdownResult(ShutdownOutcome.Cancelled,
+                    GameShare.CharacterDataProcessor.ObserveShutdownDrain(), "caller_result_unknown");
+            }
+        }
+
+        private async Task<ShutdownResult> ExecuteShutdownAttemptAsync()
+        {
+            await Task.Yield();
+            using var timeout = new CancellationTokenSource(_shutdownOptions.AttemptTimeout);
+            ShutdownOutcome outcome;
+            string reason;
+            try
+            {
+                M2Share.StartReady = false;
+                ((FrontEngine)M2Share.FrontEngine).BeginShutdown();
+                if (Interlocked.Exchange(ref _admissionStopped, 1) == 0)
+                    M2Share.NetChannel.SendServerStopMsg();
+                await _mirApp.FreezeForShutdownAsync().WaitAsync(timeout.Token).ConfigureAwait(false);
+                lock (_shutdownGate) _shutdownNotice ??= NotifyShutdownAsync();
+                await _shutdownNotice.WaitAsync(timeout.Token).ConfigureAwait(false);
                 while (true)
                 {
-                    IEnumerable<SystemModule.Actors.IPlayerActor> playObjectList = SystemShare.WorldEngine.GetPlayObjects();
-                    if (shutdownSeconds <= 0)
+                    timeout.Token.ThrowIfCancellationRequested();
+                    await GameShare.CharacterDataProcessor.TryFinalizeShutdownSnapshotsAsync()
+                        .WaitAsync(timeout.Token).ConfigureAwait(false);
+                    ShutdownDrainState state = GameShare.CharacterDataProcessor.ObserveShutdownDrain();
+                    if (state.Drained)
                     {
-                        if (isTransfer)
-                        {
-                            foreach (SystemModule.Actors.IPlayerActor playObject in playObjectList)
-                            {
-                                if (playObject.Ghost || playObject.Death)//死亡或者下线的玩家不进行转移
-                                {
-                                    continue;
-                                }
-                                // playObject.TransferPlanesServer(sIPaddr, nPort);
-                            }
-                        }
-                        break;//转移结束后跳出循环
+                        await _mirApp.CompleteShutdownAsync().WaitAsync(timeout.Token).ConfigureAwait(false);
+                        var result = new ShutdownResult(ShutdownOutcome.Stopped, state, "confirmed");
+                        lock (_shutdownGate) _completedShutdown = result;
+                        LastShutdownResult = result;
+                        _cancellationTokenSource.Cancel();
+                        LogService.Info("Player data confirmed; game service stopped. goodbye!");
+                        return result;
                     }
-                    foreach (SystemModule.Actors.IPlayerActor playObject in playObjectList)
-                    {
-                        string closeMsg = isTransfer ? string.Format(CloseTransferMessgae, shutdownSeconds) : string.Format(CloseServerMessage, shutdownSeconds);
-                        playObject.SysMsg(closeMsg, MsgColor.Red, MsgType.Notice);
-                        LogService.Info(closeMsg);
-                    }
-                    await Task.Delay(TimeSpan.FromSeconds(1));
-                    shutdownSeconds--;
+                    await Task.Delay(_shutdownOptions.PollInterval, timeout.Token).ConfigureAwait(false);
                 }
-                LogService.Info("5秒后关闭网关服务...");
-                await Task.Delay(5000);//延时1秒，等待网关服务停止
-                await M2Share.NetChannel.StopAsync();//停止网关服务
-                LogService.Info("网关服务已停止...");
-                LogService.Info("即将停止游戏引擎世界服务...");
-                await Task.Delay(500);//延时1秒，等待网关服务停止
-                await _mirApp.Stopping(_cancellationTokenSource.Token);
-                LogService.Info("游戏引擎世界服务已停止...");
-                LogService.Info("游戏服务已停止...");
-                LogService.Info("goodbye!");
-            }, _cancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+            {
+                outcome = ShutdownOutcome.TimedOut;
+                reason = "pending_data_or_shutdown_work";
+            }
+            catch (Exception ex)
+            {
+                outcome = ShutdownOutcome.Failed;
+                reason = ex.GetType().Name;
+            }
+            ShutdownDrainState failedState = GameShare.CharacterDataProcessor.ObserveShutdownDrain();
+            if (outcome == ShutdownOutcome.TimedOut && failedState.GoldChanges != 0)
+                reason = "unsupported_gold_operation";
+            else if (outcome == ShutdownOutcome.TimedOut && failedState.UnknownSaves != 0)
+                reason = "native_save_result_unknown";
+            var failed = new ShutdownResult(outcome, failedState, reason);
+            LastShutdownResult = failed;
+            LogService.Error($"Shutdown unresolved: {outcome}; reason={reason}; saves={failed.State.Saves}; nativeSaves={failed.State.NativeSaves}; unknown={failed.State.UnknownSaves}; loads={failed.State.QueuedLoads + failed.State.NativeLoads + failed.State.WorldLoads}; gold={failed.State.GoldChanges}; work={failed.State.RuntimeWork}; frozen={failed.State.Frozen}.");
+            return failed;
         }
 
-        private async Task OnShutdown()
+        private async Task NotifyShutdownAsync()
         {
-            LogService.Debug("Application is stopping");
-            M2Share.StartReady = false;
-            SavePlayer();
-            if (SystemShare.ServerIndex == 0)
+            await Task.Delay(_shutdownOptions.AdmissionDelay).ConfigureAwait(false);
+            int seconds = Math.Max(0, SystemShare.Config.ShutdownSeconds);
+            while (seconds > 0)
             {
-                await StopService(string.Empty, 0, false);
-            }
-            else if (SystemShare.ServerIndex > 0)
-            {
-                LogService.Info("检查是否有其他可用服务器.");
-                //如果有多机负载转移在线玩家到新服务器
-                string sIPaddr = string.Empty;
-                int nPort = 0;
-                bool isMultiServer = GameShare.GetMultiServerAddrPort(SystemShare.ServerIndex, ref sIPaddr, ref nPort);//如果有可用服务器，那就切换过去
-                if (isMultiServer)
+                // Existing load initialization can still add actors before the final snapshot phase.
+                // A notice is advisory; it must not race final snapshot generation or end a save barrier.
+                try
                 {
-                    LogService.Info($"玩家转移目标服务器[{sIPaddr}:{nPort}].");
-                    await StopService(sIPaddr, nPort, true);
+                    foreach (var play in SystemShare.WorldEngine.GetPlayObjects().ToArray())
+                        play.SysMsg($"服务器关闭倒计时[{seconds}].", MsgColor.Red, MsgType.Notice);
                 }
+                catch (Exception)
+                {
+                    LogService.Debug("Shutdown notice deferred while existing players finish loading.");
+                }
+                await Task.Delay(TimeSpan.FromSeconds(1)).ConfigureAwait(false);
+                seconds--;
             }
-            else
-            {
-                LogService.Info("没有可用服务器，即将关闭游戏服务器.");
-                await StopService(string.Empty, 0, false);
-            }
-            _cancellationTokenSource?.CancelAfter(3000);
         }
 
         private void ProcessLoopAsync()
         {
-            while (true)
+            while (!_cancellationTokenSource.IsCancellationRequested)
             {
                 string cmdline = Console.ReadLine();
+                if (cmdline == null) break;
                 if (string.IsNullOrEmpty(cmdline))
                 {
                     continue;
@@ -284,15 +306,6 @@ namespace GameSrv
                 {
                     // ignored
                 }
-            }
-        }
-
-        private static void Exit()
-        {
-            if (AnsiConsole.Confirm("Do you really want to exit?"))
-            {
-                // _cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(1));//延时5分钟关闭游戏服务.
-                Environment.Exit(Environment.ExitCode);
             }
         }
 
@@ -383,11 +396,13 @@ namespace GameSrv
 
         public async Task StoppingAsync(CancellationToken cancellationToken)
         {
-            if (Interlocked.Exchange(ref _stopping, 1) != 0)
+            // A host timeout cannot truthfully complete shutdown while native saves are unknown.
+            // ACK processing has an independent lifetime and remains active for a late correlated reply.
+            while (!(await RequestShutdownAsync(CancellationToken.None).ConfigureAwait(false)).Succeeded)
             {
-                return;
+                LogService.Error("Host stop is waiting for unresolved player data or work; admission remains closed.");
+                await Task.Delay(_shutdownOptions.HostRetryDelay).ConfigureAwait(false);
             }
-            await OnShutdown();
         }
 
         public Task StoppedAsync(CancellationToken cancellationToken)

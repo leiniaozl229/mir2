@@ -385,6 +385,10 @@ namespace M2Server.Actor
             {
                 return false;
             }
+            if (Master == null && IsAggressiveMonsterRace(Race) && InSafeZone())
+            {
+                return false;
+            }
             if (Race >= ActorRace.Animal && targetObject.Race == ActorRace.Play && targetObject.InSafeZone())
             {
                 return false;
@@ -419,7 +423,7 @@ namespace M2Server.Actor
                     {
                         result = false;
                     }
-                    if (((AnimalObject)targetObject).HolySeize)
+                    if (targetObject is AnimalObject animalTarget && animalTarget.HolySeize)
                     {
                         result = false;
                     }
@@ -434,9 +438,9 @@ namespace M2Server.Actor
                             result = false;
                         }
                     }
-                    else
+                    else if (this is MonsterObject monster)
                     {
-                        ((MonsterObject)this).BreakCrazyMode();
+                        monster.BreakCrazyMode();
                     }
                 }
                 else
@@ -454,7 +458,7 @@ namespace M2Server.Actor
                         result = true;
                     }
                 }
-                if (((MonsterObject)this).CrazyMode && ((targetObject.Race == ActorRace.Play) || (targetObject.Race > ActorRace.PeaceNpc)))
+                if (this is MonsterObject crazyMonster && crazyMonster.CrazyMode && ((targetObject.Race == ActorRace.Play) || (targetObject.Race > ActorRace.PeaceNpc)))
                 {
                     result = true;
                 }
@@ -586,7 +590,10 @@ namespace M2Server.Actor
                     }
                 }
             }
-            DelTargetCreat();
+            if (TargetCret == baseObject)
+            {
+                DelTargetCreat();
+            }
         }
 
         public virtual bool IsProperFriend(IActor attackTarget)
@@ -878,7 +885,7 @@ namespace M2Server.Actor
             }
             if (baseObject.Master != null)
             {
-                byte slaveExpLevel = ((MonsterObject)baseObject).SlaveExpLevel;
+                byte slaveExpLevel = baseObject is AnimalObject animal ? animal.SlaveExpLevel : (byte)0;
                 if (slaveExpLevel <= Grobal2.SlaveMaxLevel)
                 {
                     return SystemShare.Config.SlaveColor[slaveExpLevel];

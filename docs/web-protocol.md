@@ -10,12 +10,16 @@
 |---|---|---|
 | 连接 | 无 | `message: {type: "connected", protocol: 1}` |
 | 登录页 | `{type:"register",account,password}` | `{type:"registrationResult",accepted,reason}`；成功后仍可在同一连接登录 |
-| 登录 | `{type: "login", account, password}` | `{type: "characters", characters: [{name,job,hair,level,sex}]}` |
+| 登录页改密 | `{type:"changePassword",requestId,account,oldPassword,newPassword}` | `changePasswordResult{requestId,accepted,status,reason,requestSent}`；需 `connected.features.passwordChange===true` |
+| 登录 | `{type: "login", account, password, interactiveLogin:true}` | `servers{servers:[{name,status,routable}]}`，等待用户选择；历史探针未设置交互能力时保持自动流程 |
+| 服务器选择 | `{type:"selectServer",name}` | 原生CM104→SM530→CM100→SM520，返回`characters{characters:[{name,job,hair,level,sex}]}` |
 | 角色列表 | `{type:"createCharacter",name,job,sex,hair}` | `characterCreationResult`，成功后返回新的 `characters` 快照；网关会等待旧选角服务的 1 秒防刷窗口，避免 `NEWCHR` 被丢弃 |
-| 选角 | `{type: "selectCharacter", name}` | 地图及原生游戏事件 |
+| 选角 | `{type: "selectCharacter", name}` | 交互登录等待`entryNotice{noticeId,lines}`，来自原生SM658；随后显式确认 |
+| 入图公告 | `{type:"acknowledgeEntryNotice",noticeId}` | 当前公告/游戏代次匹配时发送一次原生CM1018；之后消费权威地图及自身事件 |
 | 入图后 | `{type:"move",x,y,direction,run?,actionId,mapGeneration}` | `actionResult`，`kind:"move"`，并携带确认或校正坐标 |
 | 入图后 | `{type: "inventory"}` | `{type:"inventory",items:[...]}` |
 | 入图后 | `{type:"dropItem",makeIndex}` | `{type:"dropResult",makeIndex,accepted}` 及地面事件 |
+| 入图后 | `{type:"dropGold",amount}` | 原生 `CM_DROPGOLD=1016`，数量编码在 16-bit `Param`；之后只以 `currency.gold` 或系统消息呈现服务端结果 |
 | 入图后 | `{type:"pickup"}` | `itemAdded` 与 `groundItemRemoved` |
 | 入图后 | `{type:"attack",direction,actionId,mapGeneration}` | `actionResult`，`kind:"attack"`；另有 `entityAction`、`health`、`entityDied`、`experience` |
 | 入图后 | `{type:"openDoor",x,y}` | `door`，服务端确认后开门或自动关门 |
@@ -23,9 +27,11 @@
 | 入图后 | `{type:"equipItem",makeIndex,slot}` | `itemActionResult` 与 `equipment` 状态 |
 | 入图后 | `{type:"takeOffItem",slot}` | `itemAdded` 与 `itemActionResult` |
 | 入图后 | `{type:"useItem",makeIndex}` | `itemActionResult`；成功后物品从背包移除 |
-| 入图后 | `{type:"npc",targetId}` | 相邻 NPC 的 `npcDialogue` |
-| NPC 对话 | `{type:"dialogueSelect",npcId,command}` | 后续 `npcDialogue` 或对应功能消息 |
-| 商店购买 | `{type:"shopDetails",npcId,name,page}` / `{type:"buyShopItem",npcId,name,makeIndex?}` | `shopDetails` / `shopPurchaseResult` |
+| 入图后 | `{type:"npc",targetId,npcSessionId,mapGeneration}` | 相邻 NPC 的 `npcDialogue` |
+| NPC 关闭 | `{type:"npcClose",npcId,npcSessionId,mapGeneration}` | 只关闭匹配展示身份，保留原生在途报价与成交等待 |
+| 技能设置 | `{type:"setMagicKey",magicId,key,bindingId}` | 原生211完整`skills`快照和`magicKeyResult`；key为0或ASCII49–56 |
+| NPC 对话 | `{type:"dialogueSelect",npcId,command,npcSessionId,mapGeneration}` | 后续 `npcDialogue` 或对应功能消息 |
+| 商店购买 | `{type:"shopDetails",npcId,name,page}` / `{type:"buyShopItem",npcId,name,makeIndex?}` | `shopDetails{npcId,name,page,items}` / `shopPurchaseResult` |
 | 商店出售 | `{type:"querySellItem",npcId,makeIndex}` / `{type:"sellShopItem",npcId,makeIndex}` | `shopSellQuote` / `shopSellResult` |
 | 仓库存取 | `{type:"storeItem",npcId,makeIndex}` / `{type:"takeStorageItem",npcId,makeIndex}` | `storageDeposit` / `storageItems` / `storageResult` |
 | 施法 | `{type:"castMagic",magicId,targetId?,actionId,mapGeneration}` | `actionResult`，`kind:"spell"`；另有 `spellResult`、`magicEffect`、`spellCast`、`magicFailed`、`warriorSkill` 及资源/熟练度更新 |
@@ -42,7 +48,7 @@
 
 同时暂用 `{type:"legacy", id, recog, param, tag, series, encodedBody, status}` 保留原字段；encodedBody 是旧编码字节的 Base64，不能直接当作文本。含多段独立编码的消息按消息定义分别解码。已投影事件和 legacy 事件不可重复应用同一状态变更。
 
-SM_LOGON 50 表示角色入图，随后允许移动。原生状态帧通过 id=-1、status 传递，`+GD/` 表示服务端接受操作；28 表示拒绝。网关把三类待确认动作投影为 `{type:"actionResult",actionId,kind,accepted,x,y,reason,mapGeneration}`，其中 `kind` 为 `move`、`attack` 或 `spell`；可预期的本地命令拒绝使用 `error`，并携带相同 `actionId` 与 `kind`。浏览器只消费与当前待决动作完全匹配的结果，每个连接同时只允许一个需要 GOOD/FAIL 的动作；5 秒未确认会断线重连并重新同步。移动位置最终以服务端确认和同步结果为准。网关按已确认位置重新计算合法目标：走路必须相邻一格，跑步必须沿同方向前进两格；提交的目标坐标不匹配时会拒绝请求。
+SM_LOGON 50 表示角色入图，随后允许移动。原生状态帧通过 id=-1、status 传递，`+GD/` 表示服务端接受操作；28 表示拒绝。网关把待确认动作投影为 `{type:"actionResult",actionId,kind,accepted,x,y,reason,mapGeneration}`，其中 `kind` 为 `move`、`attack`、`spell` 或 `mine`；可预期的本地命令拒绝使用 `error`，并携带相同 `actionId` 与 `kind`。浏览器只消费与当前待决动作完全匹配的结果，每个连接同时只允许一个需要 GOOD/FAIL 的动作；5 秒未确认会断线重连并重新同步。移动位置最终以服务端确认和同步结果为准。网关按已确认位置重新计算合法目标：走路必须相邻一格，跑步必须沿同方向前进两格；提交的目标坐标不匹配时会拒绝请求。
 
 基础近战由旧服继续结算。网关使用已确认的角色坐标组合 CM_HIT，浏览器仅提供八方向；点击活体目标后客户端保留目标状态，按攻击节奏重复提交，目标移动时重新走向目标，手动移动或死亡事件会清除状态。挖肉时，网关要求目标仍在当前视野、已有死亡事件、与角色相邻，并使用网关记录的尸体坐标计算方向。`entityAction` 表示攻击或挖肉动作，`health` 携带当前/最大 HP 和本次伤害，`entityDied` 携带尸体位置，`experience` 携带本次增加量与当前经验。
 
@@ -76,3 +82,114 @@ node tools/gateway_probe.mjs
 ```
 
 探针读取现有独立测试账号，验证真实 WebSocket 登录、选角、入图、角色能力、背包、移动、丢弃、地面状态与拾取，输出 `.runtime/reports/gateway.json`，不会在控制台输出口令。
+
+持续效果和强制位移（2026-10-01）：804 投影为 `{type:"mapEvent",id,x,y,eventType,eventParam}`，其中 x 来自 Tag、y 来自 Series，eventParam 来自编码后的四字节 ShortMessage.Ident。805 投影为 `{type:"mapEventRemoved",id}`。火墙 ET_FIRE=5 使用国服 Magic[1630..1635]、40ms/帧、原图偏移和加色混合；每个事件 ID 对应一个持续效果，只在原服隐藏消息或切图时移除。伤害、五格十字的生成和持续时间全部由原服决定。重复显示、隐藏后素材才加载完毕、切图后复用 ID 均不会重建旧效果。
+
+6（SM_RUSH）和 9（SM_BACKSTEP）投影为 `entity`，action 分别为 `rush`、`backstep`，forced=true；网关同步自身确认位置和对象占格。冲撞打断待决移动时保留旧 actionId 的命令槽直到其回包，回包拒绝旧目标并保留位移位置，避免旧 +GD 确认新指令。浏览器停止继续移动与追击，反向步行动画保持服务端朝向。7（SM_RUSHKUNG）是冲撞阻挡，投影为 `{type:"rushBlocked",id,targetX,targetY,direction}`；坐标是前探目标而非人物实际位置，动画前探半格后返回，网关确认位置不变。原服消息队列对相同优先级增加入队顺序，防止多步冲撞倒序到达；原有消息优先级保持不变。
+
+`connected.features` 增加 mapEvents、forcedMovement。`node tools/world_events_probe.mjs` 经实际 WebSocket、原生网关和游戏服验证火墙五格 ID/坐标/自然到期、撞墙保持原位、占格移动拒绝、连续冲撞位移和后续移动；探针新建独立角色，通过隔离技能导师学习技能，私密清理清单保存在 `.runtime/world-events-fixtures.json`。本机原生服务正常停止并备份后，使用 `python tools/cleanup_world_events_probe.py --mysql <mysql路径> --port <本机数据库端口>` 只移除清单中的账号、角色和关联记录，然后重启原生服务。不要在运行中的引擎上删除角色记录。
+
+该探针还验证安全区外两名独立角色的实际冲撞：低等级目标收到连续 SM_BACKSTEP，位置按顺序更新，之后能正常移动。生产端仅将被拒绝的追击格临时避让 1.5 秒，重复拒绝刷新期限；临时堵塞时保留目标并重试，避免移动怪物离开后仍无法接近。静态地图的通行性仍来自原地图数据。
+
+
+NPC 会话隔离（2026-10-01）：`connected.features.npcSessions=true` 时，NPC、商店、出售、修理、仓库及 NPC 行会命令都必须携带当前 `npcSessionId + mapGeneration`，并匹配 `npcId`。每次点击用递增且大于0的会话号；新地图自动脚本仅在新上下文允许显式 `automatic:true` 的会话0。本地关闭、死亡、断线后立即拒绝旧展示回复；不存在入图后按秒数丢弃对话的规则。643/645/646/668/700/704按原生NPC对象匹配，过期对象回复不覆盖当前状态或断开连接。当前服767是SM_MENU_OK，772是SM_DLGMSG；这两类独立提示没有NPC身份，不伪造npcId，关闭提示不会关闭其下的商店会话。
+
+旧原生协议没有请求nonce，647/671报价和部分经济结果还缺NPC/物品身份，因此关闭展示后保留原来的请求实例、报价/经济等待槽及捕获的展示身份，同类型请求串行至原回复被消费。过期报价不成为新NPC可成交报价；成功购买/出售/修理/仓库存取仍应用服务端背包/金币确认，无须窗口仍可见。原协议仍无法可靠区分同一个NPC关闭重开后的旧643/645等原生回复；前端会话号不能被描述成解决了原生来源关联，继续保留此缺口。
+
+成色回复 `shopDetails.name` 来自网关捕获的原 `shopDetails` 请求，`page` 来自已核对请求页的652 Tag；即使 `items=[]` 也保留名称。前端核对等待阶段、NPC、名称和页码，防止旧空页被另一商品的新等待消费。这只使用当前已保存的请求上下文，未给原 TCP 添加 nonce，也不宣称区分同 NPC、同商品、同页的不可辨别旧回复。
+
+技能快捷键（2026-10-01）：`connected.features.magicKeyBinding=true` 时可提交 `setMagicKey`。CM_MAGICKEYCHANGE=1008，Recog=已学MagicId，Param=#0或ASCII'1'..'8'；原服在游戏线程原子清除占槽技能，再设置目标并发送真实SM_SENDMYMAGIC=211完整快照。浏览器与网关只按目标键一致且无其它技能占槽确认，不修改本地技能列表冒充成功，不以+GD确认。技能列表保留全部已学技能，底部快捷栏固定8格，不把None技能补进空槽。
+
+`bindingId` 是网页请求代数，原生头不携带此字段。`magicKeyResult:{magicId,key,bindingId,accepted,reason?}` 与命令错误回包保留它，迟到错误/超时不能取消更新的同技能同键请求。原服确认与移动/攻击/施法等待槽独立。双方设置等待上限5秒；网关切图、角色死亡、目标技能删除也释放等待并返回失败。超时或取消只释放交互等待，迟到211仍按权威完整快照应用。`MIR2_PROTOCOL_TRACE`只记录命令类型及阶段，不记录登录口令、票据或完整JSON。
+
+独立复验使用 `node tools/npc_skill_probe.mjs`：新建隔离法师，验证八键、占槽、None、非法/未学拒绝、独立移动、NPC会话拒绝和正常重登持久化。私密夹具清单为`.runtime/npc-skill-fixtures.json`，报告不含凭据；清理前正常停止原服并备份，再用 `python tools/cleanup_npc_skill_probe.py --mysql <路径> --port <端口> --apply`，最后重启。运行报告、完整复刻的未关闭项及当前环境见 `docs/web-replication-plan.md`。
+
+真实挖矿意图（2026-10-01）：`connected.features.mining=true` 时，浏览器提交 `{type:"mine",direction,actionId,mapGeneration}`，direction 为0–7，actionId必须是大于0的安全整数，mapGeneration必须匹配当前地图。命令仅接受以上四个字段；坐标、目标矿石、品质、数量和奖励不能由浏览器指定。网关从已确认的武器槽1检查可用Shape19锄、StdMode5/6及持久大于0，并使用当前服务端位置；已有移动、攻击、施法或物品操作未确认时拒绝新挖矿。
+
+原服 `ClientHitXY` 的矿分支先用人物已有Dir取得前格，因此网关将同一mine动作串行为 `CM_TURN=3010` → 此次转身的原生`+GD` → `CM_HEAVYHIT=3015` → 挥锄的`+GD`或28。第一条GOOD不完成动作，也不释放共享原生等待槽；转身确认后再次检查角色位置、地图和锄实例，防止受推移或损坏装备后挥向旧格。挖矿直接使用3015，不经过战士攻击选择器，不消费已蓄烈火等技能状态。结果为 `actionResult:{kind:"mine",actionId,mapGeneration,accepted,reason}`；accepted只表示原服接受该次尝试，矿图旗标、前格墙面、矿点余量、随机产出、背包空间和品质继续由原服判定。原端允许Shift在空地强制挥锄；此时原服可能只做重击，没有矿石或碎屑。
+
+网关实际发送挥锄后投影 `miningProgress:{phase:"swing",id,actionId,x,y,direction,mapGeneration}`，供自身重动作展示；原服自身原始短帧`=DIG`专门解析为 `miningStrike:{id,actionId,x,y,direction,mapGeneration}`，只表示击中石头并应显示碎屑。远端SM_HEAVYHIT=15的非空原生正文投影为 `entityAction.digFragment=true`，空正文为false。两种碎屑标记均不添加物品，也不代表产矿成功。矿石只通过原生SM_ADDITEM=200投影的itemAdded进入已确认背包；StdMode43的原始durability表示矿石纯度，显示采用参考端Delphi Round(Dura/1000)，半整数按偶数取整，普通装备的持久语义保持独立。
+
+`MiningController`复用生产页面的统一actionId与地图代数：左键无目标、装备可用锄且前格不能走，或Shift强制挥锄，开启自动循环；下一次请求须同时等原生动作确认、动作动画结束与攻击节拍。参考ClMain的节拍为 `max(0,hitTime-min(800,min(370,level*14)+hitSpeed*itemSpeed)+(attackSlow?1500:0))`，默认hitTime1400、itemSpeed60，attackSlow来自HandWeight>MaxHandWeight；657的hitSpeed按参考ShortInt有符号值投影，负值减慢。参考扩展ClientConf支持时序覆盖与featureEx骑马字段，当前固定原服ClientConf和八字节Desc未提供这几个字段，因此默认值和骑马门槛的证据界限保持记录，不从普通feature猜测。
+
+手动移动、交互、选技能、窗口、Escape、失焦和pointercancel停止继续挥锄。已发送的原生请求没有取消协议，其等待槽必须接收旧GOOD/FAIL再排空。自身死亡、51/633/634切图立即返回旧mine的失败结果，仍保留网关旧原生槽直到其回包；迟到的转身GOOD只能结束旧mine，不能启动新挥锄或确认新移动。五秒无法确认会返回失败并关闭旧WebSocket/TCP后重新同步，不能在同一不确定的旧连接上清槽重试。
+
+独立矿石探针分三阶段：`node tools/mining_probe.mjs --create-only`正常注册新m八位十六进制账号与对应M角色并退出存档；正常停服并创建包含新角色的有效备份后，`python tools/prepare_mining_probe.py --stage purchase --backup <新.tar.gz> --mysql <路径> --port <端口> --apply`只设置此角色等级、金币及现有综合商人相邻出生位置；重启后`node tools/mining_probe.mjs --purchase`通过真实目录、报价、购买及装备回包取得原锄。再次正常停服并备份，准备工具`--stage mine`只将已有真实锄的夹具移动到现有D401矿图临墙可走格，初始朝向与矿墙相反以验证转身流程。重启后`node tools/mining_probe.mjs --run`按原矿率最多采样240次，验证碎屑、实际矿石、丢弃拾取和正常重登的实例/品质保存；达到上限无矿记为样本不足，不宣布矿石闭环通过。私密清单位于`.runtime/mining-fixtures.json`，准备工具默认只计划，无数据库操作；`--apply`校验停服、单个隔离角色所有权与输入备份的SQL/状态SHA及包含该新角色。清理前正常停服并备份，再用`python tools/cleanup_mining_probe.py --mysql <路径> --port <端口> --apply`。这些操作不修改地图、矿率、怪物或其它角色；产码TCP回归、真实联机报告、生产浏览器与原端运行对照分别记录。
+
+近战实际种类与请求排空（2026-10-01）：`entityAction` 追加 `legacyIdent`、`meleeKind`、`self` 与 `actionId`。真实 SM14/15/16/18/19/24/8 分别投影 normal/heavy/big/power/thrusting/halfMoon/fire；半月SM24使用普通ActHit人体与半月剑光，SM16仍独立大幅动作。原生头没有网页actionId：仅当前自身且待确认attack能关联当前网页请求，远端actionId为空。收到自身SM只确认实际攻击表现，完成攻击继续等待原生+GD/28；不能把SM或技能开关当作动作ACK。
+
+战士+LNG/+WID/+FIR更新`warriorSkill`，保留cast等待槽直到该次原生+GD/28排空，防止状态先到时发送新攻击、让旧施法GOOD错误确认新攻击。网页自身预测为normal人体，带`meleeActionId`与`predictedMelee=true`；同ID真实SM可沿用已处理的帧时钟，专属剑光和声音由实际kind决定。不同请求、远端、重击、大幅、死亡与过期代数不继承预测；完成的动作不重播。
+
+固定原服在消耗攻杀/烈火准备标记之前快照实际最终hitMode，广播与新增自身SM使用该快照；半月魔力不足先降级普通攻击。ClientHitXY在验证0–7方向后设置Dir，再取得真实目标，保留原伤害、随机与魔耗公式。普通RM_HEAVYHIT的旁观发送使用header-only；挖矿非空DIG正文继续保留。参考ClMain4086–4109对这七类SM均排除g_MySelf，所以新增自身表现消息不会重复驱动该参考端人体；同包原客户端运行兼容仍单独验收。
+
+聊天请求新增可选`raw`与`chatId`。`raw`保留原CM_SAY字符串和显式@、!、!!、!~、/name前缀，服务端仍校验180 GBK字节与控制字符；原中文文本不改成网页本地回显。`chatId`为网页草稿代数，只在合法正安全整数时由typed say错误回显；不进入原生头，也不代表原服投递ACK。控制器仅匹配最新已发草稿的同ID错误，旧/缺失ID不能覆盖新草稿。say拒绝不会释放移动/攻击/施法等待槽。真实原服chat/system事件继续决定聊天记录。
+
+## 独立改密请求与结果边界（第八批）
+
+改密限于未登录阶段，使用独立 LoginGate 短连接；生产页面另开 WebSocket，不借用世界连接，也不自动登录新密码。请求身份是正的 JavaScript safe integer，并在同一会话中严格递增；非法或重用身份返回泛型 error，不伪造新的结果来终止先前请求。并行改密、登录和注册受 pending 门控。重复密码仅在本地校验，不发送。
+
+账号为 4–10 位 ASCII 字母或数字。原密码至少 1 字符，新密码至少 3 字符，严格 GBK 编码后分别最多 10 字节，拒绝控制字符和斜杠（现有 Web 登录分隔策略）；不 trim、不变大小写。四个参考编辑框的 maxlength=10 是字符限制，与 GBK 字节限制分开记录。无法 GBK 编码的字符由网关拒绝，前端不假装具备完整编码表。
+
+当前 LoginSrv 在新连接创建时设置 LastUpdatePwdTick，前 5 秒的 CM2003 会被忽略。网关实际等待 5.1 秒，再编码 account TAB oldPassword TAB newPassword；整次请求最多 15 秒，前端最多等待 18 秒。口令与完整消息体不写日志，编码 payload 在结束后清零。
+
+| status | accepted | reason | requestSent | 含义 |
+|---|---|---|---|---|
+| succeeded | true | 0 | true | 仅原生 SM506 确认修改成功 |
+| rejected | false | SM507 的 Recog 整数 | true | -1 原密码错误；-2 暂时锁定；其他值保留，不能借用参考客户端的 -2 新密码不符文案 |
+| invalid / unavailable / busy / throttled | false | null | false | 字段、阶段、并行或节流拒绝，未发 CM2003 |
+| timeout / disconnected / protocol_error | null（已发）或 false（未发） | null | true 或 false | 已发或部分写入后未收到确定结果，不能声明回滚 |
+
+浏览器只消费 `{sequence,mapGeneration:0,message}` 中匹配当前 requestId 的有效结果。提交到网关后，浏览器在本地超时、断线或取消等待时无法判断 CM2003 是否已发送，`requestSent` 在本地状态为 null；取消没有原服撤销命令。成功后清空口令并回登录；失败允许修正；关闭、切换场景和 pagehide 清除改密秘密。原始安装包的字段/按钮热区、字体和同版动态比较仍待核，见 `content/classic-176/auth-actions.json`。
+
+## 角色小退与连接代次（第十批，2026-10-02）
+
+网关外层信封为 `{sequence,mapGeneration,sessionGeneration,message}`。`sequence` 在整个 WebSocket 内递增；每次开始字段有效的新认证、启动新的游戏连接，以及接受一次小退或大退，`sessionGeneration` 各递增一次。新认证在选角之前就使旧退出结果失效，同时保留退出 ID 的高水位，不能用旧结果退出新账号。网页先核对连接/角色代次，再核对地图代次；旧地图加载、消息和超时不得覆盖新角色。
+
+`connected.features.logout=true` 时，已入图角色可提交 `{type:"logout",mode:"reselect"|"login",logoutId,mapGeneration}`。`logoutId` 必须为正的 JavaScript safe integer；新请求在本 WebSocket 中递增，并匹配当前地图。确认取消不发送。确认提交先阻断未来世界输入，网关尚未接受时继续消费当前代次的权威包；收到关联 `waiting` 后才隔离旧世界展示和异步工作。
+
+接受后立即递增两个代次，发送 `{type:"logoutState",logoutId,mode,state:"waiting",sessionGeneration}`。重复的同 ID、模式与原地图请求重发当前状态，不能再发原生指令；另一个请求、字段冲突、非法身份和过期地图通过 `error/code:"command_rejected"` 拒绝，并仅回显可验证的 `logoutId` 与 `mode`。未接受的拒绝不能取消已经接受的等待。旧请求在新角色世界中不再重发旧选角结果。
+
+`reselect` 只发送一次原生 `CM_SOFTCLOSE=1009/0`。先停止旧投影和定时器，再串行发送；等待旧读取自然结束并 join，随后由唯一消费者等待 EOF。不会先取消正在等待的 Windows TCP 接收再尝试发送小退。整个退出与新选角查询共用 15 秒期限；已退出的旧连接不自动重发 CM1009。使用内存中的账号/票据新建 selection 连接，发送 CM100 并等待真实 SM520。只有关联终态 `{type:"logoutState",state:"characters",logoutId,mode,sessionGeneration,characters,requiresLogin:false}` 发布新列表；不另发普通 `characters` 包。初次登录与建角保持普通列表协议。
+
+`login` 是网页返回登录的适配流程，关闭旧游戏、选角及登录连接，清除账号/票据/世界，再返回关联 `state:"login"`。参考 `AppExit` 关闭客户端，没有发送 CM1009，因此此模式也不补发该命令。它不声明服务器票据已释放或角色已经持久保存。
+
+已接受后的超时、断线或无效选角结果发送 `state:"failed",requiresLogin:true`，清除旧身份并返回登录；不得恢复旧世界或宣称保存成功。网页断开时清理并等待退休读取与定时器结束。未接受的字段/阶段拒绝可以回到继续消费权威包的原世界。EOF、选角成功、窗口关闭均不是数据库的持久保存确认；第九批保存 ACK/事务和正常停服的验收独立追踪。
+
+参考普通 F12 调用声音开关；F12 不发送网关命令。网页音效/BGM 音量设置及设置窗口属于明确标注的网页适配，不能把参考 Ctrl+Alt+F12 扩展窗口或未经核实的国服素材热区写成同版本原端证据。原端/真实浏览器/听音和原服换角持久数据验收继续开放。
+
+## HUD 饱食、昼夜与增量值（第十二批，2026-10-02）
+
+原生 SM_DAYCHANGING=46 投影为 `{type:"daylight",phase:packet.Param,darkLevel:packet.Tag}`。phase 0/1/2/3 对应 Prguse 15/12/13/14；未知值隐藏图标。654 是角色灯光，不能转换为全局昼夜。地图暗层与角色灯光效果仍待接入。
+
+SM_MYSTATUS=708 保留 myStatus.status，饱食档位1..4对应Prguse16..19；0或未知值不画。原服食物提高饱食储备，按1000分档、5000封顶，数值越高越饱；网页不启动本地饥饿计时器。health31仅self同时更新HUD/人物面板，其他实体受击不覆盖玩家血球；weights622同时更新两处。沿用现有会话/地图代次，没有新增浏览器修改昼夜或饱食的命令。
+
+本机18801测试网关已更新。当前Vite启动脚本实际覆盖/ws到18801；标准vite.config新增可选MIR2_WEB_GATEWAY_TARGET，默认18800保留。真实账号、原端/浏览器、照明和食物持久化验收仍开放，详见[本批范围](hud-state-implementation-2026-10-02.md)。
+
+## 场景光值与死亡调色（第十三批，2026-10-02）
+
+entity消息50/10/11/13/9保留Series高字节light，低字节仍direction；不刷新光值的6/801/807发送light:null，Web保留现存值。SM_CHANGELIGHT654投影actorLight的Recog/Param，Tag客户端key不转换为地图暗度。SM_NEWMAP51与SM_CHANGEMAP634的map事件增加darkLevel=Series，46继续phase=Param/darkLevel=Tag。字段新增不改变游戏命令及代次，未知actorLight不生成实体。
+
+Web默认self死亡调色落在整个世界舞台，HUD/窗口独立；原地alive27、切图、世界清理和已接受退出解除。生产fogApplied仍false，六个原遮罩/npal只作来源与校准，不代表夜景绘制。原端可配置死亡颜色、尸骨/挖出/复活所有光值路径与同版实际渲染继续开放，详见[场景来源与本批边界](scene-lighting-death-implementation-2026-10-02.md)。
+
+### 选角删除（第十四批）
+
+`connected.features.characterDeletion=true`表示当前网关支持删除闭环。仅characters阶段允许`{type:"deleteCharacter",requestId,name}`；requestId为递增正安全整数，名字必须来自此账号当前SM520列表。选角命令不使用世界actionId/mapGeneration。CM102仅发送角色名字，等待原服>1000ms限流后发送一次；绝不重试在途删除。
+
+`characterDeletionResult`包含requestId/name、accepted(bool|null)、status、requestSent、requiresLogin；已核实结果还带characters。SM523且新SM520不含该名字才是deleted/true；SM524为rejected/false但仍查询列表恢复原服boChrQueryed；523却仍有角色为not-deleted/false。服务器没有返回名单时不能前端删角色。写前超时为not-sent/false，可能已写后的坏ACK/列表、EOF/超时为unknown/null，两类都退役selection并要求重新登录。typed command_rejected携带安全requestId，旧/不同ID不能解除当前删除等待。
+
+SM520星号前缀标记selected，网页保留按姓名选择；名单校验完整后才替换白名单。制作群的目标版行为、真实删除限制/持久化及同版原端/浏览器待验收。当前18801仍上一版，删除publish保持staging，不把新源码视为已更新运行连接。
+
+## 2026-10-02 第十四批测试网关运行补充
+
+此前封存后，18801连接释放，护栏确认0活跃连接再切换PID12516→17432，Vite14700保留。新网关已通过实际5173/ws证明characterDeletion=true、未登录删除requestId相关拒绝、退出拒绝与正常关闭；5原图/清单源HTTP/dist一致。原服/SQL/生产角色未操作，真实隔离删除及同版验收仍待完成。代码与测试输入不变，复用此前42网页脚本497标记/80网关实际组/384Python/4校准分支。详见[运行补充](selection-delete-runtime-2026-10-02.md)，最新档案为`replication-selection-live-v14-batch.json`；先前staging记录为其封存时点，不覆盖历史。
+
+### 原服删除回执修复（第十五批）
+
+DBSrv源码仅在校验当前记录所属账号/姓名、未删除、成功读取同名等级且严格小于DeleteMinLevel，并成功更新删除标记后发送SM523；其余分支及异常发送SM524。MySQL更新必须命中一行。26组生产TCP回执及8组独占真实MySQL测试通过。当前运行原服未替换DLL，网关保持523/524后SM520名单核实及未知结果不重发；新源码回执规则不能视为当前运行服务已升级。详见[原服修复范围](selection-delete-native-implementation-2026-10-02.md)。
+
+
+## 原端地图描述（2026-10-08）
+
+SM_MAPDESCRIPTION=54投影为`{type:"mapDescription",title:string,musicId:number}`，标题使用GBK正文第一段CR之前的文本，musicId来自Recog（原服无音乐为-1）。保留与其他游戏事件相同的会话／地图代次信封。浏览器仅从该权威事件更新HUD地图标题；每次map进入，包括相同地图编号，先清空上一标题，再与已确认角色坐标组合。原地图音乐播放尚待接入，不能把musicId投影当作声音验收。
+
+EntryScenesGatewayRegression用实际旧协议TCP读写覆盖非空／CR标题、空标题、音乐编号、同编号换图新代次及已有选角／公告／重选路径。生产HUD／play回归覆盖beginMap清空、坐标保持标题、旧异步文字与重试回调丢弃。完整真实服务登录入图和断线范围另行验收。

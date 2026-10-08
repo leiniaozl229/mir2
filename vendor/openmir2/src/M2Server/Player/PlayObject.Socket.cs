@@ -8,6 +8,20 @@ namespace M2Server.Player
     {
         private const byte HeaderLen = 32;
 
+        private void SendActionFailed()
+        {
+            // Correct prediction before releasing the client's pending action.
+            // Failure belongs only to this player and must not wait in the world queue.
+            CharDesc description = new CharDesc
+            {
+                Feature = GetFeatureToLong(),
+                Status = CharStatus
+            };
+            SendSocket(Messages.MakeMessage(Messages.SM_MOVEFAIL, ActorId, CurrX, CurrY, Dir),
+                EDCode.EncodePacket(description));
+            SendSocket(string.Format(SystemModule.MessageSettings.sSTATUS_FAIL, HUtil32.GetTickCount()));
+        }
+
         public void SetSocket()
         {
             //messageHead.Socket = SocketId;

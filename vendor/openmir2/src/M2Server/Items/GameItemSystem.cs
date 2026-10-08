@@ -1222,10 +1222,36 @@ namespace M2Server.Items
             }
         }
 
+        public const int MonsterDropQualityMin = 20;
+        public const int MonsterDropQualityMax = 100;
+        public const int MonsterDropFlatMin = 10;
+        public const int MonsterDropFlatMax = 30;
+
         /// <summary>
-        /// Give a monster-dropped equipment instance 0-100% of each nonzero
-        /// template maximum as a persistent bonus. One quality roll applies
-        /// to all supported combat attributes on the item.
+        /// Stack one shared base-stat quality roll with independent flat rolls.
+        /// Validate all rolls before changing the persistent item instance.
+        /// </summary>
+        public static void ApplyMonsterDropBonusRoll(StdItem stdItem, UserItem userItem,
+            int quality, int defense, int magicDefense, int attack, int magic, int tao)
+        {
+            if (quality < MonsterDropQualityMin || quality > MonsterDropQualityMax)
+            {
+                throw new ArgumentOutOfRangeException(nameof(quality));
+            }
+            foreach (int roll in new[] { defense, magicDefense, attack, magic, tao })
+            {
+                if (roll < MonsterDropFlatMin || roll > MonsterDropFlatMax)
+                {
+                    throw new ArgumentOutOfRangeException(nameof(roll));
+                }
+            }
+            ApplyMonsterDropStatBonus(stdItem, userItem, quality);
+            ApplyMonsterDropFlatBonus(stdItem, userItem, defense, magicDefense, attack, magic, tao);
+        }
+
+        /// <summary>
+        /// Give an equipment instance a percentage of each nonzero template
+        /// maximum as a persistent bonus, sharing one quality across attributes.
         /// </summary>
         public static void ApplyMonsterDropStatBonus(StdItem stdItem, UserItem userItem, int percent)
         {
@@ -1273,6 +1299,64 @@ namespace M2Server.Items
                 case 54:
                     userItem.Desc[0] = Bonus(stdItem.AC, userItem.Desc[0], percent);
                     userItem.Desc[1] = Bonus(stdItem.MAC, userItem.Desc[1], percent);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Add independent, fixed-range bonuses to monster-dropped equipment.
+        /// The legacy item packet stores each maximum in one byte, so leave
+        /// room for the template maximum and any percentage/special bonus.
+        /// </summary>
+        public static void ApplyMonsterDropFlatBonus(StdItem stdItem, UserItem userItem,
+            int defense, int magicDefense, int attack, int magic, int tao)
+        {
+            if (stdItem == null || userItem == null)
+            {
+                throw new ArgumentNullException(stdItem == null ? nameof(stdItem) : nameof(userItem));
+            }
+            if (defense is < 0 or > 50 || magicDefense is < 0 or > 50 ||
+                attack is < 0 or > 50 || magic is < 0 or > 50 || tao is < 0 or > 50)
+            {
+                throw new ArgumentOutOfRangeException(nameof(defense), "Invalid flat monster-drop bonus roll.");
+            }
+
+            static byte Add(ushort templateRange, byte existing, int bonus)
+            {
+                return (byte)Math.Min(255 - HUtil32.HiByte(templateRange), existing + bonus);
+            }
+
+            switch (stdItem.StdMode)
+            {
+                case 5:
+                case 6:
+                    // Weapon slots 3-6 also encode speed and special defenses.
+                    userItem.Desc[0] = Add(stdItem.DC, userItem.Desc[0], attack);
+                    userItem.Desc[1] = Add(stdItem.MC, userItem.Desc[1], magic);
+                    userItem.Desc[2] = Add(stdItem.SC, userItem.Desc[2], tao);
+                    break;
+                case 10:
+                case 11:
+                case 15:
+                case 16:
+                case 19:
+                case 20:
+                case 21:
+                case 22:
+                case 23:
+                case 24:
+                case 26:
+                    userItem.Desc[0] = Add(stdItem.AC, userItem.Desc[0], defense);
+                    userItem.Desc[1] = Add(stdItem.MAC, userItem.Desc[1], magicDefense);
+                    userItem.Desc[2] = Add(stdItem.DC, userItem.Desc[2], attack);
+                    userItem.Desc[3] = Add(stdItem.MC, userItem.Desc[3], magic);
+                    userItem.Desc[4] = Add(stdItem.SC, userItem.Desc[4], tao);
+                    break;
+                case 52:
+                case 54:
+                    // Belt/boot slots 2-3 encode accuracy and agility.
+                    userItem.Desc[0] = Add(stdItem.AC, userItem.Desc[0], defense);
+                    userItem.Desc[1] = Add(stdItem.MAC, userItem.Desc[1], magicDefense);
                     break;
             }
         }

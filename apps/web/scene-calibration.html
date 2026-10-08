@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>传奇 2 · 场景调色校准</title></head>
+<body><main><header><span>THE LEGEND OF MIR II</span><h1>场景调色与灯光来源校准</h1><p>地图和人物使用生产渲染组件。这里的死亡状态是校准样例，不连接账号。夜景启用规则仍待原端核对，遮罩诊断不会给地图添加推断的光晕。</p></header>
+<form id="scene-preview-controls"><label>地图 <select id="scene-map"><option value="0">比奇省</option><option value="GA0">参考绑定地图 GA0</option></select></label><label><input type="checkbox" id="scene-dead">死亡画面</label><a href="/play.html">联机页</a><a href="/ui-calibration.html">UI 校准</a><a href="/actors.html">八方向动作</a></form>
+<div id="scene-preview-viewport" style="width:800px;height:600px;max-width:none"></div><output id="scene-preview-status">正在加载地图…</output>
+<fieldset><legend>原始灯光遮罩诊断</legend><label>等级 <select id="scene-light-level"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></label><button id="scene-light-retry" type="button">重新读取</button><output id="scene-light-status"></output><canvas id="scene-light-mask" style="display:block;max-width:100%;image-rendering:pixelated"></canvas><p>灰度只用于检查原始 0–30 遮罩数值，不代表原版场景色彩。</p></fieldset>
+</main><script type="module" src="/src/scene-calibration.ts"></script></body></html>

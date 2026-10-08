@@ -82,6 +82,9 @@ namespace SystemModule.SubSystem
 
         int GetMonstersZenTime(int time);
 
+        // Positive: queued spawn groups, -1: no usable spawns, -2: map cooldown.
+        int RequestMonsterRefresh(string mapName);
+
         int GetMapHuman(string mapName);
 
         int GetMapMonster(IEnvirnoment envir, IList<IActor> list);

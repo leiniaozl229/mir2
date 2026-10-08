@@ -3,24 +3,28 @@ import path from 'node:path';
 import vm from 'node:vm';
 import ts from 'typescript';
 import {fileURLToPath} from 'node:url';
+import {iconFrameProductionSource,itemIconProductionSource} from './item_icon_test_source.mjs';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 const uiLayout=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-layout.json'),'utf8'));
 const uiInteractions=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-interactions.json'),'utf8'));
 const layoutSource=fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8').replace(/^import .*;\r?\n/gm,'');
-const source=`const itemAssets={iconIndexByName:{'祖玛井中月':48},fallbackIconIndexBySourceIndex:{1144:0,1582:0}};\nconst uiLayout=${JSON.stringify(uiLayout)};\nconst uiInteractions=${JSON.stringify(uiInteractions)};\n${layoutSource}\n`+fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8').replace(/^import .*;\r?\n/gm,'');
+const source=`${itemIconProductionSource(root)}const uiLayout=${JSON.stringify(uiLayout)};\nconst uiInteractions=${JSON.stringify(uiInteractions)};\n${layoutSource}\n`+fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8').replace(/^import .*;\r?\n/gm,'');
 const compiled=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
-const mockDocument={createElement:tag=>new Element(tag)};
+let mockDocument;
 class Element{
- constructor(tag='div'){this.tag=tag;this.children=[];this.style={};this.dataset={};this.classList={add(){},remove(){}};this.disabled=false;this.hidden=false;this.ownerDocument=mockDocument;this.offsetLeft=0;this.offsetTop=0;this.listeners=new Map();}
- append(...children){this.children.push(...children);}
- replaceChildren(...children){this.children=[...children];}
+ constructor(tag='div'){this.tag=tag;this.children=[];this.style={};this.dataset={};this.attributes={};this.classList={add(){},remove(){}};this.disabled=false;this.hidden=false;this.ownerDocument=mockDocument;this.offsetLeft=0;this.offsetTop=0;this.listeners=new Map();}
+ append(...children){for(const child of children){this.children.push(child);if(child&&typeof child==='object')child.parentElement=this;}}
+ replaceChildren(...children){for(const child of this.children)if(child&&typeof child==='object')child.parentElement=undefined;this.children=[];this.append(...children);}
+ contains(child){return this===child||this.children.some(value=>value?.contains?.(child));}
  addEventListener(type,listener){const list=this.listeners.get(type)??[];list.push(listener);this.listeners.set(type,list);}
  removeEventListener(type,listener){this.listeners.set(type,(this.listeners.get(type)??[]).filter(value=>value!==listener));}
  emit(type,event={}){for(const listener of this.listeners.get(type)??[])listener.call(this,event);}
  remove(){}
- setAttribute(){}
+ setAttribute(name,value){this.attributes[name]=String(value);}
 }
+mockDocument={createElement:tag=>new Element(tag),getElementById:id=>id==='item-tooltip'?sharedTooltipElement:undefined,addEventListener(){},defaultView:{addEventListener(){}}};
+const sharedTooltipElement=new Element('aside');sharedTooltipElement.id='item-tooltip';sharedTooltipElement.hidden=true;
 const context={exports:{},document:mockDocument,fetch:()=>new Promise(()=>{}),loadNationalUiLibrary:()=>new Promise(()=>{})};
 vm.createContext(context);
 vm.runInContext(compiled,context);
@@ -40,6 +44,8 @@ const potion={name:'金创药(中量)',makeIndex:101,durability:1,maxDurability:
 movableInventory.replace([candle,potion]);
 movedElement.children[0].onclick({preventDefault(){},shiftKey:false,clientX:20,clientY:20});
 if(movableInventory.debugState().selectedSlot!==0)throw new Error('left click does not pick up an inventory item');
+if(!movableInventory.cancelSelection()||movableInventory.cancelSelection()||movableInventory.debugState().selectedSlot!==undefined)throw new Error('Escape cannot consume an inventory-held item before closing the current window');
+movedElement.children[0].onclick({preventDefault(){},shiftKey:false,clientX:20,clientY:20});
 movedElement.children[7].onclick({preventDefault(){},shiftKey:false,clientX:20,clientY:20});
 if(movableInventory.debugState().items.find(item=>item.makeIndex===100)?.slot!==7||movableInventory.debugState().selectedSlot!==undefined)throw new Error('picked inventory item cannot move to an empty grid cell');
 const potionCell=movedElement.children.find(child=>child.dataset.itemId==='101');
@@ -54,7 +60,7 @@ const nationalGrid=JSON.parse(fs.readFileSync(path.join(root,'content/classic-17
 if(nationalGrid.originX!==context.exports.NATIONAL_BAG_CELL.originX||nationalGrid.originY!==context.exports.NATIONAL_BAG_CELL.originY||nationalGrid.cellWidth!==context.exports.NATIONAL_BAG_CELL.width||nationalGrid.cellHeight!==context.exports.NATIONAL_BAG_CELL.height)throw new Error('frontend national inventory geometry diverges from the UI contract');
 console.log('PASS inventory supports pick, place, double-click use, detailed attributes and national grid calibration');
 
-const tooltipElement=new Element('aside');tooltipElement.hidden=true;
+const tooltipElement=sharedTooltipElement;
 const tooltipParent={querySelector:selector=>selector.includes('#inventory-item-tooltip')?tooltipElement:undefined};
 const tooltipInventoryElement=new Element();tooltipInventoryElement.parentElement=tooltipParent;
 const tooltipInventory=new context.exports.InventoryView(tooltipInventoryElement,{drop(){},use(){},equip(){}});
@@ -66,7 +72,7 @@ tooltipCell.onmouseleave();
 if(!tooltipElement.hidden)throw new Error('inventory tooltip remains visible after leaving the item');
 console.log('PASS inventory item tooltip opens and closes through pointer interaction');
 
-const equipmentTooltipElement=new Element('aside');equipmentTooltipElement.hidden=true;
+const equipmentTooltipElement=sharedTooltipElement;
 const equipmentTooltipParent={querySelector:selector=>selector.includes('#equipment-item-tooltip')?equipmentTooltipElement:undefined};
 const equipmentTooltipGrid=new Element();equipmentTooltipGrid.parentElement=equipmentTooltipParent;
 const equipmentTooltipView=new context.exports.EquipmentView(equipmentTooltipGrid,()=>{});
@@ -80,8 +86,8 @@ console.log('PASS equipment item tooltip shares the inventory attribute renderer
 
 const serviceRow=new Element();
 const serviceTooltip=context.exports.attachItemTooltip(serviceRow,potion,'修理实例');
-const serviceTooltipElement=serviceRow.children.find(child=>child.className==='inventory-item-tooltip service-item-tooltip');
-if(!serviceTooltipElement||!serviceTooltipElement.hidden)throw new Error('service tooltip is not mounted as a hidden accessible surface');
+const serviceTooltipElement=sharedTooltipElement;
+if(!serviceTooltipElement.hidden||serviceRow.attributes?.['aria-describedby']!=='item-tooltip')throw new Error('service tooltip is not connected to the stage-level accessible surface');
 serviceRow.emit('pointerenter');
 if(serviceTooltipElement.hidden||serviceTooltipElement.children[0].textContent!=='金创药(中量)')throw new Error('service row hover does not expose item attributes');
 serviceRow.emit('pointerleave');
@@ -125,6 +131,13 @@ if(movement.routeDirection(10,10,11,10,0)!==2||movement.routeDirection(10,10,9,1
 if(movement.screenDirection(250,1)!==2)throw new Error('nearly horizontal pointer movement resolves diagonally');
 const straight=movement.findGridPath({x:10,y:10},{x:16,y:10},()=>true,()=>false);
 if(straight.length!==6||straight.some((point,index)=>point.x!==11+index||point.y!==10))throw new Error('open-field path does not preserve a straight route');
+const wallCell=(x,y)=>x===12&&y>=9&&y<=11;
+const detour=movement.findGridPath({x:10,y:10},{x:14,y:10},(x,y)=>!wallCell(x,y),()=>false);
+if(!detour?.length||detour.some(point=>wallCell(point.x,point.y))||detour.at(-1).x!==14||detour.at(-1).y!==10)throw new Error('pathfinding does not route around an obstacle');
+let inspected=0;
+const inaccessible=movement.findGridPath({x:0,y:0},{x:600,y:600},(x,y)=>{inspected++;return Math.max(Math.abs(x-600),Math.abs(y-600))!==1;},()=>false,1000);
+if(inaccessible!==undefined||inspected>8001)throw new Error('an unreachable long-distance destination exceeds its search budget');
+console.log('PASS obstacle detours and unreachable destinations use a bounded path search');
 const step={actionId:1,fromX:10,fromY:10,x:11,y:10,direction:2,run:false,startedAt:100,acknowledged:true};
 if(movement.movementCanFinish(step,699)||!movement.movementCanFinish(step,700)||movement.movementCanFinish({...step,acknowledged:false},900))throw new Error('movement does not wait for both animation and acknowledgement');
 const movementVisualSource=fs.readFileSync(path.join(root,'apps/web/src/movement-visual.ts'),'utf8');
@@ -168,6 +181,44 @@ equipment.replace([{slot:5,item:{...candle,stdMode:24}}]);
 if(equipment.preferredSlot(5)!==6)throw new Error('second bracelet does not select the empty right slot');
 console.log('PASS frontend dual accessories select the empty paired slot');
 
+const equipItem={...candle,name:'测试装备',makeIndex:202,stdMode:5};
+const equipBagElement=new Element(),equipGridElement=new Element(),equipRequests=[];
+const equipInventory=new context.exports.InventoryView(equipBagElement,{drop(){},use(){},equip:(id,slot)=>{equipRequests.push([id,slot]);return true;}});
+const equipView=new context.exports.EquipmentView(equipGridElement,()=>{},(id,slot)=>equipInventory.equipInto(id,slot),()=>equipInventory.heldItem()?.makeIndex);
+equipInventory.replace([equipItem]);
+const equipSource=equipBagElement.children.find(child=>child.dataset.itemId==='202');
+equipSource.onclick({preventDefault(){},shiftKey:false,clientX:0,clientY:0});
+const clickTarget=equipGridElement.children.find(child=>child.dataset.slot==='3'&&child.className.includes('equipment-cell'));
+if(!clickTarget||clickTarget.disabled)throw new Error('empty paperdoll equipment slots stay unavailable for held inventory items');
+clickTarget.onclick();
+if(equipRequests.length!==1||equipRequests[0][0]!==202||equipRequests[0][1]!==3||equipInventory.debugState().selectedMakeIndex!==undefined||equipInventory.debugState().pending[0]!==202||!equipInventory.debugState().items.some(item=>item.makeIndex===202)||equipView.itemAt(3))throw new Error('clicking an empty equipment slot does not request an authoritative equip while retaining the bag item');
+equipInventory.resolve(202,false,false);
+if(equipInventory.debugState().pending.length||!equipInventory.debugState().items.some(item=>item.makeIndex===202))throw new Error('a rejected equip removes the bag item or leaves it pending');
+console.log('PASS held inventory items equip into a chosen paperdoll slot and rejected requests restore the bag item');
+
+const dragBagElement=new Element(),dragGridElement=new Element(),dragRequests=[];
+const dragInventory=new context.exports.InventoryView(dragBagElement,{drop(){},use(){},equip:(id,slot)=>{dragRequests.push([id,slot]);return true;}});
+const dragEquipment=new context.exports.EquipmentView(dragGridElement,()=>{},(id,slot)=>dragInventory.equipInto(id,slot));
+dragInventory.replace([equipItem]);
+const paperdollDragSource=dragBagElement.children.find(child=>child.dataset.itemId==='202');
+const dragTarget=dragGridElement.children.find(child=>child.dataset.slot==='7'&&child.className.includes('equipment-cell'));
+let draggedItem='',allowed=false;
+const transfer={setData(_type,value){draggedItem=value;},getData(){return draggedItem;},effectAllowed:'',dropEffect:''};
+paperdollDragSource.ondragstart({dataTransfer:transfer});
+if(transfer.effectAllowed!=='copyMove')throw new Error('inventory drag source forbids copy-only destinations such as the consumable quickbar');
+dragTarget.ondragover({preventDefault(){allowed=true;},dataTransfer:transfer});
+dragTarget.ondrop({preventDefault(){},dataTransfer:transfer});
+if(!allowed||transfer.dropEffect!=='move'||dragRequests.length!==1||dragRequests[0][0]!==202||dragRequests[0][1]!==7||dragInventory.debugState().pending[0]!==202||dragEquipment.itemAt(7))throw new Error('dragging a bag item to a paperdoll slot bypasses the pending/authority boundary');
+dragInventory.resolve(202,true,true);
+dragEquipment.set(7,equipItem);
+if(dragInventory.debugState().items.some(item=>item.makeIndex===202)||dragEquipment.itemAt(7)?.makeIndex!==202)throw new Error('accepted equip does not follow the authoritative bag and paperdoll snapshots');
+console.log('PASS bag-to-paperdoll drag and drop only changes ownership after authoritative success');
+
+const offlineEquipBag=new Element(),offlineInventory=new context.exports.InventoryView(offlineEquipBag,{drop(){},use(){},equip:()=>false});
+offlineInventory.replace([equipItem]);
+if(offlineInventory.equipInto(202,3)||offlineInventory.debugState().pending.length||!offlineInventory.debugState().items.some(item=>item.makeIndex===202))throw new Error('an unavailable world command leaves equip pending or removes the item');
+console.log('PASS unavailable equip commands leave inventory contents intact without a stale pending state');
+
 const playSource=fs.readFileSync(path.join(root,'apps/web/src/play.ts'),'utf8').replace(/\r\n/g,'\n');
 const inventorySource=fs.readFileSync(path.join(root,'apps/web/src/inventory.ts'),'utf8');
 const playMarkup=fs.readFileSync(path.join(root,'apps/web/play.html'),'utf8');
@@ -176,15 +227,44 @@ if(!inventorySource.includes("'pointercancel'")||!inventorySource.includes("'vis
 console.log('PASS inventory selection clears on pointer cancellation, blur and hidden tabs');
 if(playSource.includes("if(id==='chat'){classicWindow.hidden=true;return;}"))throw new Error('chat tab still closes the classic window');
 if(!playSource.includes("if(id==='chat')classicWindowBody.append(chatPanel)"))throw new Error('chat tab does not expose the complete chat form');
-if(!playSource.includes('function closeDialogue()')||!playSource.includes('dialogueNpcId=undefined;')||!playSource.includes('function hideServiceWindows(){\n closeDialogue();')||!playSource.includes('inventory.rejectPending();itemQuickBar.rejectPending();equipment.rejectPending();shop.rejectPending();repair.rejectPending();storage.rejectPending();'))throw new Error('closing dialogue or changing maps can leave stale NPC and service pending state');
+if(!playSource.includes('function closeDialogue()')||!playSource.includes('dialogueNpcId=undefined;')||!playSource.includes('function hideServiceWindows(){\n cancelActiveTrade();\n hideDialogue();')||!playSource.includes('inventory.rejectPending();itemQuickBar.rejectPending();equipment.rejectPending();shop.rejectPending();repair.rejectPending();storage.rejectPending();'))throw new Error('closing dialogue or changing maps can leave stale NPC and service pending state');
 if(playSource.includes('suppressNpcDialogsUntil'))throw new Error('valid NPC dialogue is discarded during the first seconds after map entry');
-if(!playSource.includes('function targetApproachStep(')||!playSource.includes('pursuitRejectedCells.add(`${movement.x},${movement.y}`)')||!playSource.includes('pursuitTarget=retryTarget'))throw new Error('target pursuit does not reroute after a transient blocked move');
+if(!playSource.includes('function targetApproachStep(')||!playSource.includes('const attempted=movementTrace(movement);')||!playSource.includes('pursuitRejectedCells.add(`${cell.x},${cell.y}`)')||!playSource.includes('pursuitTarget=retryTarget'))throw new Error('target pursuit does not reroute around every rejected run tile');
 console.log('PASS target pursuit reroutes after a transient blocked move');
-if(!playSource.includes("entity.dead?'Alt+左键挖肉'")||!playSource.includes('interact(target,requestsHarvest(event))')||!playSource.includes('if(target.dead&&!harvest)')||!playSource.includes("if(target.dead&&harvest){socket.send(JSON.stringify({type:'butch'"))throw new Error('corpse interaction can still harvest without Alt plus left click');
+if(!playSource.includes("entity.dead?'Alt+左键挖肉'")||!playSource.includes('interact(target,requestsHarvest(event))')||!playSource.includes('if(target.dead&&!harvest)')||!playSource.includes("if(target.dead&&harvest){socket!.send(JSON.stringify({type:'butch'"))throw new Error('corpse interaction can still harvest without Alt plus left click');
 if(!playSource.includes('pursuitHarvest=retryHarvest')||!playSource.includes('interact(target,pursuitHarvest)'))throw new Error('automatic corpse approach loses the harvest modifier intent');
 console.log('PASS corpse harvest intent survives automatic approach and blocked-cell retries');
-if(!playSource.includes('.filter(value=>value.distance<=8)')||!playSource.includes('if(distance>8){connection.textContent=`${target.name||\'目标\'} 超出施法距离`'))throw new Error('the interaction list and spell distance exceed the server range');
+if(!playSource.includes('.filter(value=>value.distance<=8)')||!playSource.includes('if(distance>SKILL_RANGE)'))throw new Error('the interaction list and spell distance exceed the shared range');
 console.log('PASS interaction targets match the server spell range');
+const intentContext={mining:{cancel(){}},held:{dx:1},rightPointer:{},clickDestination:{x:20,y:20},pursuitTarget:2,pursuitHarvest:true,pursuitGroundItem:3,doorRetry:{},pursuitRejectedCells:new Set(['12,10']),pendingAction:{actionId:99},combatTarget:2,selectedMagic:{magicId:22},stopCombat(){intentContext.combatTarget=undefined;},skillBar:{cancelSelection(){intentContext.selectedMagic=undefined;}}};
+vm.createContext(intentContext);
+const intentFile=ts.createSourceFile('play.ts',playSource,ts.ScriptTarget.ES2022,true);
+const cancelNode=intentFile.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==='cancelWorldIntent');
+if(!cancelNode)throw new Error('production intent cancellation is absent');
+const cancelSource=ts.transpileModule(cancelNode.getText(intentFile),{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+vm.runInContext(`${cancelSource}\ncancelWorldIntent();`,intentContext);
+if(intentContext.pendingAction.actionId!==99||intentContext.held!==undefined||intentContext.clickDestination!==undefined||intentContext.pursuitTarget!==undefined||intentContext.pursuitGroundItem!==undefined||intentContext.pursuitRejectedCells.size)throw new Error('input cancellation leaves queued movement or discards an in-flight action');
+console.log('PASS cancelling world input stops queued intents without discarding the current server action');
+const lootActor={id:1,x:10,y:10},loot={id:5,x:14,y:10,name:'金币'},lootMoves=[],lootSent=[];
+const lootContext={pursuitGroundItem:5,pendingAction:undefined,self:1,entities:new Map([[1,lootActor]]),groundItems:{get:id=>id===5?loot:undefined},socket:{send:value=>lootSent.push(JSON.parse(value))},connection:{},clickPath:(actor,item)=>movement.findGridPath(actor,item,(x,y)=>!wallCell(x,y),()=>false),sendMovement(actor,dx,dy){actor.x+=dx;actor.y+=dy;lootMoves.push({x:actor.x,y:actor.y});return true;}};
+vm.createContext(lootContext);
+vm.runInContext(playSource.slice(playSource.indexOf('function continueGroundPursuit('),playSource.indexOf('function continueMovementIntent(')),lootContext);
+for(let count=0;count<12&&lootContext.pursuitGroundItem!==undefined;count++)vm.runInContext('continueGroundPursuit();',lootContext);
+if(lootMoves.some(point=>wallCell(point.x,point.y))||lootActor.x!==loot.x||lootActor.y!==loot.y||lootSent.length!==1||lootSent[0].type!=='pickup')throw new Error('automatic loot pickup fails to detour or picks up before arriving');
+console.log('PASS ground pickup routes around obstacles and sends pickup only after reaching the item cell');
+const spellSent=[],spellActor={id:1,x:10,y:10,direction:0},spellContext={self:1,entities:new Map([[1,spellActor]]),selectedMagic:{magicId:22,name:'火墙'},socket:{readyState:1,send:value=>spellSent.push(JSON.parse(value))},WebSocket:{OPEN:1},pendingAction:undefined,connection:{},SKILL_RANGE:8,directionIndex:movement.directionIndex,skillUseOf:id=>id===27?'rush':'ground',gatewayFeatures:{pointSpells:true,directionalRush:true},mapGeneration:3,cancelWorldIntent(){spellContext.selectedMagic=undefined;},skillBar:{setPending(){}},createAction:()=>({actionId:901}),update(){}};
+vm.createContext(spellContext);
+spellContext.worldInputAvailable=()=>true;spellContext.worldInputBlocked=()=>false;
+const castSource=playSource.slice(playSource.indexOf('function castSelectedAt('),playSource.indexOf('function scheduleCombat('));
+vm.runInContext(ts.transpileModule(castSource,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText,spellContext);
+vm.runInContext('castSelectedAt({x:14,y:13});',spellContext);
+if(spellSent[0]?.x!==14||spellSent[0]?.y!==13||spellSent[0]?.targetId!==undefined||spellSent[0]?.actionId!==901||spellSent[0]?.mapGeneration!==3)throw new Error('ground spell loses its coordinates or action/map identity');
+spellContext.selectedMagic={magicId:27,name:'野蛮冲撞'};vm.runInContext('castSelectedAt({x:14,y:10});',spellContext);
+if(spellSent[1]?.direction!==2||spellSent[1]?.x!==undefined||spellSent[1]?.targetId!==undefined)throw new Error('rush is sent as a position or entity spell');
+spellContext.gatewayFeatures.pointSpells=false;spellContext.selectedMagic={magicId:22,name:'火墙'};vm.runInContext('castSelectedAt({x:14,y:13});',spellContext);
+spellContext.gatewayFeatures.pointSpells=true;vm.runInContext('castSelectedAt({x:19,y:10});',spellContext);
+if(spellSent.length!==2||spellContext.selectedMagic?.magicId!==22)throw new Error('an unsupported gateway or out-of-range aim consumes the skill selection or sends a command');
+console.log('PASS ground/rush commands preserve action identity and refuse unsupported or out-of-range input');
 console.log('PASS frontend chat tab exposes the channel and recipient controls');
 
 const authSource=fs.readFileSync(path.join(root,'apps/web/src/classic-auth.ts'),'utf8');
@@ -199,34 +279,72 @@ console.log('PASS national character creation keeps its own frame index space');
 if(!authSource.includes("{'0-0':40,'1-0':80,'2-0':120,'0-1':160,'1-1':200,'2-1':240}"))throw new Error('national character selection portraits do not follow the three profession frame ranges');
 console.log('PASS national character portraits use the correct profession ranges');
 if(!authSource.includes('loadClassicUiSession()'))throw new Error('auth mount does not use the shared settled UI resource session');
-if(!authSource.includes('if(!this.nationalReady&&(!chrSel||!title||!prguse))return;'))throw new Error('national-only auth mode has no guarded fallback slot renderer');
+if(!authSource.includes('if(!this.nationalReady)return;')||authSource.includes("this.libraries.get('ChrSel')"))throw new Error('auth must use the guarded original slot renderer without a candidate layout');
 if(!authSource.includes('setBusy(busy:boolean)')||!authSource.includes("this.root.setAttribute('aria-busy',String(busy))"))throw new Error('auth controls do not expose a bounded busy state');
 if(!playSource.includes('classicAuth.setBusy(true)')||!playSource.includes('classicAuth.setBusy(false)')||!playSource.includes('if(!reconnectEnabled||!credentials||reconnectAttempts>=5)classicAuth.setBusy(false)'))throw new Error('authentication requests do not lock controls and release them after a result');
 const classicUiSource=fs.readFileSync(path.join(root,'apps/web/src/classic-ui.ts'),'utf8');
-if(!classicUiSource.includes('Promise.allSettled(SESSION_FALLBACK.map(loadUiLibrary))')||!classicUiSource.includes('Promise.allSettled(SESSION_NATIONAL.map(loadNationalUiLibrary))')||!classicUiSource.includes('missingNational')||!classicUiSource.includes('interactions:typeof uiInteractions'))throw new Error('shared UI resource session does not settle optional families or expose missing-resource diagnostics');
+if(classicUiSource.includes('SESSION_FALLBACK')||!classicUiSource.includes('Promise.allSettled(SESSION_NATIONAL.map(loadNationalUiLibrary))')||!classicUiSource.includes('missingNational')||!classicUiSource.includes('interactions:typeof uiInteractions'))throw new Error('shared UI resource session must settle original families, expose missing-resource diagnostics and exclude automatic candidate skins');
 const profile=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/national-ui-profile.json'),'utf8'));
 if(profile.canvas.width!==800||profile.canvas.height!==600||profile.typography?.primaryCandidates?.length<2)throw new Error('national UI profile lacks the fixed canvas and typography contract');
 const layout=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/ui-layout.json'),'utf8'));
-if(layout.nationalWindowContracts?.repair?.content!=='durability-list-single-column'||layout.nationalWindowContracts?.storage?.content!=='storage-grid-four-column'||layout.nationalWindowContracts?.quest?.content!=='quest-progress-list'||layout.nationalWindowContracts?.attack?.content!=='attack-mode-select'||layout.nationalWindowContracts?.system?.content!=='modal-confirmation'||layout.nationalWindowContracts?.group?.frame!=='prguse#402'||layout.nationalWindowContracts?.guild?.frame!=='prguse#402')throw new Error('national service and utility windows do not have separate semantic content contracts');
-if(layout.nationalHud?.mainDialog?.y!==349||layout.nationalHud?.mainDialog?.evidence!=='asset'||layout.nationalInventoryWindow?.index!==3||layout.nationalCharacterWindow?.index!==380||layout.nationalInventoryGrid?.originX!==18||layout.nationalInventoryGrid?.originY!==14)throw new Error('national HUD, inventory and character layout contracts are missing measured coordinates');
+if(layout.nationalWindowContracts?.repair?.content!=='repair-single-item-slot'||layout.nationalWindowContracts?.storage?.content!=='take-menu-or-store-single-item-slot'||layout.nationalWindowContracts?.quest?.content!=='quest-progress-list'||layout.nationalWindowContracts?.attack?.content!=='attack-mode-select'||layout.nationalWindowContracts?.system?.content!=='modal-confirmation'||layout.nationalWindowContracts?.group?.frame!=='prguse#120'||layout.nationalWindowContracts?.guild?.frame!=='prguse#180')throw new Error('national service and utility windows do not have separate semantic content contracts');
+if(layout.nationalHud?.mainDialog?.y!==349||layout.nationalHud?.mainDialog?.evidence!=='asset'||layout.nationalInventoryWindow?.index!==3||layout.nationalCharacterWindow?.index!==370||layout.nationalCharacterWindow?.x!==568||layout.nationalInventoryWindow?.x!==0||layout.nationalInventoryWindow?.y!==0||layout.nationalInventoryGrid?.originX!==18||layout.nationalInventoryGrid?.originY!==14)throw new Error('national HUD, inventory and character layout contracts are missing measured coordinates');
 if(!classicUiSource.includes('layout:typeof uiLayout')||!classicUiSource.includes('layout:uiLayout'))throw new Error('shared UI resource session does not expose the layout contract');
 const layoutHelperSource=fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8');
 if(!layoutHelperSource.includes('export function applyNationalHudLayout')||!layoutHelperSource.includes('export function applyNationalInventoryLayout')||!layoutHelperSource.includes('export function applyNationalCharacterLayout'))throw new Error('classic layout helper does not apply HUD, inventory and character contracts');
 const nationalHudSource=fs.readFileSync(path.join(root,'apps/web/src/classic-hud.ts'),'utf8');
 if(!nationalHudSource.includes('applyNationalHudLayout(root)')||!nationalHudSource.includes('applyNationalInventoryLayout(element)')||!nationalHudSource.includes('applyNationalCharacterLayout(element)'))throw new Error('classic HUD does not apply national layout from the shared contract');
-for(const kind of ['targets','ground','group','guild','system'])if(!nationalHudSource.includes(`${kind}:{index:402`))throw new Error(`national ${kind} window falls back to an unrelated skin`);
+for(const kind of ['targets','ground','system'])if(!nationalHudSource.includes(`${kind}:{index:402`))throw new Error(`national ${kind} window falls back to an unrelated skin`);
+if(!nationalHudSource.includes('layout.nationalUtilityWindows.group.index')||!nationalHudSource.includes('layout.nationalUtilityWindows.guild.index'))throw new Error('party and guild windows do not use their profile-bound native frames');
 if(!fs.readFileSync(path.join(root,'apps/web/src/shop.ts'),'utf8').includes('shop-list--${this.mode}')||!fs.readFileSync(path.join(root,'apps/web/src/repair.ts'),'utf8').includes('repair-list')||!fs.readFileSync(path.join(root,'apps/web/src/storage.ts'),'utf8').includes('storage-list--${this.mode}'))throw new Error('service panels do not emit their semantic content layout classes');
 const stageSource=fs.readFileSync(path.join(root,'apps/web/src/classic-stage.ts'),'utf8');
 const stageContext={exports:{}};vm.createContext(stageContext);
 vm.runInContext(ts.transpileModule(stageSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,stageContext);
 if(stageContext.exports.classicScaleForViewport(400,300)!==0.5||stageContext.exports.classicScaleForViewport(800,300)!==0.5||stageContext.exports.classicScaleForViewport(1200,900)!==1)throw new Error('classic stage does not preserve the 4:3 pixel coordinate contract on short viewports');
+{
+ const listeners=new Map(),viewport={innerWidth:1200,innerHeight:900,devicePixelRatio:1,addEventListener:(name,fn)=>listeners.set(name,fn),removeEventListener:name=>listeners.delete(name)};
+ let fontReady,origin={left:90.5,top:103.09375};
+ const frame={style:{setProperty(key,value){this[key]=value;}},getBoundingClientRect(){return {left:origin.left+Number.parseFloat(this.style.left||'0'),top:origin.top+Number.parseFloat(this.style.top||'0')};}},content={style:{}};
+ const fontPromise=new Promise(resolve=>fontReady=resolve);
+ Object.assign(stageContext,{window:viewport,document:{documentElement:{clientWidth:1200,clientHeight:900},fonts:{ready:fontPromise}}});
+ const stage=new stageContext.exports.ClassicStage(frame,content);
+ const aligned=()=>{const rect=frame.getBoundingClientRect(),ratio=viewport.devicePixelRatio;for(const axis of ['left','top'])if(Math.abs(rect[axis]*ratio-Math.round(rect[axis]*ratio))>1e-7)throw new Error(`classic canvas ${axis} is not device-pixel aligned`);};
+ aligned();
+ if(content.style.width!=='800px'||content.style.height!=='600px'||content.style.transform!=='scale(1)'||frame.style.width!=='800px'||frame.style.height!=='600px')throw new Error('pixel alignment changed the design coordinates or clipped a full-size canvas');
+ const initial=JSON.stringify(frame.getBoundingClientRect());listeners.get('resize')();
+ if(JSON.stringify(frame.getBoundingClientRect())!==initial)throw new Error('repeated resize accumulates the pixel alignment correction');
+ origin={left:56.25,top:113.1875};fontReady();await Promise.resolve();aligned();
+ for(const ratio of [1,1.25,2]){
+  viewport.devicePixelRatio=ratio;viewport.innerWidth=400;viewport.innerHeight=300;listeners.get('resize')();aligned();
+  if(content.style.transform!=='scale(0.5)'||content.style.width!=='800px'||content.style.height!=='600px'||frame.style.width!=='400px'||frame.style.height!=='300px')throw new Error('device alignment changes the scaled canvas bounds or internal hot-area coordinates');
+ }
+ stage.dispose();if(listeners.has('resize'))throw new Error('disposed classic canvas still listens to viewport changes');
+ let lateFontReady;stageContext.document.fonts.ready=new Promise(resolve=>lateFontReady=resolve);
+ const lateStage=new stageContext.exports.ClassicStage(frame,content);lateStage.dispose();
+ const stoppedStyle=JSON.stringify(frame.style);origin={left:1.3,top:2.7};lateFontReady();await Promise.resolve();
+ if(JSON.stringify(frame.style)!==stoppedStyle)throw new Error('disposed classic canvas changes its alignment after a late font callback');
+ console.log('PASS shared 800x600 canvas aligns its screen origin, preserves scaled hot areas and avoids resize drift');
+}
 console.log('PASS auth assets load concurrently and support a national-only client');
 
 const actorsPage=fs.readFileSync(path.join(root,'apps/web/actors.html'),'utf8');
 const actorsSource=fs.readFileSync(path.join(root,'apps/web/src/actors.ts'),'utf8');
-if(!actorsPage.includes('<option value="running">跑步</option>')||!actorsSource.includes("running:{start:80,count:6")||!actorsSource.includes("running:'2'")||!actorsSource.includes('visualDirection(direction)'))throw new Error('actor validation page cannot inspect the corrected running rows and direction mapping');
-console.log('PASS actor validation page exposes the six-frame running rows');
-if(!onlineActorSource.includes('if(!this.frames.length)this.marker.circle')||!onlineActorSource.includes('if(layers||staticIndex!==undefined)this.marker.clear()'))throw new Error('player has no visible fallback while its initial pose loads');
+if(!actorsPage.includes('<option value="running">跑步</option>')||!actorsSource.includes('nationalAction(action.value,race)')||!actorsSource.includes('actionFrame(definition!,direction,frame)')||!actorsSource.includes('monsterLayers(feature)'))throw new Error('actor validation must share production national frame rules');
+const nationalProfile=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/national-gameplay.json'),'utf8'));
+const nationalSource=fs.readFileSync(path.join(root,'apps/web/src/national-actors.ts'),'utf8').replace(/^import .*;\r?\n/gm,'');
+const nationalContext={exports:{},profile:nationalProfile};vm.createContext(nationalContext);
+vm.runInContext(ts.transpileModule(nationalSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,nationalContext);
+const national=nationalContext.exports;
+const woman=national.playerLayers((5<<24)|(2<<16)|(7<<8));
+if(woman.offset!==3000||woman.hairOffset!==3000||woman.weaponOffset!==4200||woman.bodyName!=='NHum')throw new Error('national gender, outfit, hair or weapon stride mismatch');
+const dressed=national.playerLayers((12<<24)|(1<<16));
+if(dressed.hairOffset!==1200||dressed.offset!==7200||national.playerLayers(0).hairName!==undefined)throw new Error('hair is indexed by style and gender independently of clothing');
+if(national.actionFrame(national.nationalAction('running'),4,5,600)!==765||national.actionFrame(national.nationalAction('dead'),4,0)!==571)throw new Error('national run or directional corpse frame mismatch');
+if(national.monsterLayers((160<<16)|11).bodyName!=='Mon17'||national.monsterLayers((161<<16)|11).offset!==360||national.monsterLayers((41<<16)|40).offset!==600||national.monsterLayers((172<<16)|19).offset!==920||national.monsterLayers(180<<16)!==undefined)throw new Error('original monster appearance addressing mismatch');
+if(national.nationalAction('walking',11).start!==80||national.nationalAction('walking',12).start!==64||national.nationalAction('walking',11).interval!==120)throw new Error('monster race action tables are mixed');
+if(national.weaponZIndex(0,200)!==2||national.weaponZIndex(0,203)!==-1||!national.singleAction('spell')||national.singleAction('standing'))throw new Error('weapon frame layering or spell completion mismatch');
+console.log('PASS national gameplay shares original strides, race actions, corpse frames and per-frame weapon layering');
+if(!onlineActorSource.includes('if(!this.frames.length)this.marker.circle'))throw new Error('player has no visible fallback while its initial pose loads');
 console.log('PASS player remains visible while its initial pose loads');
 
 const observerSource=fs.readFileSync(path.join(root,'apps/web/src/agent-observer.ts'),'utf8');
@@ -256,50 +374,121 @@ const scaled=helper.mapPointFromClient(37.5,25,{left:0,top:0,width:75,height:50}
 if(scaled.x!==350||scaled.y!==350)throw new Error('scaled minimap pointer coordinates do not map to the center of the world');
 console.log('PASS minimap profile, pointer mapping and Tab modes are deterministic');
 
-const skillsSource=`const skillAssets={iconIndexByName:{}};\n${fs.readFileSync(path.join(root,'apps/web/src/skills.ts'),'utf8').replace(/^import .*;\r?\n/gm,'')}`;
+const skillInput=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/skill-input.json'),'utf8'));
+const skillsSource=`${iconFrameProductionSource(root)}const iconUsage=${fs.readFileSync(path.join(root,'content/classic-176/icon-usage.json'),'utf8')};\nconst skillAssets={iconIndexByName:{}};\nconst skillInput=${JSON.stringify(skillInput)};\n${fs.readFileSync(path.join(root,'apps/web/src/skills.ts'),'utf8').replace(/^import .*;\r?\n/gm,'')}`;
 const skillsContext={exports:{},document:mockDocument,fetch:()=>new Promise(()=>{}),loadNationalUiLibrary:()=>new Promise(()=>{})};vm.createContext(skillsContext);
 vm.runInContext(ts.transpileModule(skillsSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,skillsContext);
-const sparseSkill={key:8,level:1,currentTrain:0,magicId:1,name:'攻杀剑术',effectType:0,effect:0,spell:1,power:1,trainLevels:[],maxTrain:[],job:0,delay:0,defSpell:0,defPower:0,maxPower:0,defMaxPower:0,description:''};
+const sparseSkill={key:56,level:1,currentTrain:0,magicId:1,name:'攻杀剑术',effectType:0,effect:0,spell:1,power:1,trainLevels:[],maxTrain:[],job:0,delay:0,defSpell:0,defPower:0,maxPower:0,defMaxPower:0,description:''};
 const sparseSlots=skillsContext.exports.arrangeSkillSlots([sparseSkill]);
 if(sparseSlots[7]!==sparseSkill||sparseSlots[0]!==undefined)throw new Error('sparse skill keys are compacted into the wrong F-slot');
 console.log('PASS sparse skill keys preserve their F-slot labels');
+const skillUi=new Element(),skillChoices=[];
+skillUi.querySelectorAll=()=>[];
+const testedSkillBar=new skillsContext.exports.SkillBar(skillUi,{select:skill=>skillChoices.push(skill?.magicId),self:skill=>skillChoices.push(`self:${skill.magicId}`)});
+testedSkillBar.replace([{...sparseSkill,key:49,magicId:2,name:'治愈术'},{...sparseSkill,key:50,magicId:22,name:'火墙'},{...sparseSkill,key:51,magicId:27,name:'野蛮冲撞'}]);
+const healRow=skillUi.children.find(row=>row.dataset.magicId==='2'),wallRow=skillUi.children.find(row=>row.dataset.magicId==='22');
+if(!healRow.children.some(child=>child.textContent==='对自己')||!wallRow.children.some(child=>child.textContent==='选择位置'))throw new Error('support and ground spells expose the wrong controls');
+testedSkillBar.selectSlot(1);if(!testedSkillBar.cancelSelection()||testedSkillBar.cancelSelection())throw new Error('Escape does not consume only an active skill target selection');testedSkillBar.selectSlot(1);testedSkillBar.setPending(22);if(testedSkillBar.cancelSelection())throw new Error('Escape consumes a spell already waiting for its server reply');
+if(testedSkillBar.debugState().pending!==22||testedSkillBar.debugState().selected!==undefined)throw new Error('cancelling selection releases a spell awaiting its server reply');
+testedSkillBar.resolve();
+if(skillsContext.exports.skillUseOf(27)!=='rush'||skillsContext.exports.skillUseOf(18)!=='self'||skillsContext.exports.skillUseOf(4)!=='passive')throw new Error('classical skill input modes are incomplete');
+console.log('PASS support, ground, rush and passive skills share explicit input rules and preserve in-flight spell locks');
+testedSkillBar.replace([{...sparseSkill,key:49,magicId:12,name:'刺杀剑术'},{...sparseSkill,key:50,magicId:25,name:'半月弯刀'},{...sparseSkill,key:51,magicId:26,name:'烈火剑法'},{...sparseSkill,key:52,magicId:7,name:'攻杀剑术'}]);
+testedSkillBar.warriorState({thrusting:true,halfMoon:true,fireHit:true,powerHit:true});
+const warriorRow=id=>skillUi.children.find(row=>row.dataset.magicId===String(id));
+if(!warriorRow(12).children.some(child=>child.textContent==='关闭（已开启）')||!warriorRow(26).children.some(child=>child.textContent==='已蓄力')||!warriorRow(7).children.some(child=>child.textContent==='攻杀就绪'))throw new Error('server warrior states are not visible on skill controls');
+testedSkillBar.warriorState({fireHit:false,powerHit:false});
+if(!warriorRow(26).children.some(child=>child.textContent==='蓄力')||!warriorRow(7).children.some(child=>child.textContent==='近战被动')||!warriorRow(25).children.some(child=>child.textContent==='关闭（已开启）'))throw new Error('warrior consumption clears unrelated toggles or retains stale readiness');
+console.log('PASS warrior controls display server toggles, charge expiry and passive readiness independently');
 const hudSource=fs.readFileSync(path.join(root,'apps/web/src/classic-hud.ts'),'utf8');
-if(!hudSource.includes('replaceSkills(skills:MagicSkill[]){this.skills=[...skills]')||!hudSource.includes('selectSlot(index:number){const slots=arrangeSkillSlots(this.skills)'))throw new Error('classic HUD hotbar loses sparse skill slot positions');
+if(!hudSource.includes('replaceSkills(skills:MagicSkill[]){this.skills=[...skills]')||!hudSource.includes('const skills=arrangeSkillSlots(this.skills);')||!hudSource.includes('button.onclick=()=>{this.select(index);}'))throw new Error('classic HUD hotbar loses sparse skill slot positions or click routing');
 console.log('PASS classic HUD hotbar keeps sparse skill positions clickable');
 for(const moduleName of ['shop','repair','storage']){
  const moduleSource=fs.readFileSync(path.join(root,`apps/web/src/${moduleName}.ts`),'utf8');
- if(!moduleSource.includes('pendingTimer')||!moduleSource.includes('8000'))throw new Error(`${moduleName} pending state has no timeout cleanup`);
+ if(!moduleSource.includes('new ServiceWait(')||!moduleSource.includes('cancelServiceWaitOnInputLoss('))throw new Error(`${moduleName} does not use shared service wait cleanup`);
 }
+const serviceWaitSource=fs.readFileSync(path.join(root,'apps/web/src/service-window.ts'),'utf8');
+const serviceContract=JSON.parse(fs.readFileSync(path.join(root,'content/classic-176/service-ui.json'),'utf8'));
+if(serviceContract.interaction.waitMs!==8000||!serviceWaitSource.includes('if(this.current!==request)return;'))throw new Error('shared service wait loses timeout or request identity');
 const shopStateSource=fs.readFileSync(path.join(root,'apps/web/src/shop.ts'),'utf8');
-if(!shopStateSource.includes('const expected=makeIndex===undefined||makeIndex===0?`goods:${name}`:`detail:${makeIndex}`')||!shopStateSource.includes('if(this.pending!==expected)return false;')||!shopStateSource.includes("this.pending!==`sell:${item.makeIndex}`"))throw new Error('late shop responses can mutate a reopened service window');
-if(!fs.readFileSync(path.join(root,'apps/web/src/repair.ts'),'utf8').includes('this.pending!==item.makeIndex')||!fs.readFileSync(path.join(root,'apps/web/src/storage.ts'),'utf8').includes('this.pending!==item.makeIndex'))throw new Error('late repair or storage responses can mutate a reopened service window');
+if(!shopStateSource.includes("request?.kind!=='purchase'||request.name!==name")||!shopStateSource.includes("!this.wait.matches('sale',item.makeIndex)"))throw new Error('shop does not separate purchase and sale result phases');
+if(!fs.readFileSync(path.join(root,'apps/web/src/repair.ts'),'utf8').includes("!this.wait.matches('repair',item.makeIndex)")||!fs.readFileSync(path.join(root,'apps/web/src/storage.ts'),'utf8').includes('!this.wait.matches(this.mode,item.makeIndex)'))throw new Error('repair or storage results do not match the sent phase and instance');
 const quickBarStateSource=fs.readFileSync(path.join(root,'apps/web/src/item-quickbar.ts'),'utf8');
 if(!inventorySource.includes('if(!this.pending.has(id))return false;')||!inventorySource.includes('if(!this.pending.has(slot))return false;')||!quickBarStateSource.includes('if(!this.pending.has(makeIndex))return false;')||!quickBarStateSource.includes('replace(items:InventoryItem[]){this.clearPending();'))throw new Error('late item responses can mutate a replaced inventory or equipment snapshot');
-if(!playSource.includes("if(!shop.resolve(message.name,message.makeIndex,message.accepted))return;")||!playSource.includes("if(!shop.resolveSale(message.item,message.accepted))return;")||!playSource.includes("if(!repair.resolve(message.item,message.accepted))return;")||!playSource.includes("if(!storage.resolve(message.item,message.accepted))return;")||!playSource.includes('const quickBarHandled=itemQuickBar.resolve(message.makeIndex,message.accepted,true);')||!playSource.includes('if(!inventoryHandled&&!quickBarHandled)return;'))throw new Error('stale service or item responses still apply side effects after component rejection');
-console.log('PASS shop, repair and storage pending states time out and unlock');
+if(!playSource.includes('const quickBarHandled=itemQuickBar.resolve(message.makeIndex,message.accepted,true);')||!playSource.includes('if(!inventoryHandled&&!quickBarHandled)return;'))throw new Error('stale item action responses apply side effects after component rejection');
+if(!playSource.includes('if(!npcSession.accept(message)||!shop.resolve(')||!playSource.includes('if(!npcSession.accept(message)||!shop.resolveSale(')||!playSource.includes('if(!npcSession.accept(message)||!repair.resolve(')||!playSource.includes('if(!npcSession.accept(message)||!storage.resolve('))throw new Error('NPC presentation is not gated independently of server-confirmed economic results');
+console.log('PASS service components wire shared timeout identity and gate result phases independently of economic authority');
 
-const quickBarSource=`const uiLayout=${JSON.stringify(uiLayout)};\nfunction classicUiLayout(){return uiLayout;}\n`+fs.readFileSync(path.join(root,'apps/web/src/item-quickbar.ts'),'utf8').replace(/^import .*;\r?\n/gm,'');
-const quickBarContext={exports:{},document:mockDocument,HTMLElement:Element,setTimeout,clearTimeout,loadFallbackItemIcons:()=>new Promise(()=>{}),loadNationalUiLibrary:()=>new Promise(()=>{}),nationalUiUrl:()=>'',uiUrl:()=>'',iconIndexOf:item=>item.looks};
+const quickBarSource=`${itemIconProductionSource(root)}const uiLayout=${JSON.stringify(uiLayout)};\nfunction classicUiLayout(){return uiLayout;}\n`+fs.readFileSync(path.join(root,'apps/web/src/item-quickbar.ts'),'utf8').replace(/^import .*;\r?\n/gm,'');
+const quickBarContext={exports:{},document:mockDocument,HTMLElement:Element,setTimeout,clearTimeout,fetch:()=>new Promise(()=>{}),loadNationalUiLibrary:()=>new Promise(()=>{})};
 vm.createContext(quickBarContext);
 vm.runInContext(ts.transpileModule(quickBarSource,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,quickBarContext);
 if(quickBarContext.exports.ITEM_QUICKBAR_SLOTS!==6||quickBarContext.exports.itemQuickBarSlotFromCode('Digit1')!==0||quickBarContext.exports.itemQuickBarSlotFromCode('Numpad6')!==5||quickBarContext.exports.itemQuickBarSlotFromCode('Digit7')!==undefined)throw new Error('item quickbar key contract does not map the six imported pockets');
 const quickItems=[{name:'小红',makeIndex:401,stdMode:1,looks:1},{name:'木剑',makeIndex:402,stdMode:5,looks:2}];
 const arranged=quickBarContext.exports.arrangeItemQuickSlots(quickItems,[401,402,undefined,undefined,undefined,undefined]);
 if(arranged[0]!==quickItems[0]||arranged[1]!==undefined)throw new Error('item quickbar admits equipment into a consumable slot');
-const quickElement=new Element(),quickUsed=[];
-const quickBar=new quickBarContext.exports.ItemQuickBar(quickElement,{use:id=>{quickUsed.push(id);return true;},layoutKey:()=>undefined});
+const quickElement=new Element(),quickUsed=[];let heldQuickItem;let quickStatus='';
+const quickBar=new quickBarContext.exports.ItemQuickBar(quickElement,{use:id=>{quickUsed.push(id);return true;},layoutKey:()=>undefined,heldItem:()=>heldQuickItem,clearHeld:()=>{heldQuickItem=undefined;},status:text=>{quickStatus=text;}});
 quickBar.replace(quickItems);
 if(quickBar.debugState().slots[0].makeIndex!==401||quickBar.debugState().slots[1].makeIndex!==undefined)throw new Error('item quickbar does not auto-bind usable items into six slots');
 if(quickElement.children[2].disabled)throw new Error('empty item quickbar slots must remain valid drag targets');
 const keyEvent={code:'Digit1',repeat:false,isComposing:false,target:null,preventDefault(){this.prevented=true;}};
 if(!quickBar.handleKey(keyEvent)||!keyEvent.prevented||quickUsed[0]!==401)throw new Error('item quickbar Digit1 does not use the bound item');
-quickBar.bindSlot(2,401);if(quickBar.debugState().slots[0].makeIndex!==undefined||quickBar.debugState().slots[2].makeIndex!==401)throw new Error('item quickbar manual drag binding does not move an item');
-quickBar.clearSlot(2);if(quickBar.debugState().slots.some(slot=>slot.makeIndex!==undefined))throw new Error('item quickbar context clear leaves a bound slot');
-console.log('PASS item quickbar exposes six consumable slots, key use and manual rebinding');
+quickBar.resolve(401,false,false);
+heldQuickItem=quickItems[0];quickElement.children[2].onclick({preventDefault(){}});
+if(quickBar.debugState().slots[0].makeIndex!==undefined||quickBar.debugState().slots[2].makeIndex!==401||heldQuickItem!==undefined||quickUsed.length!==1)throw new Error('clicking a quickbar slot with a held bag item uses the item instead of assigning a shortcut');
+heldQuickItem=quickItems[1];quickElement.children[2].onclick({preventDefault(){}});
+if(quickBar.debugState().slots[2].makeIndex!==401||heldQuickItem!==quickItems[1]||quickUsed.length!==1||!quickStatus.includes('只支持'))throw new Error(`an equipment item replaces or fires the consumable under the held cursor instead of being rejected: ${JSON.stringify({slot:quickBar.debugState().slots[2].makeIndex,held:heldQuickItem?.makeIndex,used:quickUsed,status:quickStatus})}`);
+heldQuickItem=undefined;
+let quickDragged='401',quickDragAllowed=false;const quickTransfer={getData:()=>quickDragged,dropEffect:''};
+quickElement.children[1].ondragover({preventDefault(){quickDragAllowed=true;},dataTransfer:quickTransfer});
+quickElement.children[1].ondrop({preventDefault(){},dataTransfer:quickTransfer});
+if(!quickDragAllowed||quickTransfer.dropEffect!=='copy'||quickBar.debugState().slots[1].makeIndex!==401||quickBar.debugState().slots[2].makeIndex!==undefined)throw new Error('quickbar slot drag does not move a shortcut onto its exact destination');
+if(typeof quickElement.ondrop==='function')throw new Error('dropping in a quickbar gap can still fall through to slot one');
+quickBar.clearSlot(1);
+const quickBagElement=new Element(),quickBag=new context.exports.InventoryView(quickBagElement,{drop(){},use(){},equip(){}});quickBag.replace([quickItems[0]]);
+const quickBagSource=quickBagElement.children.find(child=>child.dataset.itemId==='401');let quickDraggedId='';
+const quickBagTransfer={setData(_type,value){quickDraggedId=value;},getData(){return quickDraggedId;},effectAllowed:'',dropEffect:''};quickBagSource.ondragstart({dataTransfer:quickBagTransfer});
+quickElement.children[3].ondrop({preventDefault(){},dataTransfer:quickBagTransfer});
+if(quickBagTransfer.effectAllowed!=='copyMove'||quickBar.debugState().slots[3].makeIndex!==401||!quickBag.debugState().items.some(item=>item.makeIndex===401)||quickBag.debugState().pending.length)throw new Error('dragging a consumable onto the quickbar consumes the source item or lacks the browser copy effect');
+quickBar.clearSlot(3);if(quickBar.debugState().slots.some(slot=>slot.makeIndex!==undefined))throw new Error('item quickbar context clear leaves a bound slot');
+console.log('PASS item quickbar supports held-item assignment, exact drag targets, use keys and invalid-drop rejection');
+
+const lockedBagElement=new Element(),lockedBarElement=new Element(),lockedUses=[],lockedDrops=[];let lockedQuickBar;
+const lockedInventory=new context.exports.InventoryView(lockedBagElement,{drop:id=>{lockedDrops.push(id);return true;},equip(){},use:id=>{lockedUses.push(id);return true;},availabilityChanged:()=>lockedQuickBar?.refreshAvailability()});
+lockedQuickBar=new quickBarContext.exports.ItemQuickBar(lockedBarElement,{use:id=>lockedInventory.useItem(id),canUse:id=>lockedInventory.selectableItem(id)!==undefined,layoutKey:()=>undefined});
+lockedInventory.replace([quickItems[0]]);lockedQuickBar.replace([quickItems[0]]);
+if(!lockedInventory.useItem(401)||!lockedBarElement.children[0].disabled)throw new Error('bag use does not lock the matching quickbar shortcut');
+const blockedByBag={code:'Digit1',repeat:false,isComposing:false,target:null,preventDefault(){this.prevented=true;}};lockedQuickBar.handleKey(blockedByBag);
+if(!blockedByBag.prevented||lockedUses.length!==1||!lockedInventory.debugState().pending.includes(401))throw new Error('a pending bag item can still be triggered from its quickbar key');
+lockedInventory.resolve(401,false,false);
+const quickbarUse={code:'Digit1',repeat:false,isComposing:false,target:null,preventDefault(){this.prevented=true;}};lockedQuickBar.handleKey(quickbarUse);
+if(!quickbarUse.prevented||lockedUses.length!==2||!lockedInventory.debugState().pending.includes(401)||!lockedQuickBar.debugState().pending.includes(401))throw new Error('quickbar use does not acquire the inventory instance lock');
+if(lockedInventory.useItem(401))throw new Error('the same item can be triggered from the bag while quickbar use is pending');
+lockedInventory.resolve(401,false,false);lockedQuickBar.resolve(401,false,false);
+if(lockedBarElement.children[0].disabled)throw new Error('matching rejection does not release both bag and quickbar locks');
+lockedInventory.reserveForService(401);
+if(!lockedBarElement.children[0].disabled)throw new Error('a service-reserved item remains usable from its quickbar shortcut');
+lockedInventory.requestDrop(401);
+const blockedByService={code:'Digit1',repeat:false,isComposing:false,target:null,preventDefault(){this.prevented=true;}};lockedQuickBar.handleKey(blockedByService);
+if(lockedUses.length!==2||lockedDrops.length||lockedInventory.debugState().pending.length)throw new Error('a service-reserved item can still be used or dropped into the world');
+lockedInventory.releaseFromService(401);
+if(lockedBarElement.children[0].disabled)throw new Error('releasing a service reservation does not restore quickbar availability');
+console.log('PASS bag, service-reserved and quickbar item actions share the same instance lock and recover on rejection');
+
+let quickSendThrows=false;const quickFailureStatuses=[],failedQuickBar=new quickBarContext.exports.ItemQuickBar(new Element(),{use:()=>{if(quickSendThrows)throw new Error('closed socket');return false;},status:text=>quickFailureStatuses.push(text),layoutKey:()=>undefined});
+failedQuickBar.replace([quickItems[0]]);
+failedQuickBar.handleKey({code:'Digit1',repeat:false,isComposing:false,target:null,preventDefault(){}});
+if(failedQuickBar.debugState().pending.length||!quickFailureStatuses.at(-1)?.includes('未发送')||quickFailureStatuses.at(-1)?.includes('正在使用'))throw new Error('a rejected shortcut send leaves a false in-progress status or pending lock');
+quickSendThrows=true;
+failedQuickBar.handleKey({code:'Digit1',repeat:false,isComposing:false,target:null,preventDefault(){}});
+if(failedQuickBar.debugState().pending.length||!quickFailureStatuses.at(-1)?.includes('未发送'))throw new Error('a thrown shortcut send leaves an in-flight lock or no retry feedback');
+console.log('PASS quickbar offline and thrown sends restore the slot immediately and show retry feedback');
 
 const playPage=fs.readFileSync(path.join(root,'apps/web/play.html'),'utf8');
 const calibrationPage=fs.readFileSync(path.join(root,'apps/web/ui-calibration.html'),'utf8');
 if(!playPage.includes('data-hud-item-quickbar')||!calibrationPage.includes('data-hud-item-quickbar')||!playSource.includes("import {ItemQuickBar} from './item-quickbar';")||!playSource.includes("itemQuickBar.replace(message.items)"))throw new Error('production and calibration HUDs are missing the shared item quickbar wiring');
+if(!playSource.includes('use:makeIndex=>inventory.useItem(makeIndex)')||!playSource.includes('canUse:makeIndex=>inventory.selectableItem(makeIndex)!==undefined')||!playSource.includes('availabilityChanged:()=>itemQuickBar.refreshAvailability()'))throw new Error('production item shortcuts do not share the authoritative inventory-instance lock');
 const layoutHelperCompiled=ts.transpileModule(`const uiLayout=${JSON.stringify(uiLayout)};\nconst uiInteractions=${JSON.stringify(uiInteractions)};\n`+fs.readFileSync(path.join(root,'apps/web/src/classic-layout.ts'),'utf8').replace(/^import .*;\r?\n/gm,''),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
 const layoutHelperContext={exports:{}};vm.createContext(layoutHelperContext);
 vm.runInContext(layoutHelperCompiled,layoutHelperContext);
@@ -312,6 +501,6 @@ layoutHelperContext.exports.placeBox(placed,{x:232,y:165,width:336,height:270});
 if(placed.style.left!=='232px'||placed.style.top!=='165px'||placed.style.width!=='336px')throw new Error('layout helper does not apply contract boxes to elements');
 const itemLayout=uiLayout.itemQuickBar;
 const styleSource=fs.readFileSync(path.join(root,'apps/web/src/style.css'),'utf8');
-if(itemLayout.count!==6||itemLayout.slotStep!==46||itemLayout.x!==280||itemLayout.y!==50||itemLayout.frameOrigin.y!==349)throw new Error('item quickbar geometry does not match the imported Prguse#1 evidence');
+if(itemLayout.count!==6||itemLayout.slotStep!==43||itemLayout.x!==285||itemLayout.y!==59||itemLayout.slotWidth!==32||itemLayout.slotHeight!==29||itemLayout.frameOrigin.y!==349)throw new Error('item pocket geometry does not match the reference rectangles and native occupied centers');
 if(styleSource.includes('left:286px!important')||styleSource.includes('left:207px!important')||styleSource.includes('left:12px!important')||styleSource.includes('7.c0ab139c0ca9ba48.png'))throw new Error('national HUD/inventory/character coordinates are still duplicated as CSS !important literals');
 console.log('PASS production and calibration pages share the measured national item quickbar contract');

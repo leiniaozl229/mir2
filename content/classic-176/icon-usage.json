@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "classic-icon-source-usage",
+  "evidenceKind": "reference_source",
+  "nativeRuntimeCompared": false,
+  "browserRuntimeCompared": false,
+  "items": {
+    "field": "server_looks",
+    "indexRule": "exact_zero_based",
+    "bagLibrary": "Items",
+    "equipmentLibrary": "stateitem",
+    "groundLibrary": "DnItems",
+    "legacyMappingPolicy": "unselected_proposed_candidates",
+    "unsupportedStateExpansion": "GetWStateImg maps indexes >=10000 to StN/Idx%10000; no matching active source is registered, so do not substitute another family."
+  },
+  "skills": {
+    "field": "server_effect",
+    "normalMultiplier": 2,
+    "pressedOffset": 1,
+    "library": "MagIcon",
+    "legacyMappingPolicy": "unselected_proposed_candidates",
+    "hudScope": "F1-F8 HUD layout is a Web adaptation; it uses the same exact effect-family normal frame."
+  },
+  "references": [
+    {"file": "GameOfMir/Client/FState.pas", "sha256": "f685ca03af5a999858d5826e924ace25b404b2703107831027b59f6f2491e6b8", "scope": "Magic effect*2 normal and +1 Downed at3490-3499; bag4652, item quickbar3846, service5235 and trade5767/5798 use Item.S.Looks."},
+    {"file": "GameOfMir/Client/ClMain.pas", "sha256": "08c79ace18755ca96882079ed0c5a5ff71c91bd8bb2de6ab539d90272355c74e", "scope": "GetWStateImg6176-6242 exact source family; higher-version StN branch is not silently synthesized."},
+    {"file": "GameOfMir/Client/PlayScn.pas", "sha256": "0dcc555bf7fbd10fbd1ac240250bdc0bc28dead21ad188f664030c1af7426120", "scope": "Ground item DnItems lookup uses DropItem.Looks at1204/1857."}
+  ]
+}

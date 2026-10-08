@@ -10,6 +10,7 @@ public static class ChatCommand
         return channel?.Trim().ToLowerInvariant() switch
         {
             "local" or "nearby" => LocalText(text),
+            "raw" => text,
             "shout" => Prefix("!", text),
             "group" => Prefix("!!", text),
             "guild" => Prefix("!~", text),

@@ -1,0 +1,35 @@
+body.classic-play #classic-modal-layer>section.classic-service-window,body.classic-play .classic-service-window{box-sizing:border-box;position:absolute;max-width:none;max-height:none;margin:0;padding:0;border:0;overflow:visible;background-color:transparent;background-repeat:no-repeat;image-rendering:pixelated;color:#fff;font:12px/13px SimSun,'Songti SC',serif;text-shadow:1px 1px #000}
+.classic-service-window .service-heading{position:absolute;inset:0 0 auto;height:var(--service-heading-height);pointer-events:auto}
+.classic-service-window .service-a11y-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+.classic-service-window .service-command{position:absolute;padding:0;border:0;background:transparent;color:transparent;font-size:0;cursor:pointer;image-rendering:pixelated}
+.classic-service-window .service-command:hover:not(:disabled){-webkit-backdrop-filter:brightness(1.3);backdrop-filter:brightness(1.3)}
+.classic-service-window .service-command:active:not(:disabled){-webkit-backdrop-filter:brightness(.68);backdrop-filter:brightness(.68)}
+.classic-service-window .service-command:focus-visible,.classic-service-window .service-item-slot:focus-visible{outline:1px solid #fff08e}
+.classic-service-window .service-command:disabled{-webkit-backdrop-filter:brightness(.55);backdrop-filter:brightness(.55);cursor:default}
+@supports not (backdrop-filter:brightness(1)) and not (-webkit-backdrop-filter:brightness(1)){
+ .classic-service-window .service-command:hover:not(:disabled){outline:1px solid rgba(255,219,112,.7)}
+ .classic-service-window .service-command:active:not(:disabled){background:rgba(0,0,0,.24)}
+ .classic-service-window .service-command:disabled{background:rgba(0,0,0,.45)}
+}
+.classic-service-window .service-command--close{left:var(--service-close-x);top:var(--service-close-y);width:var(--service-close-width);height:var(--service-close-height)}
+.classic-service-window .service-command--previous{left:var(--service-previous-x);top:var(--service-previous-y);width:var(--service-previous-width);height:var(--service-previous-height)}
+.classic-service-window .service-command--next{left:var(--service-next-x);top:var(--service-next-y);width:var(--service-next-width);height:var(--service-next-height)}
+.classic-service-window .service-command--confirm{left:var(--service-confirm-x);top:var(--service-confirm-y);width:var(--service-confirm-width);height:var(--service-confirm-height)}
+.classic-service-window[data-service-frame="392"] .service-command--confirm{border-radius:50%}
+.classic-service-window .service-menu-headers{position:absolute;left:var(--service-headers-x);top:var(--service-headers-y);width:var(--service-headers-width);height:var(--service-headers-height);display:grid;grid-template-columns:var(--service-menu-columns);pointer-events:none}
+.classic-service-window .service-menu-list{position:absolute;left:var(--service-list-x);top:var(--service-list-y);width:var(--service-list-width);height:var(--service-list-height);display:flex;flex-direction:column;gap:0}
+.classic-service-window .service-menu-row{position:relative;display:grid;grid-template-columns:var(--service-menu-columns);flex:none;min-height:0;width:var(--service-list-width);height:var(--service-row-height);padding:0;border:0;background:transparent;color:#fff;font:12px/var(--service-row-height) SimSun,'Songti SC',serif;text-shadow:1px 1px #000;text-align:left;cursor:pointer}
+.classic-service-window .service-menu-row>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.classic-service-window .service-menu-row[aria-selected="true"]{color:#ff5959}
+.classic-service-window .service-menu-row:hover:not(:disabled){background:rgba(220,190,105,.12)}
+.classic-service-window .service-menu-row:focus-visible{outline:1px solid #e8d18a;outline-offset:-1px}
+.classic-service-window .service-menu-row:disabled{cursor:default;color:#999}
+.classic-service-window .service-item-slot{position:absolute;left:var(--service-item-x);top:var(--service-item-y);display:grid;place-items:center;width:var(--service-item-width);height:var(--service-item-height);padding:0;border:0;background:transparent;color:#efe0b5;font:12px SimSun,serif;overflow:visible;cursor:pointer}
+.classic-service-window .service-item-slot[data-item-id]{outline:1px solid rgba(228,202,120,.25)}
+.classic-service-window .service-item-slot:disabled{cursor:default;filter:brightness(.7)}
+.classic-service-window .service-item-icon{max-width:none;max-height:none;object-fit:none;image-rendering:pixelated;pointer-events:none}
+.classic-service-window .service-price{position:absolute;left:var(--service-price-x);top:var(--service-price-y);width:var(--service-price-width);height:var(--service-price-height);overflow:hidden;white-space:nowrap;text-overflow:ellipsis;color:#fff;font:12px/var(--service-price-height) SimSun,serif}
+.classic-service-window .service-status{position:absolute;left:var(--service-status-x);top:var(--service-status-y);width:var(--service-status-width);max-height:var(--service-status-height);overflow:hidden;color:#e7d6aa;font:10px/12px SimSun,serif;pointer-events:none}
+.classic-service-window[data-service-frame="392"] .service-status{text-align:center}
+.classic-service-window .service-return{position:absolute;left:var(--service-return-x);top:var(--service-return-y);width:var(--service-return-width);height:var(--service-return-height);margin:0;padding:0;border:0;background:transparent;color:#e7d6aa;font:10px/var(--service-return-height) SimSun,serif;cursor:pointer}
+.classic-service-window[data-service-skin="pending"]{background-color:#1c1812;outline:1px solid #827451}

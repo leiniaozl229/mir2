@@ -53,7 +53,7 @@
         /// </summary>
         public bool boDenyChrName = true;
         /// <summary>
-        /// 角色删除最小等级，小于该值的角色无法删除
+        /// 角色删除等级上限，达到或超过该值的角色无法删除
         /// </summary>
         public int DeleteMinLevel = 30;
         public int Interval = 3000;

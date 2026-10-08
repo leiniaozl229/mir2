@@ -642,16 +642,20 @@ namespace M2Server.Actor
                 if (newX >= 0 && Envir.Width - 1 >= newX && newY >= 0 && Envir.Height - 1 >= newY)
                 {
                     bool canWalk = true;
+                    if (Master == null && IsAggressiveMonsterRace(Race) && IsSafeZonePosition(Envir, newX, newY))
+                    {
+                        canWalk = false;
+                    }
                     if (fearFire)//怪物不进入火墙才判断是否能走动
                     {
-                        canWalk = !Envir.CanSafeWalk(newX, newY);
+                        canWalk = canWalk && Envir.CanSafeWalk(newX, newY);
                     }
                     if (Master != null)
                     {
                         short n20 = 0;
                         short n24 = 0;
                         Master.Envir.GetNextPosition(Master.CurrX, Master.CurrY, Master.Dir, 1, ref n20, ref n24);
-                        if (newX == 0 && newY == n24)
+                    if (newX == n20 && newY == n24)
                         {
                             canWalk = false;
                         }
@@ -1459,7 +1463,7 @@ namespace M2Server.Actor
             int maxHp = 0;
             if ((Race == ActorRace.MonsterWhiteskeleton) || (Race == ActorRace.MonsterElfmonster) || (Race == ActorRace.MonsterElfwarrior))
             {
-                byte slaveExpLevel = ((MonsterObject)this).SlaveExpLevel;
+                byte slaveExpLevel = this is AnimalObject animal ? animal.SlaveExpLevel : (byte)0;
                 WAbil.DC = (ushort)HUtil32.MakeLong(HUtil32.LoWord(WAbil.DC), (ushort)HUtil32.Round((slaveExpLevel * 0.1 + 0.3) * 3.0 * slaveExpLevel + HUtil32.HiWord(WAbil.DC)));
                 maxHp = maxHp + HUtil32.Round((slaveExpLevel * 0.1 + 0.3) * WAbil.MaxHP) * slaveExpLevel;
                 maxHp = maxHp + WAbil.MaxHP;
@@ -1474,7 +1478,7 @@ namespace M2Server.Actor
             }
             else
             {
-                byte slaveExpLevel = ((MonsterObject)this).SlaveExpLevel;
+                byte slaveExpLevel = this is AnimalObject animal ? animal.SlaveExpLevel : (byte)0;
                 maxHp = WAbil.MaxHP;
                 WAbil.DC = (ushort)HUtil32.MakeLong(HUtil32.LoWord(WAbil.DC), (ushort)HUtil32.Round(slaveExpLevel * 2.0 + HUtil32.HiWord(WAbil.DC)));
                 maxHp = maxHp + HUtil32.Round(WAbil.MaxHP * 0.15) * slaveExpLevel;
@@ -1774,18 +1778,15 @@ namespace M2Server.Actor
 
         public bool InSafeZone()
         {
-            if (Envir == null)
-            {
-                return true;
-            }
-            if (Envir.Flag.SafeArea)
-            {
-                return true;
-            }
-            return InSafeZone(Envir, CurrX, CurrY);
+            return IsSafeZonePosition(Envir, CurrX, CurrY);
         }
 
         public bool InSafeZone(IEnvirnoment envir, int nX, int nY)
+        {
+            return IsSafeZonePosition(envir, nX, nY);
+        }
+
+        public static bool IsSafeZonePosition(IEnvirnoment envir, int nX, int nY)
         {
             if (envir == null)
             {
@@ -1801,6 +1802,7 @@ namespace M2Server.Actor
             {
                 return true;
             }
+            if (M2Share.StartPointList == null) return false;
             for (int i = 0; i < M2Share.StartPointList.Count; i++)
             {
                 if (string.Equals(M2Share.StartPointList[i].MapName, envir.MapName, StringComparison.OrdinalIgnoreCase))
@@ -1814,6 +1816,54 @@ namespace M2Server.Actor
                 }
             }
             return false;
+        }
+
+        // Project policy from 0025; this extended race classification is not a
+        // claim that every supported monster existed in the target 1.76 client.
+        public static bool IsAggressiveMonsterRace(int race)
+        {
+            return race >= ActorRace.AnimalWolf && race != ActorRace.Trainer &&
+                   race != ActorRace.SabukDoor && race != ActorRace.SabukWall &&
+                   race != ActorRace.ArcherGuard;
+        }
+
+        public static bool TryFindMonsterSpawnPosition(IEnvirnoment map, ref short nX, ref short nY)
+        {
+            if (map == null || map.Flag.SafeArea) return false;
+            if (IsAllowedMonsterSpawnPosition(map, nX, nY)) return true;
+            int radius = (int)Math.Min((long)Math.Max(0, (int)SystemShare.Config.SafeZoneSize) + 16,
+                Math.Max(map.Width, map.Height));
+            for (int distance = 1; distance <= radius; distance++)
+            {
+                for (int offset = -distance; offset <= distance; offset++)
+                {
+                    if (TryUseMonsterSpawnPosition(map, nX + offset, nY - distance, out short x, out short y) ||
+                        TryUseMonsterSpawnPosition(map, nX + distance, nY + offset, out x, out y) ||
+                        TryUseMonsterSpawnPosition(map, nX + offset, nY + distance, out x, out y) ||
+                        TryUseMonsterSpawnPosition(map, nX - distance, nY + offset, out x, out y))
+                    {
+                        nX = x;
+                        nY = y;
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private static bool TryUseMonsterSpawnPosition(IEnvirnoment map, int nX, int nY,
+            out short x, out short y)
+        {
+            x = (short)nX;
+            y = (short)nY;
+            return IsAllowedMonsterSpawnPosition(map, nX, nY);
+        }
+
+        private static bool IsAllowedMonsterSpawnPosition(IEnvirnoment map, int nX, int nY)
+        {
+            return nX >= 0 && nX < map.Width && nY >= 0 && nY < map.Height &&
+                   nX <= short.MaxValue && nY <= short.MaxValue && map.CanWalk(nX, nY, false) &&
+                   !IsSafeZonePosition(map, nX, nY);
         }
 
         /// <summary>
@@ -2438,7 +2488,17 @@ namespace M2Server.Actor
 
         public bool ReAliveEx(MonGenInfo monGen)
         {
-            WAbil = Abil;
+            if (monGen == null || Envir == null) return false;
+            bool avoidSafeZone = Master == null && CanReAlive && IsAggressiveMonsterRace(Race);
+            if (avoidSafeZone)
+            {
+                // Reject an impossible natural respawn before clearing the old
+                // life or publishing status. This probe consumes no random roll.
+                short probeX = monGen.X;
+                short probeY = monGen.Y;
+                if (!TryFindMonsterSpawnPosition(Envir, ref probeX, ref probeY)) return false;
+            }
+            WAbil = Abil.Clone();
             Gold = 0;
             NoItem = false;
             StoneMode = false;
@@ -2447,8 +2507,8 @@ namespace M2Server.Actor
             FixedHideMode = false;
             if (Race >= ActorRace.Animal)
             {
-                ((MonsterObject)this).CrazyMode = false;
-                ((AnimalObject)this).HolySeize = false;
+                if (this is MonsterObject monster) monster.CrazyMode = false;
+                if (this is AnimalObject animal) animal.HolySeize = false;
             }
             if (this is CastleDoor)
             {
@@ -2500,7 +2560,8 @@ namespace M2Server.Actor
 
             if (this is ScultureMonster)
             {
-                FixedHideMode = true;
+                StoneMode = true;
+                CharStatusEx = PoisonState.STONEMODE;
             }
 
             if (this is ScultureKingMonster)
@@ -2619,6 +2680,18 @@ namespace M2Server.Actor
             }
             short nX = (short)(monGen.X - monGen.Range + M2Share.RandomNumber.Random(monGen.Range * 2 + 1));
             short nY = (short)(monGen.Y - monGen.Range + M2Share.RandomNumber.Random(monGen.Range * 2 + 1));
+            if (avoidSafeZone)
+            {
+                if (!TryFindMonsterSpawnPosition(Envir, ref nX, ref nY) ||
+                    !Envir.AddMapObject(nX, nY, CellType, this.ActorId, this))
+                {
+                    return false;
+                }
+                CurrX = nX;
+                CurrY = nY;
+            }
+            else
+            {
             bool mBoErrorOnInit = true;
             if (Envir.CanWalk(nX, nY, true))
             {
@@ -2704,6 +2777,7 @@ namespace M2Server.Actor
                 CurrX = nX2;
                 CurrY = nY2;
                 Envir.AddMapObject(CurrX, CurrY, CellType, this.ActorId, this);
+            }
             }
             Abil.HP = Abil.MaxHP;
             Abil.MP = Abil.MaxMP;

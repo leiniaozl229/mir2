@@ -23,13 +23,14 @@ def export(mysql_exe: Path, option_file: Path, output: Path) -> int:
          "-D", "mir2_data", "--execute", query],
         check=True, capture_output=True,
     )
-    items: dict[str, dict[str, list[int]]] = {}
+    items: dict[str, dict[str, list[int] | int]] = {}
     for line in result.stdout.decode("utf-8").splitlines():
         fields = line.split("\t")
         if len(fields) != len(columns) or not fields[0]:
             raise ValueError(f"Invalid stditems row: {line!r}")
         name_key = fields[0].encode("gbk").hex()
         stats = items.setdefault(name_key, {})
+        stats.setdefault("mode", int(fields[1]))
         for index, field in enumerate(FIELDS):
             minimum, maximum = (int(value) for value in fields[2 + index * 2:4 + index * 2])
             previous = stats.get(field, [0, 0])

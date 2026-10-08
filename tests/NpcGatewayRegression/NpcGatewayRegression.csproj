@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <NpcTestFramework Condition="'$(NpcTestFramework)' == ''">net10.0</NpcTestFramework>
+    <TargetFramework>$(NpcTestFramework)</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <GatewayProjectPath Condition="'$(GatewayProjectPath)' == ''">../../services/web-gateway/WebGateway.csproj</GatewayProjectPath>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="$(GatewayProjectPath)" /></ItemGroup>
+</Project>

@@ -367,6 +367,19 @@ namespace M2Server.Maps
             return ref CellArray[0];
         }
 
+        // Events may belong to blocked cells (in particular wall mining nodes).
+        // Keep GetCellInfo's walkable-cell contract for actors and movement.
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private ref MapCellInfo GetEventCellInfo(int nX, int nY, out bool success)
+        {
+            success = CellMatch(nX, nY);
+            if (success)
+            {
+                return ref CellArray[nX * Height + nY];
+            }
+            return ref CellArray[0];
+        }
+
         public bool MoveToMovingObject(int nCx, int nCy, IActor cert, int nX, int nY, bool boFlag)
         {
             if (!CellMatch(nX, nY))
@@ -861,7 +874,7 @@ namespace M2Server.Maps
             const string sExceptionMsg = "[Exception] Envirnoment::AddToMapMineEvent ";
             try
             {
-                ref MapCellInfo cellInfo = ref GetCellInfo(nX, nY, out bool cellSuccess);
+                ref MapCellInfo cellInfo = ref GetEventCellInfo(nX, nY, out bool cellSuccess);
                 if (cellSuccess && !cellInfo.Valid) //不动走动的地方才允许放矿
                 {
                     bool isSpace = false;// 人物可以走到的地方才放上矿
@@ -869,7 +882,7 @@ namespace M2Server.Maps
                     {
                         for (int y = nY - 1; y <= nY + 1; y++)
                         {
-                            if (CellValid(x, y))
+                            if (CellMatch(x, y) && CellValid(x, y))
                             {
                                 isSpace = true;
                             }
@@ -1398,7 +1411,7 @@ namespace M2Server.Maps
         public MapEvent GetEvent(int nX, int nY)
         {
             ChFlag = false;
-            ref MapCellInfo cellInfo = ref GetCellInfo(nX, nY, out bool cellSuccess);
+            ref MapCellInfo cellInfo = ref GetEventCellInfo(nX, nY, out bool cellSuccess);
             if (cellSuccess && cellInfo.IsAvailable)
             {
                 for (int i = 0; i < cellInfo.ObjList.Count; i++)

@@ -75,6 +75,9 @@ public record LegacyPacket(int Id, int Recog, ushort Param, ushort Tag, ushort S
     public string Text => LegacyCodec.Gbk.GetString(Body);
     public static LegacyPacket Parse(byte[] frame)
     {
+        // Native mining's raw fragment marker is not a 16-byte message header.
+        // It confirms neither an ore roll nor receipt of an inventory instance.
+        if (frame.AsSpan().SequenceEqual("=DIG"u8)) return new(-1, 0, 0, 0, 0, [], "=DIG");
         if (frame.Length > 0 && frame[0] == '+') return new(-1, 0, 0, 0, 0, [], Encoding.ASCII.GetString(frame));
         if (frame.Length < 16) throw new InvalidDataException("Truncated legacy header");
         var header = LegacyCodec.Decode(frame.AsSpan(0, 16));

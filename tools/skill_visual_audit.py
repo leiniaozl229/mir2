@@ -16,6 +16,11 @@ ASSETS = ROOT / "content/classic-176/asset-sources.json"
 
 
 def ranges_for(library: str) -> list[tuple[int, int]]:
+    native = json.loads((ROOT / "content/classic-176/national-gameplay.json").read_text(encoding="utf-8"))
+    # Source count is pinned in the gameplay contract. Runtime pixel validation
+    # belongs to the import/QA report; this check also runs in clean checkouts.
+    if library in native["effectFrameCounts"]:
+        return [(0, native["effectFrameCounts"][library] - 1)]
     data = json.loads(ASSETS.read_text(encoding="utf-8"))
     name = "Magic.Lib" if library == "Magic" else "Magic2.Lib"
     return [tuple(pair) for entry in data["effectFiles"] if entry["file"] == name for pair in entry["ranges"]]

@@ -1,0 +1,21 @@
+.client-settings-overlay{position:absolute;inset:0;z-index:900;pointer-events:auto;background:rgba(0,0,0,.12)}
+.client-settings-overlay[hidden]{display:none}
+.client-settings-panel{position:absolute;box-sizing:border-box;margin:0;padding:0;border:0;background:#20180f;background-repeat:no-repeat;color:#fff;font:12px SimSun,"Songti SC",serif;max-width:none;text-shadow:1px 1px #000}
+.client-settings-heading{position:absolute;left:30px;top:14px;width:320px;height:24px;cursor:move;font-weight:normal}
+.client-settings-close{position:absolute;padding:0;border:0;width:16px;height:23px;font-size:10px}
+.client-settings-close[data-skin-state=national],.client-settings-logout[data-skin-state=national]{color:transparent;text-shadow:none;background-color:transparent}
+.client-settings-options{position:absolute;display:grid;gap:9px}
+.client-settings-options label{display:flex;align-items:center;justify-content:space-between;height:27px;margin:0;font:inherit}
+.client-settings-options input[type=range]{width:180px;padding:0;accent-color:#bd955c}
+.client-settings-options input[type=checkbox]{width:16px;height:16px;accent-color:#bd955c}
+.client-settings-options select{width:180px;height:25px;background:#281e14;color:#fff;font:inherit;padding:2px 6px}
+.client-settings-status{position:absolute;left:30px;top:234px;width:356px;height:30px;font-size:11px}
+.client-settings-note{position:absolute;left:30px;top:265px;color:#b5a68b;font-size:10px}
+.client-settings-retry{position:absolute;right:30px;top:258px;font:inherit}
+.client-settings-logout{position:absolute;padding:0;border:0;background-repeat:no-repeat;font-size:10px;cursor:pointer}
+.client-settings-logout-label{position:absolute;color:#e5d6b5;font-size:12px;pointer-events:none}
+.client-settings-logout:disabled{opacity:.45;cursor:default}
+.client-settings-entry{position:absolute;z-index:30;pointer-events:auto;padding:0;color:#e5d6b5;border:1px solid #655037;background:#241a10;font:12px SimSun,"Songti SC",serif}
+.logout-wait-overlay{position:absolute;inset:0;z-index:950;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;pointer-events:auto;color:#e5d6b5;font:14px SimSun,"Songti SC",serif;text-shadow:1px 1px #000}
+.logout-wait-overlay[hidden]{display:none}
+.logout-wait-overlay p{background:#21180e;padding:24px;border:1px solid #6d5633;max-width:380px;text-align:center}

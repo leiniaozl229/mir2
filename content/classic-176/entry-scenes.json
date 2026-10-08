@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "domain": "original-login-scenes",
+  "canvas": {
+    "width": 800,
+    "height": 600
+  },
+  "complete": false,
+  "sources": {
+    "chrsel": {
+      "sourceSha256": "4bac812aae60e0638b9ff38518f3fcdb6c284efbe55430f5aef737cf2c8e6b4d",
+      "indexSha256": "9cdabbb910df77c2e1e42de8d4d95261c77f9dc8b901a833f022e4ce1710691c",
+      "source": "ChrSel.wil",
+      "index": "ChrSel.WIX",
+      "frames": {
+        "22": {
+          "index": 22,
+          "width": 800,
+          "height": 600,
+          "offsetX": 7,
+          "offsetY": -44,
+          "file": "22.70cee3f60ca28dbc.png",
+          "sha256": "70cee3f60ca28dbc727be4e9a00f45d4b8f584100d2a1ae03d059116f3b14689",
+          "pixelSha256": "d3709fac61d669b59b5dae1d8ae430dcf9ed52c307a18c21c85d3f7052a3837f",
+          "rebuiltPngByteEqual": true,
+          "decodedPngPixelEqual": true
+        }
+      }
+    },
+    "prguse": {
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "source": "Prguse.wil",
+      "index": "Prguse.WIX",
+      "frames": {
+        "256": {
+          "index": 256,
+          "width": 308,
+          "height": 450,
+          "offsetX": 7,
+          "offsetY": -44,
+          "file": "256.d30f62a250319f47.png",
+          "sha256": "d30f62a250319f4786b74f9713e09f3d37c8e4b02463065d66d06dde5d6fbaf3",
+          "pixelSha256": "49c679e8ddb7537e6f7c8d44b1d8923e786232f6914e6f7ab4ad3062c8a2618b",
+          "rebuiltPngByteEqual": true,
+          "decodedPngPixelEqual": true
+        },
+        "380": {
+          "index": 380,
+          "width": 256,
+          "height": 359,
+          "offsetX": 7,
+          "offsetY": -44,
+          "file": "380.875ffd8d5c7be804.png",
+          "sha256": "875ffd8d5c7be80409e555199cf5592d45d8f0aa4f8b52e1c3670981c8807a9c",
+          "pixelSha256": "f28d7621270863a842aea3f443663616187bb9f57f6a37e9dda66fa32fee6129",
+          "rebuiltPngByteEqual": true,
+          "decodedPngPixelEqual": true
+        },
+        "361": {
+          "index": 361,
+          "width": 80,
+          "height": 34,
+          "offsetX": 7,
+          "offsetY": -44,
+          "file": "361.418e002b8222f085.png",
+          "sha256": "418e002b8222f085ab408f7051533f2ef9d66e973c7aab30481223d3d4692487",
+          "pixelSha256": "3615238f90ef7b38f4e698e6728f486a0362e9df42c3bc48e3ae920e0b7cdf27",
+          "rebuiltPngByteEqual": true,
+          "decodedPngPixelEqual": true
+        },
+        "362": {
+          "index": 362,
+          "width": 80,
+          "height": 34,
+          "offsetX": 7,
+          "offsetY": -44,
+          "file": "362.afa04ed614dbae63.png",
+          "sha256": "afa04ed614dbae6374ff2438f7389f0781381349bf59a7adb72ba47e66864d5e",
+          "pixelSha256": "909800e4dbe2a3b9b97a301a9edfc4141d28433590893f7925d9a0bcd7b064a4",
+          "rebuiltPngByteEqual": true,
+          "decodedPngPixelEqual": true
+        }
+      }
+    },
+    "prguse2": {
+      "sourceSha256": "90bfe084ae19b1368d5d3991965debf430556a57637a65069bd933e1064ba7af",
+      "indexSha256": "790e42e30faf9e053485bb4f36734806dcfa97bef45b3fdac43a52f22c862cfe",
+      "source": "Prguse2.wil",
+      "index": "Prguse2.WIX",
+      "frames": {
+        "2": {
+          "index": 2,
+          "width": 168,
+          "height": 41,
+          "offsetX": 7,
+          "offsetY": -44,
+          "file": "2.5e91ef1ba17a87d4.png",
+          "sha256": "5e91ef1ba17a87d49e562e4bda759737c9531edf01fddf6c2d67d6957f81b660",
+          "pixelSha256": "2b9d212b35a5aa93ee88ea1d2783f1d8befc013b6e2844b8d5a703c916cfd066",
+          "rebuiltPngByteEqual": true,
+          "decodedPngPixelEqual": true
+        },
+        "3": {
+          "index": 3,
+          "width": 168,
+          "height": 41,
+          "offsetX": 7,
+          "offsetY": -44,
+          "file": "3.eca5fa839b516587.png",
+          "sha256": "eca5fa839b516587366a8476014944c42faf50ccb99803e832100ca65c49d77f",
+          "pixelSha256": "1211d527c7cb7ea2543283182f73a695600f2e62007317991034cd69f0bd127e",
+          "rebuiltPngByteEqual": true,
+          "decodedPngPixelEqual": true
+        }
+      }
+    }
+  },
+  "serverSelection": {
+    "background": {
+      "family": "chrsel",
+      "frame": 22
+    },
+    "panel": {
+      "family": "prguse",
+      "frame": 256,
+      "left": 246,
+      "top": 75
+    },
+    "button": {
+      "family": "prguse2",
+      "normalFrame": 2,
+      "pressedFrame": 3,
+      "hoverFrame": 2,
+      "left": 63,
+      "top": 214,
+      "width": 168,
+      "height": 41,
+      "text": {
+        "fontProfile": "kaiti-16-bold",
+        "fontSize": 16,
+        "fontWeight": 700,
+        "color": "#f7ef8c",
+        "drawTop": 12,
+        "lineHeight": 18,
+        "nativeFontMetricsVerified": false,
+        "fontEvidence": "Observed original server-name RGB region qualified; arbitrary names and source API remain unqualified"
+      },
+      "columnStep": 178,
+      "rowStep": 46,
+      "columns": 1
+    },
+    "close": {
+      "left": 244,
+      "top": 30,
+      "width": 16,
+      "height": 23,
+      "paint": "embedded in original panel",
+      "centerClickVerified": true,
+      "fullHotAreaBoundsVerified": false
+    },
+    "keys": {
+      "Enter": "ignore",
+      "Escape": "ignore"
+    },
+    "browserExit": "Disconnect and return to login; native window exits the process",
+    "multipleServerLayout": "proposed; current native service has exactly one server"
+  },
+  "entryNotice": {
+    "background": "#000000",
+    "panel": {
+      "family": "prguse",
+      "frame": 380,
+      "left": 272,
+      "top": 120
+    },
+    "button": {
+      "family": "prguse",
+      "normalFrame": 361,
+      "pressedFrame": 362,
+      "hoverFrame": 361,
+      "left": 90,
+      "top": 305,
+      "width": 80,
+      "height": 34
+    },
+    "text": {
+      "left": 23,
+      "top": 20,
+      "width": 232,
+      "fontProfile": "kaiti-12",
+      "fontSize": 12,
+      "lineHeight": 14,
+      "color": "#ffffff",
+      "whiteSpace": "pre",
+      "overflow": "visible",
+      "fontEvidence": "Two observed original notice rows are RGB equal with source-bound glyphs and four-way black outline; all other text metrics remain unqualified"
+    },
+    "keys": {
+      "Enter": "acknowledge",
+      "Escape": "ignore"
+    },
+    "reselection": "show again for each entry",
+    "serverTimeoutSeconds": 120
+  },
+  "evidence": {
+    "sourcePixels": "Re-decoded repository native-client WIL/WIX; PNG bytes and RGBA pixels equal",
+    "nativeRuntime": [
+      "88-entry-scenes-server-selection.jpg",
+      "89-entry-scenes-server-enter.jpg",
+      "90-entry-scenes-server-escape.jpg",
+      "93-entry-scenes-notice-idle.jpg",
+      "94-entry-scenes-notice-enter-world.jpg",
+      "95-entry-scenes-reselection-notice.jpg",
+      "96-entry-scenes-notice-escape.jpg",
+      "97-entry-scenes-notice-click-world.jpg"
+    ],
+    "normalFramePlacement": "Native 800x600 screenshots matched to locked PNGs",
+    "hoverPressedSemantics": "Normal reused for hover; frame pair pressed roles pending native video",
+    "fullHotAreaBoundsVerified": false,
+    "browserVisualComparisonVerified": false,
+    "continuousVideoVerified": false
+  }
+}

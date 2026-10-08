@@ -27,7 +27,7 @@ namespace M2Server.Actor
                     LateDelivery = false,
                     Buff = sMsg
                 };
-                MsgQueue.Enqueue(sendMessage, (byte)Priority);
+                EnqueueMessage(sendMessage, (byte)Priority);
             }
         }
 
@@ -91,7 +91,7 @@ namespace M2Server.Actor
                     LateDelivery = false,
                     Buff = sMsg
                 };
-                MsgQueue.Enqueue(sendMessage, (byte)wIdent);
+                EnqueueMessage(sendMessage, (byte)wIdent);
             }
         }
 
@@ -178,7 +178,7 @@ namespace M2Server.Actor
                 //        sendMessage.wIdent = 0;
                 //        break;
                 //}
-                MsgQueue.Enqueue(sendMessage, (byte)wIdent);
+                EnqueueMessage(sendMessage, (byte)wIdent);
             }
         }
 
@@ -201,7 +201,7 @@ namespace M2Server.Actor
                     Buff = sMsg,
                     ActorId = this.ActorId
                 };
-                MsgQueue.Enqueue(sendMessage, (byte)MessagePriority.Lowest);
+                EnqueueMessage(sendMessage, (byte)MessagePriority.Lowest);
             }
         }
 
@@ -224,7 +224,7 @@ namespace M2Server.Actor
                     Buff = sMsg,
                     ActorId = Messages.RM_STRUCK
                 };
-                MsgQueue.Enqueue(sendMessage, (byte)MessagePriority.Lowest);
+                EnqueueMessage(sendMessage, (byte)MessagePriority.Lowest);
             }
         }
 
@@ -247,7 +247,7 @@ namespace M2Server.Actor
                     Buff = sMsg
                 };
                 sendMessage.ActorId = actorId == Messages.RM_STRUCK ? Messages.RM_STRUCK : actorId;
-                MsgQueue.Enqueue(sendMessage, (byte)MessagePriority.Lowest);
+                EnqueueMessage(sendMessage, (byte)MessagePriority.Lowest);
             }
         }
 
@@ -338,7 +338,7 @@ namespace M2Server.Actor
             {
                 if ((sendMessage.DeliveryTime > 0) && (HUtil32.GetTickCount() < sendMessage.DeliveryTime))
                 {
-                    MsgQueue.Enqueue(sendMessage, (byte)MessagePriority.Lowest);//延时消息优先级最低
+                    EnqueueMessage(sendMessage, (byte)MessagePriority.Lowest);//延时消息优先级最低
                     return false;
                 }
                 msg.wIdent = sendMessage.wIdent;
@@ -361,7 +361,7 @@ namespace M2Server.Actor
             {
                 if ((sendMessage.DeliveryTime > 0) && (msgTick < sendMessage.DeliveryTime))
                 {
-                    MsgQueue.Enqueue(sendMessage, (byte)MessagePriority.Lowest);//延时消息优先级最低
+                    EnqueueMessage(sendMessage, (byte)MessagePriority.Lowest);//延时消息优先级最低
                     return false;
                 }
                 msg.wIdent = sendMessage.wIdent;

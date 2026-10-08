@@ -7,9 +7,9 @@ namespace Mir2.WebGateway;
 public static class WorldProjection
 {
     public static object? Project(LegacyPacket packet, string character, int? playerActorId = null,
-        string? knownName = null, byte? knownNameColor = null)
+        string? knownName = null, byte? knownNameColor = null, long? attackActionId = null)
     {
-        if (packet.Id is 10 or 11 or 13 or 50 or 801 or 807)
+        if (packet.Id is 6 or 9 or 10 or 11 or 13 or 50 or 801 or 807)
         {
             byte[] description = packet.Id == 50 ? packet.Body
                 : packet.EncodedBody.Length >= 11 ? LegacyCodec.Decode(packet.EncodedBody.AsSpan(0, 11)) : [];
@@ -18,30 +18,47 @@ public static class WorldProjection
             bool self = packet.Id == 50 || playerActorId == packet.Recog;
             string? name = self ? character : knownName;
             byte? nameColor = knownNameColor;
-            if (packet.Id is 10 or 801 or 807 && packet.EncodedBody.Length > 11)
+            if (packet.Id is 9 or 10 or 801 or 807 && packet.EncodedBody.Length > 11)
             {
                 string[] parts = LegacyCodec.Gbk.GetString(LegacyCodec.Decode(packet.EncodedBody.AsSpan(11))).Split('/');
                 name = DisplayName(parts[0]);
                 if (parts.Length > 1 && byte.TryParse(parts[1], out byte color)) nameColor = color;
             }
             return new { type = "entity", id = packet.Recog, x = packet.Param, y = packet.Tag,
-                direction = packet.Series & 255, feature, status, name, nameColor, self,
+                direction = packet.Series & 255,
+                light = packet.Id is 9 or 10 or 11 or 13 or 50 ? (int?)(packet.Series >> 8) : null,
+                feature, status, name, nameColor, self,
                 // Movement/update packets can omit the name. Keep the kind
                 // unknown in that case so a later update cannot overwrite a
                 // previously classified summon with "monster".
                 kind = name is null && !self ? null : Kind(self, feature, name, nameColor),
-                action = packet.Id == 11 ? "walking" : packet.Id == 13 ? "running" : "standing", dead = false };
+                action = packet.Id == 6 ? "rush" : packet.Id == 9 ? "backstep" : packet.Id == 11 ? "walking" : packet.Id == 13 ? "running" : "standing",
+                forced = packet.Id is 6 or 9, dead = false };
         }
         return packet.Id switch
         {
+            // SM_RUSHKUNG is a blocked lunge: Param/Tag are the attempted
+            // front cell, not the actor's position (DoMotaebo/Actor.pas).
+            7 => new { type = "rushBlocked", id = packet.Recog, targetX = packet.Param, targetY = packet.Tag, direction = packet.Series & 255 },
             29 or 30 or 800 or 806 => new { type = "entityRemoved", id = packet.Recog },
-            14 => new { type = "entityAction", id = packet.Recog, action = "attack", x = packet.Param, y = packet.Tag, direction = packet.Series & 255 },
+            8 or 14 or 15 or 16 or 18 or 19 or 24 => new { type = "entityAction", id = packet.Recog,
+                action = packet.Id == 15 ? "heavyAttack" : packet.Id == 16 ? "wideAttack" : "attack",
+                attackKind = packet.Id, legacyIdent = packet.Id, meleeKind = MeleeSkills.KindForServerAttack(packet.Id),
+                self = packet.Recog == playerActorId, actionId = packet.Recog == playerActorId ? attackActionId : null,
+                x = packet.Param, y = packet.Tag, direction = packet.Series & 255,
+                digFragment = packet.Id == 15 && packet.EncodedBody.Length > 0 },
             31 => new { type = "health", id = packet.Recog, hp = packet.Param, maxHp = packet.Tag, damage = packet.Series },
             32 or 34 => new { type = "entityDied", id = packet.Recog, x = packet.Param, y = packet.Tag, direction = packet.Series & 255 },
             27 => new { type = "entityAlive", id = packet.Recog, x = packet.Param, y = packet.Tag, direction = packet.Series & 255 },
             41 => new { type = "appearance", id = packet.Recog, feature = (uint)packet.Param | (uint)packet.Tag << 16 },
             42 => EntityName(packet),
             656 => new { type = "nameColor", id = packet.Recog, color = packet.Param & 255 },
+            // SM_DAYCHANGING: Param is the day phase; Tag is map darkness, not a phase.
+            46 => new { type = "daylight", phase = packet.Param, darkLevel = packet.Tag },
+            // SM_MAPDESCRIPTION: the native client takes the first CR-delimited title.
+            54 => new { type = "mapDescription", title = packet.Text.Split('\r', 2)[0], musicId = packet.Recog },
+            // SM_CHANGELIGHT: Param changes one actor; Tag is a client key.
+            654 => new { type = "actorLight", id = packet.Recog, light = packet.Param },
             44 => new { type = "experience", total = packet.Recog, gained = (uint)packet.Param | (uint)packet.Tag << 16 },
             40 => Chat(packet, "local"),
             100 => SystemMessage(packet),
@@ -68,6 +85,8 @@ public static class WorldProjection
             667 => new { type = "groupMembers", members = packet.Text.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries) },
             612 => new { type = "door", x = packet.Param, y = packet.Tag, open = true },
             614 => new { type = "door", x = packet.Param, y = packet.Tag, open = false },
+            804 => MapEvent(packet),
+            805 => new { type = "mapEventRemoved", id = packet.Recog },
             637 => new { type = "entityAction", id = packet.Recog, action = "harvest", x = packet.Param, y = packet.Tag, direction = packet.Series & 255 },
             _ => null
         };
@@ -75,7 +94,7 @@ public static class WorldProjection
     public static uint? Feature(LegacyPacket packet)
     {
         if (packet.Id == 41) return (uint)packet.Param | (uint)packet.Tag << 16;
-        if (packet.Id is not (10 or 11 or 13 or 50 or 801 or 807)) return null;
+        if (packet.Id is not (6 or 9 or 10 or 11 or 13 or 50 or 801 or 807)) return null;
         byte[] description = packet.Id == 50 ? packet.Body
             : packet.EncodedBody.Length >= 11 ? LegacyCodec.Decode(packet.EncodedBody.AsSpan(0, 11)) : [];
         return description.Length >= 4 ? BinaryPrimitives.ReadUInt32LittleEndian(description) : null;
@@ -84,13 +103,19 @@ public static class WorldProjection
     {
         bool self = packet.Id == 50 || playerActorId == packet.Recog;
         string? name = self ? character : null;
-        if (packet.Id is 10 or 801 or 807 && packet.EncodedBody.Length > 11)
+        if (packet.Id is 9 or 10 or 801 or 807 && packet.EncodedBody.Length > 11)
             name = DisplayName(LegacyCodec.Gbk.GetString(LegacyCodec.Decode(packet.EncodedBody.AsSpan(11))).Split('/')[0]);
         return name;
     }
+    private static object MapEvent(LegacyPacket packet) => new
+    {
+        type = "mapEvent", id = packet.Recog, x = packet.Tag, y = packet.Series,
+        eventType = packet.Param,
+        eventParam = packet.Body.Length >= 4 ? BinaryPrimitives.ReadUInt16LittleEndian(packet.Body) : 0
+    };
     public static byte? NameColor(LegacyPacket packet)
     {
-        if (packet.Id is 10 or 801 or 807 && packet.EncodedBody.Length > 11)
+        if (packet.Id is 9 or 10 or 801 or 807 && packet.EncodedBody.Length > 11)
         {
             string[] parts = LegacyCodec.Gbk.GetString(LegacyCodec.Decode(packet.EncodedBody.AsSpan(11))).Split('/');
             return parts.Length > 1 && byte.TryParse(parts[1], out byte color) ? color : null;
@@ -117,6 +142,8 @@ public static class WorldProjection
     {
         type = "systemMessage",
         text = packet.Text,
+        foreground = packet.Param & 255,
+        background = packet.Param >> 8,
         castleWar = ParseCastleWar(packet.Text)
     };
     private static object? ParseCastleWar(string text)

@@ -23,11 +23,7 @@ namespace M2Server.Monster.Monsters
                 for (int i = 0; i < VisibleActors.Count; i++)
                 {
                     IActor baseObject = VisibleActors[i].BaseObject;
-                    if (baseObject.Death)
-                    {
-                        continue;
-                    }
-                    if (IsProperTarget(baseObject))
+                    if (IsCombatTarget(baseObject, ViewRange))
                     {
                         if (Math.Abs(CurrX - baseObject.CurrX) <= ViewRange && Math.Abs(CurrY - baseObject.CurrY) <= ViewRange)
                         {

@@ -2,8 +2,9 @@
 #classic-hud{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;color:#f0dfb4;text-shadow:0 1px 2px #000;font-family:Georgia,'Songti SC',serif}.hud-topbar{display:flex;align-items:center;gap:8px;min-height:35px;padding:6px 10px;background:linear-gradient(180deg,rgba(20,12,8,.92),rgba(20,12,8,.55),transparent);font-size:12px}.hud-topbar strong{color:#f5d98a}.hud-topbar [data-hud-status]{color:#c1b188;white-space:nowrap}.hud-status-alert{color:#e68d75!important}.hud-topbar [data-hud-coords]{margin-left:auto;color:#c1b188;font:11px ui-monospace,monospace}.hud-crest{display:grid;place-items:center;width:23px;height:23px;border:1px solid #d0a85b;border-radius:50%;background:#2d1910;color:#e8c87e;font:bold 10px Georgia}.hud-orbs{display:flex;align-items:end;gap:10px;padding:0 12px 6px;background:linear-gradient(0deg,rgba(15,10,7,.96),rgba(15,10,7,.4),transparent)}.hud-orb{position:relative;display:grid;place-items:center;width:68px;height:68px;border:3px solid #c3954a;border-radius:50%;overflow:hidden;background:radial-gradient(circle at 38% 28%,#703f36,#260d0c 66%,#090706)}.hud-orb::before{content:'';position:absolute;inset:auto 0 0;height:var(--fill,0%);background:linear-gradient(0deg,rgba(146,23,20,.9),rgba(224,76,45,.58));transition:height .18s}.mp-orb{background:radial-gradient(circle at 38% 28%,#3d5e85,#101d35 66%,#090706)}.mp-orb::before{background:linear-gradient(0deg,rgba(28,62,150,.92),rgba(64,144,224,.62))}.hud-orb span,.hud-orb strong{position:relative;z-index:1}.hud-orb span{font-size:10px;color:#e3bd75}.hud-orb strong{font:10px ui-monospace,monospace;color:#fff3d0}.hud-exp{position:relative;flex:1;max-width:520px;height:18px;margin-bottom:3px;border:1px solid #9f7b3b;background:rgba(18,13,8,.84);overflow:hidden}.hud-exp i{display:block;height:100%;width:0;background:linear-gradient(90deg,#74521a,#d6af42,#f5d877);transition:width .25s}.hud-exp span{position:absolute;inset:0;text-align:center;font:10px/16px ui-monospace,monospace;color:#fff0bf}.hud-hotbar{display:flex;justify-content:center;gap:4px;padding:5px 8px 8px;background:linear-gradient(0deg,rgba(20,12,8,.96),rgba(20,12,8,.68));pointer-events:auto}.hud-slot{display:grid;grid-template-columns:20px 1fr;grid-template-rows:1fr 1fr;min-width:74px;height:38px;padding:3px 5px;border:1px solid #75582c;background:linear-gradient(135deg,#3b2b1a,#18120d);color:#ddc28a;text-align:left;box-shadow:inset 0 0 0 1px #17100b}.hud-slot:hover,.hud-slot.selected{border-color:#f0cb67;background:linear-gradient(135deg,#62451f,#24170e);color:#fff0bb}.hud-slot kbd{grid-row:1 / span 2;align-self:center;color:#f1d271;font:10px ui-monospace,monospace;text-align:center}.hud-slot strong{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hud-slot small{font:9px ui-monospace,monospace;color:#a99570}@media(max-width:600px){.hud-orb{width:56px;height:56px}.hud-slot{min-width:42px}.hud-slot strong{display:none}.hud-slot small{grid-column:2}.hud-topbar [data-hud-status]{display:none}.hud-topbar [data-hud-coords]{font-size:9px}}
 select{background:#24261d;color:#e1d6b9;padding:7px;border:1px solid #655735}a{color:#ccb27d}#directions{display:grid;grid-template-columns:repeat(4,180px);gap:12px;margin:20px 0}.direction{position:relative;height:200px;background:#272a23;border:1px solid #53503e;overflow:hidden}.direction span{position:absolute;bottom:8px;left:10px;color:#a5a38e;font-size:12px}.direction img{position:absolute;image-rendering:pixelated;max-width:none}@media(max-width:800px){#directions{grid-template-columns:repeat(2,180px)}}
 .inventory-item{display:flex;align-items:center;gap:12px;border:1px solid #655735;background:#24261d;padding:10px;min-width:280px}.inventory-item img,.equipment-item img,.missing-item-icon{width:40px;height:40px;object-fit:contain;image-rendering:pixelated}.missing-item-icon{display:block;border:1px dashed #655735}.inventory-item p{margin:4px 0 0}.item-actions{display:flex;gap:5px;margin-left:auto}.inventory-grid{display:flex;flex-wrap:wrap;gap:10px}details{max-width:800px;margin:16px 0}summary{cursor:pointer;color:#ccb27d;margin-bottom:12px}
-.target-list{display:flex;flex-wrap:wrap;gap:8px}.target-list button{font-size:12px}
-.chat-panel{max-width:800px;margin:14px 0;border:1px solid #655735;background:#171812}.chat-panel ol{height:112px;overflow:auto;list-style:none;margin:0;padding:9px 12px;font-size:12px}.chat-panel li{padding:2px 0;color:#d4c9ac}.chat-panel li[data-channel=system]{color:#c4b179}.chat-panel form{margin:0;padding:8px;border-top:1px solid #4b4433}.chat-panel label{display:flex;align-items:center;gap:8px;flex:1}.chat-panel input{flex:1}
+.target-list{display:flex;flex-wrap:wrap;gap:8px}.target-list button{font-size:12px}.target-list .nearby-target-entry{display:flex;flex:1 0 100%;gap:5px;min-width:0}.target-list .nearby-target-entry>button:first-child{flex:1;min-width:0}.target-list .nearby-target-trade{white-space:nowrap}.target-list .nearby-target-trade:disabled{cursor:default;opacity:.55}
+.chat-panel{max-width:800px;margin:14px 0;border:1px solid #655735;background:#171812}.chat-panel ol{height:112px;overflow:auto;list-style:none;margin:0;padding:9px 12px;font-size:12px;line-height:14px}.chat-panel li{padding:2px 0;color:#d4c9ac}.chat-panel li[data-channel=system]{color:#c4b179}.chat-panel form{margin:0;padding:8px;border-top:1px solid #4b4433}.chat-panel label{display:flex;align-items:center;gap:8px;flex:1}.chat-panel input{flex:1}
+body.classic-play .chat-panel label[hidden]{display:none!important}
 .group-panel{max-width:800px;margin:14px 0;padding:10px;border:1px solid #655735;background:#171812;display:flex;flex-wrap:wrap;align-items:center;gap:8px}.group-panel>strong{color:#c4b179}.group-panel>span{min-width:110px;color:#9b9889}.group-panel label{display:flex;align-items:center;gap:6px}.group-panel input{width:120px}.group-panel ol{display:flex;flex-wrap:wrap;gap:7px;width:100%;margin:0;padding:0;list-style:none}.group-panel li{padding:4px 8px;border:1px solid #4f4937;background:#1d1f18;color:#d4c9ac}
 .quest-panel{display:block}.quest-entry{padding:7px 0;border-top:1px solid #3b3425}.quest-entry:first-of-type{border-top:0}.quest-entry strong{color:#e8c976}.quest-entry p{margin:3px 0}.quest-entry small{color:#99917d}.quest-complete strong{color:#91c58b}
 .trade-panel{max-width:800px;margin:14px 0;padding:12px;border:1px solid #806b39;background:#171812}.trade-heading{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.trade-heading span{color:#9b9889}.trade-panel form{margin:0 0 10px}.trade-panel form label{display:flex;align-items:center;gap:6px}.trade-panel form input{width:120px}.trade-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.trade-columns>div{border:1px solid #4f4937;background:#1d1f18;padding:8px}.trade-columns ol{display:grid;gap:6px;margin:8px 0 0;padding:0;list-style:none;min-height:34px}.trade-columns li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 7px;border:1px solid #4a4434;background:#24261d;font-size:12px}.trade-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px}.trade-controls label{display:flex;align-items:center;gap:6px}@media(max-width:600px){.trade-columns{grid-template-columns:1fr}}
@@ -17,7 +18,7 @@ select{background:#24261d;color:#e1d6b9;padding:7px;border:1px solid #655735}a{c
 .equipment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.equipment-item{min-height:58px;display:grid;grid-template-columns:58px 40px 1fr auto;align-items:center;gap:7px;padding:7px;border:1px solid #4b4433;background:#1d1f18}.equipment-item>span{color:#9f947a;font-size:12px}.equipment-item>span:nth-of-type(2){display:grid;gap:3px;color:#ddd0af}.equipment-item small{color:#99917d}.equipment-item em{color:#666;font-size:12px}@media(max-width:700px){.equipment-grid{grid-template-columns:1fr}}
 @media(max-width:700px){.vitals{grid-template-columns:1fr}.attribute-grid{grid-template-columns:repeat(2,auto 1fr)}}
 body.classic-play{background:#000;color:#d4c9ac;font-family:SimSun,'Songti SC',serif}body.classic-play main{width:auto;max-width:none;margin:0;padding:12px 0 24px}#game-stage,#viewport-shell{width:800px;height:600px;max-width:800px;aspect-ratio:auto;margin:0 auto;border:0;overflow:hidden;background:#000}#viewport{cursor:default}body.in-world .dev-chrome,#auth-overlay[hidden],body.in-world #auth-overlay{display:none}#auth-overlay{position:absolute;z-index:40;inset:0;display:block;padding:0;background:#000;pointer-events:auto;overflow:hidden}#auth-overlay form[hidden],#create-character[hidden],.auth-scene[hidden]{display:none!important}
-body.classic-play main>.character-panel,body.classic-play main>.group-panel,body.classic-play main>.trade-panel,body.classic-play main>details{display:none}#classic-hud{position:absolute;inset:0;pointer-events:none;color:#fff;text-shadow:1px 1px #000;font:12px SimSun,'Songti SC',serif}.hud-main,.hud-minimap-frame,.hud-skillbar,.hud-chat,.hud-chatbar{position:absolute;background-repeat:no-repeat;image-rendering:pixelated}.hud-main{left:0;top:448px;pointer-events:none}.hud-minimap-frame{left:674px;top:0;pointer-events:none}.hud-minimap-frame canvas{position:absolute;left:4px;top:20px;width:120px;height:110px;border:0;opacity:1;box-shadow:none}.hud-minimap-frame [data-hud-coords]{position:absolute;left:46px;top:131px;width:56px;height:18px;display:grid;place-items:center;font:11px SimSun,serif}.hud-skillbar{left:0;top:0;pointer-events:auto}.hud-hotbar{position:absolute;inset:0}.hud-slot{position:absolute;width:22px;height:22px;padding:0;border:0;background:transparent;overflow:hidden}.hud-slot img{width:22px;height:22px;image-rendering:pixelated}.hud-slot kbd{position:absolute;right:0;bottom:0;font:9px SimSun,serif;color:#ffe7a0;background:transparent;border:0;padding:0}.hud-slot.selected{outline:1px solid #ffe27a}.hud-chatbar{left:230px;top:488px}.hud-chat{left:230px;top:503px;pointer-events:auto}.hud-chat .chat-panel{position:absolute;inset:0;max-width:none;margin:0;border:0;background:transparent}.hud-chat .chat-panel ol{height:48px;padding:4px 8px;font-size:12px}.hud-chat .chat-panel form{position:absolute;left:1px;top:54px;width:403px;height:13px;padding:0;border:0;gap:4px;background:transparent}.hud-chat .chat-panel input,#chat-input{height:13px;padding:0 4px;border:0;background:#2a2a2a;color:#fff;font:12px SimSun,serif}.hud-orb-well{position:absolute;left:0;top:30px;width:50px;height:80px;overflow:hidden}.hud-orb-well.mp{left:51px}.hud-orb-fill{position:absolute;left:0;bottom:0;width:50px;height:80px;overflow:hidden}.hud-orb-fill img{position:absolute;left:0;bottom:0;width:104px;height:80px;max-width:none;image-rendering:pixelated}.hud-orb-well.mp .hud-orb-fill img{left:-51px}.hud-exp-track{position:absolute;left:9px;top:143px;overflow:hidden;pointer-events:none}.hud-exp-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8a5a12,#e6c14a)}.hud-weight{position:absolute;left:695px;top:103px;overflow:hidden}.hud-weight i{display:block;height:100%;width:0;background:#c9a227}[data-hud-class]{position:absolute;left:15px;top:-15px}[data-hud-job]{position:absolute;left:38px;top:8px}[data-hud-name]{position:absolute;left:6px;top:120px;width:90px;text-align:center;font-weight:normal}[data-hud-gold]{position:absolute;left:695px;top:119px;width:99px;font:12px SimSun,serif}[data-hud-hp]{position:absolute;left:8px;top:48px;width:90px;text-align:center;font:11px SimSun,serif}[data-hud-mp]{position:absolute;left:8px;top:62px;width:90px;text-align:center;font:11px SimSun,serif}[data-hud-exp]{position:absolute;left:9px;top:132px;width:200px;font:11px SimSun,serif;color:#ffe7a0}[data-hud-status]{position:absolute;left:110px;top:8px;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hud-window-buttons{position:absolute;inset:0;pointer-events:none}.hud-window-buttons button{position:absolute;pointer-events:auto;padding:0;border:0;background-color:transparent;background-repeat:no-repeat;image-rendering:pixelated}.classic-window{position:absolute;z-index:20;left:536px;top:0;right:auto;bottom:auto;display:flex;flex-direction:column;padding:28px 10px 12px;border:0;background-repeat:no-repeat;background-color:transparent;box-shadow:none;color:#d4c9ac;pointer-events:auto;overflow:hidden;image-rendering:pixelated}.classic-window[hidden],.classic-window-body>[hidden]{display:none!important}.classic-window-heading{display:flex;align-items:center;justify-content:center;height:22px;padding:0;border:0;color:#fff}.classic-window-heading button{position:absolute;padding:0;border:0;background-color:transparent;background-repeat:no-repeat;image-rendering:pixelated}.classic-window-tabs{display:flex;flex-wrap:wrap;gap:2px;padding:4px 0}.classic-window-tabs button{padding:2px 6px;border-color:#6e542e;background:#292015;color:#d8bd7b;font:11px SimSun,serif}.classic-window-tabs button.active{border-color:#e9c866;background:#62451f;color:#fff0bb}.classic-window-body{min-height:0;overflow:auto;padding-right:3px}.classic-window-body>.character-panel,.classic-window-body>details,.classic-window-body>.chat-panel,.classic-window-body>.group-panel{max-width:none;margin:0;border:0;background:transparent}.classic-window-body>.chat-panel{padding:0}.classic-window-body>.chat-panel ol{height:180px}.classic-window-body .equipment-grid,.classic-window-body .inventory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#classic-modal-layer{position:absolute;z-index:25;inset:0;pointer-events:none}#classic-modal-layer>[hidden]{display:none!important}#classic-modal-layer>section{position:absolute;left:5px;top:40px;right:auto;max-width:440px;max-height:calc(100% - 160px);margin:0;overflow:auto;pointer-events:auto;box-shadow:none;border:0}#classic-modal-layer .npc-dialog{width:440px;min-height:180px;padding:28px 16px 12px;background:transparent}
+body.classic-play main>.character-panel,body.classic-play main>.group-panel,body.classic-play main>.trade-panel,body.classic-play main>.chat-panel,body.classic-play main>details{display:none}#classic-hud{position:absolute;inset:0;pointer-events:none;color:#fff;text-shadow:1px 1px #000;font:12px SimSun,'Songti SC',serif}.hud-main,.hud-minimap-frame,.hud-skillbar,.hud-chat,.hud-chatbar{position:absolute;background-repeat:no-repeat;image-rendering:pixelated}.hud-main{left:0;top:448px;pointer-events:none}.hud-minimap-frame{left:674px;top:0;pointer-events:none}.hud-minimap-frame canvas{position:absolute;left:4px;top:20px;width:120px;height:110px;border:0;opacity:1;box-shadow:none}.hud-minimap-frame [data-hud-coords]{position:absolute;left:46px;top:131px;width:56px;height:18px;display:grid;place-items:center;font:11px SimSun,serif}.hud-skillbar{left:0;top:0;pointer-events:auto}.hud-hotbar{position:absolute;inset:0}.hud-slot{position:absolute;width:22px;height:22px;padding:0;border:0;background:transparent;overflow:hidden}.hud-slot img{width:22px;height:22px;image-rendering:pixelated}.hud-slot kbd{position:absolute;right:0;bottom:0;font:9px SimSun,serif;color:#ffe7a0;background:transparent;border:0;padding:0}.hud-slot.selected{outline:1px solid #ffe27a}.hud-chatbar{left:230px;top:488px}.hud-chat{left:230px;top:503px;pointer-events:auto}.hud-chat .chat-panel{position:absolute;inset:0;max-width:none;margin:0;border:0;background:transparent}.hud-chat .chat-panel ol{height:48px;padding:4px 8px;font-size:12px}.hud-chat .chat-panel form{position:absolute;left:1px;top:54px;width:403px;height:13px;padding:0;border:0;gap:4px;background:transparent}.hud-chat .chat-panel input,#chat-input{height:13px;padding:0 4px;border:0;background:#2a2a2a;color:#fff;font:12px SimSun,serif}.hud-orb-well{position:absolute;left:0;top:30px;width:50px;height:80px;overflow:hidden}.hud-orb-well.mp{left:51px}.hud-orb-fill{position:absolute;left:0;bottom:0;width:50px;height:80px;overflow:hidden}.hud-orb-fill img{position:absolute;left:0;bottom:0;width:104px;height:80px;max-width:none;image-rendering:pixelated}.hud-orb-well.mp .hud-orb-fill img{left:-51px}.hud-exp-track{position:absolute;left:9px;top:143px;overflow:hidden;pointer-events:none}.hud-exp-track i{display:block;height:100%;width:0;background:linear-gradient(90deg,#8a5a12,#e6c14a)}.hud-weight{position:absolute;left:695px;top:103px;overflow:hidden}.hud-weight i{display:block;height:100%;width:0;background:#c9a227}[data-hud-class]{position:absolute;left:15px;top:-15px}[data-hud-job]{position:absolute;left:38px;top:8px}[data-hud-level]{position:absolute;left:6px;top:120px;width:90px;text-align:center;font-weight:normal}[data-hud-gold]{position:absolute;left:695px;top:119px;width:99px;font:12px SimSun,serif}[data-hud-hp]{position:absolute;left:8px;top:48px;width:90px;text-align:center;font:11px SimSun,serif}[data-hud-mp]{position:absolute;left:8px;top:62px;width:90px;text-align:center;font:11px SimSun,serif}[data-hud-exp]{position:absolute;left:9px;top:132px;width:200px;font:11px SimSun,serif;color:#ffe7a0}[data-hud-status]{position:absolute;left:110px;top:8px;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hud-window-buttons{position:absolute;inset:0;pointer-events:none}.hud-window-buttons button{position:absolute;pointer-events:auto;padding:0;border:0;background-color:transparent;background-repeat:no-repeat;image-rendering:pixelated}.classic-window{position:absolute;z-index:20;left:536px;top:0;right:auto;bottom:auto;display:flex;flex-direction:column;padding:28px 10px 12px;border:0;background-repeat:no-repeat;background-color:transparent;box-shadow:none;color:#d4c9ac;pointer-events:auto;overflow:hidden;image-rendering:pixelated}.classic-window[hidden],.classic-window-body>[hidden]{display:none!important}.classic-window-heading{display:flex;align-items:center;justify-content:center;height:22px;padding:0;border:0;color:#fff}.classic-window-heading button{position:absolute;padding:0;border:0;background-color:transparent;background-repeat:no-repeat;image-rendering:pixelated}.classic-window-tabs{display:flex;flex-wrap:wrap;gap:2px;padding:4px 0}.classic-window-tabs button{padding:2px 6px;border-color:#6e542e;background:#292015;color:#d8bd7b;font:11px SimSun,serif}.classic-window-tabs button.active{border-color:#e9c866;background:#62451f;color:#fff0bb}.classic-window-body{min-height:0;overflow:auto;padding-right:3px}.classic-window-body>.character-panel,.classic-window-body>details,.classic-window-body>.chat-panel,.classic-window-body>.group-panel{max-width:none;margin:0;border:0;background:transparent}.classic-window-body>.chat-panel{padding:0}.classic-window-body>.chat-panel ol{height:180px}.classic-window-body .equipment-grid,.classic-window-body .inventory-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#classic-modal-layer{position:absolute;z-index:auto;inset:0;pointer-events:none}#classic-modal-layer>[hidden]{display:none!important}#classic-modal-layer>section{position:absolute;left:5px;top:40px;right:auto;max-width:440px;max-height:calc(100% - 160px);margin:0;overflow:auto;pointer-events:auto;box-shadow:none;border:0}#classic-modal-layer .npc-dialog{width:440px;min-height:180px;padding:28px 16px 12px;background:transparent}
 body.classic-play #classic-hud{display:block;justify-content:normal;flex-direction:row}
 body.classic-play .hud-hotbar{display:block;padding:0;background:none;justify-content:normal;gap:0}
 body.classic-play .hud-slot{display:block;grid-template-columns:unset;min-width:22px;height:22px;padding:0;border:0;background:transparent;box-shadow:none;color:#fff}
@@ -35,18 +36,37 @@ body.classic-play #character-panel,body.classic-play #character-state{margin:0;p
 body.classic-play .classic-stat,body.classic-play .classic-stat-value{position:absolute;font:12px SimSun,'Songti SC',serif;color:#e8d6a0;white-space:nowrap;text-shadow:1px 1px #000}
 body.classic-play .classic-bag,body.classic-play .paperdoll{position:absolute;inset:0;margin:0;padding:0;display:block;background:transparent}
 body.classic-play .paperdoll{pointer-events:none}
+body.classic-play .paperdoll .equipment-cell{z-index:5}
 body.classic-play .paperdoll[hidden],body.classic-play #paperdoll-actor[hidden]{display:none!important}
 body.classic-play #paperdoll-actor{position:absolute;left:70px;top:150px;width:1px;height:1px;pointer-events:none;z-index:1;overflow:visible}
 body.classic-play #paperdoll-actor img{position:absolute;image-rendering:pixelated;max-width:none}
 body.classic-play .item-cell{position:absolute;width:36px;height:32px;padding:0;border:0;background:transparent;overflow:hidden;pointer-events:auto}
+body.classic-play .item-cell > *,body.classic-play .item-quickbar-slot > *{pointer-events:none}
+/* Failed-image controls handle their own click; decorative frames still hit the stable cell. */
+body.classic-play .item-cell > .missing-item-icon[role=button],body.classic-play .item-quickbar-slot > .missing-item-icon[role=button]{pointer-events:auto}
 body.classic-play .item-cell img{position:absolute;left:50%;top:50%;width:auto;height:auto;max-width:36px;max-height:32px;transform:translate(-50%,-50%);object-fit:contain;image-rendering:pixelated;display:block}
+body.classic-play .national-window #inventory-items .item-cell{overflow:visible}
+body.classic-play .national-window #inventory-items .native-bag-item-icon{max-width:none;max-height:none;transform:none}
 body.classic-play .item-cell .missing-item-icon{width:34px;height:30px;image-rendering:pixelated;display:block}
 body.classic-play .item-cell .item-count{position:absolute;right:1px;bottom:0;padding:0 2px;background:rgba(8,6,4,.78);color:#fff1ae;font:9px/11px ui-monospace,monospace;pointer-events:none}
 body.classic-play .item-cell:hover{outline:1px solid #ffe27a}
 body.classic-play .item-cell.selected{z-index:3;outline:1px solid #fff0a6;filter:brightness(1.25)}
 body.classic-play .inventory-window{overflow:visible}
-body.classic-play [data-window-drag-handle]{cursor:move;touch-action:none;user-select:none}body.classic-play .window-dragging{z-index:35!important}body.classic-play .classic-window-drag-region{position:absolute;left:0;top:0;width:100%;height:14px;z-index:1}
-body.classic-play .inventory-gold{position:absolute;left:40px;top:212px;width:111px;height:14px;z-index:2;color:#f0dda4;text-align:right;font:12px/14px SimSun,'Songti SC',serif;text-shadow:1px 1px #000;pointer-events:none}
+body.classic-play .inventory-description{position:absolute;z-index:2;overflow:hidden;color:#fff;font:12px/var(--bag-description-line-height,14px) var(--bag-native-font-family,KaiTi,'楷体',serif);pointer-events:none;white-space:nowrap}
+body.classic-play .inventory-description>div{height:var(--bag-description-line-height,14px);position:relative}
+body.classic-play .native-inventory-glyph{position:absolute;left:0;top:0;width:auto;max-width:none;height:auto;max-height:none;image-rendering:pixelated;pointer-events:none}
+body.classic-play .inventory-description>.native-inventory-font-error{position:absolute;inset:0;height:auto;color:#fff;white-space:normal;font:12px/14px sans-serif;background:#18120b;z-index:2;pointer-events:auto}
+body.classic-play .native-inventory-font-error button{padding:0 3px;font:12px/14px sans-serif;color:#fff;background:#382d1d;border:1px solid #80704c}
+body.classic-play .inventory-description strong{font-weight:normal;color:#ff0}
+body.classic-play .inventory-description [data-requirement="unmet"]{color:#f00}
+body.classic-play .inventory-gold-icon{position:absolute;z-index:2;border:0;padding:0;background-color:transparent;background-repeat:no-repeat;image-rendering:pixelated;cursor:grab;pointer-events:auto}
+body.classic-play .inventory-gold-icon:focus-visible{outline:1px solid #ffe7a0;outline-offset:1px}
+body.classic-play .inventory-gold-icon[data-gold-drop-state="moving"]{cursor:grabbing}
+body.classic-play [data-window-drag-handle]{cursor:move;touch-action:none;user-select:none}body.classic-play .window-dragging{cursor:move}body.classic-play .classic-window-drag-region{position:absolute;left:0;top:0;width:100%;height:14px;z-index:1}
+  body.classic-play .inventory-gold{position:absolute;left:40px;top:212px;width:111px;height:14px;z-index:2;border:0;padding:0;background:transparent;color:#fff;text-align:left;font:12px/14px var(--bag-native-font-family,KaiTi,'楷体',serif);text-shadow:1px 1px #000;pointer-events:none}
+  .inventory-gold-cursor{position:fixed;z-index:2147483646;display:flex;align-items:center;gap:4px;min-height:22px;padding:2px 6px 2px 3px;border:1px solid #b99039;background:rgba(27,20,10,.94);box-shadow:2px 2px 4px #000;color:#f6db83;font:12px/16px SimSun,'Songti SC',serif;pointer-events:none;user-select:none;white-space:nowrap}
+  .inventory-gold-cursor[hidden]{display:none}
+  .inventory-gold-cursor-coin{display:grid;width:16px;height:16px;place-items:center;border:1px solid #e6c66f;border-radius:50%;background:#8d6723;color:#fff0b2;font:10px/14px SimSun,'Songti SC',serif;font-style:normal}
 body.classic-play .inventory-item-tooltip{position:absolute;z-index:30;width:180px;padding:8px 9px;border:1px solid #94783f;background:rgba(12,9,7,.96);color:#e7d5a2;box-shadow:2px 3px 8px rgba(0,0,0,.72);font:12px/17px SimSun,'Songti SC',serif;pointer-events:none;image-rendering:auto}
 body.classic-play .inventory-item-tooltip[hidden]{display:none}
 body.classic-play .inventory-item-tooltip strong{display:block;margin-bottom:4px;color:#f6d77f;font-weight:normal}
@@ -59,7 +79,7 @@ body.classic-play .inventory-item-tooltip .item-bonus{color:#73d86c;font-style:n
 body.classic-play .equipment-appearance{position:absolute;margin:0;padding:0;border:0;background:transparent;overflow:visible;pointer-events:auto}
 body.classic-play .equipment-appearance img{position:absolute;inset:0;width:100%;height:100%;max-width:none;image-rendering:pixelated}
 body.classic-play .equipment-appearance:hover{filter:drop-shadow(0 0 2px #ffe27a)}
-body.classic-play #character-window:has(#equipment-items .equipment-appearance--clothes) #paperdoll-actor{visibility:hidden}
+body.classic-play .equipment-cell.drop-target,body.classic-play .equipment-appearance.drop-target{outline:1px dashed rgba(244,202,104,.82);outline-offset:-2px;background:rgba(244,202,104,.08)}
 body.classic-play .character-window [data-character-page=skills]{overflow:auto;pointer-events:auto}
 body.classic-play .character-window .skill-grid{display:flex;flex-direction:column;gap:2px;padding:8px;max-height:268px}
 body.classic-play .character-window .skill-item{min-height:33px;padding:2px 6px;border:0;background:transparent;gap:4px}
@@ -78,14 +98,16 @@ body.classic-cursors.in-world .item-cell{cursor:var(--cursor-default)}
 #auth-overlay input,#auth-overlay button{position:absolute;padding:0;border:0;background:transparent;color:#e8d6a0;font:12px SimSun,'Songti SC',serif;image-rendering:pixelated}
 #auth-overlay input{background:#1a1610;color:#fff}
 #auth-overlay #connection{position:absolute;left:8px;bottom:4px;margin:0;z-index:2;color:#e8d6a0;font:12px SimSun,'Songti SC',serif;text-shadow:1px 1px #000}
-#world-status{display:none}
-body.in-world #world-status{position:absolute;left:50%;top:8px;z-index:7;display:block;max-width:620px;min-height:20px;padding:3px 10px;transform:translateX(-50%);border:1px solid rgba(190,151,76,.72);background:rgba(18,12,8,.86);color:#f0d89b;font:12px/14px SimSun,'Songti SC',serif;text-align:center;text-shadow:1px 1px #000;pointer-events:none}
+#world-connection-status{display:none}
+body.in-world #world-connection-status[data-connection-state=reconnecting],body.in-world #world-connection-status[data-connection-state=notice],body.in-world[data-diagnostics=on] #world-connection-status{position:absolute;left:50%;top:8px;z-index:35;display:flex;align-items:center;gap:8px;box-sizing:border-box;max-width:calc(100% - 24px);min-height:24px;padding:2px 5px 2px 10px;transform:translateX(-50%);border:1px solid rgba(190,151,76,.72);background:rgba(18,12,8,.9);color:#f0d89b;text-shadow:1px 1px #000;pointer-events:none}
+#world-status{display:block;max-width:620px;min-height:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f0d89b;font:12px/18px SimSun,'Songti SC',serif;text-align:center}
+#reconnect-cancel{flex:none;min-height:19px;padding:1px 6px;border:1px solid rgba(205,166,87,.8);background:#342719;color:#ffe7a0;font:11px SimSun,'Songti SC',serif;pointer-events:auto}
 .auth-slot{position:absolute;padding:0;border:0;background-color:transparent;background-repeat:no-repeat;image-rendering:pixelated;color:#fff;text-align:left}
 .auth-slot-name,.auth-slot-meta{position:absolute;left:107px;white-space:nowrap;text-shadow:1px 1px #000;pointer-events:none}
 .auth-slot-name{top:9px}
 .auth-slot-meta{top:28px}
 [data-auth-portrait],[data-auth-create-portrait]{position:absolute;image-rendering:pixelated;pointer-events:none;max-width:none}
-[data-auth-title-label],[data-auth-account-label],[data-auth-pass-label],[data-auth-select-title],[data-auth-create-title]{position:absolute;background-repeat:no-repeat;image-rendering:pixelated}.auth-slot-select{position:absolute;display:block;pointer-events:none;background-repeat:no-repeat;image-rendering:pixelated}#auth-overlay.national-auth .auth-slot-name{left:88px;top:39px;color:#e8d6a0}#auth-overlay.national-auth .auth-slot-meta{left:88px;top:60px;color:#c9b98c}#auth-overlay.national-auth .auth-slot-job{position:absolute;left:88px;top:82px;color:#c9b98c;white-space:nowrap;text-shadow:1px 1px #000;pointer-events:none}#auth-overlay.national-auth [data-auth-portrait]{z-index:1}
+[data-auth-title-label],[data-auth-account-label],[data-auth-pass-label],[data-auth-select-title],[data-auth-create-title]{position:absolute;background-repeat:no-repeat;image-rendering:pixelated}.auth-slot-select{position:absolute;display:block;pointer-events:none;background-repeat:no-repeat;image-rendering:pixelated}#auth-overlay.national-auth [data-auth-portrait]{z-index:1}
 
 body.classic-play #classic-hud.national-ui .hud-main{z-index:1}
 body.classic-play #classic-hud.national-ui .hud-minimap-frame{background-image:none!important;left:688px;top:400px;width:100px;height:108px;opacity:1;z-index:3}
@@ -94,26 +116,40 @@ body.classic-play #classic-hud.national-ui .hud-minimap-frame [data-hud-coords]{
 body.classic-play #classic-hud.national-ui .hud-skillbar{background:transparent;background-image:none;z-index:3}
 body.classic-play #classic-hud.national-ui .hud-slot kbd{display:none}
 body.classic-play.national-play #audio-toggle{display:none}
+/* The native bottom-right speaker owns sound; the backing audio control stays hidden. */
+body.classic-play.national-play.in-world #viewport-shell>#audio-toggle.native-sound-toggle:focus-visible{outline:1px solid #f2d47c;outline-offset:1px}
 body.classic-play #classic-hud.national-ui .hud-chatbar{display:none}
-body.classic-play #classic-hud.national-ui .hud-chat{overflow:hidden;background:#1a1612;z-index:2}
+body.classic-play #classic-hud.national-ui .hud-chat{overflow:hidden;background:var(--classic-chat-bg,#fff);z-index:2;text-shadow:none}
 body.classic-play #classic-hud.national-ui .hud-window-buttons{z-index:4}
-body.classic-play #classic-hud.national-ui .hud-chat .chat-panel{background:#1a1612}
-body.classic-play #classic-hud.national-ui .hud-chat .chat-panel ol{padding:4px 8px;color:#e8d6a0;overflow:auto}
+body.classic-play #classic-hud.national-ui .hud-chat .chat-panel{background:var(--classic-chat-bg,#fff)}
+body.classic-play #classic-hud.national-ui .hud-chat .chat-panel ol{padding:0 2px;color:var(--classic-chat-text,#000);overflow:auto;font:12px/13px SimSun,serif}
 body.classic-play #classic-hud.national-ui .hud-chat .chat-panel form{display:block}
 body.classic-play #classic-hud.national-ui .hud-chat .chat-panel form label{position:absolute;inset:0;display:flex;margin:0;padding:0;font-size:0;gap:0}
 body.classic-play #classic-hud.national-ui .hud-chat .chat-panel form label:not(:last-of-type),body.classic-play #classic-hud.national-ui .hud-chat .chat-panel form button{display:none}
-body.classic-play #classic-hud.national-ui #chat-input{width:100%;height:16px;background:#14110e;color:#e8d6a0}
+body.classic-play #classic-hud.national-ui #chat-input{width:100%;height:16px;background:var(--classic-chat-input-bg,#fff);color:var(--classic-chat-input-text,#000)}
+body.classic-play [hidden]{display:none!important}
+body.classic-play .dev-chrome{display:none}
+body.classic-play:not(.ui-calibration-page) main{min-height:100dvh;padding:0;display:grid;place-items:center}
 body.classic-play #classic-hud.national-ui .hud-orb-well{display:block;overflow:hidden}
+body.classic-play .native-hud-toolbar{position:absolute;inset:0;z-index:5;pointer-events:none}
+body.classic-play .native-hud-toolbar button{position:absolute;pointer-events:auto;margin:0;padding:0;border:0;background-color:transparent;background-repeat:no-repeat;image-rendering:pixelated}
+body.classic-play [data-hud-location]{position:absolute;left:4px;top:232px;color:#fff;font:12px/16px SimSun,serif;text-shadow:1px 1px #000}
 body.classic-play #classic-hud.national-ui .hud-exp-track,body.classic-play #classic-hud.national-ui .hud-weight{display:block}
 body.classic-play #classic-hud.national-ui [data-hud-hp]{color:#fff0bb;text-align:center;font-size:10px}
 body.classic-play #classic-hud.national-ui [data-hud-mp]{color:#d6e4ff;text-align:center;font-size:10px}
 body.classic-play #classic-hud.national-ui [data-hud-status]{font-size:10px}
 body.classic-play #classic-hud.national-ui [data-hud-exp]{font-size:11px}
-body.classic-play #classic-hud.national-ui .hud-window-buttons button{background-image:none!important}
+/* Background frames are owned by ClassicHud's native button state controller. */
 body.classic-play .national-window{border:0;background-color:transparent;box-shadow:none}
 body.classic-play .inventory-window.national-window{padding:0;overflow:visible}
 body.classic-play .character-window.national-window{padding:0;overflow:hidden}
-body.classic-play .character-window.national-window [data-character-tab]{color:#e8d6a0;font:12px SimSun,serif;line-height:18px;text-align:center}
+body.classic-play .character-window.national-window [data-character-cycle]{position:absolute;z-index:3;padding:0;border:0;background:transparent;cursor:var(--cursor-default)}
+body.classic-play .character-window.national-window #character-state{overflow:hidden}
+body.classic-play .character-window.national-window .classic-stat,body.classic-play .character-window.national-window .classic-stat-value{line-height:14px;text-shadow:none}
+body.classic-play .native-character-glyph{position:absolute;left:0;top:0;pointer-events:none}
+body.classic-play .native-character-font-error{position:absolute;left:8px;right:8px;bottom:8px;z-index:2;padding:4px;background:#180c08;color:#fff;font:12px/14px sans-serif;white-space:normal;pointer-events:auto}
+body.classic-play .native-character-font-error--title{top:16px;bottom:auto;left:0;right:0;text-align:left}
+body.classic-play .native-character-font-error button{display:block;margin-top:4px;font:inherit}
 body.classic-play .national-window .classic-window-close{position:absolute;z-index:2}
 body.classic-play .national-panel{box-sizing:border-box;padding:28px 12px 10px;color:#e8d6a0;overflow:auto}body.classic-play .national-panel .shop-heading{height:22px;margin:0 12px 5px;color:#f4d67c;text-shadow:1px 1px #000}body.classic-play .national-panel .shop-heading button{position:absolute;right:2px;top:2px;width:22px;height:22px;padding:0;border:0;background:transparent;color:transparent;cursor:pointer}body.classic-play .national-panel .shop-goods,body.classic-play .national-panel .shop-details,body.classic-play .national-panel .storage-items{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}body.classic-play .national-panel .shop-row{min-height:38px;padding:3px 4px;gap:4px;border-color:#6c5a3e;background:rgba(22,13,8,.72);box-shadow:inset 0 0 0 1px rgba(231,196,112,.16)}body.classic-play .national-panel .shop-row span{min-width:0;gap:1px}body.classic-play .national-panel .shop-row strong,body.classic-play .national-panel .shop-row small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}body.classic-play .national-panel .shop-row small{font-size:10px;color:#c5b27d}body.classic-play .national-panel .shop-row button{padding:2px 4px;border-color:#8a6c39;background:#2b1d11;color:#f0d286;font:11px SimSun,serif;white-space:nowrap}body.classic-play .national-panel .item-icon{flex:none;width:32px;height:32px;object-fit:contain;image-rendering:pixelated}body.classic-play .national-panel h3{margin:8px 0 4px;color:#f0d286;font-size:12px}
 body.classic-play #shop-panel.national-panel .shop-list--buy,body.classic-play #shop-panel.national-panel .shop-details{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -160,9 +196,11 @@ body.classic-play .national-panel.utility-panel{display:flex;flex-direction:colu
 body.classic-play .national-panel.utility-panel .calibration-window-heading{position:absolute;left:0;right:0;top:8px;height:20px;display:flex;align-items:center;justify-content:center;color:#f4d67c;text-shadow:1px 1px #000}
 body.classic-play .national-panel.utility-panel .calibration-window-heading .classic-window-close{position:absolute;right:2px;top:2px;width:22px;height:22px;padding:0;border:0;background-image:none!important;color:transparent}
 body.classic-play .national-panel.utility-panel>span{color:#c5b27d;font:11px SimSun,serif}
-body.classic-play .national-panel.utility-panel .target-list,body.classic-play .national-panel.utility-panel .ground-item-list{display:flex;flex-direction:column;align-items:stretch;gap:5px}
-body.classic-play .national-panel.utility-panel .target-list button,body.classic-play .national-panel.utility-panel .ground-item-list button{padding:5px 7px;border:1px solid rgba(108,90,62,.75);background:rgba(22,13,8,.72);color:#e8d6a0;text-align:left;font:11px SimSun,serif}
-body.classic-play .national-panel.utility-panel .target-list button:hover,body.classic-play .national-panel.utility-panel .ground-item-list button:hover{border-color:#d4af5c;color:#fff0bb}
+body.classic-play .national-panel .target-list,body.classic-play .national-panel .ground-item-list{display:flex;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:5px;max-height:235px;min-height:0;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain}
+body.classic-play .national-panel .target-list>.nearby-target-entry,body.classic-play .national-panel .target-list>button,body.classic-play .national-panel .ground-item-list>button{flex:0 0 auto}
+body.classic-play .national-panel .target-list>.nearby-target-entry{width:100%}
+body.classic-play .national-panel .target-list button,body.classic-play .national-panel .ground-item-list button{padding:5px 7px;border:1px solid rgba(108,90,62,.75);background:rgba(22,13,8,.72);color:#e8d6a0;text-align:left;font:11px SimSun,serif}
+body.classic-play .national-panel .target-list button:hover,body.classic-play .national-panel .ground-item-list button:hover{border-color:#d4af5c;color:#fff0bb}
 body.classic-play .national-panel.utility-panel label{display:flex;align-items:center;gap:6px;color:#c5b27d;font:11px SimSun,serif}
 body.classic-play .national-panel.utility-panel label input{flex:1;min-width:0;height:24px;padding:2px 4px;border:1px solid #6c5a3e;background:#1a110b;color:#e8d6a0;font:11px SimSun,serif}
 body.classic-play .national-panel.utility-panel>button{padding:3px 6px;border-color:#8a6c39;background:#2b1d11;color:#f0d286;font:11px SimSun,serif}
@@ -177,14 +215,18 @@ body.classic-play .national-panel.system-panel small{color:#9c8c68;font:10px/15p
 body.classic-play.in-world main{min-height:100vh;padding:0;display:grid;place-items:center}
 body.classic-play.in-world #game-stage{grid-area:1 / 1;margin:0}
 body.classic-play #classic-hud.national-ui .hud-exp-track i{height:9px;margin:2px 1px;background:linear-gradient(90deg,#745112,#e9c95e)}
-body.classic-play #classic-window{left:192px!important;top:126px!important;width:416px!important;height:347px!important;padding:38px 14px 12px!important;background-image:url('/ui-national/prguse/402.2b8c83a121142363.png')!important;color:#e8d6a0;font:12px SimSun,'Songti SC',serif}
+body.classic-play #classic-window{left:var(--classic-window-left,192px)!important;top:var(--classic-window-top,126px)!important;width:var(--classic-window-width,416px)!important;height:var(--classic-window-height,347px)!important;padding:var(--classic-window-padding,38px 14px 12px)!important;background-image:var(--classic-window-background,url('/ui-national/prguse/402.2b8c83a121142363.png'))!important;color:#e8d6a0;font:12px SimSun,'Songti SC',serif}
 body.classic-play #classic-window .classic-window-heading{position:absolute;left:0;right:0;top:8px;height:20px;color:#f4d67c;text-shadow:1px 1px #000}
-body.classic-play #classic-window .classic-window-heading button{left:390px!important;top:2px!important;width:22px!important;height:22px!important;background-image:none!important;color:transparent!important;font-size:0}
+body.classic-play #classic-window .classic-window-heading button{left:var(--classic-window-close-left,390px)!important;top:var(--classic-window-close-top,2px)!important;width:var(--classic-window-close-width,22px)!important;height:var(--classic-window-close-height,22px)!important;background-image:none!important;color:transparent!important;font-size:0}
 body.classic-play #classic-window .classic-window-tabs{position:relative;gap:2px;padding:0;margin:0 0 8px;min-height:22px;max-width:388px}
 body.classic-play #classic-window .classic-window-tabs button{padding:2px 7px;border:1px solid #6e542e;background:#24180f;color:#d8bd7b;font:11px SimSun,serif}
 body.classic-play #classic-window .classic-window-tabs button.active{border-color:#e9c866;background:#62451f;color:#fff0bb}
 body.classic-play #classic-window .classic-window-body{flex:1;min-height:0;padding:0 2px 0 0;color:#e8d6a0}
 body.classic-play #classic-window .classic-window-body>details,body.classic-play #classic-window .classic-window-body>.group-panel,body.classic-play #classic-window .classic-window-body>.chat-panel{margin:0;padding:0;border:0;background:transparent;color:#e8d6a0}
+body.classic-play #classic-window[data-window-kind=quest] .classic-window-body{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+body.classic-play #classic-window[data-window-kind=quest] #quest-panel{display:flex;flex:1 1 auto;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:0;min-height:0;width:100%}
+body.classic-play #classic-window[data-window-kind=quest] #quest-log{flex:1 1 auto;min-height:0;padding-bottom:8px;overflow-y:auto;overscroll-behavior:contain}
+body.classic-play #classic-window[data-window-kind=quest] #quest-log:focus-visible{outline:1px solid #d4af5c;outline-offset:-1px}
 body.classic-play #classic-window .classic-window-body>.chat-panel form{display:grid;grid-template-columns:92px minmax(0,1fr) auto;gap:6px;padding:8px 0;border-top:1px solid #4b4433}
 body.classic-play #classic-window .classic-window-body>.chat-panel form label{display:flex;gap:4px;min-width:0}
 body.classic-play #classic-window .classic-window-body>.chat-panel form label:last-of-type{grid-column:1 / 3}
@@ -196,9 +238,15 @@ body.classic-play #classic-modal-layer .npc-dialog>div:first-child{min-height:20
 body.classic-play #classic-modal-layer .npc-dialog #close-dialogue{top:2px;right:2px;width:22px;height:22px;background-image:none!important;color:transparent;font-size:0}
 body.classic-play .character-window.national-window #character-panel{overflow:hidden}
 body.classic-play .character-window.national-window #character-panel .classic-stat{display:none}
-body.classic-play .character-window.national-window #character-panel .classic-stat-value{text-align:center}
-body.classic-play .character-window.national-window [data-character-page=skills]{overflow:auto}
-body.classic-play .character-window.national-window [data-character-page=skills] .skill-grid{width:100%;max-height:none;padding:8px 6px;box-sizing:border-box;overflow:visible}
+body.classic-play .character-window.national-window [data-character-page=skills]{overflow:visible}
+body.classic-play .character-window.national-window [data-character-page=skills] .skill-grid{position:relative;display:block;width:168px;height:199px;max-height:none;padding:0;overflow:visible}
+body.classic-play .character-window.national-window [data-character-page=skills] .native-skill-row{position:absolute;left:0;min-height:0;padding:0;display:block;overflow:visible}
+body.classic-play .character-window.national-window [data-character-page=skills] .native-skill-row .skill-icon-button{position:absolute;left:8px;top:7px;padding:0;border:0;background:transparent}
+body.classic-play .character-window.national-window [data-character-page=skills] .native-skill-row .native-skill-name,body.classic-play .character-window.national-window [data-character-page=skills] .native-skill-row .native-skill-training{position:absolute;display:block;min-width:0;line-height:14px;white-space:nowrap}
+body.classic-play .character-window.national-window [data-character-page=skills] .native-skill-row .skill-key-binding{position:absolute;padding:0;border:0;border-radius:0;background:transparent;text-shadow:none}
+/* Frame painting replaces image children during a press; keep the hit target on its stable button. */
+.skill-icon-button > *{pointer-events:none}
+body.classic-play .character-window.national-window #skills .skill-key-status{position:absolute;left:0;top:247px;margin:0;width:168px;color:#fff;font:10px/12px SimSun,serif}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-item{width:100%;min-width:0;min-height:40px;padding:4px 2px;box-sizing:border-box;align-items:center;gap:4px;overflow:hidden}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-item>span:first-of-type{min-width:0;flex:1;overflow:hidden}
 body.classic-play .character-window.national-window [data-character-page=skills] .skill-item strong,body.classic-play .character-window.national-window [data-character-page=skills] .skill-item small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -222,9 +270,19 @@ body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-cly
 body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clred{color:#e98a6a}
 body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clblue{color:#8ab5e8}
 body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-color-clgreen{color:#8fc77b}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-inline-option,
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-inline-input button{appearance:none;display:inline;border:0;border-radius:0;padding:0 1px;margin:0;background:transparent;color:inherit;font:inherit;line-height:inherit;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:2px;box-shadow:none;cursor:pointer;vertical-align:baseline}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-inline-option:hover,
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-inline-input button:hover{color:#ffe39a;text-decoration-style:solid}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-inline-option:focus-visible,
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-inline-input button:focus-visible{outline:1px solid #ffe39a;outline-offset:2px}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-inline-input{display:inline-flex;align-items:baseline;gap:4px;margin:0;vertical-align:baseline}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-inline-input input{box-sizing:border-box;width:128px;max-width:150px;height:19px;padding:1px 3px;border:1px solid #6e542e;background:#160f0a;color:#f2dfb0;font:inherit;line-height:16px;vertical-align:baseline}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text .dialogue-inline-input input:focus-visible{outline:1px solid #ffe39a;outline-offset:1px}
+body.classic-play #classic-modal-layer .npc-dialog #npc-text :disabled{cursor:wait;opacity:.7}
 /* Modal service panels are hidden by the controller before they open. Character and inventory windows can remain visible beside a shop, repair or storage panel. */
 /* The mmap.wil view is a standalone map panel. Its three modes intentionally override legacy HUD frame guesses. */
-body.classic-play #classic-hud .hud-minimap-frame{position:absolute;left:614px!important;top:12px!important;right:auto;width:174px!important;height:148px!important;display:block;padding:5px;background:linear-gradient(145deg,rgba(43,35,25,.97),rgba(8,11,10,.98))!important;border:1px solid #a98a4c;outline:1px solid #20180e;box-shadow:0 2px 10px #000;opacity:1;z-index:16;pointer-events:auto;color:#e7d6a4;text-shadow:1px 1px #000;image-rendering:pixelated}
+body.classic-play #classic-hud .hud-minimap-frame{position:absolute;left:614px!important;top:40px!important;right:auto;width:174px!important;height:148px!important;display:block;padding:5px;background:linear-gradient(145deg,rgba(43,35,25,.97),rgba(8,11,10,.98))!important;border:1px solid #a98a4c;outline:1px solid #20180e;box-shadow:0 2px 10px #000;opacity:1;z-index:16;pointer-events:auto;color:#e7d6a4;text-shadow:1px 1px #000;image-rendering:pixelated}
 body.classic-play #classic-hud .minimap-heading{position:relative;display:grid;grid-template-columns:1fr auto 20px;align-items:center;gap:5px;width:auto;max-width:none;height:22px;min-height:0;padding:0 1px 3px;border-bottom:1px solid #66522c;font:11px SimSun,'Songti SC',serif}
 body.classic-play #classic-hud .minimap-heading strong{overflow:hidden;color:#f0d48d;font-weight:normal;white-space:nowrap;text-overflow:ellipsis}
 body.classic-play #classic-hud .hud-minimap-frame [data-hud-coords]{position:static!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;display:block;color:#cdbb8c;font:10px ui-monospace,monospace;letter-spacing:0}
@@ -241,7 +299,7 @@ body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="expanded"] .min
 body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="expanded"] .minimap-viewport{width:604px;height:370px;margin-top:5px}
 body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="expanded"] .minimap-legend{display:flex;gap:12px}
 body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="expanded"] .minimap-help{margin-left:auto}
-body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"]{left:758px!important;top:12px!important;width:30px!important;height:30px!important;padding:4px;background:rgba(28,22,15,.92)!important}
+body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"]{left:758px!important;top:40px!important;width:30px!important;height:30px!important;padding:4px;background:rgba(28,22,15,.92)!important}
 body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-heading{display:block;width:20px;height:20px;padding:0;border:0}
 body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-heading>*:not(button),body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-viewport,body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-legend{display:none}
 body.classic-play #classic-hud .hud-minimap-frame[data-map-mode="hidden"] .minimap-heading button{display:block}
@@ -252,11 +310,240 @@ body.classic-play #classic-window{left:var(--classic-window-left,192px)!importan
 body.classic-play #classic-hud .hud-itembar{display:none;position:absolute;left:0;top:0;z-index:3;pointer-events:none}
 body.classic-play #classic-hud.national-ui .hud-itembar{display:block;pointer-events:none}
 body.classic-play #classic-hud.national-ui .hud-item-quickbar{position:absolute;display:flex;pointer-events:auto}
-body.classic-play #classic-hud .item-quickbar-slot{position:relative;display:grid;place-items:center;width:38px;height:35px;padding:0;border:1px solid rgba(226,202,151,.42);border-radius:1px;background:rgba(11,9,7,.58);color:#f3d681;box-shadow:inset 0 0 0 1px rgba(23,17,10,.8);image-rendering:pixelated;cursor:pointer}
-body.classic-play #classic-hud .item-quickbar-slot:hover,body.classic-play #classic-hud .item-quickbar-slot:focus-visible{border-color:#f4db86;background:rgba(68,48,24,.62);outline:1px solid rgba(255,225,137,.45);outline-offset:1px}
-body.classic-play #classic-hud .item-quickbar-slot:active{background:rgba(114,81,30,.7);transform:translateY(1px)}
+/* Prguse#1 paints the six pockets; these buttons remain transparent hit targets. */body.classic-play #classic-hud .item-quickbar-slot{position:relative;display:grid;place-items:center;width:38px;height:35px;padding:0;border:0;border-radius:0;background:transparent;color:#f3d681;box-shadow:none;image-rendering:pixelated;cursor:pointer}
+body.classic-play #classic-hud .item-quickbar-slot:hover,body.classic-play #classic-hud .item-quickbar-slot:focus-visible{background:rgba(68,48,24,.14);outline:1px solid rgba(255,225,137,.62);outline-offset:-2px}
+body.classic-play #classic-hud .item-quickbar-slot:active{background:rgba(114,81,30,.24)}
+body.classic-play #classic-hud .item-quickbar-slot.drop-target{outline:1px dashed rgba(255,225,137,.82);outline-offset:-2px;background:rgba(114,81,30,.18)}
 body.classic-play #classic-hud .item-quickbar-slot:disabled{opacity:.48;cursor:default}
 body.classic-play #classic-hud .item-quickbar-slot img{display:block;max-width:32px;max-height:30px;image-rendering:pixelated;object-fit:contain;pointer-events:none}
-body.classic-play #classic-hud .item-quickbar-slot kbd{position:absolute;right:2px;bottom:0;padding:0;border:0;background:rgba(8,6,4,.7);color:#ffe8a2;font:9px/11px SimSun,serif;pointer-events:none}
+body.classic-play #classic-hud .item-quickbar-slot kbd{position:absolute;right:2px;bottom:0;padding:0;border:0;background:transparent;color:#ffe8a2;font:9px/11px SimSun,serif;text-shadow:1px 1px #000;pointer-events:none}
 body.classic-play #classic-hud .item-quickbar-slot .item-quickbar-fallback{font:14px SimSun,serif;color:#e6c873;pointer-events:none}
 body.classic-play #classic-hud .item-quickbar-slot .item-quickbar-count{position:absolute;left:2px;bottom:0;padding:0 2px;background:rgba(8,6,4,.78);color:#fff1ae;font:9px/11px ui-monospace,monospace;pointer-events:none}
+
+body.classic-play #classic-hud.national-ui .hud-chat .chat-panel li{padding:0;color:var(--classic-chat-text,#000)}
+body.classic-play #classic-hud.national-ui .hud-chat .chat-panel li[data-channel=system]{color:var(--classic-chat-system,#008000)}
+
+.national-ui [data-hud-level]{text-align:left;}
+
+[data-hud-daylight],[data-hud-hunger]{position:absolute;pointer-events:none;image-rendering:pixelated;}
+
+/* Native 2003 party window: the art already contains the permission label and action buttons. */
+body.classic-play .classic-utility-window{z-index:20;pointer-events:auto;image-rendering:pixelated}
+body.classic-play .national-window.classic-utility-window[hidden]{display:none!important}
+body.classic-play #classic-window[data-window-kind=group]{overflow:visible!important}
+body.classic-play #classic-window[data-window-kind=group] .classic-window-heading,
+body.classic-play #classic-window[data-window-kind=guild] .classic-window-heading{z-index:3;pointer-events:none}
+body.classic-play #classic-window[data-window-kind=group] .classic-window-heading strong,
+body.classic-play #classic-window[data-window-kind=guild] .classic-window-heading strong,
+body.classic-play .national-window[data-window-kind=group].group-panel>.calibration-window-heading strong,
+body.classic-play .national-window[data-window-kind=guild].group-panel>.calibration-window-heading strong,
+body.classic-play .national-window[data-window-kind=group].group-panel>strong,
+body.classic-play .national-window[data-window-kind=group] .group-panel>strong,
+body.classic-play .national-window[data-window-kind=guild] .group-panel>strong{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+body.classic-play #classic-window[data-window-kind=group] .classic-window-tabs{position:absolute;left:calc(100% + 6px);top:24px;display:grid;grid-template-columns:1fr;width:108px;gap:2px;padding:0;margin:0;min-height:0;max-width:none;z-index:3}
+body.classic-play #classic-window[data-window-kind=group] .classic-window-tabs button{min-height:22px;padding:2px 4px;background:rgba(31,22,13,.94);font-size:10px}
+body.classic-play #classic-window[data-window-kind=guild] .classic-window-tabs{position:relative;display:flex;flex-wrap:nowrap;justify-content:center;gap:2px;padding:0;margin:0 0 4px;min-height:22px;max-width:none;z-index:2}
+body.classic-play #classic-window[data-window-kind=guild] .classic-window-tabs button{flex:1;min-width:0;padding:2px 4px;font-size:10px;white-space:nowrap}
+body.classic-play #classic-window[data-window-kind=group] .classic-window-body{flex:1;min-height:0;padding:0;overflow:hidden}
+body.classic-play #classic-window[data-window-kind=guild] .classic-window-body{flex:1;min-height:0;padding:0;overflow:hidden}
+body.classic-play #classic-window[data-window-kind=group] .group-panel,
+body.classic-play .national-window[data-window-kind=group].group-panel,
+body.classic-play .national-window[data-window-kind=group] .group-panel{position:relative;display:block;width:100%;height:100%;max-width:none;margin:0;padding:var(--classic-window-padding,0px)!important;border:0;background:transparent;color:#e8d6a0;overflow:hidden}
+body.classic-play .national-window[data-window-kind=group] .group-panel>span{position:absolute;left:22px;top:46px;width:92px;min-width:0;color:#dbc995;font:10px/18px SimSun,'Songti SC',serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.classic-play .national-window[data-window-kind=group] #group-feedback{position:absolute;left:22px;top:59px;width:218px;height:12px;min-width:0;color:#f0cf8d;font:9px/12px SimSun,'Songti SC',serif;text-shadow:1px 1px #130d08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none}
+body.classic-play .national-window[data-window-kind=group] #group-mode,
+body.classic-play .national-window[data-window-kind=group] [data-group-action="允许组队"]{position:absolute;left:15px;top:10px;width:23px;height:24px;padding:0;border:0;background:transparent;color:transparent;font-size:0;box-shadow:none}
+body.classic-play .national-window[data-window-kind=group] #group-mode::after,
+body.classic-play .national-window[data-window-kind=group] [data-group-action="允许组队"]::after{content:'';position:absolute;left:4px;top:4px;width:13px;height:13px;color:#f5dc78;font:bold 14px/13px SimSun,serif;text-shadow:1px 1px #160d07}
+body.classic-play .national-window[data-window-kind=group] #group-mode[data-enabled=true]::after,
+body.classic-play .national-window[data-window-kind=group] [data-group-action="允许组队"][data-enabled=true]::after{content:'✓'}
+body.classic-play .national-window[data-window-kind=group] #group-create,
+body.classic-play .national-window[data-window-kind=group] [data-group-action="新建队伍"],
+body.classic-play .national-window[data-window-kind=group] #group-add,
+body.classic-play .national-window[data-window-kind=group] [data-group-action="邀请加入"],
+body.classic-play .national-window[data-window-kind=group] #group-remove,
+body.classic-play .national-window[data-window-kind=group] [data-group-action="移除成员"]{position:absolute;top:201px;height:29px;padding:0;border:0;background:transparent;color:transparent;font-size:0;box-shadow:none}
+body.classic-play .national-window[data-window-kind=group] #group-create,
+body.classic-play .national-window[data-window-kind=group] [data-group-action="新建队伍"]{left:20px;width:74px}
+body.classic-play .national-window[data-window-kind=group] #group-add,
+body.classic-play .national-window[data-window-kind=group] [data-group-action="邀请加入"]{left:171px;width:80px}
+body.classic-play .national-window[data-window-kind=group] #group-remove,
+body.classic-play .national-window[data-window-kind=group] [data-group-action="移除成员"]{left:97px;width:71px}
+body.classic-play .national-window[data-window-kind=group] #group-members,
+body.classic-play .national-window[data-window-kind=group] .group-panel>ol{position:absolute;left:22px;top:72px;width:218px;height:118px;display:grid;grid-template-columns:100px 100px;grid-auto-rows:16px;align-content:start;box-sizing:border-box;margin:0;padding:8px 6px 4px;overflow:auto;list-style:none;background:rgba(8,5,4,.24);color:#e3d5ad;font:11px/16px SimSun,'Songti SC',serif}
+body.classic-play .national-window[data-window-kind=group] #group-members li,
+body.classic-play .national-window[data-window-kind=group] .group-panel>ol li{display:block;min-width:0;margin:0;padding:0;border:0;background:transparent;color:inherit;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+body.classic-play .national-window[data-window-kind=group] #group-members li:first-child,
+body.classic-play .national-window[data-window-kind=group] .group-panel>ol li:first-child{grid-column:1 / -1}
+body.classic-play .national-window[data-window-kind=group] button.native-frame-button{box-sizing:border-box;padding:0!important;border:0!important;background-repeat:no-repeat;background-position:left top;background-size:100% 100%;background-color:transparent!important;color:transparent!important;font-size:0!important;line-height:0;box-shadow:none;image-rendering:pixelated}
+body.classic-play .national-window[data-window-kind=group] button.native-frame-button[data-ui-state=hover]{filter:brightness(1.12)}
+body.classic-play .national-window[data-window-kind=group] button.native-frame-button[data-ui-state=pressed]{filter:brightness(.78)}
+body.classic-play .national-window[data-window-kind=group] button.native-frame-button:disabled{cursor:not-allowed;filter:grayscale(1) brightness(.58)}
+body.classic-play .national-window[data-window-kind=group] button.native-frame-button:focus-visible{outline:1px solid #ffe39a;outline-offset:-2px}
+
+/* The guild frame's central void is split into a member roster and a scrollable management column. */
+body.classic-play .national-window[data-window-kind=guild]{box-sizing:border-box;color:#e8d6a0}
+body.classic-play .national-window[data-window-kind=guild]>strong:first-child{display:none}
+body.classic-play .national-window[data-window-kind=guild].group-panel,
+body.classic-play .national-window[data-window-kind=guild] .guild-panel{position:relative;display:grid;width:100%;height:100%;max-width:none;margin:0;padding:var(--classic-window-padding,0px)!important;border:0;background:transparent;color:#e8d6a0;grid-template-columns:minmax(0,1fr) minmax(0,1.08fr);grid-template-rows:28px minmax(0,1fr) 62px;gap:6px;overflow:hidden}
+body.classic-play #classic-window[data-window-kind=guild] .guild-panel{display:grid}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;min-width:0;padding:0 2px 3px;border-bottom:1px solid rgba(167,140,87,.38)}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-header>span{min-width:0;overflow:hidden;color:#f0d286;font:12px SimSun,'Songti SC',serif;white-space:nowrap;text-overflow:ellipsis}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-header>div{display:contents}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-roster{grid-column:1;grid-row:2;min-width:0;min-height:0;display:flex;flex-direction:column;gap:5px;overflow:hidden}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-roster>[hidden]{display:none!important}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-roster>span{min-width:0;overflow:hidden;color:#d7c69a;font:10px/16px SimSun,'Songti SC',serif;white-space:nowrap;text-overflow:ellipsis}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-roster>ol{display:block;flex:1;min-height:0;width:auto;margin:0;padding:4px 6px;overflow:auto;list-style:none;border:1px solid rgba(154,132,89,.4);background:rgba(7,5,4,.34)}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-roster>ol li{display:block;margin:0;padding:0 2px;border:0;background:transparent;color:#e7d9b5;font:11px/14px SimSun,'Songti SC',serif}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-roster>#guild-ranks{max-height:70px;overflow:auto;color:#cabb96;font:10px/15px SimSun,'Songti SC',serif}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-admin{grid-column:2;grid-row:2;display:flex;min-width:0;min-height:0;flex-direction:column;gap:5px;overflow:auto}
+body.classic-play .national-window[data-window-kind=guild] .guild-create,
+body.classic-play .national-window[data-window-kind=guild] .guild-invites{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0;padding:4px;border:1px solid rgba(154,132,89,.35);background:rgba(12,8,6,.3)}
+body.classic-play .national-window[data-window-kind=guild] .guild-create[hidden],
+body.classic-play .national-window[data-window-kind=guild] .guild-invites[hidden],
+body.classic-play .national-window[data-window-kind=guild] .guild-management[hidden]{display:none!important}
+body.classic-play .national-window[data-window-kind=guild] .guild-create label,
+body.classic-play .national-window[data-window-kind=guild] .guild-invites label{display:flex;flex:1 1 100%;min-width:0;align-items:center;gap:4px;color:#d7c69a;font:10px SimSun,'Songti SC',serif}
+body.classic-play .national-window[data-window-kind=guild] .guild-create input,
+body.classic-play .national-window[data-window-kind=guild] .guild-invites input{flex:1;min-width:60px;width:auto;height:22px;padding:2px 4px;background:#100c08;color:#f2dfb0;font:10px SimSun,'Songti SC',serif}
+body.classic-play .national-window[data-window-kind=guild] .guild-window-header button,
+body.classic-play .national-window[data-window-kind=guild] .guild-create button,
+body.classic-play .national-window[data-window-kind=guild] .guild-invites button,
+body.classic-play .national-window[data-window-kind=guild] .guild-management button{padding:3px 6px;border:1px solid #75603a;background:#271b10;color:#eed28a;font:10px SimSun,'Songti SC',serif;white-space:nowrap}
+body.classic-play .national-window[data-window-kind=guild] .guild-management{display:flex;min-width:0;min-height:0;flex-wrap:wrap;align-content:flex-start;align-items:center;gap:4px;padding:5px;overflow:auto;border:1px solid rgba(154,132,89,.38);background:rgba(9,6,5,.32)}
+body.classic-play .national-window[data-window-kind=guild] .guild-management label{display:flex;flex:1 1 100%;min-width:0;flex-direction:column;gap:2px;color:#d7c69a;font:10px SimSun,'Songti SC',serif}
+body.classic-play .national-window[data-window-kind=guild] .guild-management input,
+body.classic-play .national-window[data-window-kind=guild] .guild-management textarea{width:100%;min-width:0;padding:3px 4px;border:1px solid #56472f;background:#100c08;color:#f2dfb0;font:10px/15px SimSun,'Songti SC',serif;resize:vertical}
+body.classic-play .national-window[data-window-kind=guild] .guild-management textarea{max-height:64px}
+body.classic-play .national-window[data-window-kind=guild]>.guild-native-scroll{position:absolute;z-index:4;display:block;padding:0;border:0;border-radius:50%;background:transparent;color:transparent;box-shadow:none;cursor:pointer}
+body.classic-play .national-window[data-window-kind=guild]>.guild-native-scroll:hover,
+body.classic-play .national-window[data-window-kind=guild]>.guild-native-scroll:focus-visible{background:rgba(255,224,125,.13);outline:1px solid rgba(255,224,125,.66);outline-offset:-3px}
+body.classic-play .national-window[data-window-kind=guild]>.guild-native-scroll:active{background:rgba(255,224,125,.25)}
+body.classic-play .national-window[data-window-kind=guild] .guild-panel button.native-frame-button{position:absolute;z-index:5;display:block;flex:none;width:64px!important;height:16px!important;min-width:64px;padding:0!important;border:0!important;border-radius:0;background-color:transparent!important;background-position:center;background-repeat:no-repeat;background-size:100% 100%;color:transparent!important;font-size:0!important;line-height:0;box-shadow:none;image-rendering:pixelated}
+body.classic-play .national-window[data-window-kind=guild] .guild-panel button.native-frame-button[data-ui-state=pressed]{filter:brightness(.78)}
+body.classic-play .national-window[data-window-kind=guild] .guild-panel button.native-frame-button:disabled{cursor:not-allowed;filter:grayscale(1) brightness(.58)}
+
+/* The original trade UI is two adjacent Prguse windows (#390 remote, #389 local). */
+body.classic-play #classic-window[data-window-kind=trade]{display:block;overflow:visible;}
+body.classic-play #classic-window[data-window-kind=trade] .classic-window-heading{position:absolute;inset:0 0 auto;height:0;}
+body.classic-play #classic-window[data-window-kind=trade] .classic-window-heading>strong,
+body.classic-play .national-window.trade-panel[data-window-kind=trade] .calibration-window-heading>strong,
+body.classic-play .national-window[data-window-kind=trade] .trade-heading>strong{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+body.classic-play #classic-window[data-window-kind=trade] .classic-window-tabs{position:absolute;left:-344px;top:8px;z-index:3;display:grid;grid-template-columns:1fr;width:108px;gap:2px;padding:0;margin:0;min-height:0;max-width:none}
+body.classic-play #classic-window[data-window-kind=trade] .classic-window-tabs button{min-height:21px;padding:2px 4px;background:rgba(31,22,13,.94);font-size:10px}
+body.classic-play #classic-window[data-window-kind=trade] .classic-window-body{position:static;flex:none;min-height:0;padding:0;overflow:visible}
+body.classic-play #classic-window[data-window-kind=trade] .classic-window-body>.trade-panel{display:contents}
+body.classic-play .national-window.trade-panel[data-window-kind=trade]{display:block!important;box-sizing:border-box;width:236px!important;height:175px!important;margin:0;padding:0!important;overflow:visible;border:0;background-color:transparent;color:#e8d6a0}
+body.classic-play .national-window[data-window-kind=trade] .trade-heading{display:contents}
+body.classic-play .national-window[data-window-kind=trade] #trade-status,
+body.classic-play .national-window[data-window-kind=trade] #calibration-trade-status{position:absolute;left:-193px;top:4px;width:174px;height:18px;overflow:hidden;color:#f1dda5;text-align:center;text-overflow:ellipsis;white-space:nowrap;font:10px/18px SimSun,'Songti SC',serif;text-shadow:1px 1px #000}
+body.classic-play .national-window[data-window-kind=trade] [data-trade-remote-window]{z-index:0;pointer-events:none;background-repeat:no-repeat;image-rendering:pixelated}
+body.classic-play #classic-window[data-window-kind=trade] .trade-panel,
+body.classic-play .national-window.trade-panel[data-window-kind=trade]{color:#e8d6a0;font:10px SimSun,'Songti SC',serif}
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns{display:contents}
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns>div,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns>div{display:contents}
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns>div>strong,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns>div>strong{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns ol,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns ol{position:absolute;z-index:1;left:21px;top:56px;display:grid;box-sizing:border-box;grid-template-columns:repeat(5,36px);grid-template-rows:repeat(2,33px);gap:0;width:180px;height:66px;margin:0;padding:0;overflow:hidden;list-style:none}
+body.classic-play #classic-window[data-window-kind=trade] #trade-remote-items,
+body.classic-play .national-window[data-window-kind=trade] #trade-remote-items,
+body.classic-play .national-window[data-window-kind=trade] #calibration-trade-remote-items{left:-199px}
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns li,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns li{position:relative;display:grid;box-sizing:border-box;place-items:center;width:36px;height:33px;margin:0;padding:1px;border:0;background:transparent;color:#fff0be;font:8px/10px SimSun,'Songti SC',serif}
+body.classic-play #classic-window[data-window-kind=trade] .trade-item-icon,
+body.classic-play .national-window[data-window-kind=trade] .trade-item-icon{display:block;max-width:30px;max-height:28px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(1px 1px 1px #000)}
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns li button,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns li button{position:absolute;inset:auto 0 0;z-index:2;width:100%;height:12px;padding:0;border:0;background:rgba(20,12,7,.9);color:#f5d778;font:8px/12px SimSun,'Songti SC',serif;opacity:0}
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns li:hover button,
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns li:focus-within button,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns li:hover button,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns li:focus-within button{opacity:1}
+body.classic-play #classic-window[data-window-kind=trade] .trade-panel form,
+body.classic-play .national-window[data-window-kind=trade] #trade-request-form{position:absolute;left:-193px;top:4px;width:174px;height:20px;margin:0;overflow:visible}
+body.classic-play #classic-window[data-window-kind=trade] .trade-panel form label,
+body.classic-play .national-window[data-window-kind=trade] #trade-request-form label{display:contents;font-size:0}
+body.classic-play #classic-window[data-window-kind=trade] #trade-target,
+body.classic-play .national-window[data-window-kind=trade] #trade-target{position:absolute;left:0;top:0;width:126px;height:18px;padding:1px 4px;border:0;background:rgba(12,8,5,.64);color:#fff0be;font:10px SimSun,'Songti SC',serif}
+body.classic-play #classic-window[data-window-kind=trade] [data-trade-confirm],
+body.classic-play .national-window[data-window-kind=trade] [data-trade-confirm]{position:absolute;z-index:2;left:155px;top:128px;width:44px;height:16px;padding:0;border:0;background-color:transparent;color:transparent;font-size:0;cursor:pointer}
+body.classic-play #classic-window[data-window-kind=trade] #trade-request-form [data-trade-confirm]{left:348px;top:124px}
+body.classic-play #classic-window[data-window-kind=trade] [data-trade-confirm][hidden],
+body.classic-play .national-window[data-window-kind=trade] [data-trade-confirm][hidden]{display:none!important}
+body.classic-play #classic-window[data-window-kind=trade] [data-trade-confirm]:disabled,
+body.classic-play .national-window[data-window-kind=trade] [data-trade-confirm]:disabled{cursor:default;filter:saturate(.55);opacity:.58}
+body.classic-play #classic-window[data-window-kind=trade] #trade-accept[aria-pressed=true]:disabled{filter:none;opacity:1;-webkit-backdrop-filter:brightness(.68);backdrop-filter:brightness(.68)}
+body.classic-play #classic-window[data-window-kind=trade] .trade-controls,
+body.classic-play .national-window[data-window-kind=trade] .trade-controls{display:contents}
+body.classic-play #classic-window[data-window-kind=trade] .trade-controls label,
+body.classic-play .national-window[data-window-kind=trade] .trade-controls label{display:contents;font-size:0}
+body.classic-play #classic-window[data-window-kind=trade] #trade-gold,
+body.classic-play .national-window[data-window-kind=trade] #trade-gold,
+body.classic-play .national-window[data-window-kind=trade] #calibration-trade-gold{position:absolute;z-index:2;left:30px;top:137px;width:67px;height:19px;padding:1px 3px;border:0;background:rgba(12,8,5,.62);color:#fff0be;font:10px SimSun,'Songti SC',serif}
+body.classic-play #classic-window[data-window-kind=trade] #trade-remote-gold,
+body.classic-play .national-window[data-window-kind=trade] #trade-remote-gold,
+body.classic-play .national-window[data-window-kind=trade] #calibration-trade-remote-gold{position:absolute;left:-208px;top:137px;width:75px;height:18px;color:#e5d09c;text-align:center;white-space:nowrap;font:9px/18px SimSun,'Songti SC',serif}
+body.classic-play #classic-window[data-window-kind=trade] #trade-set-gold,
+body.classic-play .national-window[data-window-kind=trade] #trade-set-gold,
+body.classic-play .national-window[data-window-kind=trade] #calibration-trade-set-gold{position:absolute;z-index:2;left:104px;top:136px;width:43px;height:20px;padding:0;border:0;background:rgba(29,19,9,.72);color:#f0d286;font:9px SimSun,'Songti SC',serif}
+body.classic-play #classic-window[data-window-kind=trade] #trade-cancel,
+body.classic-play .national-window[data-window-kind=trade] #trade-cancel,
+body.classic-play .national-window[data-window-kind=trade] #calibration-trade-cancel{position:absolute;z-index:2;left:199px;top:136px;width:34px;height:18px;padding:0;border:0;background:rgba(29,19,9,.72);color:#e2c17b;font:9px SimSun,'Songti SC',serif}
+body.classic-play #classic-window[data-window-kind=trade] #trade-cancel:disabled,
+body.classic-play .national-window[data-window-kind=trade] #trade-cancel:disabled{cursor:default;opacity:.58}
+body.classic-play #classic-window[data-window-kind=trade] .classic-window-body>[hidden],
+body.classic-play .national-window[data-window-kind=trade]>[hidden]{display:none!important}
+
+body.classic-play #viewport-shell>#item-tooltip-layer,
+body.classic-play #calibration-stage-frame>#item-tooltip-layer{position:absolute;inset:0;z-index:34;overflow:visible;pointer-events:none}
+body.classic-play #viewport-shell>#item-tooltip-layer>.inventory-item-tooltip,
+body.classic-play #calibration-stage-frame>#item-tooltip-layer>.inventory-item-tooltip{z-index:1;max-width:calc(100% - 12px);max-height:calc(100% - 12px);overflow:auto;overscroll-behavior:contain}
+
+/* Keep every offer anchored to its native 5x2 cell, including after removals. */
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns li.trade-slot,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns li.trade-slot{overflow:visible;padding:0}
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns li button.trade-slot-button,
+body.classic-play .national-window[data-window-kind=trade] .trade-columns li button.trade-slot-button{position:absolute;inset:0;z-index:1;display:grid;place-items:center;box-sizing:border-box;width:100%;height:100%;padding:0;border:0;background:transparent;color:#f5d778;font:8px/10px SimSun,'Songti SC',serif;opacity:1;cursor:pointer}
+body.classic-play #classic-window[data-window-kind=trade] .trade-columns li button.trade-slot-button--remote[aria-disabled=true],
+body.classic-play .national-window[data-window-kind=trade] .trade-columns li button.trade-slot-button--remote[aria-disabled=true]{opacity:1;cursor:default}
+body.classic-play #classic-window[data-window-kind=trade] .trade-slot-action,
+body.classic-play .national-window[data-window-kind=trade] .trade-slot-action{position:absolute;inset:auto 0 0;z-index:2;height:12px;background:rgba(20,12,7,.9);font:8px/12px SimSun,'Songti SC',serif;text-align:center;opacity:0;pointer-events:none}
+body.classic-play #classic-window[data-window-kind=trade] .trade-slot-button--local:hover .trade-slot-action,
+body.classic-play #classic-window[data-window-kind=trade] .trade-slot-button--local:focus-visible .trade-slot-action,
+body.classic-play .national-window[data-window-kind=trade] .trade-slot-button--local:hover .trade-slot-action,
+body.classic-play .national-window[data-window-kind=trade] .trade-slot-button--local:focus-visible .trade-slot-action{opacity:1}
+body.classic-play #classic-window[data-window-kind=trade] .trade-slot-button--empty:hover,
+body.classic-play #classic-window[data-window-kind=trade] .trade-slot-button--empty:focus-visible,
+body.classic-play .national-window[data-window-kind=trade] .trade-slot-button--empty:hover,
+body.classic-play .national-window[data-window-kind=trade] .trade-slot-button--empty:focus-visible{outline:1px solid rgba(244,202,104,.82);outline-offset:-1px;background:rgba(244,202,104,.1)}
+body.classic-play #classic-window[data-window-kind=trade] .trade-slot-button--drop-target,
+body.classic-play .national-window[data-window-kind=trade] .trade-slot-button--drop-target{outline:1px dashed rgba(244,202,104,.72);outline-offset:-2px;background:rgba(244,202,104,.06)}
+
+body.classic-play .chat-panel ol{overflow-anchor:none}
+
+/* Close hotspots overlay the close mark already baked into native window frames. */
+body.classic-play .classic-window-close:not(.service-command):hover:not(:disabled),
+body.classic-play #classic-window-close:hover:not(:disabled){background-color:rgba(255,214,112,.2)!important}
+body.classic-play .classic-window-close:not(.service-command):active:not(:disabled),
+body.classic-play #classic-window-close:active:not(:disabled){background-color:rgba(25,15,8,.32)!important}
+body.classic-play .classic-window-close:not(.service-command):focus-visible,
+body.classic-play #classic-window-close:focus-visible{outline:1px solid #fff08e;outline-offset:-1px;z-index:3}
+
+/* Preserve native black input wells when Chromium autofills existing credentials. */
+#auth-overlay input:-webkit-autofill{box-shadow:0 0 0 1000px #000 inset;-webkit-text-fill-color:#fff;caret-color:#fff}
+
+/* Native HUD labels use the source bitmap digits and captured Windows glyph atlas. */
+body.classic-play #classic-hud .native-hud-label{color:transparent;text-shadow:none;overflow:visible;}
+.native-hud-literal{position:absolute;inset:0;white-space:pre;color:transparent;text-shadow:none;}
+.native-hud-glyph{position:absolute;left:0;top:0;image-rendering:pixelated;pointer-events:none;}
+.native-hud-label-retry{position:absolute;left:0;top:-18px;pointer-events:auto;padding:1px 4px;white-space:nowrap;color:#fff;background:#402020;border:1px solid #c88;font:12px/14px sans-serif;text-shadow:none;}
+
+.native-selection-portrait{position:absolute;image-rendering:pixelated;pointer-events:none;z-index:1;max-width:none;}
+.native-selection-portrait-retry{position:absolute;z-index:2;padding:3px 5px;background:#402020;color:#fff;border:1px solid #c88;font:12px sans-serif;}
+
+#auth-overlay.national-auth .native-selection-label{position:absolute;display:block;pointer-events:none;text-shadow:none;white-space:nowrap;z-index:2}
+#auth-overlay.national-auth .native-selection-literal{color:transparent;text-shadow:none;pointer-events:none}
+#auth-overlay.national-auth .native-selection-glyph{position:absolute;left:0;top:0;display:block;max-width:none;image-rendering:pixelated;pointer-events:none}
+#auth-overlay.national-auth .native-selection-label-retry{left:12px;top:577px;width:76px;height:20px;z-index:3;color:#fff;background:#281b0f;border:1px solid #9b784a;cursor:pointer}

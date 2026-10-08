@@ -2949,7 +2949,7 @@ namespace M2Server.Player
             {
                 nDura = UseItems[ItemLocation.Dress].Dura;
                 nOldDura = HUtil32.Round(nDura / 1000.0);
-                nDura -= nDam;
+                nDura = ReduceDurability(nDura, nDam);
                 if (nDura <= 0)
                 {
                     SendDelItems(UseItems[ItemLocation.Dress]);
@@ -2984,7 +2984,7 @@ namespace M2Server.Player
                 {
                     nDura = UseItems[i].Dura;
                     nOldDura = HUtil32.Round(nDura / 1000.0);
-                    nDura -= nDam;
+                    nDura = ReduceDurability(nDura, nDam);
                     if (nDura <= 0)
                     {
                         SendDelItems(UseItems[i]);
@@ -3016,6 +3016,11 @@ namespace M2Server.Player
                 SendMsg(Messages.RM_ABILITY, 0, 0, 0, 0);
                 SendMsg(Messages.RM_SUBABILITY, 0, 0, 0, 0);
             }
+        }
+
+        public static ushort ReduceDurability(ushort durability, ushort damage)
+        {
+            return damage >= durability ? (ushort)0 : (ushort)(durability - damage);
         }
 
         /// <summary>
@@ -3114,7 +3119,7 @@ namespace M2Server.Player
                                                     UpdateVisibleGay(baseObject);//更新自己的视野对象
                                                     if (baseObject.CellType == CellType.Monster && !ObMode && !FixedHideMode) //进入附近怪物视野
                                                     {
-                                                        if (Math.Abs(baseObject.CurrX - CurrX) <= (ViewRange - baseObject.ViewRange) && Math.Abs(baseObject.CurrY - CurrY) <= (ViewRange - baseObject.ViewRange))
+                                                        if (Math.Abs(baseObject.CurrX - CurrX) <= baseObject.ViewRange && Math.Abs(baseObject.CurrY - CurrY) <= baseObject.ViewRange)
                                                         {
                                                             SystemShare.ActorMgr.SendMessage(baseObject.ActorId, Messages.RM_UPDATEVIEWRANGE, this.ActorId, 0, 0, 0, "");// 发送消息更新对方的视野
                                                         }
@@ -4387,6 +4392,15 @@ namespace M2Server.Player
             return (MyGuild != null) && (GuildRankNo == 1);
         }
 
+        private static ushort AddEquipmentDefense(ushort current, ushort item)
+        {
+            // Each end of the legacy defense range has one byte. Clamp before
+            // packing so several high-bonus items cannot wrap the total.
+            return HUtil32.MakeWord(
+                (ushort)Math.Min(255, HUtil32.LoByte(current) + HUtil32.LoByte(item)),
+                (ushort)Math.Min(255, HUtil32.HiByte(current) + HUtil32.HiByte(item)));
+        }
+
         private void ApplyItemParameters(UserItem uitem, StdItem item)
         {
             if (item != null)
@@ -4411,8 +4425,8 @@ namespace M2Server.Player
                         break;
                     case 10:
                     case 11:
-                        AddAbil.AC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.AC) + HUtil32.LoByte(clientItem.Item.AC)), (ushort)(HUtil32.HiByte(AddAbil.AC) + HUtil32.HiByte(clientItem.Item.AC)));
-                        AddAbil.MAC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.MAC) + HUtil32.LoByte(clientItem.Item.MAC)), (ushort)(HUtil32.HiByte(AddAbil.MAC) + HUtil32.HiByte(clientItem.Item.MAC)));
+                        AddAbil.AC = AddEquipmentDefense(AddAbil.AC, clientItem.Item.AC);
+                        AddAbil.MAC = AddEquipmentDefense(AddAbil.MAC, clientItem.Item.MAC);
                         AddAbil.SPEED = (ushort)(AddAbil.SPEED + clientItem.Item.Agility);
                         AddAbil.AntiMagic = (ushort)(AddAbil.AntiMagic + clientItem.Item.MgAvoid);
                         AddAbil.AntiPoison = (ushort)(AddAbil.AntiPoison + clientItem.Item.ToxAvoid);
@@ -4490,8 +4504,8 @@ namespace M2Server.Player
                         }
                         break;
                     case 15:
-                        AddAbil.AC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.AC) + HUtil32.LoByte(clientItem.Item.AC)), (ushort)(HUtil32.HiByte(AddAbil.AC) + HUtil32.HiByte(clientItem.Item.AC)));
-                        AddAbil.MAC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.MAC) + HUtil32.LoByte(clientItem.Item.MAC)), (ushort)(HUtil32.HiByte(AddAbil.MAC) + HUtil32.HiByte(clientItem.Item.MAC)));
+                        AddAbil.AC = AddEquipmentDefense(AddAbil.AC, clientItem.Item.AC);
+                        AddAbil.MAC = AddEquipmentDefense(AddAbil.MAC, clientItem.Item.MAC);
                         AddAbil.HIT = (ushort)(AddAbil.HIT + clientItem.Item.Accurate);
                         AddAbil.AntiMagic = (ushort)(AddAbil.AntiMagic + clientItem.Item.MgAvoid);
                         AddAbil.AntiPoison = (ushort)(AddAbil.AntiPoison + clientItem.Item.ToxAvoid);
@@ -4525,8 +4539,8 @@ namespace M2Server.Player
                         AddAbil.Poison = (byte)(AddAbil.Poison + clientItem.Item.Tox);
                         break;
                     case 22:
-                        AddAbil.AC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.AC) + HUtil32.LoByte(clientItem.Item.AC)), (ushort)(HUtil32.HiByte(AddAbil.AC) + HUtil32.HiByte(clientItem.Item.AC)));
-                        AddAbil.MAC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.MAC) + HUtil32.LoByte(clientItem.Item.MAC)), (ushort)(HUtil32.HiByte(AddAbil.MAC) + HUtil32.HiByte(clientItem.Item.MAC)));
+                        AddAbil.AC = AddEquipmentDefense(AddAbil.AC, clientItem.Item.AC);
+                        AddAbil.MAC = AddEquipmentDefense(AddAbil.MAC, clientItem.Item.MAC);
                         AddAbil.HitSpeed = (ushort)(AddAbil.HitSpeed + clientItem.Item.AtkSpd);
                         AddAbil.Slowdown = (byte)(AddAbil.Slowdown + clientItem.Item.Slowdown);
                         AddAbil.Poison = (byte)(AddAbil.Poison + clientItem.Item.Tox);
@@ -4555,8 +4569,8 @@ namespace M2Server.Player
                                 AddAbil.SPEED = (ushort)(AddAbil.SPEED + HUtil32.HiByte(clientItem.Item.MAC));
                                 break;
                             case 26:
-                                AddAbil.AC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.AC) + HUtil32.LoByte(clientItem.Item.AC)), (ushort)(HUtil32.HiByte(AddAbil.AC) + HUtil32.HiByte(clientItem.Item.AC)));
-                                AddAbil.MAC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.MAC) + HUtil32.LoByte(clientItem.Item.MAC)), (ushort)(HUtil32.HiByte(AddAbil.MAC) + HUtil32.HiByte(clientItem.Item.MAC)));
+                                AddAbil.AC = AddEquipmentDefense(AddAbil.AC, clientItem.Item.AC);
+                                AddAbil.MAC = AddEquipmentDefense(AddAbil.MAC, clientItem.Item.MAC);
                                 AddAbil.HIT = (ushort)(AddAbil.HIT + clientItem.Item.Accurate);
                                 AddAbil.SPEED = (ushort)(AddAbil.SPEED + clientItem.Item.Agility);
                                 AddAbil.MP = (ushort)(AddAbil.MP + clientItem.Item.MpAdd);
@@ -4564,13 +4578,13 @@ namespace M2Server.Player
                         }
                         break;
                     case 52:
-                        AddAbil.AC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.AC) + HUtil32.LoByte(clientItem.Item.AC)), (ushort)(HUtil32.HiByte(AddAbil.AC) + HUtil32.HiByte(clientItem.Item.AC)));
-                        AddAbil.MAC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.MAC) + HUtil32.LoByte(clientItem.Item.MAC)), (ushort)(HUtil32.HiByte(AddAbil.MAC) + HUtil32.HiByte(clientItem.Item.MAC)));
+                        AddAbil.AC = AddEquipmentDefense(AddAbil.AC, clientItem.Item.AC);
+                        AddAbil.MAC = AddEquipmentDefense(AddAbil.MAC, clientItem.Item.MAC);
                         AddAbil.SPEED = (ushort)(AddAbil.SPEED + clientItem.Item.Agility);
                         break;
                     case 54:
-                        AddAbil.AC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.AC) + HUtil32.LoByte(clientItem.Item.AC)), (ushort)(HUtil32.HiByte(AddAbil.AC) + HUtil32.HiByte(clientItem.Item.AC)));
-                        AddAbil.MAC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.MAC) + HUtil32.LoByte(clientItem.Item.MAC)), (ushort)(HUtil32.HiByte(AddAbil.MAC) + HUtil32.HiByte(clientItem.Item.MAC)));
+                        AddAbil.AC = AddEquipmentDefense(AddAbil.AC, clientItem.Item.AC);
+                        AddAbil.MAC = AddEquipmentDefense(AddAbil.MAC, clientItem.Item.MAC);
                         AddAbil.HIT = (ushort)(AddAbil.HIT + clientItem.Item.Accurate);
                         AddAbil.SPEED = (ushort)(AddAbil.SPEED + clientItem.Item.Agility);
                         AddAbil.AntiPoison = (ushort)(AddAbil.AntiPoison + clientItem.Item.ToxAvoid);
@@ -4580,8 +4594,8 @@ namespace M2Server.Player
                         AddAbil.MP = (ushort)(AddAbil.MP + clientItem.Item.MpAdd);
                         break;
                     default:
-                        AddAbil.AC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.AC) + HUtil32.LoByte(clientItem.Item.AC)), (ushort)(HUtil32.HiByte(AddAbil.AC) + HUtil32.HiByte(clientItem.Item.AC)));
-                        AddAbil.MAC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.MAC) + HUtil32.LoByte(clientItem.Item.MAC)), (ushort)(HUtil32.HiByte(AddAbil.MAC) + HUtil32.HiByte(clientItem.Item.MAC)));
+                        AddAbil.AC = AddEquipmentDefense(AddAbil.AC, clientItem.Item.AC);
+                        AddAbil.MAC = AddEquipmentDefense(AddAbil.MAC, clientItem.Item.MAC);
                         break;
                 }
                 AddAbil.DC = HUtil32.MakeWord((ushort)(HUtil32.LoByte(AddAbil.DC) + HUtil32.LoByte(clientItem.Item.DC)), (ushort)HUtil32._MIN(255, HUtil32.HiByte(AddAbil.DC) + HUtil32.HiByte(clientItem.Item.DC)));
@@ -5348,7 +5362,7 @@ namespace M2Server.Player
                         {
                             ushort nDura = UseItems[i].Dura;
                             ushort tDura = (ushort)HUtil32.Round(nDura / 1000.0);
-                            nDura -= 1000;
+                            nDura = ReduceDurability(nDura, 1000);
                             if (nDura <= 0)
                             {
                                 nDura = 0;
@@ -5422,9 +5436,10 @@ namespace M2Server.Player
             for (int i = 0; i < VisibleItems.Count; i++)
             {
                 visibleMapItem = VisibleItems[i];
-                if (visibleMapItem.MapItem == MapItem)
+                if (visibleMapItem.MapItem.ItemId == MapItem.ItemId)
                 {
                     visibleMapItem.VisibleFlag = VisibleFlag.Invisible;
+                    visibleMapItem.MapItem = MapItem;
                     boIsVisible = true;
                     break;
                 }
@@ -5433,7 +5448,9 @@ namespace M2Server.Player
             {
                 return;
             }
-            visibleMapItem ??= new VisibleMapItem
+            // The loop variable may still reference the last unrelated item.
+            // Every new ground identity needs its own visibility entry.
+            visibleMapItem = new VisibleMapItem
             {
                 VisibleFlag = VisibleFlag.Show,
                 nX = wX,

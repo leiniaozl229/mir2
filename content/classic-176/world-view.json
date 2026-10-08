@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "national-2003-world-view",
+  "viewport": { "width": 800, "height": 600 },
+  "cell": { "width": 48, "height": 32 },
+  "cameraAnchor": { "x": 366, "y": 192 },
+  "pointerOrigin": { "x": 390, "y": 208 },
+  "evidence": {
+    "cameraAnchor": "original-runtime: map 0 at 338:264, 800x600 game crop; locked Tiles pixel fit selects (366,192) over adjacent offsets",
+    "capture": "native-baselines/75-native-world-map-baseline.jpg",
+    "captureSha256": "d5e7e8ca7a51ae16d464b5b01335267fd0511ea5fbcbc09fee46b4353a347cae",
+    "nativeMapSha256": "ef70bd5f5425f7f9dc79cb1ea6957f771c7293d55a554b3ba6239aba372fa370",
+    "referenceFile": "GameOfMir/Client/PlayScn.pas",
+    "referenceSha256": "0dcc555bf7fbd10fbd1ac240250bdc0bc28dead21ad188f664030c1af7426120",
+    "referenceRules": "SWH800 client rect Left/Top=self-9; DrawTileMap source crop and actor/object passes yield x=9*48-2*48+16+14=366, y=9*32-3*32=192",
+    "pointerOrigin": "cell center derived from the measured camera anchor; continuous right-button direction still requires native gesture comparison"
+  },
+  "status": "stationary-camera-measured; complete-world-acceptance-pending",
+  "pending": [
+    "Map source and collision version synchronization",
+    "Middle-layer vertical origin and full foreground pixel comparison",
+    "Moving, edge and map-transition original-client recordings",
+    "Actor frame anchors, NPC appearance, labels, lighting and audio"
+  ]
+}

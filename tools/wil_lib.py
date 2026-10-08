@@ -195,11 +195,14 @@ class WeMadeLibrary:
     def _indexed_pixels(self, indices, width, height):
         if self.palette is None:
             self.palette = [0] * 256
+        palette_pixels = [struct.pack("<I", color) for color in self.palette]
+        # Pack each palette entry once, rather than once per decoded pixel.
+        # Large actor/effect exports contain hundreds of millions of pixels.
         pixels = bytearray()
         for index in indices:
             if index >= len(self.palette):
                 raise WeMadeFormatError(f"palette index outside WIL palette: {index}")
-            pixels.extend(struct.pack("<I", self.palette[index]))
+            pixels.extend(palette_pixels[index])
         return bytes(pixels)
 
     @staticmethod

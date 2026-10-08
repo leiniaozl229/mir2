@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "library": "NPC00",
+  "sourceSha256": "7806b71fcca6c257365dd42a9cc614a7b24dd102b69f6e326393e42433b2b052",
+  "indexSha256": "d90f18d3a85781bef29cd2fc80e5c2b2a74eac93971e5cd5297fe740da13157b",
+  "sourceFrameCount": 2790,
+  "directions": 3,
+  "standing": {"start": 0, "count": 4, "skip": 6, "interval": 200},
+  "appearanceOffsets": [
+    0, 60, 120, 180, 240, 300, 360, 420, 480, 540,
+    600, 660, 720, 780, 840, 900, 960, 1020, 1080, 1140,
+    1200, 1260, 1320, 1380, 1470, 1530, 1620, 1650, 1740, 1800,
+    1860, 1920, 1950, 2040, 2100, 2160, 2220, 2280, 2340, 2400,
+    2460, 2520, 2580, 2580, 2640, 2640, 2640, 2640, 2700, 2760
+  ],
+  "evidence": {
+    "appearance5": "Fresh gateway feature 327730 plus original screenshot pixel fitting to NPC00 frames 301, 313 and 320 on 2026-10-07",
+    "referenceOffsets": "Actor.pas GetNpcOffset; reference implementation only for other appearances",
+    "referenceDirection": "Actor.pas TNpcActor.CalcActorFrame: byte direction mod 3",
+    "referenceStanding": "Actor.pas MA41 ActStand; four frames at stride 10, 200 ms; the reference MA50 name is unresolved in this source snapshot",
+    "pending": ["Original continuous animation timing", "All other appearances", "Labels and exact hot zones", "Extended NPC effects and non-standing actions"]
+  }
+}

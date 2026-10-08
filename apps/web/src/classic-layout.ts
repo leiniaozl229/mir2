@@ -6,6 +6,11 @@ export type LayoutBox={x:number;y:number;width?:number;height?:number;maxWidth?:
 /** Shared 800×600 UI contract. Production HUD and `/ui-calibration.html` both read this file. */
 export function classicUiLayout(){return uiLayout;}
 
+/** Same-version runtime rules for Escape, shared by production and calibration. */
+export function classicWindowClosesOnEscape(element:Pick<HTMLElement,'id'>){
+ return !uiInteractions.keyboardRouting.escapeIgnoredWindowIds.includes(element.id);
+}
+
 export function placeBox(element:HTMLElement|null|undefined,box:LayoutBox|undefined){
  if(!element||!box)return;
  element.style.left=`${box.x}px`;
@@ -24,6 +29,12 @@ export function bagCellPositionFromLayout(index:number,national=false){
  const grid=bagGridFromLayout(national);
  const column=index%grid.columns,row=Math.floor(index/grid.columns)%5;
  return {left:column*(grid.width+grid.gapX)+grid.originX,top:row*(grid.height+grid.gapY)+grid.originY,width:grid.width,height:grid.height};
+}
+
+/** The source sprite keeps its own size; the existing hit cell remains unchanged. */
+export function nationalBagIconPosition(size:{width:number;height:number}){
+ const grid=uiLayout.nationalInventoryGrid,alignment=grid.iconAlignment;
+ return {left:Math.floor((grid.cellWidth-size.width)/2)+alignment.offsetX,top:Math.floor((grid.cellHeight-size.height)/2)+alignment.offsetY};
 }
 
 export function nationalHudOrbMetrics(){
@@ -55,11 +66,17 @@ export function applyNationalHudLayout(root:HTMLElement){
  placeBox(root.querySelector<HTMLElement>('[data-hud-weight]'),hud.weightBar);
  placeBox(root.querySelector<HTMLElement>('[data-hud-hp]'),hud.fields.hp);
  placeBox(root.querySelector<HTMLElement>('[data-hud-mp]'),hud.fields.mp);
- placeBox(root.querySelector<HTMLElement>('[data-hud-name]'),hud.fields.name);
+ placeBox(root.querySelector<HTMLElement>('[data-hud-level]'),hud.fields.level);
  placeBox(root.querySelector<HTMLElement>('[data-hud-job]'),hud.fields.job);
  placeBox(root.querySelector<HTMLElement>('[data-hud-status]'),hud.fields.status);
  placeBox(root.querySelector<HTMLElement>('[data-hud-exp]'),hud.fields.exp);
  placeBox(root.querySelector<HTMLElement>('[data-hud-gold]'),hud.fields.gold);
+ const colors=hud.chat.colors;
+ root.style.setProperty('--classic-chat-bg',colors.background);
+ root.style.setProperty('--classic-chat-text',colors.text);
+ root.style.setProperty('--classic-chat-system',colors.system);
+ root.style.setProperty('--classic-chat-input-bg',colors.inputBackground);
+ root.style.setProperty('--classic-chat-input-text',colors.inputText);
  const chat=root.querySelector<HTMLElement>('[data-hud-chat]');
  placeBox(chat,hud.chat);
  const log=chat?.querySelector('ol');
@@ -97,6 +114,10 @@ export function applyNationalInventoryLayout(element:HTMLElement){
  element.style.setProperty('--bag-step-x',`${grid.cellWidth+grid.gapX}px`);
  element.style.setProperty('--bag-step-y',`${grid.cellHeight+grid.gapY}px`);
  placeBox(element.querySelector<HTMLElement>('[data-inventory-gold], .inventory-gold'),grid.gold);
+ placeBox(element.querySelector<HTMLElement>('[data-inventory-gold-icon]'),grid.goldIcon);
+ placeBox(element.querySelector<HTMLElement>('[data-inventory-description]'),grid.description);
+ element.style.setProperty('--bag-description-line-height',`${grid.description.lineHeight}px`);
+ element.style.setProperty('--bag-native-font-family',grid.description.fontFamily);
  element.querySelectorAll<HTMLElement>('.item-cell').forEach((cell,index)=>{
   const slot=Number(cell.dataset.slot);
   const position=bagCellPositionFromLayout(Number.isInteger(slot)?slot:index,true);
@@ -116,16 +137,18 @@ export function applyNationalCharacterLayout(element:HTMLElement){
  placeBox(paper,{x:page.x,y:page.y});
  const status=element.querySelector<HTMLElement>('#character-panel, [data-character-page="status"]');
  placeBox(status,windowSpec.statusPage);
+ const state=element.querySelector<HTMLElement>('[data-character-page="state"]');
+ placeBox(state,windowSpec.statePage);
  const skills=element.querySelector<HTMLElement>('[data-character-page="skills"]');
  placeBox(skills,windowSpec.skillsPage);
  placeBox(element.querySelector<HTMLElement>('#paperdoll-actor'),{x:actor.x,y:actor.y});
  const name=element.querySelector<HTMLElement>('.classic-char-name, [data-character-name]');
- if(name)name.style.width=`${windowSpec.width}px`;
- const tabs=windowSpec.tabs;
- element.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach((button,index)=>{
-  placeBox(button,{x:tabs.x+index*tabs.step,y:tabs.y,width:tabs.width,height:tabs.height});
-  const label=tabs.labels[index];
-  if(label)button.textContent=label;
+ placeBox(name,windowSpec.name);
+ element.querySelectorAll<HTMLButtonElement>('[data-character-tab]').forEach(button=>{button.hidden=true;});
+ const controls=windowSpec.pageButtons;
+ element.querySelectorAll<HTMLButtonElement>('[data-character-cycle]').forEach(button=>{
+  const spec=button.dataset.characterCycle==='previous'?controls.previous:controls.next;
+  placeBox(button,spec);button.textContent='';
  });
  applyNationalCharacterStats(element);
  return windowSpec;
@@ -133,7 +156,7 @@ export function applyNationalCharacterLayout(element:HTMLElement){
 
 export function applyNationalCharacterStats(root:HTMLElement){
  const stats=uiLayout.nationalCharacterWindow.statValues;
- const panel=root.id==='character-panel'||root.getAttribute('data-character-page')==='status'?root:root.querySelector<HTMLElement>('#character-panel, [data-character-page="status"]');
+ const panel=root.id==='character-panel'||root.matches('.character-page[data-character-page="status"]')?root:root.querySelector<HTMLElement>('#character-panel, .character-page[data-character-page="status"]');
  if(!panel)return;
  panel.querySelectorAll<HTMLElement>('.classic-stat').forEach(label=>{label.style.display='none';});
  panel.querySelectorAll<HTMLElement>('.classic-stat-value').forEach((value,index)=>{
@@ -142,7 +165,7 @@ export function applyNationalCharacterStats(root:HTMLElement){
   value.style.left=`${stats.x}px`;
   value.style.top=`${top}px`;
   value.style.width=`${stats.width}px`;
-  value.style.textAlign='center';
+  value.style.textAlign=stats.align;
  });
 }
 

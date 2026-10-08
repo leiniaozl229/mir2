@@ -1,0 +1,394 @@
+{
+  "schemaVersion": 1,
+  "family": "prguse",
+  "canvas": {
+    "width": 800,
+    "height": 600,
+    "coordinateOrigin": "top-left"
+  },
+  "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+  "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+  "namespace": "/ui-national/prguse",
+  "source": {
+    "sourceId": "national:ui:prguse",
+    "provenance": "native_pixels",
+    "sourceContract": "content/classic-176/active-asset-sources.json",
+    "root": "nationalData",
+    "data": {
+      "path": "Prguse.wil",
+      "bytes": 4313717,
+      "sha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2"
+    },
+    "index": {
+      "path": "Prguse.WIX",
+      "bytes": 2088,
+      "sha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531"
+    },
+    "sourceFrameCount": 510,
+    "manifest": "assets/web/ui-national/prguse/library.json",
+    "manifestSha256": "f7b57c6ef18d71132655acd8502b26672fca0ee323cdbd3f6477a698bda2f363",
+    "pixelByteOrder": "RGBA",
+    "offsetPolicy": "Record source offsets; UI ClientRect is placed at panel/control coordinates without actor offsets."
+  },
+  "nativeSameVersion": "unknown",
+  "historicalLayoutVerified": false,
+  "browserVisualComparisonVerified": false,
+  "complete": false,
+  "domain": "auth-actions",
+  "frames": {
+    "50": {
+      "index": 50,
+      "width": 420,
+      "height": 299,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "50.28ea88be270ca69b.png",
+      "sha256": "28ea88be270ca69b02a50e2ca7a004ac83f995e80d839ef46c835299e7551bbb",
+      "pixelSha256": "9fe08e479922ee53a179692785e228cc708876022fc7662914c6c3cd087ca9ef",
+      "bgraSha256": "9087e2a38e8368185368d5b8d99d7eb78f75d095d0b307601f5edb4d22f59138",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 4167,
+        "opaque": 121413,
+        "partial": 0,
+        "bbox": [
+          0,
+          1,
+          416,
+          299
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "53": {
+      "index": 53,
+      "width": 128,
+      "height": 33,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "53.a39bae2af81fe69a.png",
+      "sha256": "a39bae2af81fe69aae587912cf7e031d53f4dad7b907f12900de0bff86eee395",
+      "pixelSha256": "39f8577e33ef9340358263138a9b71243b107c9411e689d6c7b1b89b500a7627",
+      "bgraSha256": "866fc9b50db3831462b67fc58ab09762b23770b574f19642282a97d3e4189132",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 4224,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          128,
+          33
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "54": {
+      "index": 54,
+      "width": 296,
+      "height": 253,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "54.9b8c519eebd2e052.png",
+      "sha256": "9b8c519eebd2e052ab17d4aa8a2b97dd745b4138b94f60b1d885a5d901cedee8",
+      "pixelSha256": "3156c84e20a3139ba75e5349fea08c113410b29669b2b8cb35a4275cd52a6168",
+      "bgraSha256": "0cc218e174ed3475eaa82b43fc11de7e1cf04600e5186c751aad2ba49663df28",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 2926,
+        "opaque": 71962,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          294,
+          253
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "64": {
+      "index": 64,
+      "width": 16,
+      "height": 23,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "64.6bdf8a5b7878a2f9.png",
+      "sha256": "6bdf8a5b7878a2f972152ad851897b61cd915169373f199ff41a2fd70d649fac",
+      "pixelSha256": "1bc72aa243f7a930a3e7e36dc7b312ccfc98d175bf3b59660da85923fbcd2fae",
+      "bgraSha256": "f8dfe53d18748d425dce55c323179821d59e6bea9d15c2400329f09c16f8f984",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 368,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          16,
+          23
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "65": {
+      "index": 65,
+      "width": 800,
+      "height": 600,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "65.a13d989c17971951.png",
+      "sha256": "a13d989c17971951134a2ef57b6570c298f11c760ddcfebe24c1757125347c71",
+      "pixelSha256": "ef4f9abc42351de79688269206c7b44dd96fe906b85e6f386773e227d4f504e9",
+      "bgraSha256": "a30337ce46395330108d95f55247d9dbbddd6feec5ce64b80c01226d5bca3868",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 480000,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          800,
+          600
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    }
+  },
+  "changePassword": {
+    "backgroundFrame": 50,
+    "width": 420,
+    "height": 299,
+    "center": {
+      "left": 190,
+      "top": 150,
+      "rule": "integer-div",
+      "provenance": "reference_source"
+    },
+    "inputs": {
+      "account": {
+        "left": 240,
+        "top": 119,
+        "width": 132,
+        "height": 14,
+        "maxLength": 10,
+        "masked": false,
+        "layoutEvidence": "proposed_native_pixel_measurement",
+        "measuredBorder": {
+          "left": 237,
+          "top": 116,
+          "right": 375,
+          "bottom": 134
+        }
+      },
+      "oldPassword": {
+        "left": 240,
+        "top": 151,
+        "width": 132,
+        "height": 17,
+        "maxLength": 10,
+        "masked": true,
+        "layoutEvidence": "proposed_native_pixel_measurement",
+        "measuredBorder": {
+          "left": 237,
+          "top": 148,
+          "right": 375,
+          "bottom": 171
+        }
+      },
+      "newPassword": {
+        "left": 240,
+        "top": 178,
+        "width": 132,
+        "height": 15,
+        "maxLength": 10,
+        "masked": true,
+        "layoutEvidence": "proposed_native_pixel_measurement",
+        "measuredBorder": {
+          "left": 237,
+          "top": 175,
+          "right": 375,
+          "bottom": 194
+        }
+      },
+      "repeatPassword": {
+        "left": 240,
+        "top": 210,
+        "width": 132,
+        "height": 14,
+        "maxLength": 10,
+        "masked": true,
+        "layoutEvidence": "proposed_native_pixel_measurement",
+        "measuredBorder": {
+          "left": 237,
+          "top": 207,
+          "right": 375,
+          "bottom": 226
+        }
+      }
+    },
+    "inputOrder": [
+      "account",
+      "oldPassword",
+      "newPassword",
+      "repeatPassword"
+    ],
+    "buttons": {
+      "agree": {
+        "left": 178,
+        "top": 251,
+        "width": 87,
+        "height": 35,
+        "embeddedInBackground": true,
+        "label": "同意",
+        "layoutEvidence": "proposed_native_pixel_measurement",
+        "pressedPolicy": "reuse_baked_background_unverified"
+      },
+      "cancel": {
+        "left": 272,
+        "top": 251,
+        "width": 101,
+        "height": 35,
+        "embeddedInBackground": true,
+        "label": "取消",
+        "layoutEvidence": "proposed_native_pixel_measurement",
+        "pressedPolicy": "reuse_baked_background_unverified"
+      }
+    },
+    "loginEntry": {
+      "normalFrame": 53,
+      "pressedFrame": 53,
+      "width": 128,
+      "height": 33,
+      "pressedPolicy": "reuse_normal_unverified",
+      "hoverPolicy": "reuse_normal_unverified",
+      "referencePosition": {
+        "left": 268,
+        "top": 558,
+        "kind": "reference_source"
+      },
+      "rejectedAdjacentFrame": 54,
+      "rejection": "Frame 54 is a 296x253 PASSWORD panel, not an alternate button state."
+    },
+    "nativeLoginEntry": {
+      "backgroundFrame": 60,
+      "left": 128,
+      "top": 207,
+      "width": 128,
+      "height": 33,
+      "layoutEvidence": "native_pixels",
+      "actionEvidence": "proposed_native_pixel_measurement",
+      "label": "修改密码",
+      "note": "Transparent keyboard-accessible hit area over the label baked into Prguse#60; same-version click semantics remain unverified."
+    },
+    "closeCandidate": {
+      "normalFrame": 64,
+      "pressedFrame": 64,
+      "width": 16,
+      "height": 23,
+      "pressedPolicy": "reuse_normal_unverified",
+      "hoverPolicy": "reuse_normal_unverified",
+      "referencePosition": {
+        "left": 613,
+        "top": 558,
+        "kind": "reference_source"
+      },
+      "rejectedAdjacentFrame": 65,
+      "rejection": "Frame 65 is an 800x600 character-selection backdrop, not an alternate close state.",
+      "usage": "candidate close glyph; native target placement and action unverified"
+    },
+    "typography": {
+      "cssPixelSize": 12,
+      "familyCandidates": [
+        "SimSun",
+        "宋体",
+        "Songti SC",
+        "STSong"
+      ],
+      "provenance": "proposed",
+      "nativeFontVerified": false
+    },
+    "reference": {
+      "kind": "reference_source",
+      "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/IntroScn.pas",
+      "sha256": "838aed85539bfc668393ce8e5b80d9adccb15da21791203b97c7bc481305711d",
+      "scope": "Four TEdit inputs MaxLength=10, last three PasswordChar, Enter advances through fields; repeated password validated locally. This is not evidence for the measured native frame-50 hotzones.",
+      "incompatibleLayout": {
+        "inputX": 191,
+        "inputY": [
+          92,
+          119,
+          145,
+          172
+        ],
+        "buttons": {
+          "ok": [
+            81,
+            141
+          ],
+          "cancel": [
+            160,
+            141
+          ]
+        },
+        "basis": "FState/IntroScn reference coordinates cross this native frame's labels/borders/buttons and are retained as reference evidence only."
+      }
+    }
+  },
+  "gaps": [
+    "Actual national native-client field and button interactions, font rasterization and layout have not been measured at runtime.",
+    "Normal/pressed semantics for loginEntry/close are not proven; adjacent 54/65 cannot be used.",
+    "Measured inner input rectangles and embedded button hitboxes are proposed browser fitting choices."
+  ],
+  "login": {
+    "dialogOrigin": {
+      "left": 252,
+      "top": 173
+    },
+    "backgroundFrame": 60,
+    "inputs": {
+      "account": {
+        "left": 98,
+        "top": 86,
+        "width": 137,
+        "height": 16
+      },
+      "password": {
+        "left": 98,
+        "top": 118,
+        "width": 137,
+        "height": 16
+      }
+    },
+    "inputBackground": "#000000",
+    "evidence": {
+      "kind": "native_runtime",
+      "image": "184-录像帧-登录输入无损.png",
+      "imageSha256": "0f229c4df89b3a86a981ce0aab6f4c8f6a09ffcbafc84b388e786710bf47bb68",
+      "surroundingBandPixels": 1908,
+      "surroundingBandDifferentPixels": 0,
+      "scope": "TEdit geometry and surrounding source-art bands only. Black interiors and text in this composite are drawn by LoginTextOverlay, not qualified original input rendering; original color, glyph, caret, focus, selection, IME and all-edge interactions remain pending.",
+      "inputGeometryOrigin": "Visible TEdit GetWindowRect, read by NativeWindow.ReadInputFields",
+      "inputBackgroundOrigin": "Compatibility overlay black fill; browser choice pending raw original input evidence",
+      "nativeOriginalInputTypographyVerified": false,
+      "nativeOriginalInputBackgroundVerified": false
+    }
+  }
+}

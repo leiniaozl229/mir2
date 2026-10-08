@@ -87,6 +87,7 @@ namespace ScriptSystem.Processings
             ProcessExecutionMessage[(int)ExecutionCode.UpgradeItems] = ActionOfUpgradeItems;
             ProcessExecutionMessage[(int)ExecutionCode.UpgradeItemSex] = ActionOfUpgradeItemsEx;
             ProcessExecutionMessage[(int)ExecutionCode.MonGenex] = ActionOfMonGenEx;
+            ProcessExecutionMessage[(int)ExecutionCode.ResetMonSpawn] = ActionOfResetMonSpawn;
             ProcessExecutionMessage[(int)ExecutionCode.ClearMapMon] = ActionOfClearMapMon;
             ProcessExecutionMessage[(int)ExecutionCode.SetMapMode] = ActionOfSetMapMode;
             ProcessExecutionMessage[(int)ExecutionCode.PvpZone] = ActionOfPkZone;
@@ -2136,6 +2137,15 @@ namespace ScriptSystem.Processings
             playerActor.TimeRecallMoveX = playerActor.CurrX;
             playerActor.TimeRecallMoveY = playerActor.CurrY;
             playerActor.TimeRecallTick = HUtil32.GetTickCount() + (questActionInfo.nParam1 * 60 * 1000);
+        }
+
+        private void ActionOfResetMonSpawn(INormNpc normNpc, IPlayerActor playerActor, QuestActionInfo questActionInfo, ref bool Success)
+        {
+            string map = questActionInfo.sParam1 == "CURRENT" ? playerActor.MapName : questActionInfo.sParam1;
+            int result = SystemShare.WorldEngine.RequestMonsterRefresh(map);
+            string message = result > 0 ? "已请求重置怪物刷新，缺少的怪物将立即补齐，存活怪物保留。" :
+                result == -2 ? "该地图刚刚请求过刷新，请等待30秒后再试。" : "该地图没有可刷新的自然怪物。";
+            playerActor.SysMsg(message, result > 0 ? MsgColor.Green : MsgColor.Red, MsgType.Hint);
         }
 
         private void ActionOfMonGen(INormNpc normNpc, IPlayerActor playerActor, QuestActionInfo questActionInfo, ref bool Success)

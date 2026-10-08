@@ -11,10 +11,7 @@ namespace DBSrv.Storage.Impl
 
         public void Add(string sChrName, CharacterDataInfo humDataInfo)
         {
-            if (_cacheMap.ContainsKey(sChrName)) //缓存存在则直接直接替换
-            {
-                _cacheMap[sChrName] = humDataInfo;
-            }
+            _cacheMap[sChrName] = humDataInfo;
         }
 
         public CharacterDataInfo Get(string sChrName, out bool exist)

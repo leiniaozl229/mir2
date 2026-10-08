@@ -1,0 +1,299 @@
+{
+  "schemaVersion": 1,
+  "id": "national-2003-actor-status",
+  "requirements": [
+    "GAME-053",
+    "GAME-106",
+    "GAME-131",
+    "ART-023"
+  ],
+  "evidence": {
+    "behavior": "reference_source; Actor.pas / cliUtil.pas, not native_runtime",
+    "referenceActorSha256": "78f2ee21cc3a0230074064f80062eb1ad5f0352221e7c06925b247f2cc6a05e3",
+    "referenceCliUtilSha256": "e17f0604633636fb54c06503a285aa0f1837731f762e0a9daa73ed316ebb018d",
+    "pixels": "native_pixels; same installed national Magic.wil/wix library as the six exported PNGs",
+    "manifest": "assets/web/effects/Magic/library.json",
+    "sourceSha256": "be46a0258349b26db9ba7dba595abac1f0767d52fef11d9f508e704f2f6deaac",
+    "indexSha256": "7f95ff7ba4add42157e10eb0d43ee7c77fd3c5ac3ea1183e39971066a40dfc91",
+    "sourceFrameCount": 4010,
+    "nativeSource": "C:/Program Files (x86)/shanda/Legend of Mir/Data/Magic.wil",
+    "nativeIndex": "C:/Program Files (x86)/shanda/Legend of Mir/Data/Magic.wix",
+    "remaining": "Native executable and real browser/GPU comparison; screen framebuffer palette quantization/remap, source focus/invisibility differences and statue rendering remain unverified. Actor div/nearest palette lookup is implemented against the hash-locked national Prguse palette."
+  },
+  "bubble": {
+    "mask": "0x00100000",
+    "race": 0,
+    "library": "Magic",
+    "normal": {
+      "indices": [
+        3890,
+        3891,
+        3892
+      ],
+      "intervalMs": 120,
+      "loop": true
+    },
+    "struck": {
+      "indices": [
+        3900,
+        3901,
+        3902
+      ],
+      "intervalMs": 120,
+      "requiresAction": "struck",
+      "loop": false
+    },
+    "clearOn": [
+      "status-bit-revoked",
+      "dying",
+      "dead",
+      "actor-destroy",
+      "world-clear-via-actor-destroy"
+    ],
+    "lifetime": "Confirmed status only; a cast animation does not create a shield and no client TTL revokes one.",
+    "hitRestart": "A new struckSequence restarts the hit frames; without a sequence, entering struck is the fallback. Same-sequence status/resources refreshes preserve the hit clock even after a local action finish.",
+    "drawOrder": "After body, hair and front weapon; before health/name. Source offsets are local to the actor foot and share its movement interpolation.",
+    "blend": {
+      "reference": "DrawBlend mode 1 / Color256Anti",
+      "browser": "screen",
+      "remaining": "Reference maps the result to the original 256-color palette; Pixi screen currently retains the RGB blend only."
+    },
+    "frames": [
+      {
+        "index": 3890,
+        "width": 92,
+        "height": 110,
+        "offsetX": -21,
+        "offsetY": -78,
+        "sha256": "27de52df0d079509cd6e326bd6cf81e986516b02f45829b76dc1a1aa4c6d1927"
+      },
+      {
+        "index": 3891,
+        "width": 92,
+        "height": 110,
+        "offsetX": -21,
+        "offsetY": -78,
+        "sha256": "c84e817a807de4a2d0b35f31375d04ccf690cea990c9df9296a2a51b1a77ff58"
+      },
+      {
+        "index": 3892,
+        "width": 92,
+        "height": 110,
+        "offsetX": -21,
+        "offsetY": -78,
+        "sha256": "31735c037db8f9b75fa0b7557957996edfd51f40ee98eb12267dc2d48a24e3b9"
+      },
+      {
+        "index": 3900,
+        "width": 88,
+        "height": 118,
+        "offsetX": -19,
+        "offsetY": -78,
+        "sha256": "b49c5d7d3e90d2efe6a47c387b1f15b12963ec59714a09436e7dbd577d2e4036"
+      },
+      {
+        "index": 3901,
+        "width": 92,
+        "height": 120,
+        "offsetX": -21,
+        "offsetY": -81,
+        "sha256": "e0cc1e41f50f71318c2bb2fffac9bca493fb3c890630dd28babb4f4208900fea"
+      },
+      {
+        "index": 3902,
+        "width": 92,
+        "height": 114,
+        "offsetX": -21,
+        "offsetY": -78,
+        "sha256": "ee3d34cd5e67938c0edde88a99059e52bfb92bb0eda9d116c3284257d3f9b7db"
+      }
+    ]
+  },
+  "drawEffect": {
+    "priorityLowToHigh": [
+      {
+        "mask": "0x80000000",
+        "effect": "green"
+      },
+      {
+        "mask": "0x40000000",
+        "effect": "red"
+      },
+      {
+        "mask": "0x20000000",
+        "effect": "blue"
+      },
+      {
+        "mask": "0x10000000",
+        "effect": "yellow"
+      },
+      {
+        "mask": "0x08000000",
+        "effect": "fuchsia"
+      },
+      {
+        "mask": "0x04000000",
+        "effect": "gray"
+      }
+    ],
+    "referenceFormula": "floor((r+g+b)/3) into the selected channels, then nearest original palette color by Manhattan RGB distance.",
+    "browserFormula": "GLSL/WGSL shared 256x6 nearest LUT: recover straight RGB bytes from premultiplied filter input, floor((r+g+b)/3), nearest Prguse palette index1..255 by Manhattan RGB with first-index ties, then premultiply once and preserve alpha. GPU execution/native visual comparison remain pending.",
+    "layers": [
+      "body",
+      "hair"
+    ],
+    "uncoloredLayers": [
+      "weapon",
+      "shield",
+      "health",
+      "label"
+    ],
+    "legacyStoneFallback": {
+      "mask": "0x00000001",
+      "effect": "gray",
+      "evidence": "browser inference retained from existing implementation, not confirmed by reference GetDrawEffectValue"
+    },
+    "invisibility": {
+      "mask": "0x00800000",
+      "alpha": 0.38,
+      "evidence": "existing browser inference; native self/other drawing still pending"
+    },
+    "palette": {
+      "resource": "content/classic-176/actor-status-palette.json",
+      "source": "Prguse.wil",
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "paletteSha256": "325fe725be263df66b47dbd9817dab2462d3fe54b3dc20bdf04971eb108c2b0f",
+      "compatibleSources": [
+        {
+          "library": "Mon1",
+          "source": "Mon1.wil",
+          "sourceSha256": "a9195961fa489f5555b064e57d1887e74f1173da13476970fe0422871d7a9f8a"
+        },
+        {
+          "library": "Mon10",
+          "source": "Mon10.wil",
+          "sourceSha256": "830c9f76436204820a947747c2570b01c208f2450190e7e625973becfbed54cc"
+        },
+        {
+          "library": "Mon11",
+          "source": "Mon11.wil",
+          "sourceSha256": "2b88ba7f55a359fc835552963df9cbb46b9c2af639ff722fcaa5ce4e0e8dfd88"
+        },
+        {
+          "library": "Mon12",
+          "source": "Mon12.wil",
+          "sourceSha256": "14451b341cd6f2c39d8b1b4d4e420f8f14f6b1d36457bd5b9ca60309de3af2c8"
+        },
+        {
+          "library": "Mon13",
+          "source": "Mon13.wil",
+          "sourceSha256": "3750a227f24263cbf7661fa26d4bd17abf5906fa1a257cb6f6f9dd35d41a39a4"
+        },
+        {
+          "library": "Mon14",
+          "source": "Mon14.wil",
+          "sourceSha256": "18c277042a2d84cd4b002ebe67b1434565e68cbabd5998490153e2bc7d3aaeb2"
+        },
+        {
+          "library": "Mon15",
+          "source": "Mon15.wil",
+          "sourceSha256": "c543cc422f2762c4965c0070d83f27f08b96bc508caf82b5d9a38e5eff19e549"
+        },
+        {
+          "library": "Mon16",
+          "source": "Mon16.wil",
+          "sourceSha256": "79e3c918fb60e14864c4ba9f155c631adbee89485b61f8cb9859776ef8b53121"
+        },
+        {
+          "library": "Mon17",
+          "source": "Mon17.wil",
+          "sourceSha256": "a7622886f172213ae1ec68950e28732d5d6e65444e246d8f1eecebd0f8b02846"
+        },
+        {
+          "library": "Mon18",
+          "source": "Mon18.wil",
+          "sourceSha256": "eab9850feaecd7a3bf89d3e6274317e3543f5c07ec3e771627e1aa11c4c74bbd"
+        },
+        {
+          "library": "Mon2",
+          "source": "Mon2.wil",
+          "sourceSha256": "cc0e72f7d49eaca32934ae79d2c339d46c33cff88d848a70a043b5228b50820b"
+        },
+        {
+          "library": "Mon3",
+          "source": "Mon3.wil",
+          "sourceSha256": "5af297556364dfaa8fa402e0ec7e4a7a6b6fee48949bbb5be0b30e5ccf98b276"
+        },
+        {
+          "library": "Mon4",
+          "source": "Mon4.wil",
+          "sourceSha256": "6a46fc8d8fd093181bde0a8ceca8c25b8d3faf71752dbf47bbbd0a6e5fad5412"
+        },
+        {
+          "library": "Mon5",
+          "source": "Mon5.wil",
+          "sourceSha256": "c7a89a9a75eb06cf2b50c4d21059f9112c80cdb09a6c31cef950e512f09b3ff4"
+        },
+        {
+          "library": "Mon6",
+          "source": "Mon6.wil",
+          "sourceSha256": "39ec87ffae98f96d111b8a2a51f8958e64802f435db254b4ca67602d8ae2a7e6"
+        },
+        {
+          "library": "Mon7",
+          "source": "Mon7.wil",
+          "sourceSha256": "b4476c971fe9f9c326b96e987e3362c51649c73a5489197467634055ff270055"
+        },
+        {
+          "library": "Mon8",
+          "source": "Mon8.wil",
+          "sourceSha256": "d540cfe34df0bb12d5776760d374546144a35d48d46838d2ae80588e49fbe0e1"
+        },
+        {
+          "library": "Mon9",
+          "source": "Mon9.wil",
+          "sourceSha256": "d2a5238c8f558c3df6a6a91d9126bc2adedea908fd8f91da3356248d9093e532"
+        },
+        {
+          "library": "NHair",
+          "source": "Hair.wil",
+          "sourceSha256": "ae377f1529913d97f0ff9ba25c94352fc348490a99d291adc2e821fbb3180927"
+        },
+        {
+          "library": "NHum",
+          "source": "Hum.wil",
+          "sourceSha256": "6a3867b84cdda2f972aea76586e68d113894832b07d93bb7f10bfcfb1e17005e"
+        },
+        {
+          "library": "NPC00",
+          "source": "npc.wil",
+          "sourceSha256": "7806b71fcca6c257365dd42a9cc614a7b24dd102b69f6e326393e42433b2b052"
+        },
+        {
+          "library": "NWeapon",
+          "source": "Weapon.wil",
+          "sourceSha256": "130e39f4656584769d7d0ff8ab615830f4e74ddddcb82bd8ca76ac4da5c0a63e"
+        }
+      ],
+      "origin": "Reference ClMain996-1005 -> MShare596-600 -> Share46 chooses global Prguse palette; locked national actor source palettes must match byte-for-byte",
+      "referenceOriginFiles": [
+        {
+          "file": "ClMain.pas",
+          "sha256": "08c79ace18755ca96882079ed0c5a5ff71c91bd8bb2de6ab539d90272355c74e"
+        },
+        {
+          "file": "MShare.pas",
+          "sha256": "b0b27f8e7802171caae5098b861f4e82b400ccab9a1eee5c3ba9ece5a846d2a2"
+        },
+        {
+          "file": "Share.pas",
+          "sha256": "e25154998cd50b1ad1c08f8c123bd10e575bbabbb011cd96c570f7317d1af8c2"
+        },
+        {
+          "file": "WIL.pas",
+          "sha256": "662fa57702187698953d74c81464ba995fe05668125100a4f39a57f3119186ec"
+        }
+      ]
+    }
+  }
+}

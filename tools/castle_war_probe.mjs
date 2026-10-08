@@ -3,8 +3,10 @@
 // consume the gold bar/Zuma Piece or modify castle state. Set
 // MIR2_CASTLE_EXPECT_LIST=1 only for a prepared character carrying a gold bar.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { NpcProbeSession, readNativeNpcClickInterval } from './npc_probe_session.mjs';
 
 const root = new URL('..', import.meta.url);
+const npcClickInterval = await readNativeNpcClickInterval(root);
 const gatewayUrl = process.env.MIR2_GATEWAY_URL ?? 'ws://127.0.0.1:18800/ws';
 const credentialsPath = process.env.MIR2_CASTLE_CREDENTIALS ?? '.runtime/web-ui-test.json';
 const credentials = JSON.parse(await readFile(new URL(credentialsPath, root), 'utf8'));
@@ -29,8 +31,10 @@ class Client {
     this.mapGeneration = 0;
     this.position = undefined;
     this.entities = new Map();
+    this.npcSession = new NpcProbeSession(npcClickInterval);
     this.socket.addEventListener('message', event => {
       const envelope = JSON.parse(event.data);
+      this.npcSession.observe(envelope);
       if (!Number.isInteger(envelope.sequence) || envelope.sequence <= this.sequence)
         throw new Error(`gateway sequence regressed at ${envelope.sequence}`);
       this.sequence = envelope.sequence;
@@ -190,14 +194,15 @@ function findNpc(client, predicate) {
 }
 
 async function openNpc(client, npc, label) {
-  client.send({ type: 'npc', targetId: npc.id });
-  const dialogue = await client.waitFor(message => message.type === 'npcDialogue' && message.npcId === npc.id, `${label} dialogue`);
+  const stamp = await client.npcSession.begin(npc.id);
+  client.send({ type: 'npc', targetId: npc.id, ...stamp });
+  const dialogue = await client.waitFor(message => message.type === 'npcDialogue' && client.npcSession.matches(message), `${label} dialogue`);
   report[`${label}Dialogue`] = { npcId: npc.id, npcName: dialogue.npcName, text: dialogue.text, options: dialogue.options };
   return dialogue;
 }
 
 async function select(client, npcId, command, label) {
-  client.send({ type: 'dialogueSelect', npcId, command });
+  client.send({ type: 'dialogueSelect', ...client.npcSession.fields(npcId), command });
   const dialogue = await client.waitFor(message => message.type === 'npcDialogue' || message.type === 'dialogueMessage'
     || message.type === 'systemMessage' || message.type === 'npcDialogueClosed', `${label} response`);
   report.path.push({ label, command, responseType: dialogue.type });
@@ -221,7 +226,7 @@ try {
     const palaceDialogue = await openNpc(client, palaceGuide, 'palace return guide');
     const home = palaceDialogue.options.find(option => option.command === '@home');
     if (!home) throw new Error('palace return guide did not expose return-to-Biqi action');
-    client.send({ type: 'dialogueSelect', npcId: palaceGuide.id, command: home.command });
+    client.send({ type: 'dialogueSelect', ...client.npcSession.fields(palaceGuide.id), command: home.command });
     await client.waitFor(message => message.type === 'map' && message.map === '0', 'return to Biqi');
     await client.waitFor(message => message.type === 'entity' && message.self, 'Biqi self entity');
     report.path.push({ label: 'palace cleanup', command: home.command, responseType: 'map' });
@@ -238,7 +243,7 @@ try {
   const page7 = await select(client, guide.id, page.command, 'castle directory page');
   const castleRoute = page7.options?.find(option => option.command === '@route7_7');
   if (!castleRoute) throw new Error('castle directory page did not expose map 0122');
-  client.send({ type: 'dialogueSelect', npcId: guide.id, command: castleRoute.command });
+  client.send({ type: 'dialogueSelect', ...client.npcSession.fields(guide.id), command: castleRoute.command });
   await client.waitFor(message => message.type === 'map' && message.map === '0122', 'palace map transition');
   await client.waitFor(message => message.type === 'entity' && message.self, 'palace self entity');
 

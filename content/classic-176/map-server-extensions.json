@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "domain": "maps",
+  "classification": "server-extension",
+  "profileFile": "version-profile.json",
+  "source": {
+    "repository": "mirbeta/MirServer",
+    "directory": "vendor/mirserver-data/Mir200/Map",
+    "submoduleCommit": "f38deae64c521a28f8e0d86f2bf24d4ba7c9ea5c"
+  },
+  "preservedBaseline": {
+    "count": 570,
+    "orderedMapIdsSha256": "0780d0020457e7d1b833f6fa52376e6cd16fe5c1b1bb968e33cfa188ed9e1b28"
+  },
+  "originalClientEvidence": {
+    "kind": "source_review",
+    "recordedAt": "2026-10-01T10:29:11.549861+00:00",
+    "directory": "C:\\Program Files (x86)\\shanda\\Legend of Mir\\Map",
+    "mapCount": 528,
+    "sortedFileNamesSha256": "88af27fba9aad3e4c6f0bbb0ebaf15551d3210db05cdfd21a31c4af37bd963bb",
+    "absentMapIds": [
+      "D718",
+      "D719"
+    ],
+    "scope": "Local original installation filename inventory only; these maps belong to the fixed server extension. This is not historical geography, browser rendering or native runtime evidence."
+  },
+  "libraryLocks": {
+    "Tiles": {
+      "source": "Tiles.wil",
+      "sourceSha256": "92dc40c4ed6ed4417daf1ae7ad753624f992a9a24e493d651cc2eebd11963f27",
+      "index": "Tiles.WIX",
+      "indexSha256": "d19435d0996b8d386bf709da1748a68b96105535d420a05b36eae715dab4e146"
+    },
+    "SmTiles": {
+      "source": "SmTiles.wil",
+      "sourceSha256": "f87570676bff54457e9b56630a4b557e1129c3f0a5a359047668be40e44a0605",
+      "index": "SmTiles.WIX",
+      "indexSha256": "16d41274a8c68632a1bd6d4a64d065ff70cb81e468c97fd34021fd772267e0ed"
+    },
+    "Objects": {
+      "source": "Objects.wil",
+      "sourceSha256": "80b27c1be115a19c9d8baac878e90e182c9543ddb0640fda8626b90c636690f0",
+      "index": "Objects.WIX",
+      "indexSha256": "199be3894f277cb4e8ac16e222d7dcda725f2e1fc620d207f432367509afc503"
+    }
+  },
+  "maps": [
+    {
+      "id": "D718",
+      "classification": "server-extension",
+      "source": {
+        "path": "vendor/mirserver-data/Mir200/Map/D718.MAP",
+        "gitBlob": "3ffc4e5bbb8f152d9c064e044dd47fd708410b91",
+        "sha256": "9633461c756c0d152f412d08e33012df6fa72c885509a57a85b81463070f0020",
+        "bytes": 120052
+      },
+      "format": "classic-12",
+      "width": 100,
+      "height": 100,
+      "cellBytes": 12,
+      "cellOrder": "column-major",
+      "trailingBytes": 0,
+      "sourceMapInfo": {
+        "path": "vendor/mirserver-data/Mir200/Envir/MapInfo.txt",
+        "sha256": "86a6a68ca3604171ab92a706a102f4083fce94bcd1449bc3a211bc5e983c0c06",
+        "entry": null,
+        "flags": null
+      },
+      "sourceMonGen": {
+        "path": "vendor/mirserver-data/Mir200/Envir/MonGen.txt",
+        "sha256": "e5c39fb7eda66b70f82a61a5c2cea25df9cf0b6892b916fb6d579f88ff43748f",
+        "entries": 0
+      },
+      "generatedRoute": {
+        "name": "地图 D718",
+        "start": [
+          50,
+          50
+        ],
+        "npc": [
+          51,
+          50
+        ],
+        "monster": "虎蛇",
+        "defaultMapFlags": "DAY",
+        "basis": "prepare-runtime deterministic walkable map-centre, neighboring NPC and generic monster fallback; no source MapInfo or MonGen entry",
+        "historicalConfigurationVerified": false
+      },
+      "graphicsPolicy": "Raw classic cells and library indices are preserved without image decoding, palette conversion or quantization. Existing national WIL PNG exports are reused."
+    },
+    {
+      "id": "D719",
+      "classification": "server-extension",
+      "source": {
+        "path": "vendor/mirserver-data/Mir200/Map/D719.MAP",
+        "gitBlob": "3ffc4e5bbb8f152d9c064e044dd47fd708410b91",
+        "sha256": "9633461c756c0d152f412d08e33012df6fa72c885509a57a85b81463070f0020",
+        "bytes": 120052
+      },
+      "format": "classic-12",
+      "width": 100,
+      "height": 100,
+      "cellBytes": 12,
+      "cellOrder": "column-major",
+      "trailingBytes": 0,
+      "sourceMapInfo": {
+        "path": "vendor/mirserver-data/Mir200/Envir/MapInfo.txt",
+        "sha256": "86a6a68ca3604171ab92a706a102f4083fce94bcd1449bc3a211bc5e983c0c06",
+        "entry": null,
+        "flags": null
+      },
+      "sourceMonGen": {
+        "path": "vendor/mirserver-data/Mir200/Envir/MonGen.txt",
+        "sha256": "e5c39fb7eda66b70f82a61a5c2cea25df9cf0b6892b916fb6d579f88ff43748f",
+        "entries": 0
+      },
+      "generatedRoute": {
+        "name": "地图 D719",
+        "start": [
+          50,
+          50
+        ],
+        "npc": [
+          51,
+          50
+        ],
+        "monster": "虎蛇",
+        "defaultMapFlags": "DAY",
+        "basis": "prepare-runtime deterministic walkable map-centre, neighboring NPC and generic monster fallback; no source MapInfo or MonGen entry",
+        "historicalConfigurationVerified": false
+      },
+      "graphicsPolicy": "Raw classic cells and library indices are preserved without image decoding, palette conversion or quantization. Existing national WIL PNG exports are reused."
+    }
+  ]
+}

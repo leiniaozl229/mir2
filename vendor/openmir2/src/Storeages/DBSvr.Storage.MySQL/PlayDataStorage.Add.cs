@@ -50,39 +50,55 @@ namespace DBSrv.Storage.MySQL
 
         private bool AddRecord(ref int nIndex, ref CharacterDataInfo humanRcd)
         {
-            using StorageContext context = new StorageContext(_storageOption);
-            bool success = false;
-            context.Open(ref success);
-            if (!success)
-            {
-                return false;
-            }
+            StorageContext context = CreateSaveContext();
             bool result = false;
             try
             {
+                bool success = false;
+                context.Open(ref success);
+                if (!success)
+                {
+                    return false;
+                }
                 context.BeginTransaction();
                 int playerId = CreateCharacters(context, humanRcd);
                 if (playerId <= 0)
                 {
-                    return false;
+                    throw new InvalidOperationException("Character insert did not return a valid ID.");
                 }
                 CreateAblity(context, playerId, humanRcd.Data);
                 CreateStatus(context, playerId);
                 CreateUseItem(context, playerId);
                 CreateBagItem(context, playerId);
                 CreateStorageItem(context, playerId);
+                context.Commit();
                 result = true;
                 nIndex = playerId;
-                context.Commit();
             }
             catch (Exception e)
             {
-                context.RollBack();
+                result = false;
+                try
+                {
+                    context.RollBack();
+                }
+                catch (Exception rollbackError)
+                {
+                    LogService.Error("[Exception] PlayDataStorage.AddRecord.RollBack: " + rollbackError.Message);
+                }
                 LogService.Error("创建角色失败" + e.StackTrace);
             }
             finally
             {
-                context.Dispose();
+                try
+                {
+                    context.Dispose();
+                }
+                catch (Exception disposeError)
+                {
+                    result = false;
+                    LogService.Error("[Exception] PlayDataStorage.AddRecord.Dispose: " + disposeError.Message);
+                }
             }
             return result;
         }
@@ -142,15 +158,14 @@ namespace DBSrv.Storage.MySQL
             command.Parameters.AddWithValue("@Deleted", 0);
             try
             {
-                command.ExecuteNonQuery();
-                return (int)command.LastInsertedId;
+                context.ExecuteNonQuery(command);
+                return checked((int)context.GetLastInsertedId(command));
             }
             catch (Exception ex)
             {
-                context.RollBack();
                 LogService.Error("[Exception] PlayDataStorage.CreateCharacters");
                 LogService.Error(ex.StackTrace);
-                return 0;
+                throw;
             }
         }
 
@@ -184,11 +199,12 @@ namespace DBSrv.Storage.MySQL
                 command.Parameters.AddWithValue("@MaxWearWeight", hd.Abil.MaxWearWeight);
                 command.Parameters.AddWithValue("@HandWeight", hd.Abil.HandWeight);
                 command.Parameters.AddWithValue("@MaxHandWeight", hd.Abil.MaxHandWeight);
-                command.ExecuteNonQuery();
+                context.ExecuteNonQuery(command);
             }
             catch (Exception e)
             {
                 LogService.Error(e.StackTrace);
+                throw;
             }
         }
 
@@ -203,20 +219,19 @@ namespace DBSrv.Storage.MySQL
                 command.CommandText = strSql.ToString();
                 command.Parameters.Clear();
                 command.Parameters.AddWithValue("@PlayerId", playerId);
-                command.ExecuteNonQuery();
+                context.ExecuteNonQuery(command);
             }
             catch (Exception e)
             {
                 LogService.Error(e.StackTrace);
+                throw;
             }
         }
 
         private void CreateUseItem(StorageContext context, int playerId)
         {
             const string InsertUseItemSql = "INSERT INTO characters_item (PlayerId,Position,MakeIndex,StdIndex,Dura,DuraMax) VALUES (@PlayerId, @Position, @MakeIndex, @StdIndex, @Dura, @DuraMax);";
-            CharacterDataInfo playData = new CharacterDataInfo();
-            GetItemRecord(playerId, context, ref playData);
-            ServerUserItem[] oldItems = playData.Data.HumItems;
+            ServerUserItem[] oldItems = ReadItemSlotsForSave(context, playerId, "characters_item", 13);
             int useItemCount = oldItems.Where(x => x != null).Count(x => x.MakeIndex == 0 && x.Index == 0);
             int useSize = oldItems.Length;
             if (useItemCount <= 0)
@@ -249,7 +264,7 @@ namespace DBSrv.Storage.MySQL
                     command.Parameters.AddWithValue("@StdIndex", addItem[i].Index);
                     command.Parameters.AddWithValue("@Dura", addItem[i].Dura);
                     command.Parameters.AddWithValue("@DuraMax", addItem[i].DuraMax);
-                    command.ExecuteNonQuery();
+                    context.ExecuteNonQuery(command);
                 }
                 try
                 {
@@ -259,6 +274,7 @@ namespace DBSrv.Storage.MySQL
                 {
                     LogService.Error("[Exception] PlayDataStorage.SaveItem (Insert Item)");
                     LogService.Error(ex.StackTrace);
+                    throw;
                 }
             }
         }
@@ -266,9 +282,7 @@ namespace DBSrv.Storage.MySQL
         private void CreateBagItem(StorageContext context, int playerId)
         {
             const string InsertBagItemSql = "INSERT INTO characters_bagitem (PlayerId, Position, MakeIndex, StdIndex, Dura, DuraMax) VALUES (@PlayerId, @Position, @MakeIndex, @StdIndex, @Dura, @DuraMax);";
-            CharacterDataInfo playData = new CharacterDataInfo();
-            GetBagItemRecord(playerId, context, ref playData);
-            ServerUserItem[] oldItems = playData.Data.BagItems;
+            ServerUserItem[] oldItems = ReadItemSlotsForSave(context, playerId, "characters_bagitem", 46);
             int bagItemCount = oldItems.Where(x => x != null).Count(x => x.MakeIndex == 0 && x.Index == 0);
             int bagSize = oldItems.Length;
             if (bagItemCount <= 0)
@@ -297,7 +311,7 @@ namespace DBSrv.Storage.MySQL
                     command.Parameters.AddWithValue("@StdIndex", addItem[i].Index);
                     command.Parameters.AddWithValue("@Dura", addItem[i].Dura);
                     command.Parameters.AddWithValue("@DuraMax", addItem[i].DuraMax);
-                    command.ExecuteNonQuery();
+                    context.ExecuteNonQuery(command);
                 }
                 try
                 {
@@ -307,6 +321,7 @@ namespace DBSrv.Storage.MySQL
                 {
                     LogService.Error("[Exception] PlayDataStorage.UpdateBagItem (Insert Item)");
                     LogService.Error(ex.StackTrace);
+                    throw;
                 }
             }
         }
@@ -314,9 +329,7 @@ namespace DBSrv.Storage.MySQL
         private void CreateStorageItem(StorageContext context, int playerId)
         {
             const string InsertStorageItemSql = "INSERT INTO characters_storageitem (PlayerId, Position, MakeIndex, StdIndex, Dura, DuraMax) VALUES (@PlayerId, @Position, @MakeIndex, @StdIndex, @Dura, @DuraMax);";
-            CharacterDataInfo playData = new CharacterDataInfo();
-            GetStorageRecord(playerId, context, ref playData);
-            ServerUserItem[] oldItems = playData.Data.StorageItems;
+            ServerUserItem[] oldItems = ReadItemSlotsForSave(context, playerId, "characters_storageitem", 50);
             int storageItemCount = oldItems.Where(x => x != null).Count(x => x.MakeIndex == 0 && x.Index == 0);
             int storageSize = oldItems.Length;
             if (storageItemCount <= 0)
@@ -347,7 +360,7 @@ namespace DBSrv.Storage.MySQL
                         command.Parameters.AddWithValue("@StdIndex", addItem[i].Index);
                         command.Parameters.AddWithValue("@Dura", addItem[i].Dura);
                         command.Parameters.AddWithValue("@DuraMax", addItem[i].DuraMax);
-                        command.ExecuteNonQuery();
+                        context.ExecuteNonQuery(command);
                     }
                     CreateItemAttr(context, playerId, addItem);
                 }
@@ -355,6 +368,7 @@ namespace DBSrv.Storage.MySQL
                 {
                     LogService.Error("[Exception] PlayDataStorage.SaveStorageItem (Insert Item)");
                     LogService.Error(e.StackTrace);
+                    throw;
                 }
             }
         }
@@ -380,12 +394,13 @@ namespace DBSrv.Storage.MySQL
                 }
                 MySqlConnector.MySqlCommand command = context.CreateCommand();
                 command.CommandText = string.Join("\r\n", strSqlList);
-                command.ExecuteNonQuery();
+                context.ExecuteNonQuery(command);
             }
             catch (Exception e)
             {
                 LogService.Error("[Exception] PlayDataStorage.UpdateRecord (Insert item attr)");
                 LogService.Error(e.StackTrace);
+                throw;
             }
         }
     }

@@ -1,4 +1,4 @@
-using GameSrv.Services;
+﻿using GameSrv.Services;
 using M2Server.Actor;
 using M2Server.Event.Events;
 using M2Server.Maps;
@@ -478,6 +478,7 @@ namespace GameSrv.Word
 
         public void ProcessHumans()
         {
+            if (ShutdownSnapshotPhaseStarted) return;
             const string sExceptionMsg1 = "[Exception] WorldServer::ProcessHumans -> Ready, Save, Load...";
             const string sExceptionMsg3 = "[Exception] WorldServer::ProcessHumans ClosePlayer.Delete";
             //var dwCheckTime = HUtil32.GetTickCount();
@@ -504,6 +505,7 @@ namespace GameSrv.Word
                                 {
                                     LogService.Warn($"获取玩家数据[{userOpenInfo.ChrName}]失败.");
                                     LoadPlayerQueue.Add(i);
+                                    PlayerDataService.RetireLoad(userOpenInfo.QueryId);
                                     M2Share.NetChannel.SendOutConnectMsg(userOpenInfo.LoadUser.GateIdx, userOpenInfo.LoadUser.SocketId, userOpenInfo.LoadUser.GSocketIdx);
                                     continue;
                                 }
@@ -530,28 +532,33 @@ namespace GameSrv.Word
                             }
                             else
                             {
+                                PlayerDataService.RetireLoad(userOpenInfo.QueryId);
                                 KickOnlineUser(userOpenInfo.ChrName);
                                 ListOfGateIdx.Add(userOpenInfo.LoadUser.GateIdx);
                                 ListOfSocket.Add(userOpenInfo.LoadUser.SocketId);
                             }
                             LoadPlayList[i] = null;
                         }
-                        for (int i = 0; i < LoadPlayerQueue.Count; i++)
+                        var retiredLoads = new HashSet<int>(LoadPlayerQueue);
+                        for (int i = LoadPlayList.Count - 1; i >= 0; i--)
                         {
-                            LoadPlayList.RemoveAt(i);
+                            if (LoadPlayList[i] == null || retiredLoads.Contains(i)) LoadPlayList.RemoveAt(i);
                         }
                         LoadPlayerQueue.Clear();
                         //LoadPlayList.Clear();
-                        for (int i = 0; i < ChangeHumanDbGoldList.Count; i++)
+                        if (!IsShutdownFrozen && !(M2Share.FrontEngine is FrontEngine shutdownFront && shutdownFront.ShutdownRequested))
                         {
-                            GoldChangeInfo goldChangeInfo = ChangeHumanDbGoldList[i];
-                            playObject = GetPlayObject(goldChangeInfo.sGameMasterName);
-                            if (playObject != null)
+                            for (int i = 0; i < ChangeHumanDbGoldList.Count; i++)
                             {
-                                //  playObject.GoldChange(goldChangeInfo.sGetGoldUser, goldChangeInfo.nGold);
+                                GoldChangeInfo goldChangeInfo = ChangeHumanDbGoldList[i];
+                                playObject = GetPlayObject(goldChangeInfo.sGameMasterName);
+                                if (playObject != null)
+                                {
+                                    //  playObject.GoldChange(goldChangeInfo.sGetGoldUser, goldChangeInfo.nGold);
+                                }
                             }
+                            ChangeHumanDbGoldList.Clear();
                         }
-                        ChangeHumanDbGoldList.Clear();
                     }
                     finally
                     {
@@ -576,6 +583,7 @@ namespace GameSrv.Word
                     LogService.Error(e.StackTrace);
                 }
             }
+            if (IsShutdownFrozen) return;
             try
             {
                 for (int i = 0; i < PlayObjectFreeList.Count; i++)
@@ -1073,6 +1081,21 @@ namespace GameSrv.Word
         }
 
         public static void SaveHumanRcd(IPlayerActor playObject)
+        {
+            // All ordinary close/tick producers have stopped before the final pass.
+            // A console save or delayed callback must not enqueue a second snapshot.
+            if (SystemShare.WorldEngine is WorldServer world)
+            {
+                lock (world._shutdownGate)
+                {
+                    if (world.IsShutdownFrozen) return;
+                    SaveHumanRcdCore(playObject);
+                }
+            }
+            else SaveHumanRcdCore(playObject);
+        }
+
+        private static void SaveHumanRcdCore(IPlayerActor playObject)
         {
             if (playObject.IsRobot) //Bot玩家不保存数据
             {
@@ -1759,9 +1782,11 @@ namespace GameSrv.Word
 
         public void sub4AE514(GoldChangeInfo goldChangeInfo)
         {
-            GoldChangeInfo goldChange = goldChangeInfo;
-            HUtil32.EnterCriticalSection(LoadPlaySection);
-            ChangeHumanDbGoldList.Add(goldChange);
+            lock (LoadPlaySection)
+            {
+                if (!IsShutdownFrozen && !(M2Share.FrontEngine is FrontEngine shutdownFront && shutdownFront.ShutdownRequested))
+                    ChangeHumanDbGoldList.Add(goldChangeInfo);
+            }
         }
 
         public void ClearMonSayMsg()

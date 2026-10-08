@@ -14,27 +14,32 @@ namespace M2Server.Monster.Monsters
             CharStatusEx = PoisonState.STONEMODE;
         }
 
-        private void MeltStone()
+        private void MeltStone(IActor trigger)
         {
-            CharStatusEx = 0;
+            StoneMode = false;
+            CharStatusEx &= ~PoisonState.STONEMODE;
             CharStatus = GetCharStatus();
             SendRefMsg(Messages.RM_DIGUP, Dir, CurrX, CurrY, 0, "");
-            StoneMode = false;
+            if (IsCombatTarget(trigger, ChaseRange))
+            {
+                UpdateVisibleGay(trigger);
+                SetTargetCreat(trigger);
+            }
         }
 
-        private void MeltStoneAll()
+        private void MeltStoneAll(IActor trigger)
         {
-            MeltStone();
+            MeltStone(trigger);
             IList<IActor> objectList = new List<IActor>();
             GetMapBaseObjects(Envir, CurrX, CurrY, 7, ref objectList);
             for (int i = 0; i < objectList.Count; i++)
             {
                 IActor baseObject = objectList[i];
-                if (baseObject.StoneMode)
+                if (baseObject.StoneMode && !baseObject.Death && !baseObject.Ghost)
                 {
                     if (baseObject is ScultureMonster)
                     {
-                        ((ScultureMonster)baseObject).MeltStone();
+                        ((ScultureMonster)baseObject).MeltStone(trigger);
                     }
                 }
             }
@@ -49,20 +54,10 @@ namespace M2Server.Monster.Monsters
                     for (int i = 0; i < VisibleActors.Count; i++)
                     {
                         IActor baseObject = VisibleActors[i].BaseObject;
-                        if (baseObject.Death)
+                        if (IsCombatTarget(baseObject, 2))
                         {
-                            continue;
-                        }
-                        if (IsProperTarget(baseObject))
-                        {
-                            if (!baseObject.HideMode || CoolEye)
-                            {
-                                if (Math.Abs(CurrX - baseObject.CurrX) <= 2 && Math.Abs(CurrY - baseObject.CurrY) <= 2)
-                                {
-                                    MeltStoneAll();
-                                    break;
-                                }
-                            }
+                            MeltStoneAll(baseObject);
+                            break;
                         }
                     }
                 }

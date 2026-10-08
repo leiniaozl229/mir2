@@ -25,7 +25,16 @@ namespace M2Server.Net.TCP
         /// 网关地址白名单
         /// </summary>
         private readonly HashSet<long> Whitelist = new HashSet<long>();
-        private CancellationToken _stoppingCancelReads;
+        private readonly object _lifecycleGate = new object();
+        private Task _messageTask;
+        private Task _quiesceTask;
+        private Task _stopTask;
+        private int _quiescing;
+        private int _quiesced;
+        private int _stopped;
+
+        public bool IsQuiesced => Volatile.Read(ref _quiesced) != 0;
+        public bool IsStopped => Volatile.Read(ref _stopped) != 0;
 
         public TCPNetChannel()
         {
@@ -37,7 +46,6 @@ namespace M2Server.Net.TCP
             tcpService.Disconnected += Disconnected;
             tcpService.Received += Received;
             RunSocketSection = new object();
-            _stoppingCancelReads = new CancellationToken();
         }
 
         private Task Received(SocketClient socketClient, ReceivedDataEventArgs e)
@@ -121,20 +129,58 @@ namespace M2Server.Net.TCP
 
         public Task Start(CancellationToken cancellationToken = default)
         {
-            tcpService.Start();
+            cancellationToken.ThrowIfCancellationRequested();
+            lock (_lifecycleGate)
+            {
+                if (_quiesceTask != null || _stopTask != null)
+                    throw new InvalidOperationException("Game channel has entered shutdown.");
+                if (_messageTask != null) return Task.CompletedTask;
+                tcpService.Start();
+                _messageTask = ProcessGateMessagesAsync();
+            }
             LogService.Info($"游戏网关[{SystemShare.Config.sGateAddr}:{SystemShare.Config.nGatePort}]已启动...");
-            return StartMessageThread(cancellationToken);
+            return Task.CompletedTask;
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken = default)
+        public Task QuiesceAsync(CancellationToken cancellationToken = default)
         {
-            if (_receiveQueue.Reader.Count > 0)
-            {
-                await _receiveQueue.Reader.Completion;
-            }
+            Task task;
+            lock (_lifecycleGate) task = _quiesceTask ??= QuiesceCoreAsync();
+            return cancellationToken.CanBeCanceled ? task.WaitAsync(cancellationToken) : task;
+        }
 
-            _stoppingCancelReads = new CancellationToken(true);
-            await tcpService.StopAsync();
+        private async Task QuiesceCoreAsync()
+        {
+            Interlocked.Exchange(ref _quiescing, 1);
+            _receiveQueue.Writer.TryComplete();
+            if (_messageTask != null) await _messageTask.ConfigureAwait(false);
+            else
+            {
+                // Stop may be requested before Start. Complete the actual channel
+                // without dispatching buffered game commands during shutdown.
+                while (_receiveQueue.Reader.TryRead(out _)) { }
+            }
+            await _receiveQueue.Reader.Completion.ConfigureAwait(false);
+            Interlocked.Exchange(ref _quiesced, 1);
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken = default)
+        {
+            Task task;
+            lock (_lifecycleGate)
+            {
+                if (_stopTask == null || _stopTask.IsFaulted || _stopTask.IsCanceled)
+                    _stopTask = StopCoreAsync();
+                task = _stopTask;
+            }
+            return cancellationToken.CanBeCanceled ? task.WaitAsync(cancellationToken) : task;
+        }
+
+        private async Task StopCoreAsync()
+        {
+            await QuiesceAsync().ConfigureAwait(false);
+            await tcpService.StopAsync().ConfigureAwait(false);
+            Interlocked.Exchange(ref _stopped, 1);
         }
 
         private void LoadRunAddr()
@@ -425,18 +471,18 @@ namespace M2Server.Net.TCP
         /// <summary>
         /// 处理GameGate消息
         /// </summary>
-        private Task StartMessageThread(CancellationToken cancellationToken)
+        private async Task ProcessGateMessagesAsync()
         {
-            return Task.Factory.StartNew(async () =>
+            while (await _receiveQueue.Reader.WaitToReadAsync().ConfigureAwait(false))
             {
-                while (await _receiveQueue.Reader.WaitToReadAsync(_stoppingCancelReads))
+                while (_receiveQueue.Reader.TryRead(out ReceiveData message))
                 {
-                    while (_receiveQueue.Reader.TryRead(out ReceiveData message))
-                    {
-                        _gameGates[message.GateId].ProcessDataBuffer(message.Packet, message.Data);
-                    }
+                    if (Volatile.Read(ref _quiescing) != 0) continue;
+                    if (message.GateId < 0 || message.GateId >= _gameGates.Length || _gameGates[message.GateId] == null)
+                        continue;
+                    _gameGates[message.GateId].ProcessDataBuffer(message.Packet, message.Data);
                 }
-            }, cancellationToken);
+            }
         }
     }
 

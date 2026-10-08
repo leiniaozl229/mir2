@@ -589,7 +589,9 @@
       "EM100",
       "T118",
       "T218",
-      "T318"
+      "T318",
+      "D718",
+      "D719"
     ],
     "monsters": [
       "鸡",
@@ -687,11 +689,28 @@
     "sabuk": {
       "name": "沙巴克",
       "castleFile": "Castle/0/SabukW.txt",
-      "maps": ["0150", "0151", "0152", "0153", "0154", "0155", "0156", "3", "D701"],
-      "home": {"map": "3", "x": 644, "y": 290},
+      "maps": [
+        "0150",
+        "0151",
+        "0152",
+        "0153",
+        "0154",
+        "0155",
+        "0156",
+        "3",
+        "D701"
+      ],
+      "home": {
+        "map": "3",
+        "x": 644,
+        "y": 290
+      },
       "placeMap": "0150",
       "secretMap": "D701",
-      "palaceDoor": {"x": 631, "y": 274}
+      "palaceDoor": {
+        "x": 631,
+        "y": 274
+      }
     }
   },
   "quests": {
@@ -701,12 +720,17 @@
   "worldCatalog": {
     "monGenFile": "vendor/mirserver-data/Mir200/Envir/MonGen.txt",
     "monItemsDir": "vendor/mirserver-data/Mir200/Envir/MonItems",
-    "knownSqlGaps": ["神鹰", "飞火流星", "骷髅王"]
+    "knownSqlGaps": [
+      "神鹰",
+      "飞火流星",
+      "骷髅王"
+    ]
   },
   "unresolved": [
     "配套数据库包含后期内容，需逐项筛选",
     "基础男女角色、头发、六套武器、42 帧 NPC、鸡、鹿、卫士、洞蛆、四类骨系怪物、沃玛系、猪系、两类僵尸、火球/治愈/雷电 208 帧、首批事件音效及 2003 国服 UI 已导入；其他装备、怪物、魔法与声音仍待补齐，原端视觉校准仍需继续",
     "同版本参考客户端与视觉回放尚未取得",
-    "主世界、洞穴、城镇与副本目录已固定为 570 张可解析经典地图；其中 121 张精选路线配置了分层向导与区域刷怪，其中 4 张保留历史尾数据。完整规则、物品和素材视觉校准仍需按版本清单补齐。"
-  ]
+    "主世界、洞穴、城镇与副本目录已固定为 572 张可解析经典地图；其中 121 张精选路线配置了分层向导与区域刷怪，其中 4 张保留历史尾数据。完整规则、物品和素材视觉校准仍需按版本清单补齐。 D718/D719 are fixed server extensions absent from the local original 528-map installation; their map-id name, central spawn, neighboring NPC and fallback monster are generated, with no source MapInfo/MonGen entries."
+  ],
+  "mapServerExtensionsFile": "map-server-extensions.json"
 }

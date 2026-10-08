@@ -9,6 +9,7 @@ export function classicScaleForViewport(width:number,height:number){
 /** Keep the game surface on the original 800×600 coordinate system. */
 export class ClassicStage {
  private readonly resizeHandler=()=>this.resize();
+ private disposed=false;
 
  constructor(private readonly frame:HTMLElement,private readonly content:HTMLElement){
   frame.style.position='relative';
@@ -20,9 +21,10 @@ export class ClassicStage {
   content.style.transformOrigin='top left';
   window.addEventListener('resize',this.resizeHandler,{passive:true});
   this.resize();
+  document.fonts?.ready.then(()=>{if(!this.disposed)this.resize();});
  }
 
- dispose(){window.removeEventListener('resize',this.resizeHandler);}
+ dispose(){this.disposed=true;window.removeEventListener('resize',this.resizeHandler);}
 
  private resize(){
   const availableWidth=Math.min(window.innerWidth,document.documentElement.clientWidth||CLASSIC_STAGE.width);
@@ -34,5 +36,11 @@ export class ClassicStage {
   this.content.style.height=`${CLASSIC_STAGE.height}px`;
   this.content.style.transform=`scale(${scale})`;
   this.frame.style.setProperty('--classic-scale',String(scale));
+  // Centered layout and text line heights can place the entire pixel canvas at
+  // fractional screen coordinates. Move its frame, keeping internal coordinates intact.
+  this.frame.style.left='0px';this.frame.style.top='0px';
+  const rect=this.frame.getBoundingClientRect(),ratio=window.devicePixelRatio||1;
+  this.frame.style.left=`${Math.floor(rect.left*ratio)/ratio-rect.left}px`;
+  this.frame.style.top=`${Math.floor(rect.top*ratio)/ratio-rect.top}px`;
  }
 }

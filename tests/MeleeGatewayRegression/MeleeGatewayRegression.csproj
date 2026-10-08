@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>Exe</OutputType><MeleeTestFramework Condition="'$(MeleeTestFramework)' == ''">net10.0</MeleeTestFramework><TargetFramework>$(MeleeTestFramework)</TargetFramework><ImplicitUsings>enable</ImplicitUsings><Nullable>enable</Nullable><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup>
+ <ItemGroup><Compile Include="../../services/web-gateway/*.cs" Exclude="../../services/web-gateway/Program.cs" /><EmbeddedResource Include="../../content/classic-176/skill-input.json" LogicalName="Mir2.WebGateway.SkillInput" /></ItemGroup>
+</Project>

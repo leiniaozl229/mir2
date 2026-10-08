@@ -793,6 +793,8 @@
         OfflinePlayEx = 2006,
         [ScriptDefName("READRANDOMLINE")]
         ReadRandomLine = 2007,
+        [ScriptDefName("RESETMONSPAWN")]
+        ResetMonSpawn = 2008,
         [ScriptDefName("DELLINELIST")]
         DelLineListCompat = DelNameList
     }

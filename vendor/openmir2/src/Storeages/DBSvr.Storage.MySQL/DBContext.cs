@@ -3,6 +3,7 @@ using NLog;
 using OpenMir2;
 using System;
 using System.Data;
+using System.Data.Common;
 
 namespace DBSrv.Storage.MySQL
 {
@@ -18,11 +19,12 @@ namespace DBSrv.Storage.MySQL
             _storageOption = storageOption;
         }
 
-        public void Open(ref bool success)
+        public virtual void Open(ref bool success)
         {
-            _connection = new MySqlConnection(_storageOption.ConnectionString);
+            success = false;
             try
             {
+                _connection = new MySqlConnection(_storageOption.ConnectionString);
                 _connection.Open();
                 success = true;
             }
@@ -39,32 +41,38 @@ namespace DBSrv.Storage.MySQL
             return new MySqlCommand(connection: _connection, transaction: _transaction);
         }
 
+        // Keep command construction and parameters in the production save methods;
+        // execution is the single overridable boundary for isolated storage tests.
+        public virtual int ExecuteNonQuery(MySqlCommand command) => command.ExecuteNonQuery();
+
+        public virtual DbDataReader ExecuteReader(MySqlCommand command) => command.ExecuteReader();
+
+        public virtual long GetLastInsertedId(MySqlCommand command) => command.LastInsertedId;
+
         public MySqlConnection GetConnection()
         {
             return _connection;
         }
 
-        public void BeginTransaction()
+        public virtual void BeginTransaction()
         {
-            if (_transaction == null && _connection.State == ConnectionState.Open)
+            if (_transaction != null || _connection == null || _connection.State != ConnectionState.Open)
             {
-                _transaction = _connection.BeginTransaction();
+                throw new InvalidOperationException("An open connection without an existing transaction is required.");
             }
-            else
-            {
-                LogService.Warn("[警告] 获取MySQL链接事物失败.");
-            }
+            _transaction = _connection.BeginTransaction();
         }
 
-        public void Commit()
+        public virtual void Commit()
         {
-            if (_transaction != null)
+            if (_transaction == null)
             {
-                _transaction.Commit();
+                throw new InvalidOperationException("Cannot commit without a transaction.");
             }
+            _transaction.Commit();
         }
 
-        public void RollBack()
+        public virtual void RollBack()
         {
             if (_transaction != null)
             {
@@ -72,12 +80,23 @@ namespace DBSrv.Storage.MySQL
             }
         }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
-            if (_connection != null)
+            try
             {
-                _connection.Close();
-                _connection.Dispose();
+                _transaction?.Dispose();
+            }
+            finally
+            {
+                _transaction = null;
+                try
+                {
+                    _connection?.Dispose();
+                }
+                finally
+                {
+                    _connection = null;
+                }
             }
         }
     }

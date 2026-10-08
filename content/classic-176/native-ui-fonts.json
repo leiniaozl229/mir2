@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 1,
+  "id": "shanda-176-observed-ui-raster",
+  "complete": false,
+  "sourceFont": {
+    "file": "simkai.ttf",
+    "sha256": "9dd76f7ab430edd091db24c3f18e71410325c1414141aad5fe67947873ffba06",
+    "requestedFamily": "KaiTi",
+    "resolvedFamily": "楷体"
+  },
+  "rasterizer": {
+    "api": "Windows GDI TextOutW",
+    "charset": 134,
+    "quality": 3,
+    "characterExtra": 0,
+    "outline": [
+      [
+        -1,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        -1
+      ],
+      [
+        0,
+        1
+      ]
+    ]
+  },
+  "encoding": "CP936",
+  "evidence": {
+    "notice": "Two observed original notice rows and the shared production component in the real offline calibration page are RGB equal in 10,588 pixels",
+    "server": "One observed original server-name region and the shared production component in the real offline calibration page are RGB equal in 2,112 pixels",
+    "limits": "Does not prove the source API uniquely, all glyphs, other windows, input fields or arbitrary native text metrics"
+  },
+  "profiles": {
+    "kaiti-12": {
+      "size": 12,
+      "weight": 400,
+      "manifest": "/ui-national/fonts/kaiti-12-707ce95fff34ef8f.json",
+      "sha256": "707ce95fff34ef8f60fd42cfaf8ea74a08f7eaea3314cd605c897c49bf3863be",
+      "glyphCount": 24070,
+      "repertoireSha256": "b99eb3f4c126fb891ee263cf233a5ded0fdb037cff70d692ac94faf43b364c4b",
+      "fallbackGlyphCount": 2158
+    },
+    "kaiti-16-bold": {
+      "size": 16,
+      "weight": 700,
+      "manifest": "/ui-national/fonts/kaiti-16-bold-3ae7f8e5f9d22f95.json",
+      "sha256": "3ae7f8e5f9d22f9530641c8c7feb2667c7d0ce934f4ae2a5a0dc126243c67d80",
+      "glyphCount": 24070,
+      "repertoireSha256": "b99eb3f4c126fb891ee263cf233a5ded0fdb037cff70d692ac94faf43b364c4b",
+      "fallbackGlyphCount": 2158
+    }
+  }
+}

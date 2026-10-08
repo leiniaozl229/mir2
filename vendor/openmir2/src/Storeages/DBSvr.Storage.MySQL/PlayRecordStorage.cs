@@ -295,7 +295,6 @@ namespace DBSrv.Storage.MySQL
                 }
                 else
                 {
-                    HumRecord.Header.Deleted = false;
                     MySqlCommand command = new MySqlCommand();
                     command.Connection = connection;
                     command.CommandText = UpdateChrIndexes;
@@ -304,8 +303,11 @@ namespace DBSrv.Storage.MySQL
                     command.Parameters.AddWithValue("@SelectID", HumRecord.Selected);
                     command.Parameters.AddWithValue("@IsDeleted", HumRecord.Deleted);
                     command.Parameters.AddWithValue("@Id", nIndex);
-                    command.ExecuteNonQuery();
-                    result = true;
+                    result = command.ExecuteNonQuery() == 1;
+                    if (result)
+                    {
+                        HumRecord.Header.Deleted = HumRecord.Deleted;
+                    }
                 }
             }
             catch (Exception e)

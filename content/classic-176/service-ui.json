@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "profile": "shanda-2003-1.76-cn",
+  "status": "partial-reference-and-native-pixels",
+  "source": "Native Prguse385/392 pixels; Delphi FState DMenu/DSell reference, not same-version executable proof",
+  "menu": {
+    "frame": 385, "width": 308, "height": 205,
+    "placement": {"x": 152, "y": 125, "evidence": "proposed"},
+    "list": {"x": 12, "y": 29, "width": 268, "rowHeight": 13, "visible": 10, "columns": [139, 88, 41], "evidence": "native-pixels+reference-source; text baselines proposed"},
+    "headers": {"x": 12, "y": 7, "height": 16},
+    "headingHeight": 25,
+    "status": {"x": 118, "y": 178, "width": 89, "height": 26, "evidence": "proposed browser waiting/error text"},
+    "return": {"x": 119, "y": 162, "width": 85, "height": 14, "evidence": "proposed browser return-to-catalog control"},
+    "previous": {"x": 38, "y": 174, "width": 30, "height": 29},
+    "next": {"x": 85, "y": 174, "width": 30, "height": 29},
+    "confirm": {"x": 213, "y": 168, "width": 48, "height": 23},
+    "close": {"x": 292, "y": 1, "width": 15, "height": 22},
+    "localPageStep": 9, "detailPageStep": 10,
+    "pageSource": "FState.pas LISTLINEHEIGHT=13/MAXMENU=10; DMenuPrev/Next local step MAXMENU-1 and detail step10",
+    "selection": "single/double click selects; separate confirm buys or retrieves; no speculative purchase on selection",
+    "doubleClickEvidence": "proposed conservative behavior: reference DMenu has no explicit double-click purchase handler"
+  },
+  "slot": {
+    "frame": 392, "width": 140, "height": 181,
+    "placement": {"x": 316, "y": 156, "evidence": "proposed"},
+    "item": {"x": 27, "y": 67, "width": 61, "height": 52, "evidence": "FState.pas DSellDlgSpot; native392 hanging slot supports geometry"},
+    "confirm": {"x": 77, "y": 142, "width": 39, "height": 37},
+    "close": {"x": 115, "y": 1, "width": 15, "height": 22},
+    "price": {"x": 8, "y": 2, "width": 103, "height": 18},
+    "headingHeight": 25,
+    "status": {"x": 5, "y": 24, "width": 128, "height": 28, "evidence": "proposed browser waiting/error text"},
+    "source": "FState.pas DSellDlgSpotClick/DSellDlgOkClick; sell/repair query then confirm, storage chooses then confirm",
+    "inventoryAuthority": "presentation only; placing or cancelling never removes the authoritative bag instance",
+    "doubleClickFromBag": "proposed browser convenience only for accepting sell/repair/store slots; buy/take preserve original inventory use route"
+  },
+  "interaction": {
+    "waitMs": 8000,
+    "waitEvidence": "proposed existing Web timeout; reference LastestClickTime uses5000 but is not an authoritative transaction timeout",
+    "phaseMatching": "details/purchase/quote/sale/repair/store/take results release only their own phase and instance",
+    "cancel": "close/blur/hidden/pointercancel release UI waiting; successful late economic results remain owned by play/Gateway",
+    "quantity": "one authority request per confirmed item; no native quantity/stack command has been demonstrated",
+    "tooltip": "production inventory properties shared; same-version tooltip position/font and browser comparison pending"
+  }
+}

@@ -1,0 +1,172 @@
+{
+  "schemaVersion": 1,
+  "range": 8,
+  "source": "OpenMir2 MagicConst + PlayObject.ClientSpellXY; ClMain.UseMagic reference; actual costs/status/damage remain server authoritative",
+  "skills": {
+    "1": {
+      "name": "火球术",
+      "use": "hostile",
+      "point": true
+    },
+    "2": {
+      "name": "治愈术",
+      "use": "support",
+      "point": true
+    },
+    "3": {
+      "name": "基本剑术",
+      "use": "passive",
+      "point": false
+    },
+    "4": {
+      "name": "精神力战法",
+      "use": "passive",
+      "point": false
+    },
+    "5": {
+      "name": "大火球",
+      "use": "hostile",
+      "point": true
+    },
+    "6": {
+      "name": "施毒术",
+      "use": "hostile",
+      "point": true
+    },
+    "7": {
+      "name": "攻杀剑术",
+      "use": "passive",
+      "point": false
+    },
+    "8": {
+      "name": "抗拒火环",
+      "use": "self",
+      "point": false
+    },
+    "9": {
+      "name": "地狱火",
+      "use": "directional",
+      "point": true
+    },
+    "10": {
+      "name": "疾光电影",
+      "use": "directional",
+      "point": true
+    },
+    "11": {
+      "name": "雷电术",
+      "use": "hostile",
+      "point": true
+    },
+    "12": {
+      "name": "刺杀剑术",
+      "use": "toggle",
+      "point": false
+    },
+    "13": {
+      "name": "灵魂火符",
+      "use": "hostile",
+      "point": true
+    },
+    "14": {
+      "name": "幽灵盾",
+      "use": "support",
+      "point": true
+    },
+    "15": {
+      "name": "神圣战甲术",
+      "use": "support",
+      "point": true
+    },
+    "16": {
+      "name": "困魔咒",
+      "use": "ground",
+      "point": true
+    },
+    "17": {
+      "name": "召唤骷髅",
+      "use": "self",
+      "point": false
+    },
+    "18": {
+      "name": "隐身术",
+      "use": "self",
+      "point": false
+    },
+    "19": {
+      "name": "集体隐身术",
+      "use": "ground",
+      "point": true
+    },
+    "20": {
+      "name": "诱惑之光",
+      "use": "hostile",
+      "point": true
+    },
+    "21": {
+      "name": "瞬息移动",
+      "use": "self",
+      "point": false
+    },
+    "22": {
+      "name": "火墙",
+      "use": "ground",
+      "point": true
+    },
+    "23": {
+      "name": "爆裂火焰",
+      "use": "ground",
+      "point": true
+    },
+    "24": {
+      "name": "地狱雷光",
+      "use": "self",
+      "point": false
+    },
+    "25": {
+      "name": "半月弯刀",
+      "use": "toggle",
+      "point": false
+    },
+    "26": {
+      "name": "烈火剑法",
+      "use": "charge",
+      "point": false
+    },
+    "27": {
+      "name": "野蛮冲撞",
+      "use": "rush",
+      "point": false
+    },
+    "28": {
+      "name": "心灵启示",
+      "use": "support",
+      "point": true
+    },
+    "29": {
+      "name": "群体治疗术",
+      "use": "ground",
+      "point": true
+    },
+    "30": {
+      "name": "召唤神兽",
+      "use": "self",
+      "point": false
+    },
+    "31": {
+      "name": "魔法盾",
+      "use": "self",
+      "point": false
+    },
+    "32": {
+      "name": "圣言术",
+      "use": "hostile",
+      "point": true
+    },
+    "33": {
+      "name": "冰咆哮",
+      "use": "ground",
+      "point": true
+    }
+  }
+}

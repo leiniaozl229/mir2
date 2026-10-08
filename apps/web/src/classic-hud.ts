@@ -1,28 +1,49 @@
+import {NativeHudLabels} from './native-hud-labels';
 import type {CharacterAttributes} from './character-panel';
-import {arrangeSkillSlots,type MagicSkill} from './skills';
+import {arrangeSkillSlots,skillIconIndexOf,type MagicSkill} from './skills';
 import {applyNationalUiFrame,applyUiFrame,loadClassicUiSession,loadNationalUiLibrary,loadUiLibrary,uiFrame,uiUrl,nationalUiUrl,type Frame} from './classic-ui';
 import {applyNationalCharacterLayout,applyNationalHudLayout,applyNationalInventoryLayout,classicUiLayout,nationalHudOrbMetrics,nationalWindowButtonFrames,placeBox} from './classic-layout';
-import skillAssets from '../../../content/classic-176/skill-assets.json';
+import {skinServiceWindow} from './service-window';
+import {resolveIconFrame,iconHasPixels} from './icon-frames';
+import {bindNativeFrameButtonStates,type NativeButtonVisualState} from './native-frame-button';
 
 type ResourceState={hp:number;mp:number;maxHp:number;maxMp:number;experience:number;maxExperience:number};
 type UiButton={library:string;index:number;hover:number;pressed:number;x:number;y:number;window:string};
 type NationalLibrary=Awaited<ReturnType<typeof loadNationalUiLibrary>>;
 
+function skinNativeFrameButton(button:HTMLButtonElement,library:NationalLibrary,normalIndex:number,hoverIndex:number){
+ const normal=uiFrame(library,normalIndex),hover=uiFrame(library,hoverIndex);
+ const label=button.getAttribute('aria-label')||button.textContent?.trim()||'';
+ if(label){button.setAttribute('aria-label',label);button.title=label;}
+ button.textContent='';button.classList.add('native-frame-button');
+ const paint=(state:NativeButtonVisualState)=>{
+  applyNationalUiFrame(button,'prguse',state==='normal'?normal:hover);
+  button.dataset.uiState=state;
+ };
+ bindNativeFrameButtonStates(button,paint);
+}
+
 export class ClassicHud {
  private attributes:CharacterAttributes|undefined;
  private resources:ResourceState={hp:0,mp:0,maxHp:0,maxMp:0,experience:0,maxExperience:0};
  private skills:MagicSkill[]=[];
- private selected=-1;
+ private selectedMagicId:number|undefined;
  private map='0';
+ private mapTitle='';
+ private nativeLabels:NativeHudLabels|undefined;
  private x=0;
  private y=0;
  private statusMask=0;
  private hunger=0;
+ private dayBright:number|undefined=classicUiLayout().nationalHud.daylight.initialPhase;
+ private dayDarkLevel=0;
+ private nationalOrbMode:string|undefined;
  private libraries=new Map<string,Awaited<ReturnType<typeof loadUiLibrary>>>();
  private nationalLibraries=new Map<string,NationalLibrary>();
+ private pendingWindowSkins=new Map<HTMLElement,string>();
  private nationalReady=false;
  private readonly job:HTMLElement;
- private readonly name:HTMLElement;
+ private readonly levelText:HTMLElement;
  private readonly coords:HTMLElement;
  private readonly hpFill:HTMLElement;
  private readonly mpFill:HTMLElement;
@@ -35,10 +56,16 @@ export class ClassicHud {
  private readonly statusText:HTMLElement;
  private readonly classIcon:HTMLElement;
  private readonly mountTask:Promise<void>;
+ private iconLoadFailed=false;
+ private iconSerial=1;
+ private iconRenderSerial=0;
+ private failedIconUrls=new Set<string>();
+ private emptyIconUrls=new Set<string>();
+ private iconRetryTask:Promise<void>|undefined;
 
- constructor(root:HTMLElement,private readonly select:(index:number)=>boolean){
+ constructor(private readonly root:HTMLElement,private readonly select:(index:number)=>boolean){
   this.job=root.querySelector<HTMLElement>('[data-hud-job]')!;
-  this.name=root.querySelector<HTMLElement>('[data-hud-name]')!;
+  this.levelText=root.querySelector<HTMLElement>('[data-hud-level]')!;
   this.coords=root.querySelector<HTMLElement>('[data-hud-coords]')!;
   this.hpFill=root.querySelector<HTMLElement>('[data-hud-hp-fill]')!;
   this.mpFill=root.querySelector<HTMLElement>('[data-hud-mp-fill]')!;
@@ -54,15 +81,22 @@ export class ClassicHud {
 }
 
  async ready(){await this.mountTask;}
+ retryIcons(){
+  if(this.iconRetryTask)return this.iconRetryTask;
+  this.iconSerial++;this.iconLoadFailed=false;this.failedIconUrls.clear();
+  const task=loadNationalUiLibrary('magic-icons').then(icons=>{this.nationalLibraries.set('magic-icons',icons);}).catch(()=>{this.iconLoadFailed=true;}).finally(()=>{if(this.iconRetryTask===task){this.iconRetryTask=undefined;this.renderHotbar();}});
+  this.iconRetryTask=task;this.renderHotbar();return task;
+ }
 
  private async mount(root:HTMLElement){
   const session=await loadClassicUiSession();
   for(const [name,library] of session.fallback)this.libraries.set(name,library);
   for(const [name,library] of session.national)this.nationalLibraries.set(name,library);
+  this.iconLoadFailed=session.missingNational.includes('magic-icons');
   const nationalPrguse=session.national.get('prguse');
   if(nationalPrguse){this.nationalLibraries.set('prguse',nationalPrguse);this.nationalReady=true;}
   const prguse=this.libraries.get('Prguse');
-  if(prguse){
+  if(prguse&&!this.nationalReady){
    applyUiFrame(root.querySelector<HTMLElement>('[data-hud-main]')!, 'Prguse', uiFrame(prguse, 0));
    applyUiFrame(root.querySelector<HTMLElement>('[data-hud-chat]')!, 'Prguse', uiFrame(prguse, 2201));
    applyUiFrame(root.querySelector<HTMLElement>('[data-hud-chatbar]')!, 'Prguse', uiFrame(prguse, 2035));
@@ -73,27 +107,33 @@ export class ClassicHud {
    applyUiFrame(root.querySelector<HTMLElement>('[data-hud-exp-track]')!, 'Prguse', uiFrame(prguse, 7));
    applyUiFrame(root.querySelector<HTMLElement>('[data-hud-weight]')!, 'Prguse', uiFrame(prguse, 76));
   }
-  const buttons=classicUiLayout().buttons as Record<string,UiButton>;
-  for(const [id,spec] of Object.entries(buttons)){
-   const button=root.querySelector<HTMLButtonElement>(`[data-window-open="${spec.window}"]`);
-   if(!button)continue;
-   if(!prguse)continue;
-   const frame=uiFrame(prguse, spec.index);
-   button.style.left=`${spec.x}px`;button.style.top=`${spec.y}px`;
-   applyUiFrame(button, 'Prguse', frame);
-   button.textContent='';button.setAttribute('aria-label', id);
-   button.onmouseenter=()=>applyUiFrame(button, 'Prguse', uiFrame(prguse, spec.hover));
-   button.onmouseleave=()=>applyUiFrame(button, 'Prguse', uiFrame(prguse, spec.index));
-   button.onmousedown=()=>applyUiFrame(button, 'Prguse', uiFrame(prguse, spec.pressed));
-   button.onmouseup=()=>applyUiFrame(button, 'Prguse', uiFrame(prguse, spec.hover));
+  if(!this.nationalReady){
+   const buttons=classicUiLayout().buttons as Record<string,UiButton>;
+   for(const [id,spec] of Object.entries(buttons)){
+    const button=root.querySelector<HTMLButtonElement>(`[data-window-open="${spec.window}"]`);
+    if(!button)continue;
+    if(!prguse)continue;
+    button.style.left=`${spec.x}px`;button.style.top=`${spec.y}px`;
+    button.textContent='';button.setAttribute('aria-label', id);
+    const paint=(state:NativeButtonVisualState)=>applyUiFrame(button,'Prguse',uiFrame(prguse,state==='normal'?spec.index:state==='hover'?spec.hover:spec.pressed));
+    bindNativeFrameButtonStates(button,paint);
+   }
   }
   if(this.nationalReady){
    this.mountNationalHud(root);
+   this.nativeLabels=new NativeHudLabels(root,this.levelText,root.querySelector<HTMLElement>('[data-hud-location]'));
+   this.renderLocation();
    this.renderHotbar();
   }
   if(!prguse&&!this.nationalReady)throw new Error('缺少可用的经典 HUD 素材');
   this.applyCursor(document.body);
   this.render();
+  this.applyPendingWindowSkins();
+ }
+
+ private applyPendingWindowSkins(){
+  const pending=[...this.pendingWindowSkins];this.pendingWindowSkins.clear();
+  for(const [element,kind] of pending)this.skinWindow(element,kind);
  }
 
  private mountNationalHud(root:HTMLElement){
@@ -104,18 +144,20 @@ export class ClassicHud {
   root.classList.add('national-ui');document.body.classList.add('national-play');
   const main=root.querySelector<HTMLElement>('[data-hud-main]')!;
   applyNationalUiFrame(main,'prguse',uiFrame(prguse,hud.mainDialog.index));
-  void punchNationalHudChat(main,prguse);
+  const soundToggle=root.ownerDocument.querySelector<HTMLButtonElement>('#audio-toggle');
+  if(soundToggle&&hud.soundToggle){
+   applyNationalUiFrame(soundToggle,'prguse',uiFrame(prguse,hud.soundToggle.index));
+   placeBox(soundToggle,hud.soundToggle);soundToggle.style.position='absolute';soundToggle.style.right='auto';
+   soundToggle.style.zIndex='31';soundToggle.classList.add('native-sound-toggle');
+   soundToggle.setAttribute('aria-label',soundToggle.getAttribute('aria-pressed')==='true'?'关闭声音':'开启声音');
+   soundToggle.title='声音开关（F12）';
+  }
   const skillbar=root.querySelector<HTMLElement>('[data-hud-skillbar]');
   if(skillbar){skillbar.hidden=true;skillbar.setAttribute('aria-hidden','true');}
   for(const selector of ['[data-hud-minimap-frame]','[data-hud-chatbar]','[data-hud-weight]']){
    const element=root.querySelector<HTMLElement>(selector);if(element)element.style.backgroundImage='none';
   }
-  const expTrack=root.querySelector<HTMLElement>('[data-hud-exp-track]');
-  if(expTrack)applyNationalUiFrame(expTrack,'prguse',uiFrame(prguse,hud.experienceBar.index));
-  const orb=uiFrame(prguse,4);
-  const orbMetrics=nationalHudOrbMetrics();
-  this.hpFill.replaceChildren(orbImage(orb,hud.orbs.hp.imageOffsetX,true));
-  this.mpFill.replaceChildren(orbImage(orb,orbMetrics.mpImageOffsetX,true));
+  this.nationalOrbMode=undefined;
   applyNationalHudLayout(root);
   const windowButtons=Array.from(root.querySelectorAll<HTMLButtonElement>('.hud-window-buttons button'));
   hud.windowButtons.forEach((spec,index)=>{
@@ -123,23 +165,27 @@ export class ClassicHud {
    button.hidden=false;
    const frames=nationalWindowButtonFrames('control' in spec?spec.control:undefined);
    if('remapFrom' in spec&&spec.remapFrom){
-    clearSkin(button);button.onmouseenter=null;button.onmouseleave=null;button.onmousedown=null;button.onmouseup=null;
-    button.dataset.windowOpen=spec.window;button.setAttribute('aria-label','目标');button.title='附近目标';
-    placeBox(button,{x:spec.x,y:spec.y,width:spec.width,height:spec.height});
+    // No native art or executable evidence exists for this extra target button.
+    // Keep the target list reachable through the existing utility window.
+    clearSkin(button);button.hidden=true;
    }else if(frames){
     skinNationalHudButton(button,prguse,{...frames,x:spec.x,y:spec.y,width:spec.width,height:spec.height,backgroundX:'backgroundX' in spec?spec.backgroundX??0:0,backgroundY:'backgroundY' in spec?spec.backgroundY??0:0});
    }
-   if(spec.id==='attack'){
-    button.setAttribute('aria-label','声音');
-    button.addEventListener('click',event=>{
-     event.preventDefault();event.stopImmediatePropagation();
-     document.querySelector<HTMLButtonElement>('#audio-toggle')?.click();
-    },true);
-   }
   });
+  for(const spec of hud.toolbar){
+   const button=root.querySelector<HTMLButtonElement>(`[data-native-toolbar="${spec.id}"]`);
+   if(!button||button.dataset.nativeToolbar!==spec.id)continue;
+   placeBox(button,spec);
+   skinNativeFrameButton(button,prguse,spec.normal,spec.hover);
+  }
  }
 
  skinWindow(element:HTMLElement,kind:'character'|'inventory'|'npc'|string){
+  if(!this.nationalReady&&!this.libraries.size&&!this.nationalLibraries.size){this.pendingWindowSkins.set(element,kind);return;}
+  if(['shop','repair','storage'].includes(kind)){
+   element.dataset.serviceMode??=kind==='shop'?'buy':kind==='repair'?'repair':'store';
+   skinServiceWindow(element,this.nationalLibraries.get('prguse'));return;
+  }
   const prguse=this.libraries.get('Prguse'),title=this.libraries.get('Title'),prguse2=this.libraries.get('Prguse2');
   if(this.nationalReady&&this.skinNationalWindow(element,kind))return;
   if(!prguse||!title||!prguse2)return;
@@ -176,22 +222,20 @@ export class ClassicHud {
  }
 
  private skinNationalWindow(element:HTMLElement,kind:string){
+  if(skinServiceWindow(element,this.nationalLibraries.get('prguse')))return true;
   const prguse=this.nationalLibraries.get('prguse');
   const layout=classicUiLayout();
-  const specs:Record<string,{index:number;x:number;y:number;closeX:number;closeY:number;closeWidth:number;closeHeight:number;paintClose?:boolean}>={
+  const specs:Record<string,{index:number;x:number;y:number;closeX:number;closeY:number;closeWidth:number;closeHeight:number;padding?:string;paintClose?:boolean}>={
    npc:{index:402,x:192,y:126,closeX:385,closeY:-37,closeWidth:17,closeHeight:23},
-   shop:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
-   repair:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
-   storage:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
    quest:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
    attack:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
    targets:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
    ground:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
-   group:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
-   guild:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
+   group:{index:layout.nationalUtilityWindows.group.index,x:layout.nationalUtilityWindows.group.x,y:layout.nationalUtilityWindows.group.y,closeX:layout.nationalUtilityWindows.group.close.x,closeY:layout.nationalUtilityWindows.group.close.y,closeWidth:layout.nationalUtilityWindows.group.close.width,closeHeight:layout.nationalUtilityWindows.group.close.height,padding:layout.nationalUtilityWindows.group.padding},
+   guild:{index:layout.nationalUtilityWindows.guild.index,x:layout.nationalUtilityWindows.guild.x,y:layout.nationalUtilityWindows.guild.y,closeX:layout.nationalUtilityWindows.guild.close.x,closeY:layout.nationalUtilityWindows.guild.close.y,closeWidth:layout.nationalUtilityWindows.guild.close.width,closeHeight:layout.nationalUtilityWindows.guild.close.height,padding:layout.nationalUtilityWindows.guild.padding},
    system:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
    chat:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23},
-   trade:{index:402,x:192,y:126,closeX:399,closeY:1,closeWidth:17,closeHeight:23}
+   trade:{index:layout.nationalUtilityWindows.trade.index,x:layout.nationalUtilityWindows.trade.x,y:layout.nationalUtilityWindows.trade.y,closeX:layout.nationalUtilityWindows.trade.close.x,closeY:layout.nationalUtilityWindows.trade.close.y,closeWidth:layout.nationalUtilityWindows.trade.close.width,closeHeight:layout.nationalUtilityWindows.trade.close.height,padding:layout.nationalUtilityWindows.trade.padding}
   };
   const spec=kind==='character'||kind==='equipment'||kind==='skills'?{
    index:layout.nationalCharacterWindow.index,x:layout.nationalCharacterWindow.x,y:layout.nationalCharacterWindow.y,
@@ -204,51 +248,113 @@ export class ClassicHud {
    closeWidth:layout.nationalInventoryWindow.close.width,closeHeight:layout.nationalInventoryWindow.close.height
   }:specs[kind];
   if(!prguse||!spec)return false;
-  element.classList.add('national-window');element.classList.toggle('national-panel',['shop','repair','storage','quest','attack','targets','ground','group','guild','system','chat','trade'].includes(kind));if(element.dataset.windowMoved!=='true'){element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;if(element.id==='classic-window'){element.style.setProperty('--classic-window-left',`${spec.x}px`);element.style.setProperty('--classic-window-top',`${spec.y}px`);}}element.style.right='auto';element.style.bottom='auto';
-  applyNationalUiFrame(element,'prguse',uiFrame(prguse,spec.index));
+  const frame=uiFrame(prguse,spec.index);
+  element.classList.add('national-window');element.classList.toggle('national-panel',['shop','repair','storage','quest','attack','targets','ground','group','guild','system','chat','trade'].includes(kind));element.dataset.windowKind=kind;const minWindowTop=Math.min(0,spec.y);if(minWindowTop<0)element.dataset.windowMinTop=String(minWindowTop);else delete element.dataset.windowMinTop;if(element.dataset.windowMoved!=='true'){element.style.left=`${spec.x}px`;element.style.top=`${spec.y}px`;if(element.id==='classic-window'){element.style.setProperty('--classic-window-left',`${spec.x}px`);element.style.setProperty('--classic-window-top',`${spec.y}px`);}}element.style.right='auto';element.style.bottom='auto';if(spec.padding!==undefined)element.style.setProperty('--classic-window-padding',spec.padding);
+  applyNationalUiFrame(element,'prguse',frame);
+  if(kind==='group'){
+   const controls=layout.nationalUtilityWindows.group.buttons;
+   for(const [name,spec] of Object.entries(controls)){
+    const button=element.querySelector<HTMLButtonElement>(`#group-${name}`);if(!button)continue;
+    button.style.left=`${spec.x}px`;button.style.top=`${spec.y}px`;
+    skinNativeFrameButton(button,prguse,spec.index,spec.index);
+   }
+  }
+  if(kind==='trade'){
+   const remote=element.querySelector<HTMLElement>('[data-trade-remote-window]'),remoteSpec=layout.nationalUtilityWindows.trade.remote;
+   if(remote){applyNationalUiFrame(remote,'prguse',uiFrame(prguse,remoteSpec.index));remote.style.position='absolute';remote.style.left=`${remoteSpec.left}px`;remote.style.top=`${remoteSpec.top}px`;remote.style.right='auto';remote.style.bottom='auto';}
+   const confirm=uiFrame(prguse,layout.nationalUtilityWindows.trade.confirm.index);
+   element.querySelectorAll<HTMLButtonElement>('[data-trade-confirm]').forEach(button=>{applyNationalUiFrame(button,'prguse',confirm);button.style.backgroundRepeat='no-repeat';});
+  }
+  if(kind==='guild'){
+   const buttons=layout.nationalUtilityWindows.guild.buttons;
+   const controls=[
+    ['#guild-open',buttons.open],['#guild-members-request',buttons.members],['#guild-chat-toggle',buttons.chat],['#guild-add',buttons.add],
+    ['#guild-ally',buttons.ally],['#guild-break-ally',buttons.breakAlly],['#guild-remove',buttons.remove],
+    ['#guild-ranks-save',buttons.ranks],['#guild-notice-save',buttons.notice],['#guild-war-request',buttons.war]
+   ] as const;
+   for(const [selector,frames] of controls){const button=element.querySelector<HTMLButtonElement>(selector);if(!button)continue;skinNativeFrameButton(button,prguse,frames.normal,frames.hover);const geometry=frames.geometry;if(geometry){button.style.left=`${geometry.x}px`;button.style.top=`${geometry.y}px`;button.style.width=`${geometry.width}px`;button.style.height=`${geometry.height}px`;}}
+   const scrollButtons=layout.nationalUtilityWindows.guild.scrollButtons;
+   for(const [id,geometry] of [['guild-scroll-up',scrollButtons.up],['guild-scroll-down',scrollButtons.down]] as const){const button=element.querySelector<HTMLButtonElement>(`#${id}`);if(!button)continue;button.style.left=`${geometry.x}px`;button.style.top=`${geometry.y}px`;button.style.width=`${geometry.width}px`;button.style.height=`${geometry.height}px`;}
+  }
+  if(element.id==='classic-window'){
+   element.style.setProperty('--classic-window-width',`${frame.width}px`);element.style.setProperty('--classic-window-height',`${frame.height}px`);
+   element.style.setProperty('--classic-window-background',`url('${nationalUiUrl('prguse',frame)}')`);
+   element.style.setProperty('--classic-window-padding',spec.padding??'38px 14px 12px');
+   element.style.setProperty('--classic-window-close-left',`${spec.closeX}px`);element.style.setProperty('--classic-window-close-top',`${spec.closeY}px`);
+   element.style.setProperty('--classic-window-close-width',`${spec.closeWidth}px`);element.style.setProperty('--classic-window-close-height',`${spec.closeHeight}px`);
+  }
   if(kind==='character'||kind==='equipment'||kind==='skills'){
    const paper=element.querySelector<HTMLElement>('[data-character-page="paperdoll"]');
    if(paper)applyNationalUiFrame(paper,'prguse',uiFrame(prguse,layout.nationalCharacterPage.index));
    const status=element.querySelector<HTMLElement>('[data-character-page="status"]');
-   if(status)applyNationalUiFrame(status,'prguse',uiFrame(prguse,layout.nationalCharacterWindow.statusPage.index));
+   if(status)clearSkin(status);
+    for(const pageName of ['state','skills'] as const){
+     const page=element.querySelector<HTMLElement>(`[data-character-page="${pageName}"]`);
+     const pageSpec=pageName==='state'?layout.nationalCharacterWindow.statePage:layout.nationalCharacterWindow.skillsPage;
+     if(page)applyNationalUiFrame(page,'prguse',uiFrame(prguse,pageSpec.index));
+    }
+   const controls=layout.nationalCharacterWindow.pageButtons;
+   for(const [direction,control] of Object.entries(controls)){
+    const button=element.querySelector<HTMLButtonElement>(`[data-character-cycle="${direction}"]`);
+    if(button){clearSkin(button);placeBox(button,control);button.textContent='';}
+   }
    applyNationalCharacterLayout(element);
   }
-  if(kind==='inventory')applyNationalInventoryLayout(element);
+  if(kind==='inventory'){
+   const goldIcon=element.querySelector<HTMLElement>('[data-inventory-gold-icon]');
+   if(goldIcon)applyNationalUiFrame(goldIcon,'prguse',uiFrame(prguse,layout.nationalInventoryGrid.goldIcon.index));
+   applyNationalInventoryLayout(element);
+  }
   const close=element.querySelector<HTMLButtonElement>('#classic-window-close, [data-window-close], #close-dialogue, .classic-window-close');
   if(close)skinNationalClose(close,prguse,spec);
   return true;
  }
 
  applyCursor(root:HTMLElement){
-  root.style.setProperty('--cursor-default', "url('/ui/Cursors/Cursor_Default.CUR') 0 0, auto");
-  root.style.setProperty('--cursor-attack', "url('/ui/Cursors/Cursor_Normal_Atk.CUR') 0 0, crosshair");
-  root.style.setProperty('--cursor-attack-red', "url('/ui/Cursors/Cursor_Compulsion_Atk.CUR') 0 0, crosshair");
-  root.style.setProperty('--cursor-npc', "url('/ui/Cursors/Cursor_Npc.CUR') 0 0, pointer");
-  root.style.setProperty('--cursor-text', "url('/ui/Cursors/Cursor_TextPrompt.CUR') 1 11, text");
-  root.style.setProperty('--cursor-trash', "url('/ui/Cursors/Cursor_Trash.CUR') 0 0, pointer");
+  const national=root.classList.contains('national-play');
+  // The 2003 skin has no verified national cursor atlas. Its reference client
+  // compiles with USECURSOR=DEFAULTCURSOR; keep Crystal .CUR art on fallback only.
+  root.style.setProperty('--cursor-default', national?'auto':"url('/ui/Cursors/Cursor_Default.CUR'), auto");
+  root.style.setProperty('--cursor-attack', national?'crosshair':"url('/ui/Cursors/Cursor_Normal_Atk.CUR'), crosshair");
+  root.style.setProperty('--cursor-attack-red', national?'crosshair':"url('/ui/Cursors/Cursor_Compulsion_Atk.CUR'), crosshair");
+  root.style.setProperty('--cursor-npc', national?'pointer':"url('/ui/Cursors/Cursor_Npc.CUR'), pointer");
+  root.style.setProperty('--cursor-text', national?'text':"url('/ui/Cursors/Cursor_TextPrompt.CUR'), text");
+  root.style.setProperty('--cursor-trash', national?'no-drop':"url('/ui/Cursors/Cursor_Trash.CUR'), pointer");
   root.classList.add('classic-cursors');
  }
 
- clear(){this.attributes=undefined;this.skills=[];this.selected=-1;this.statusMask=0;this.hunger=0;this.resources={hp:0,mp:0,maxHp:0,maxMp:0,experience:0,maxExperience:0};this.render();}
+ clear(){this.mapTitle='';this.x=0;this.y=0;this.renderLocation();this.attributes=undefined;this.skills=[];this.selectedMagicId=undefined;this.statusMask=0;this.hunger=0;this.dayBright=classicUiLayout().nationalHud.daylight.initialPhase;this.dayDarkLevel=0;this.resources={hp:0,mp:0,maxHp:0,maxMp:0,experience:0,maxExperience:0};this.render();}
  replaceAttributes(attributes:CharacterAttributes){this.attributes=attributes;this.resources={...this.resources,hp:attributes.hp,mp:attributes.mp,maxHp:attributes.maxHp,maxMp:attributes.maxMp,experience:attributes.experience,maxExperience:attributes.maxExperience};this.render();}
  currency(values:{gold?:number;gameGold?:number}){if(!this.attributes)return;this.attributes={...this.attributes,...values};this.gold.textContent=String(this.attributes.gold);}
+ weights(values:{weight:number;wearWeight:number;handWeight:number}){if(!this.attributes)return;this.attributes={...this.attributes,...values};this.renderBars();}
+ daylight(phase:number,darkLevel:number){this.dayBright=Number.isInteger(phase)?phase:undefined;this.dayDarkLevel=darkLevel;this.renderStatus();}
  resource(values:Partial<ResourceState>){this.resources={...this.resources,...values};this.renderBars();}
  experience(total:number){this.resources.experience=total;this.renderBars();}
  level(level:number,total:number){if(this.attributes)this.attributes={...this.attributes,level,experience:total};this.resources.experience=total;this.render();}
- replaceSkills(skills:MagicSkill[]){this.skills=[...skills];this.selected=-1;this.renderHotbar();}
+ replaceSkills(skills:MagicSkill[]){this.skills=[...skills];this.selectedMagicId=undefined;this.renderHotbar();}
  addSkill(skill:MagicSkill){this.skills=[...this.skills.filter(value=>value.magicId!==skill.magicId),skill];this.renderHotbar();}
- removeSkill(magicId:number){this.skills=this.skills.filter(skill=>skill.magicId!==magicId);if(this.selected>=this.skills.length)this.selected=-1;this.renderHotbar();}
+ removeSkill(magicId:number){this.skills=this.skills.filter(skill=>skill.magicId!==magicId);if(this.selectedMagicId===magicId)this.selectedMagicId=undefined;this.renderHotbar();}
  progress(magicId:number,level:number,currentTrain:number){this.skills=this.skills.map(skill=>skill.magicId===magicId?{...skill,level,currentTrain}:skill);this.renderHotbar();}
- position(map:string,x:number,y:number){this.map=map;this.x=x;this.y=y;this.coords.textContent=`${x}:${y}`;}
+ beginMap(map:string){this.mapTitle='';this.position(map,0,0);}
+ mapDescription(title:string){this.mapTitle=title;this.renderLocation();}
+ position(map:string,x:number,y:number){if(map!==this.map)this.mapTitle='';this.map=map;this.x=x;this.y=y;this.coords.textContent=`${x}:${y}`;this.renderLocation();}
+ private renderLocation(){
+  const value=this.mapTitle?`${this.mapTitle} ${this.x}:${this.y}`:` ${this.x}:${this.y}`;
+  if(this.nativeLabels)this.nativeLabels.setLocation(value);
+  else{const location=this.root.querySelector<HTMLElement>('[data-hud-location]');if(location)location.textContent=value;}
+ }
  status(mask:number){this.statusMask=mask>>>0;this.renderStatus();}
- hungerStatus(value:number){this.hunger=Math.max(0,Math.min(4,value));this.renderStatus();}
- selectSlot(index:number){const slots=arrangeSkillSlots(this.skills);if(index<0||index>=slots.length||!slots[index])return;this.selected=index;this.renderHotbar();}
+ hungerStatus(value:number){this.hunger=Number.isInteger(value)&&value>=1&&value<=4?value:0;this.renderStatus();}
+ selectSkill(magicId:number|undefined){this.selectedMagicId=magicId;this.renderHotbar();}
 
  private render(){
   const jobNames=['战士','法师','道士'];
+  this.job.hidden=this.nationalReady;
   this.job.textContent=this.attributes?jobNames[this.attributes.job]??`职业 ${this.attributes.job}`:'';
-  this.name.textContent=this.attributes?`${this.attributes.level}`:'';
+  const level=this.attributes?`${this.attributes.level}`:'';
+  if(this.nativeLabels)this.nativeLabels.setLevel(level);else this.levelText.textContent=level;
   this.gold.textContent=this.attributes?String(this.attributes.gold):'0';
+  this.gold.hidden=this.nationalReady;
   this.coords.textContent=`${this.x}:${this.y}`;
   const prguse=this.libraries.get('Prguse');
   if(prguse&&this.attributes&&!this.nationalReady){
@@ -264,14 +370,55 @@ export class ClassicHud {
   const {hp,mp,maxHp,maxMp,experience,maxExperience}=this.resources;
   this.hpText.textContent=`${Math.max(0,hp)}/${Math.max(0,maxHp)}`;
   this.mpText.textContent=`${Math.max(0,mp)}/${Math.max(0,maxMp)}`;
-  const orbHeight=this.nationalReady?nationalHudOrbMetrics().orbHeight:80,barWidth=this.nationalReady?nationalHudOrbMetrics().barWidth:784,weightWidth=this.nationalReady?nationalHudOrbMetrics().weightWidth:76;
+  this.hpText.hidden=this.nationalReady;this.mpText.hidden=this.nationalReady;this.expText.hidden=this.nationalReady;
+  if(this.nationalReady){this.renderNationalBars();return;}
+  const orbHeight=80,barWidth=784,weightWidth=76;
   this.hpFill.style.height=`${ratio(hp,maxHp)*orbHeight}px`;
   this.mpFill.style.height=`${ratio(mp,maxMp)*orbHeight}px`;
   this.expFill.style.width=`${ratio(experience,maxExperience)*barWidth}px`;
   this.expText.textContent=`${Math.max(0,experience)}/${Math.max(0,maxExperience)}`;
   const weight=this.attributes?ratio(this.attributes.weight,this.attributes.maxWeight):0;
-  const weightFill=document.querySelector<HTMLElement>('[data-hud-weight-fill]');
+  const weightFill=this.root.querySelector<HTMLElement>('[data-hud-weight-fill]');
   if(weightFill)weightFill.style.width=`${weight*weightWidth}px`;
+ }
+ private renderNationalBars(){
+  const hud=classicUiLayout().nationalHud,prguse=this.nationalLibraries.get('prguse');
+  if(!prguse)return;
+  const warrior=this.attributes?.job===hud.orbs.warrior.job&&this.attributes.level<hud.orbs.warrior.levelBelow;
+  const mode=warrior?'warrior':'split',spec=warrior?hud.orbs.warrior:hud.orbs.hp;
+  const hpWell=this.root.querySelector<HTMLElement>('.hud-orb-well.hp'),mpWell=this.root.querySelector<HTMLElement>('.hud-orb-well.mp');
+  const empty=this.root.querySelector<HTMLElement>('.hud-orb-well.hp [data-hud-orb-image]');
+  const enabled=Boolean(this.attributes)&&this.resources.maxHp>0&&this.resources.maxMp>0;
+  if(hpWell){placeBox(hpWell,spec);hpWell.hidden=!enabled;hpWell.title=`HP ${this.resources.hp}/${this.resources.maxHp}`;}
+  if(mpWell){placeBox(mpWell,hud.orbs.mp);mpWell.hidden=!enabled||warrior;mpWell.title=`MP ${this.resources.mp}/${this.resources.maxMp}`;}
+  if(empty)empty.hidden=!warrior;
+  const frame=uiFrame(prguse,warrior?hud.orbs.warrior.fillIndex:hud.orbs.splitIndex);
+  if(this.nationalOrbMode!==mode){
+   this.nationalOrbMode=mode;
+   this.hpFill.replaceChildren(orbImage(frame,0,true));
+   this.mpFill.replaceChildren(orbImage(uiFrame(prguse,hud.orbs.splitIndex),hud.orbs.mp.imageOffsetX,true));
+   if(warrior&&empty)applyNationalUiFrame(empty,'prguse',uiFrame(prguse,hud.orbs.warrior.emptyIndex));
+  }
+  this.hpFill.style.width=`${spec.width}px`;this.mpFill.style.width=`${hud.orbs.mp.width}px`;
+  for(const [fill,width,height] of [[this.hpFill,frame.width,frame.height],[this.mpFill,hud.orbs.fillImageWidth,hud.orbs.fillImageHeight]] as const){
+   const image=fill.querySelector<HTMLImageElement>('img');
+   if(image){image.style.width=`${width}px`;image.style.height=`${height}px`;}
+  }
+  this.hpFill.style.height=`${enabled?classicOrbHeight(spec.height,this.resources.hp,this.resources.maxHp):0}px`;
+  this.mpFill.style.height=`${enabled&&!warrior?classicOrbHeight(hud.orbs.mp.height,this.resources.mp,this.resources.maxMp):0}px`;
+  const barsEnabled=Boolean(this.attributes)&&this.resources.maxExperience>0&&(this.attributes?.maxWeight??0)>0;
+  const weightFill=this.root.querySelector<HTMLElement>('[data-hud-weight-fill]');
+  for(const [track,fill,box,value,max] of [
+   [this.root.querySelector<HTMLElement>('[data-hud-exp-track]'),this.expFill,hud.experienceBar,this.resources.experience,this.resources.maxExperience],
+   [this.root.querySelector<HTMLElement>('[data-hud-weight]'),weightFill,hud.weightBar,this.attributes?.weight??0,this.attributes?.maxWeight??0]
+  ] as const){
+   if(track){track.style.backgroundImage='none';placeBox(track,box);track.title=`${Math.max(0,value)}/${Math.max(0,max)}`;}
+   if(fill){
+    const bar=uiFrame(prguse,box.index);fill.style.backgroundImage=`url(${nationalUiUrl('prguse',bar)})`;
+    fill.style.backgroundColor='transparent';fill.style.backgroundRepeat='no-repeat';fill.style.backgroundSize=`${bar.width}px ${bar.height}px`;
+    fill.style.width=`${barsEnabled?classicBarWidth(box.width,value,max):0}px`;
+   }
+  }
  }
  private renderStatus(){
   const labels:[[number,string],...Array<[number,string]>]=[
@@ -280,55 +427,61 @@ export class ClassicHud {
    [0x00400000,'神圣战甲'],[0x00200000,'幽灵盾'],[0x00100000,'魔法盾'],[0x00000001,'石化'],[0x00000002,'开天眼']
   ];
   const active=labels.filter(([bit])=>(this.statusMask&bit)!==0).map(([,label])=>label);
-  const hunger=['','微饿','饥饿','很饿','饥荒'][this.hunger]??'';
+  const hunger=['','饱食等级 1','饱食等级 2','饱食等级 3','饱食等级 4'][this.hunger]??'';
   this.statusText.textContent=[...active,hunger].filter(Boolean).join(' ');
-  this.statusText.classList.toggle('hud-status-alert',active.length>0||this.hunger>=3);
+  this.statusText.hidden=this.nationalReady;
+  this.statusText.classList.toggle('hud-status-alert',active.length>0);
+  this.renderNationalIndicators();
+ }
+ private renderNationalIndicators(){
+  const hud=classicUiLayout().nationalHud,prguse=this.nationalLibraries.get('prguse');
+  const hunger=this.root.querySelector<HTMLElement>('[data-hud-hunger]'),daylight=this.root.querySelector<HTMLElement>('[data-hud-daylight]');
+  const phase=hud.daylight.phases.find(value=>value.phase===this.dayBright);
+  for(const [element,spec,index,label,visible] of [
+   [hunger,hud.hunger,hud.hunger.firstIndex+this.hunger-1,`饱食等级 ${this.hunger}`,Boolean(this.attributes)&&hud.hunger.states.includes(this.hunger)],
+   [daylight,hud.daylight,phase?.index??0,phase?.label??'',Boolean(phase)]
+  ] as const){
+   if(!element)continue;
+   element.hidden=!this.nationalReady||!prguse||!visible;
+   if(element.hidden){element.style.backgroundImage='none';element.title='';element.removeAttribute('aria-label');continue;}
+   applyNationalUiFrame(element,'prguse',uiFrame(prguse!,index));placeBox(element,spec);
+   element.setAttribute('role','img');element.setAttribute('aria-label',label);element.title=label;
+  }
+  if(daylight)daylight.dataset.darkLevel=String(this.dayDarkLevel);
  }
  private renderHotbar(){
+  const renderGeneration=++this.iconRenderSerial;
   this.hotbar.replaceChildren();
-  const icons=this.libraries.get('MagIcon'),nationalIcons=this.nationalLibraries.get('magic-icons');
+  const nationalIcons=this.nationalLibraries.get('magic-icons');
   const skills=arrangeSkillSlots(this.skills);
   for(let index=0;index<8;index++){
    const skill=skills[index],button=document.createElement('button');
    button.type='button';button.className='hud-slot';button.style.left=`${15+index*25}px`;button.style.top='3px';
    if(this.nationalReady){button.style.left=`${index*31}px`;button.style.top='1px';button.style.width='26px';button.style.height='26px';}
    button.title=skill?`${skill.name} · ${skill.level}级`:`F${index+1}`;
-   if(index===this.selected)button.classList.add('selected');
-   if(skill&&(nationalIcons||icons)){
-    const iconIndex=(skillAssets.iconIndexByName as Record<string,number>)[skill.name]??skill.magicId;
-    const nationalFrame=nationalIcons?.frames[String(iconIndex)]??nationalIcons?.frames[String(Math.max(0,iconIndex-1))];
-    const frame=nationalFrame??icons?.frames[String(iconIndex)]??icons?.frames[String(Math.max(0,iconIndex-1))]??icons?.frames['1'];
-    if(frame){const image=new Image();image.src=nationalFrame?`/ui-national/magic-icons/${nationalFrame.file}`:uiUrl('MagIcon', frame);image.alt=skill.name;button.append(image);}
-    else button.textContent=skill.name.slice(0,1);
+   if(skill&&skill.magicId===this.selectedMagicId)button.classList.add('selected');
+   if(skill){
+    const iconIndex=skillIconIndexOf(skill);
+    const resolved=resolveIconFrame(iconIndex,[{namespace:'/ui-national/magic-icons',library:nationalIcons}]);
+    if(resolved.status==='ready'&&resolved.frame&&resolved.url&&!this.failedIconUrls.has(resolved.url)&&!this.emptyIconUrls.has(resolved.url)){
+     const image=new Image(),url=resolved.url,generation=this.iconSerial;image.alt=skill.name;image.dataset.iconDomain=resolved.domain;
+     const current=()=>generation===this.iconSerial&&renderGeneration===this.iconRenderSerial;
+     const failed=()=>{if(!current())return;this.failedIconUrls.add(url);this.renderHotbar();};
+     image.onerror=failed;image.onload=()=>{if(!current())return;if(image.naturalWidth!==resolved.frame!.width||image.naturalHeight!==resolved.frame!.height){failed();return;}if(iconHasPixels(image,image.naturalWidth,image.naturalHeight)===false){this.emptyIconUrls.add(url);this.failedIconUrls.delete(url);this.renderHotbar();}};
+     image.src=url+(this.iconSerial>1?`?retry=${this.iconSerial}`:'');button.append(image);
+    }else{const missing=document.createElement('span');missing.className='hud-icon-missing';missing.textContent='?';missing.setAttribute('aria-label','图标暂缺');button.title+=' · 图标暂缺';button.append(missing);}
    }
    const key=document.createElement('kbd');key.textContent=`F${index+1}`;button.append(key);
-   button.onclick=()=>{if(this.select(index))this.selectSlot(index);};
-   button.oncontextmenu=event=>{event.preventDefault();if(this.select(index))this.selectSlot(index);};
+   button.onclick=()=>{this.select(index);};
+   button.oncontextmenu=event=>{event.preventDefault();this.select(index);};
    this.hotbar.append(button);
   }
+  if(this.iconLoadFailed||this.failedIconUrls.size){const retry=document.createElement('button');retry.type='button';retry.className='hud-icon-retry';retry.textContent='图标加载失败，重试';retry.style.position='absolute';retry.style.top='30px';retry.style.left='0';retry.disabled=Boolean(this.iconRetryTask);retry.onclick=()=>{void this.retryIcons();};this.hotbar.append(retry);}
  }
 }
 
 function orbImage(frame:Frame,offsetX:number,national=false){
  const image=new Image();image.src=national?nationalUiUrl('prguse', frame):uiUrl('Prguse', frame);image.alt='';image.style.left=`${offsetX}px`;return image;
-}
-async function punchNationalHudChat(main:HTMLElement,prguse:NationalLibrary){
- const frame=uiFrame(prguse,1),image=new Image();
- image.src=nationalUiUrl('prguse', frame);
- await image.decode().catch(()=>undefined);
- if(!image.naturalWidth)return;
- const canvas=document.createElement('canvas');canvas.width=frame.width;canvas.height=frame.height;
- const context=canvas.getContext('2d');if(!context)return;
- context.drawImage(image,0,0);
- const pixels=context.getImageData(0,0,canvas.width,canvas.height),data=pixels.data;
- const punch=classicUiLayout().nationalHud.chatPunch;
- const left=punch.left,right=Math.min(canvas.width-1,punch.right),top=punch.top,bottom=Math.min(canvas.height-1,punch.bottom);
- for(let y=top;y<=bottom;y++)for(let x=left;x<=right;x++){
-  const i=(y*canvas.width+x)*4;
-  if(data[i]>248&&data[i+1]>248&&data[i+2]>248&&data[i+3]>200){data[i]=26;data[i+1]=22;data[i+2]=18;data[i+3]=255;}
- }
- context.putImageData(pixels,0,0);
- main.style.backgroundImage=`url(${canvas.toDataURL('image/png')})`;
 }
 function clearSkin(element:HTMLElement){element.style.backgroundImage='none';element.style.backgroundColor='transparent';}
 function skinNationalClose(button:HTMLButtonElement,library:NationalLibrary,spec:{closeX:number;closeY:number;closeWidth:number;closeHeight:number;paintClose?:boolean}){
@@ -344,10 +497,26 @@ function skinNationalHudButton(button:HTMLButtonElement,library:NationalLibrary,
   button.style.backgroundRepeat='no-repeat';button.style.backgroundColor='transparent';button.style.filter=filter;
  };
  const hoverFilter=spec.hover===spec.index?'':'brightness(1.14)',pressedFilter=spec.pressed===spec.index?'':'brightness(.86)';
- paint(spec.index,'');
- button.onmouseenter=()=>paint(spec.hover,hoverFilter);
- button.onmouseleave=()=>paint(spec.index,'');
- button.onmousedown=()=>paint(spec.pressed,pressedFilter);
- button.onmouseup=()=>paint(spec.hover,hoverFilter);
+ const paintState=(state:NativeButtonVisualState)=>{
+  const index=state==='normal'?spec.index:state==='hover'?spec.hover:spec.pressed;
+  paint(index,state==='normal'?'':state==='hover'?hoverFilter:pressedFilter);
+  button.dataset.uiState=state;
+ };
+ bindNativeFrameButtonStates(button,paintState);
 }
 function ratio(value:number,max:number){return max>0?Math.max(0,Math.min(1,value/max)):0;}
+
+// Delphi Round uses the nearest even integer on half-pixel ties.
+function classicRound(value:number){
+ const floor=Math.floor(value),fraction=value-floor;
+ return fraction===.5?(floor%2===0?floor:floor+1):Math.round(value);
+}
+function classicOrbHeight(height:number,value:number,max:number){
+ if(!(max>0)||!Number.isFinite(value))return 0;
+ const current=Math.max(0,Math.min(max,value));
+ return height-classicRound(height/max*(max-current));
+}
+function classicBarWidth(width:number,value:number,max:number){
+ if(!(max>0)||!Number.isFinite(value)||value<=0)return 0;
+ return Math.max(0,Math.min(width,classicRound(width/(max/value))));
+}

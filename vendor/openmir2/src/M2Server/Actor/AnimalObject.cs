@@ -124,10 +124,28 @@ namespace M2Server.Actor
             }
         }
 
+        // Specialized bosses (tree, spider nest, etc.) also derive directly from
+        // AnimalObject and must receive the same player discovery notifications.
+        private void UpdateMonsterVisible(int actorId)
+        {
+            IActor actor = SystemShare.ActorMgr.Get(actorId);
+            if (actor == null || actor.Death || actor.Ghost || actor.Invisible || actor.ObMode ||
+                actor.FixedHideMode || actor.Envir != Envir ||
+                Math.Abs(actor.CurrX - CurrX) > ViewRange || Math.Abs(actor.CurrY - CurrY) > ViewRange)
+            {
+                return;
+            }
+            // A new actor must not wait for (or reset) the full-scan timer.
+            UpdateVisibleGay(actor);
+        }
+
         protected override bool Operate(ProcessMessage processMsg)
         {
             switch (processMsg.wIdent)
             {
+                case Messages.RM_UPDATEVIEWRANGE:
+                    UpdateMonsterVisible(processMsg.wParam);
+                    return true;
                 case Messages.RM_STRUCK:
                     {
                         IActor struckObject = SystemShare.ActorMgr.Get(processMsg.nParam3);
@@ -395,6 +413,17 @@ namespace M2Server.Actor
             SendRefMsg(Messages.RM_HIT, Dir, CurrX, CurrY, 0, "");
         }
 
+        protected const int ChaseRange = 15;
+
+        // Acquisition and pursuit use square tile ranges, like map visibility.
+        protected bool IsCombatTarget(IActor target, int range)
+        {
+            return target != null && !target.Death && !target.Ghost && !target.Invisible &&
+                !target.ObMode && !target.FixedHideMode && target.Envir == Envir &&
+                Math.Abs(target.CurrX - CurrX) <= range && Math.Abs(target.CurrY - CurrY) <= range &&
+                (!target.HideMode || CoolEye) && IsProperTarget(target);
+        }
+
         /// <summary>
         /// 搜索目标
         /// </summary>
@@ -402,24 +431,21 @@ namespace M2Server.Actor
         {
             IActor searchTarget = null;
             int n10 = 999;
-            for (int i = 0; i < VisibleActors.Count; i++)
+            for (int i = VisibleActors.Count - 1; i >= 0; i--)
             {
                 IActor baseObject = VisibleActors[i].BaseObject;
-                if (baseObject.Death || baseObject.Ghost || (baseObject.Envir != Envir) || (Math.Abs(baseObject.CurrX - CurrX) > 15) || (Math.Abs(baseObject.CurrY - CurrY) > 15))
+                if (!IsCombatTarget(baseObject, ChaseRange))
                 {
                     ClearTargetCreat(baseObject);
                     continue;
                 }
-                if (!baseObject.Death)
+                if (Math.Abs(baseObject.CurrX - CurrX) <= ViewRange && Math.Abs(baseObject.CurrY - CurrY) <= ViewRange)
                 {
-                    if (IsProperTarget(baseObject) && (!baseObject.HideMode || CoolEye))
+                    int distance = Math.Abs(CurrX - baseObject.CurrX) + Math.Abs(CurrY - baseObject.CurrY);
+                    if (distance < n10)
                     {
-                        int nC = Math.Abs(CurrX - baseObject.CurrX) + Math.Abs(CurrY - baseObject.CurrY);
-                        if (nC < n10)
-                        {
-                            n10 = nC;
-                            searchTarget = baseObject;
-                        }
+                        n10 = distance;
+                        searchTarget = baseObject;
                     }
                 }
             }

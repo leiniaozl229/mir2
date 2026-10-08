@@ -3,8 +3,10 @@
 // optional castle mode also submits the first castle request and checks token
 // consumption; the wrapper prepares disposable characters and removes all state.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { NpcProbeSession, readNativeNpcClickInterval } from './npc_probe_session.mjs';
 
 const root = new URL('..', import.meta.url);
+const npcClickInterval = await readNativeNpcClickInterval(root);
 const gatewayUrl = process.env.MIR2_GATEWAY_URL ?? 'ws://127.0.0.1:18800/ws';
 const redCredentials = JSON.parse(await readFile(new URL(
   process.env.MIR2_GUILD_RED_CREDENTIALS ?? '.runtime/pvp-attacker.json', root), 'utf8'));
@@ -37,8 +39,10 @@ class Client {
     this.map = undefined;
     this.position = undefined;
     this.entities = new Map();
+    this.npcSession = new NpcProbeSession(npcClickInterval);
     this.socket.addEventListener('message', event => {
       const envelope = JSON.parse(event.data);
+      this.npcSession.observe(envelope);
       if (!Number.isInteger(envelope.sequence) || envelope.sequence <= this.sequence)
         throw new Error(`${this.label}: gateway sequence regressed at ${envelope.sequence}`);
       this.sequence = envelope.sequence;
@@ -146,8 +150,9 @@ async function openKing(client) {
   if (!king) throw new Error(`${client.label}: king NPC was not visible`);
   if (!client.position || Math.max(Math.abs(king.x - client.position[0]), Math.abs(king.y - client.position[1])) > 1)
     throw new Error(`${client.label}: king NPC is out of reach at ${king.x},${king.y}`);
-  client.send({ type: 'npc', targetId: king.id });
-  const dialogue = await client.waitFor(message => message.type === 'npcDialogue' && message.npcId === king.id, 'king dialogue');
+  const stamp = await client.npcSession.begin(king.id);
+  client.send({ type: 'npc', targetId: king.id, ...stamp });
+  const dialogue = await client.waitFor(message => message.type === 'npcDialogue' && client.npcSession.matches(message), 'king dialogue');
   report.path.push({ label: `${client.label} king dialogue`, npcId: king.id, options: dialogue.options });
   client.lastKingDialogue = dialogue;
   return king;
@@ -156,7 +161,7 @@ async function openKing(client) {
 async function createGuild(client, guildName) {
   const king = await openKing(client);
   const start = client.events.length;
-  client.send({ type: 'guildCreate', npcId: king.id, guildName });
+  client.send({ type: 'guildCreate', ...client.npcSession.fields(king.id), guildName });
   const result = await client.waitForEventSince(start,
     message => message.type === 'guildResult' && message.action === 'create', 'guild creation result');
   if (!result.accepted) throw new Error(`${client.label}: guild creation rejected (${result.reason})`);
@@ -192,14 +197,14 @@ async function submitCastleApplication(client, king, expectedMakeIndex) {
   const entryOption = client.lastKingDialogue.options.find(option => option.command === '@requestcastlewarA');
   if (!entryOption) throw new Error(`${client.label}: king dialogue did not expose castle-war entry`);
   const entryStart = client.events.length;
-  client.send({ type: 'dialogueSelect', npcId: freshKing.id, command: entryOption.command });
+  client.send({ type: 'dialogueSelect', ...client.npcSession.fields(freshKing.id), command: entryOption.command });
   const entry = await client.waitForEventSince(entryStart,
     message => message.type === 'npcDialogue' && message.npcId === king.id
       && message.options.some(option => option.command === '@requestcastlewar'),
     'castle application entry dialogue');
 
   const listStart = client.events.length;
-  client.send({ type: 'dialogueSelect', npcId: freshKing.id, command: '@requestcastlewar' });
+  client.send({ type: 'dialogueSelect', ...client.npcSession.fields(freshKing.id), command: '@requestcastlewar' });
   const list = await client.waitForEventSince(listStart,
     message => message.type === 'npcDialogue' && message.npcId === king.id
       && message.options.some(option => option.command.startsWith('@requestcastlewarnow')),
@@ -208,7 +213,7 @@ async function submitCastleApplication(client, king, expectedMakeIndex) {
   if (!castleOption) throw new Error(`${client.label}: castle list did not expose a selectable castle`);
 
   const resultStart = client.events.length;
-  client.send({ type: 'dialogueSelect', npcId: freshKing.id, command: castleOption.command });
+  client.send({ type: 'dialogueSelect', ...client.npcSession.fields(freshKing.id), command: castleOption.command });
   const result = await client.waitForEventSince(resultStart,
     message => ['dialogueMessage', 'npcDialogue', 'systemMessage'].includes(message.type)
       && /你的请求被许可|申请成功/.test(String(message.text ?? '')),
@@ -240,8 +245,9 @@ try {
   const blueKing = await createGuild(blue, blueGuild);
   await sleep(1200);
 
+  const warKing = await openKing(red);
   const warStart = red.events.length;
-  red.send({ type: 'guildWarRequest', npcId: redKing.id, guildName: blueGuild });
+  red.send({ type: 'guildWarRequest', ...red.npcSession.fields(warKing.id), guildName: blueGuild });
   // The legacy server may persist the first declaration without producing a
   // direct gateway result. Re-open both guild panels as the authoritative
   // confirmation and retain any announcement packets as supporting evidence.

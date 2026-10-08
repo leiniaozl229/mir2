@@ -3,7 +3,7 @@ using System.Text;
 namespace Mir2.WebGateway;
 
 public record ShopGoods(string name, int subMenu, int price, int stock);
-public record ShopDetail(string name, int makeIndex, int price, ushort durability, byte stdMode, byte weight, ushort looks);
+public record ShopDetail(string name, int makeIndex, int price, ushort durability, byte stdMode, byte weight, ushort looks, InventoryItem? item = null);
 
 public static class ShopProjection
 {
@@ -36,7 +36,11 @@ public static class ShopProjection
         {
             var item = InventoryProjection.Parse(LegacyCodec.Decode(Encoding.ASCII.GetBytes(record)));
             if (item.makeIndex <= 0 || item.maxDurability == 0) throw new InvalidDataException("Invalid shop detail item");
-            return new ShopDetail(item.name, item.makeIndex, item.maxDurability, item.durability, item.stdMode, item.weight, item.looks);
+            // SM_SENDDETAILGOODSLIST overwrites the instance's MaxDura with its asking
+            // price. Preserve the other real attributes but never expose that
+            // field as maximum durability (reference BoNoDisplayMaxDura).
+            return new ShopDetail(item.name, item.makeIndex, item.maxDurability, item.durability, item.stdMode, item.weight, item.looks,
+                item with { maxDurability = 0, price = item.maxDurability });
         }).ToArray();
         if (details.Select(item => item.makeIndex).Distinct().Count() != details.Length)
             throw new InvalidDataException("Duplicate shop detail identity");

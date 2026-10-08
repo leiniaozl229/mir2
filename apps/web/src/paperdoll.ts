@@ -1,6 +1,5 @@
-import {playerLayers,type PlayerLayers} from './online-actors';
-
-const SOUTH=4;
+import {playerLayers} from './online-actors';
+import {loadNationalUiLibrary,nationalUiUrl,uiFrame} from './classic-ui';
 
 export class PaperdollView {
  private generation=0;
@@ -15,34 +14,17 @@ export class PaperdollView {
   const generation=++this.generation;
   this.element.replaceChildren();
   if(!layers)return;
-  void this.draw(layers,generation).catch(()=>{
+  void this.draw(layers.sex,generation).catch(()=>{
    if(generation!==this.generation)return;
    this.element.textContent='换装形象待校准';
   });
  }
- private async draw(layers:PlayerLayers,generation:number){
-  const parts:{name:string;offset:number;z:number}[]=[
-   {name:layers.bodyName,offset:layers.offset,z:0},
-  ];
-  if(layers.weaponName)parts.push({name:layers.weaponName,offset:layers.weaponOffset,z:2});
-  if(layers.hairName)parts.push({name:layers.hairName,offset:layers.offset,z:1});
-  const images=await Promise.all(parts.map(async part=>{
-   const response=await fetch(`/actors/${part.name}/library.json`);
-   if(!response.ok)throw new Error(part.name);
-   const library=await response.json() as {frames:Record<string,{file:string;offsetX:number;offsetY:number}>;actions?:Record<string,{start:number;count:number;skip:number}>};
-   const definition=library.actions?.['0']??{start:0,count:4,skip:0};
-   const index=part.offset+definition.start+SOUTH*(definition.count+definition.skip);
-   const frame=library.frames[index]??library.frames[String(index)];
-   if(!frame)return;
-   const image=document.createElement('img');
-   image.src=`/actors/${part.name}/${frame.file}`;
-   image.alt='';
-   image.style.zIndex=String(part.z);
-   image.style.left=`${frame.offsetX}px`;
-   image.style.top=`${frame.offsetY}px`;
-   return image;
-  }));
+ private async draw(sex:number,generation:number){
+  const library=await loadNationalUiLibrary('prguse');
   if(generation!==this.generation)return;
-  this.element.replaceChildren(...images.filter((image):image is HTMLImageElement=>Boolean(image)));
+  const frame=uiFrame(library,sex===1?377:376);
+  const image=document.createElement('img');image.alt='';image.width=frame.width;image.height=frame.height;
+  image.style.left='0px';image.style.top='0px';image.src=nationalUiUrl('prguse',frame);
+  this.element.replaceChildren(image);
  }
 }

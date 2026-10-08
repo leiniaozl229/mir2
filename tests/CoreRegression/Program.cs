@@ -1,4 +1,3 @@
-using System.Collections.Concurrent;
 using System.Reflection;
 using GameSrv.Services;
 using M2Server;
@@ -137,23 +136,26 @@ try
     var front = new FrontEngine();
     M2Share.FrontEngine = front;
     M2Share.UserDBCriticalSection = new object();
-    front.AddToSaveRcdList(new SavePlayerRcd { ChrName = "pending", QueryId = 7001 });
-    front.AddToSaveRcdList(new SavePlayerRcd { ChrName = "other", QueryId = 7002 });
-    var queue = (ConcurrentQueue<int>)typeof(PlayerDataService)
-        .GetField("SaveProcessList", BindingFlags.NonPublic | BindingFlags.Static)!.GetValue(null)!;
-    queue.Enqueue(7001);
+    // Exercise the actual FrontEngine completion guard here. Actual transport publication,
+    // reply decoding and retry identities are covered by NativeSaveQueueRegression's TCP peer.
+    front.AddToSaveRcdList(new SavePlayerRcd { ChrName = "pending", QueryId = 7001, IsSaveing = true });
+    front.AddToSaveRcdList(new SavePlayerRcd { ChrName = "other", QueryId = 7002, IsSaveing = true });
     PlayerDataService.ProcessSaveQueue();
     Require(front.InSaveRcdList("pending"), "no acknowledgement retains pending save");
-    PlayerDataService.Enqueue(7001, new ServerRequestData {
-        QueryId = 7001,
+    PlayerDataService.Enqueue(7999, new ServerRequestData {
+        QueryId = 7999,
         Message = EDCode.EncodeBuffer(SerializerUtil.Serialize(
             new ServerRequestMessage(Messages.DBR_SAVEHUMANRCD, 1, 0, 0, 0))),
         Packet = Array.Empty<byte>()
     });
     PlayerDataService.ProcessSaveQueue();
-    Require(!front.InSaveRcdList("pending"), "successful database acknowledgement unblocks login");
+    front.RemoveSaveList(7999);
+    Require(front.InSaveRcdList("pending") && front.InSaveRcdList("other"),
+            "unknown acknowledgement identity cannot release either pending save");
+    front.RemoveSaveList(7001);
+    Require(!front.InSaveRcdList("pending"), "matching confirmed-save identity releases the corresponding FrontEngine barrier");
     Require(front.InSaveRcdList("other"), "unrelated save remains pending");
-    Console.WriteLine("PASS: new-file encoding, map cells, database save acknowledgement, empty castle and memory statistics");
+    Console.WriteLine("PASS: new-file encoding, map cells, FrontEngine save completion guards (TCP is covered by NativeSaveQueueRegression), empty castle and memory statistics");
 }
 finally
 {

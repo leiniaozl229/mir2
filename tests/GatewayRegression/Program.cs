@@ -7,6 +7,88 @@ using Mir2.WebGateway;
 using System.Text.Json;
 
 static void Require(bool ok, string message) { if (!ok) throw new Exception(message); }
+foreach (ushort phase in new ushort[] { 0, 1, 2, 3, 65535 })
+foreach (ushort darkness in new ushort[] { 0, 1, 2 })
+{
+    using var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(46, 0, phase, darkness, 9, []), "")));
+    Require(projected.RootElement.GetProperty("type").GetString() == "daylight"
+        && projected.RootElement.GetProperty("phase").GetInt32() == phase
+        && projected.RootElement.GetProperty("darkLevel").GetInt32() == darkness,
+        "day phase uses native Param and map darkness uses Tag independently, including raw unsupported phase");
+}
+using (var light = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(654, 9, 3, 2, 0, []), ""))))
+    Require(light.RootElement.GetProperty("type").GetString() == "actorLight"
+        && light.RootElement.GetProperty("id").GetInt32() == 9
+        && light.RootElement.GetProperty("light").GetInt32() == 3
+        && !light.RootElement.TryGetProperty("phase", out _), "actor light uses Param; Tag client key cannot become a phase");
+Console.WriteLine("PASS gateway native daylight phase/darkness fields and actor-light separation");
+foreach (ushort packetId in new ushort[] { 9, 10, 11, 13, 50 })
+foreach (byte light in new byte[] { 0, 1, 5, 255 })
+{
+    using var entity = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(packetId, 99, 10, 20, (ushort)(light << 8 | 7), []), "test")));
+    Require(entity.RootElement.GetProperty("light").GetInt32() == light && entity.RootElement.GetProperty("direction").GetInt32() == 7,
+        "native direction low byte and actor-light high byte remain independent");
+}
+foreach (ushort packetId in new ushort[] { 6, 801, 807 })
+{
+    using var entity = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(packetId, 99, 10, 20, 0x507, []), "test")));
+    Require(entity.RootElement.GetProperty("light").ValueKind == JsonValueKind.Null,
+        "reference paths without a light refresh preserve the existing actor light");
+}
+foreach (ushort light in new ushort[] { 0, 5, 255, 65535 })
+{
+    using var entity = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(654, 99, light, 123, 0xFFFF, []), "test")));
+    Require(entity.RootElement.GetProperty("light").GetInt32() == light && !entity.RootElement.TryGetProperty("direction", out _),
+        "dedicated actor-light packet retains raw Param without treating Tag/client-key as position or darkness");
+}
+Console.WriteLine("PASS gateway packed actor light, explicit zero, raw unknown levels and unrelated entity fields");
+var spellEntities = new Dictionary<int, (ushort x, ushort y, bool dead, uint? feature)>
+{
+    [8] = (12, 13, false, 0), [9] = (11, 10, true, 3), [10] = (11, 10, false, 50),
+    [11] = (19, 10, false, 3)
+};
+(int targetId, ushort x, ushort y) Aim(string json, int magicId)
+{
+    using var command = JsonDocument.Parse(json);
+    return SpellTarget.Resolve(command.RootElement, magicId, 7, (10, 10), spellEntities);
+}
+Require(Aim("{\"x\":14,\"y\":15}", 22) == (0, 14, 15), "firewall aims at empty ground with no fabricated actor");
+Require(Aim("{\"targetId\":8}", 2) == (8, 12, 13), "healing uses confirmed ally coordinates");
+Require(Aim("{}", 2) == (7, 10, 10), "healing defaults to the authoritative self position");
+Require(Aim("{\"direction\":5}", 27) == (0, 5, 0), "rush encodes direction in CM_SPELL X rather than map coordinates");
+foreach (var (json, magicId) in new (string, int)[] {
+    ("{\"x\":19,\"y\":10}",22), ("{\"x\":14}",22), ("{\"x\":-1,\"y\":10}",22),
+    ("{\"x\":14,\"y\":15,\"targetId\":8}",22), ("{\"x\":14,\"y\":15}",31),
+    ("{\"targetId\":9}",1), ("{\"targetId\":10}",1), ("{\"targetId\":11}",1),
+    ("{\"direction\":8}",27), ("{\"x\":12,\"y\":12}",27), ("{\"targetId\":-1}",1)
+}) {
+    bool refused=false;
+    try { Aim(json, magicId); } catch (Exception error) when (error is InvalidDataException or InvalidOperationException) { refused=true; }
+    Require(refused, $"invalid spell aim rejected: {json}");
+}
+Console.WriteLine("PASS gateway ground spells, ally/self targeting, directional rush and invalid aim rejection");
+var melee = new MeleeSkills();
+Require(melee.SelectAttack(20, false, true) == 3014, "unconfirmed skills cannot alter attacks");
+Require(melee.SelectAttack(20, true, false) == 3015, "StdMode 6 weapon uses heavy attack");
+melee.Apply("+LNG");
+Require(melee.SelectAttack(20, false, false) == 3014 && melee.SelectAttack(20, false, true) == 3019, "thrusting requires living target two cells ahead");
+melee.Apply("+WID"); melee.Apply("+PWR"); melee.Apply("+FIR");
+Require(melee.SelectAttack(20, false, true) == 3025 && melee.SelectAttack(20, false, true) == 3018
+    && melee.SelectAttack(20, false, true) == 3024, "fire and power consume once, with priority over half moon and thrusting");
+Require(melee.SelectAttack(2, false, true) == 3019, "low mana skips half moon");
+melee.Apply("+FIR");
+Require(melee.SelectAttack(6, false, true) == 3024 && melee.FireHit, "insufficient fire mana preserves charge");
+melee.Apply("+UFIR"); melee.Apply("+UWID"); melee.Apply("+ULNG");
+Require(!melee.FireHit && melee.SelectAttack(20, false, true) == 3014, "server expiry and disabled toggles restore normal attack");
+Require(MeleeSkills.ConfirmsSpell("+WID",25) && !MeleeSkills.ConfirmsSpell("+PWR",25)
+    && !MeleeSkills.ConfirmsSpell("+FIR",22), "unsolicited warrior statuses cannot acknowledge another spell");
+foreach (ushort attackKind in new ushort[]{8,14,15,16,18,19,24})
+{
+    using var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(new LegacyPacket(attackKind,7,10,10,2,[]), "")));
+    Require(projected.RootElement.GetProperty("attackKind").GetInt32()==attackKind
+        && projected.RootElement.GetProperty("action").GetString()==(attackKind==15?"heavyAttack":attackKind==16?"wideAttack":"attack"), "native melee broadcast animation projection");
+}
+Console.WriteLine("PASS warrior attack priority, mana gates, charge expiry, one-shot consumption and native attack projections");
 Require(LegacyCodec.Encode([0xac]).SequenceEqual("<<"u8.ToArray()), "single byte reference vector");
 Require(LegacyCodec.Encode([0, 0, 0]).SequenceEqual("ddhk"u8.ToArray()), "three byte reference vector");
 for (int size = 0; size < 1024; size++)
@@ -293,6 +375,17 @@ using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(NpcProjection
     Require(dialogue.GetProperty("options").GetArrayLength() == 2
         && dialogue.GetProperty("options")[0].GetProperty("command").GetString() == "@jiangli",
         "NPC dialogue options projection");
+    var parts = dialogue.GetProperty("parts");
+    Require(parts.GetArrayLength() == 4
+        && parts[0].GetProperty("type").GetString() == "text"
+        && parts[0].GetProperty("text").GetString() == "欢迎来到比奇\n"
+        && parts[1].GetProperty("type").GetString() == "option"
+        && parts[1].GetProperty("text").GetString() == "查看奖励"
+        && parts[1].GetProperty("command").GetString() == "@jiangli"
+        && parts[2].GetProperty("type").GetString() == "text"
+        && parts[2].GetProperty("text").GetString() == "\n"
+        && parts[3].GetProperty("command").GetString() == "@main",
+        "NPC dialogue preserves interleaved inline option order and separators");
 }
 var inputDialoguePacket = new LegacyPacket(643, 77, 0, 0, 1,
     LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes("衣服/请告诉我暗号\\<输入暗号/@@InPutString8>")));
@@ -301,6 +394,11 @@ using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(NpcProjection
     var option = projected.RootElement.GetProperty("options")[0];
     Require(option.GetProperty("input").GetBoolean() && option.GetProperty("command").GetString() == "@@InPutString8",
         "NPC input dialogue option projection");
+    var inlineOption = projected.RootElement.GetProperty("parts")[1];
+    Require(inlineOption.GetProperty("type").GetString() == "option"
+        && inlineOption.GetProperty("input").GetBoolean()
+        && inlineOption.GetProperty("command").GetString() == "@@InPutString8",
+        "NPC input option retains its original position in the ordered dialogue parts");
 }
 var questDialogue = new LegacyPacket(772, 77, 0, 0, 1,
     LegacyCodec.Encode(LegacyCodec.Gbk.GetBytes("任务标记QMARK|p0-trial|accepted|比奇试炼|收集 1 个鸡肉|击杀比奇省的鸡|试炼已开始。|END\\返回")));
@@ -337,6 +435,16 @@ var detailPacket = new LegacyPacket(652, 77, 1, 0, 0, LegacyCodec.Encode(encoded
 var details = ShopProjection.ParseDetails(detailPacket);
 Require(details.Length == 1 && details[0].makeIndex == 4567 && details[0].price == 440
     && details[0].name == "鸡肉", "independently encoded shop detail projection");
+Require(details[0].item == (InventoryProjection.Parse(shopNativeItem) with { maxDurability = 0, price = 440 }),
+    "shop detail keeps all real instance attributes and does not invent a maximum durability from its price");
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(ShopProjection.Project(detailPacket))))
+{
+    var detail = projected.RootElement.GetProperty("items")[0];
+    Require(detail.GetProperty("price").GetInt32() == 440
+        && detail.GetProperty("item").GetProperty("maxDurability").GetInt32() == 0
+        && detail.GetProperty("item").GetProperty("durability").GetInt32() == details[0].durability,
+        "actual typed shop details separate asking price from current durability and preserve the attribute surface");
+}
 bool badGoodsCount = false;
 try { ShopProjection.ParseGoods(goodsPacket with { Param = 3 }); } catch (InvalidDataException) { badGoodsCount = true; }
 Require(badGoodsCount, "shop catalogue count mismatch rejected");
@@ -407,6 +515,15 @@ using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(MagicProjecti
         && spell.GetProperty("magicId").GetInt32() == 11,
         "plain ASCII spell cast projection");
 }
+var fireEvent = new LegacyPacket(804, 4321, 5, 301, 611, LegacyCodec.Encode(new byte[] { 37, 0, 0, 0 }));
+using (var projected = JsonDocument.Parse(JsonSerializer.Serialize(WorldProjection.Project(fireEvent, "test"))))
+{
+    var mapEvent = projected.RootElement;
+    Require(mapEvent.GetProperty("type").GetString() == "mapEvent" && mapEvent.GetProperty("id").GetInt32() == 4321
+        && mapEvent.GetProperty("x").GetInt32() == 301 && mapEvent.GetProperty("y").GetInt32() == 611
+        && mapEvent.GetProperty("eventType").GetInt32() == 5 && mapEvent.GetProperty("eventParam").GetInt32() == 37,
+        "SM_SHOWEVENT uses Tag/Series coordinates and encoded ShortMessage parameter");
+}
 var listener = new TcpListener(IPAddress.Loopback, 0);
 listener.Start();
 try
@@ -463,13 +580,106 @@ using (var actionTimeout = new CancellationTokenSource(TimeSpan.FromSeconds(10))
     Set("pendingActionKind", "move");
     byte[] rejected = [(byte)'#', ..LegacyCodec.Header(28, recog: 7, param: 10, tag: 10, series: 2), (byte)'!'];
     await peer.GetStream().WriteAsync(rejected, actionTimeout.Token);
-    await actionSocket.WaitForCount(4, actionTimeout.Token);
+    await actionSocket.WaitForCount(5, actionTimeout.Token);
     Require((ValueTuple<ushort, ushort>?)Get("confirmedPosition") == ((ushort)10, (ushort)10),
         "movement rejection restores the authoritative position");
     Require(Get("pendingPosition") is null, "movement rejection clears the pending position");
     Require(actionSocket.Contains("\"type\":\"actionResult\"", "\"actionId\":42", "\"kind\":\"move\"", "\"accepted\":false"),
         "movement rejection carries its browser action identity");
 
+    Set("pendingSpell", ((ushort)25, "半月弯刀"));
+    Set("pendingActionId", (long?)43);
+    Set("pendingActionKind", "spell");
+    await peer.GetStream().WriteAsync("#+PWR!"u8.ToArray(), actionTimeout.Token);
+    await actionSocket.WaitForCount(7, actionTimeout.Token);
+    Require(Get("pendingSpell") is not null && Get("pendingActionId") is not null, "power readiness leaves half moon confirmation pending");
+    await peer.GetStream().WriteAsync("#+WID!"u8.ToArray(), actionTimeout.Token);
+    await actionSocket.WaitForCount(9, actionTimeout.Token);
+    Require(((MeleeSkills)Get("meleeSkills")!).HalfMoon && Get("pendingSpell") is not null
+        && (long?)Get("pendingActionId") == 43 && (string?)Get("pendingActionKind") == "spell",
+        "matching skill status updates canonical half moon state without releasing the native cast slot before GOOD");
+    Require(!actionSocket.Contains("\"type\":\"spellResult\"", "\"magicId\":25")
+        && !actionSocket.Contains("\"type\":\"actionResult\"", "\"actionId\":43"),
+        "skill status alone cannot publish cast completion or acknowledge its browser action");
+    using (var earlyAttack = JsonDocument.Parse("{\"type\":\"attack\",\"direction\":2,\"actionId\":440}"))
+    {
+        bool blocked = false;
+        try { await (Task)sessionType.GetMethod("Attack", flags)!.Invoke(actionSession, [earlyAttack.RootElement, actionTimeout.Token])!; }
+        catch (InvalidOperationException error) when (error.Message == "Action confirmation pending") { blocked = true; }
+        Require(blocked && !(bool)Get("pendingAttack")! && (long?)Get("pendingActionId") == 43 && peer.Available == 0,
+            "attack submitted between skill status and cast GOOD is rejected without sending a native command or stealing action 43");
+    }
+    await peer.GetStream().WriteAsync("#+WID!"u8.ToArray(), actionTimeout.Token);
+    await actionSocket.WaitForCount(11, actionTimeout.Token);
+    Require(Get("pendingSpell") is not null && (long?)Get("pendingActionId") == 43
+        && !actionSocket.Contains("\"type\":\"actionResult\"", "\"actionId\":440"),
+        "duplicate skill status before delayed GOOD cannot release the spell or complete a refused newer attack");
+    await peer.GetStream().WriteAsync("#+GD/1!"u8.ToArray(), actionTimeout.Token);
+    await actionSocket.WaitForCount(14, actionTimeout.Token);
+    Require(Get("pendingSpell") is null && Get("pendingActionId") is null
+        && actionSocket.Contains("\"type\":\"spellResult\"", "\"magicId\":25", "\"accepted\":true")
+        && actionSocket.Contains("\"type\":\"actionResult\"", "\"actionId\":43", "\"kind\":\"spell\"", "\"accepted\":true")
+        && !actionSocket.Contains("\"type\":\"actionResult\"", "\"actionId\":440"),
+        "delayed cast GOOD drains action 43 before any new world request can occupy its native slot");
+
+    Set("pendingPosition", ((ushort)11, (ushort)10));
+    Set("pendingActionId", (long?)44);
+    Set("pendingActionKind", "move");
+    byte[] rush = [(byte)'#', ..LegacyCodec.Header(6, recog: 7, param: 12, tag: 10, series: 2), ..LegacyCodec.Encode(new byte[8]), (byte)'!'];
+    await peer.GetStream().WriteAsync(rush, actionTimeout.Token);
+    await actionSocket.WaitForCount(16, actionTimeout.Token);
+    Require((ValueTuple<ushort, ushort>?)Get("confirmedPosition") == ((ushort)12, (ushort)10)
+        && Get("pendingActionId") is not null, "rush confirms displacement but retains the interrupted command slot until its reply");
+    Require(actionSocket.Contains("\"type\":\"entity\"", "\"action\":\"rush\"", "\"forced\":true", "\"self\":true"),
+        "rush is projected with native actor identity and forced movement");
+    await peer.GetStream().WriteAsync("#+GD/1!"u8.ToArray(), actionTimeout.Token);
+    await actionSocket.WaitForCount(18, actionTimeout.Token);
+    Require((ValueTuple<ushort, ushort>?)Get("confirmedPosition") == ((ushort)12, (ushort)10) && Get("pendingActionId") is null,
+        "delayed movement acknowledgement cannot undo authoritative displacement");
+    Require(actionSocket.Contains("\"actionId\":44", "\"accepted\":false", "\"x\":12", "\"reason\":6"),
+        "interrupted move resolves against its original identity at the displaced cell");
+
+    Set("pendingSpell", ((ushort)27, "野蛮冲撞"));
+    Set("pendingActionId", (long?)45);
+    Set("pendingActionKind", "spell");
+    rush = [(byte)'#', ..LegacyCodec.Header(9, recog: 7, param: 13, tag: 10, series: 6), ..LegacyCodec.Encode(new byte[8]), (byte)'!'];
+    await peer.GetStream().WriteAsync(rush, actionTimeout.Token);
+    await actionSocket.WaitForCount(20, actionTimeout.Token);
+    Require(Get("pendingSpell") is not null && (ValueTuple<ushort, ushort>?)Get("confirmedPosition") == ((ushort)13, (ushort)10),
+        "pushed actor position updates without prematurely resolving the active spell");
+    rush = [(byte)'#', ..LegacyCodec.Header(7, recog: 7, param: 14, tag: 10, series: 2), ..LegacyCodec.Encode(new byte[8]), (byte)'!'];
+    await peer.GetStream().WriteAsync(rush, actionTimeout.Token);
+    await actionSocket.WaitForCount(22, actionTimeout.Token);
+    Require((ValueTuple<ushort, ushort>?)Get("confirmedPosition") == ((ushort)13, (ushort)10)
+        && actionSocket.Contains("\"type\":\"rushBlocked\"", "\"targetX\":14"),
+        "blocked rush projects a lunge target without moving the authoritative actor");
+    await peer.GetStream().WriteAsync("#+GD/1!"u8.ToArray(), actionTimeout.Token);
+    await actionSocket.WaitForCount(25, actionTimeout.Token);
+    Require(actionSocket.Contains("\"actionId\":45", "\"kind\":\"spell\"", "\"accepted\":true"),
+        "rush displacement preserves the subsequent spell acknowledgement");
+
+    byte[] dayMorning = [(byte)'#', ..LegacyCodec.Header(46, param: 0, tag: 2), (byte)'!'];
+    byte[] dayNight = [(byte)'#', ..LegacyCodec.Header(46, param: 3, tag: 0), (byte)'!'];
+    byte[] dayFrames = [..dayMorning, ..dayNight];
+    await peer.GetStream().WriteAsync(dayFrames.AsMemory(0, 7), actionTimeout.Token);
+    await Task.Delay(10, actionTimeout.Token);
+    await peer.GetStream().WriteAsync(dayFrames.AsMemory(7), actionTimeout.Token);
+    await actionSocket.WaitForCount(29, actionTimeout.Token);
+    Require(actionSocket.Contains("\"type\":\"daylight\"", "\"phase\":0", "\"darkLevel\":2", "\"mapGeneration\":0")
+        && actionSocket.Contains("\"type\":\"daylight\"", "\"phase\":3", "\"darkLevel\":0", "\"mapGeneration\":0"),
+        "actual ReadGame projects fragmented/coalesced native day frames into current world envelopes");
+    Console.WriteLine("PASS gateway actual private TCP reader daylight projections retain map generation");
+    byte[] zeroLight = [(byte)'#', ..LegacyCodec.Header(654, recog: 7, param: 0, tag: 123), (byte)'!'];
+    byte[] newDarkMap = [(byte)'#', ..LegacyCodec.Header(51, recog: 7, param: 10, tag: 10, series: 2), ..LegacyCodec.Encode("GA0"u8), (byte)'!'];
+    byte[] changedDarkMap = [(byte)'#', ..LegacyCodec.Header(634, recog: 7, param: 11, tag: 10, series: 1), ..LegacyCodec.Encode("D011"u8), (byte)'!'];
+    byte[] lightMapFrames = [..zeroLight, ..newDarkMap, ..changedDarkMap];
+    await peer.GetStream().WriteAsync(lightMapFrames.AsMemory(0, 7), actionTimeout.Token);
+    await Task.Delay(10, actionTimeout.Token);
+    await peer.GetStream().WriteAsync(lightMapFrames.AsMemory(7), actionTimeout.Token);
+    await actionSocket.WaitForMessage(actionTimeout.Token, "\"type\":\"actorLight\"", "\"id\":7", "\"light\":0", "\"mapGeneration\":0");
+    await actionSocket.WaitForMessage(actionTimeout.Token, "\"type\":\"map\"", "\"map\":\"GA0\"", "\"darkLevel\":2", "\"mapGeneration\":1");
+    await actionSocket.WaitForMessage(actionTimeout.Token, "\"type\":\"map\"", "\"map\":\"D011\"", "\"darkLevel\":1", "\"mapGeneration\":2");
+    Console.WriteLine("PASS gateway actual actor-light and both native map darkness paths retain packet-specific fields and generations");
     await actionTimeout.CancelAsync();
     try { await reading; } catch (OperationCanceledException) { }
 }
@@ -495,6 +705,10 @@ sealed class RecorderSocket : WebSocket
     public async Task WaitForCount(int count, CancellationToken cancellationToken)
     {
         while (messages.Count < count) await Task.Delay(10, cancellationToken);
+    }
+    public async Task WaitForMessage(CancellationToken cancellation, params string[] fragments)
+    {
+        while (!Contains(fragments)) await Task.Delay(10, cancellation);
     }
     public bool Contains(params string[] fragments) => messages.Any(message => fragments.All(message.Contains));
 }

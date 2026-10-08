@@ -1,29 +1,32 @@
 import type {InventoryItem} from './inventory';
-import {attachItemTooltip,loadFallbackItemIcons} from './inventory';
-import {loadNationalUiLibrary} from './classic-ui';
+import {attachItemTooltip} from './inventory';
+import {SERVICE_UI,ServiceAssets,ServiceWait,cancelServiceWaitOnInputLoss,serviceButton,serviceHeading,serviceMenuHeaders,serviceMenuRow,serviceSlot,serviceStatus} from './service-window';
+type StorageActions={store:(npcId:number,makeIndex:number)=>boolean|void;take:(npcId:number,makeIndex:number)=>boolean|void;close?:()=>void;afterClose?:(focusWasWithinWindow:boolean)=>void};
 
-type StorageActions={store:(npcId:number,makeIndex:number)=>void;take:(npcId:number,makeIndex:number)=>void};
-
-export class StorageView {
- private npcId:number|undefined;private mode:'store'|'take'='store';private items:InventoryItem[]=[];private pending:number|undefined;private pendingTimer:ReturnType<typeof setTimeout>|undefined;private icons:Awaited<ReturnType<typeof loadFallbackItemIcons>>|undefined;private nationalIcons:Awaited<ReturnType<typeof loadNationalUiLibrary>>|undefined;
- constructor(private element:HTMLElement,private actions:StorageActions){
-  void loadFallbackItemIcons().then(icons=>{this.icons=icons;this.render();}).catch(()=>{});
-  void loadNationalUiLibrary('items').then(icons=>{this.nationalIcons=icons;this.render();}).catch(()=>{});
+export class StorageView{
+ private npcId:number|undefined;private mode:'store'|'take'='store';private items:InventoryItem[]=[];private selected:InventoryItem|undefined;private top=0;private message='';
+ private readonly wait:ServiceWait;private readonly assets:ServiceAssets;
+ constructor(private element:HTMLElement,private actions:StorageActions){this.wait=new ServiceWait(reason=>{if(reason)this.message=reason;this.render();});this.assets=new ServiceAssets(()=>this.render());cancelServiceWaitOnInputLoss(element,()=>{if(this.wait.current)this.rejectPending('操作已取消，请重试');});}
+ clear(){this.wait.clear();this.npcId=undefined;this.items=[];this.selected=undefined;this.top=0;this.message='';this.element.hidden=true;this.element.replaceChildren();}
+ rejectPending(reason='操作未完成，请重试',phase?:'store'|'take'){if(!this.wait.current||phase!==undefined&&this.wait.current.kind!==phase)return false;this.wait.clear();this.message=reason;this.render();return true;}
+ openDeposit(npcId:number,items:InventoryItem[]){this.clear();this.npcId=npcId;this.mode='store';this.items=items.map(item=>({...item}));this.render();}
+ openItems(npcId:number,items:InventoryItem[]){
+  // SM_SENDUSERSTORAGEITEM carries cumulative pages; later pages must not cancel a take.
+  if(this.npcId!==npcId||this.mode!=='take'){this.clear();this.npcId=npcId;this.mode='take';}
+  this.items=items.map(item=>({...item}));if(this.selected)this.selected=this.items.find(item=>item.makeIndex===this.selected!.makeIndex);
+  this.top=Math.min(this.top,Math.max(0,this.items.length-1));this.render();
  }
- clear(){this.clearPendingTimer();this.npcId=undefined;this.items=[];this.pending=undefined;this.element.hidden=true;this.element.replaceChildren();}
- rejectPending(){this.clearPendingTimer();this.pending=undefined;this.render();}
- openDeposit(npcId:number,items:InventoryItem[]){this.clearPendingTimer();this.npcId=npcId;this.mode='store';this.items=items;this.pending=undefined;this.render();}
- openItems(npcId:number,items:InventoryItem[]){this.clearPendingTimer();this.npcId=npcId;this.mode='take';this.items=items;this.pending=undefined;this.render();}
- resolve(item:InventoryItem,accepted:boolean){if(this.pending!==item.makeIndex)return false;this.clearPendingTimer();this.pending=undefined;if(accepted)this.items=this.items.filter(value=>value.makeIndex!==item.makeIndex);this.render();return true;}
- private clearPendingTimer(){if(this.pendingTimer!==undefined){clearTimeout(this.pendingTimer);this.pendingTimer=undefined;}}
- private render(){
-  this.element.hidden=this.npcId===undefined;if(this.npcId===undefined)return;this.element.replaceChildren();
-  const heading=document.createElement('div');heading.className='shop-heading';const title=document.createElement('strong');title.textContent=this.mode==='store'?'存入仓库':'仓库物品';const close=document.createElement('button');close.type='button';close.className='classic-window-close';close.textContent='关闭';close.onclick=()=>this.clear();heading.append(title,close);this.element.append(heading);
-  const list=document.createElement('div');list.className=`storage-items storage-list--${this.mode}`;if(!this.items.length){list.textContent=this.mode==='store'?'背包为空':'仓库为空';this.element.append(list);return;}
-  for(const item of this.items){const row=document.createElement('div');row.className='shop-row';row.dataset.storageItem=String(item.makeIndex);const icon=this.icon(item);if(icon)row.append(icon);const label=document.createElement('span');label.innerHTML='<strong></strong><small></small>';label.querySelector('strong')!.textContent=item.name;label.querySelector('small')!.textContent=`#${item.makeIndex} · 持久 ${(item.durability/1000).toFixed(1)} / ${(item.maxDurability/1000).toFixed(1)}`;const button=document.createElement('button');button.type='button';button.disabled=this.pending!==undefined;button.textContent=this.pending===item.makeIndex?'等待服务端…':this.mode==='store'?'存入':'取回';button.onclick=()=>{if(this.pending!==undefined)return;this.pending=item.makeIndex;this.clearPendingTimer();this.pendingTimer=setTimeout(()=>{this.pendingTimer=undefined;this.pending=undefined;this.render();},8000);this.render();if(this.mode==='store')this.actions.store(this.npcId!,item.makeIndex);else this.actions.take(this.npcId!,item.makeIndex);};row.append(label,button);attachItemTooltip(row,item);list.append(row);}this.element.append(list);
- }
- private icon(item:InventoryItem){
-  const national=this.nationalIcons?.frames[String(item.looks)],fallback=this.icons?.frames[String(item.looks)],frame=national??fallback;if(!frame)return undefined;
-  const image=document.createElement('img');image.className='item-icon';image.src=national?`/ui-national/items/${national.file}`:`/items/Items/${frame.file}`;image.alt='';return image;
- }
+ acceptsInventoryItem(){return this.npcId!==undefined&&this.mode==='store'&&!this.wait.current;}
+ offerInventoryItem(item:InventoryItem){if(!this.acceptsInventoryItem())return false;const actual=this.items.find(value=>value.makeIndex===item.makeIndex);if(!actual)return false;this.selected=actual;this.message='';this.render();return true;}
+ syncInventory(items:InventoryItem[]){if(this.mode!=='store'||this.npcId===undefined)return;this.items=items.map(item=>({...item}));if(this.selected)this.selected=this.items.find(item=>item.makeIndex===this.selected!.makeIndex);this.render();}
+ cancelSelection(){if(this.wait.current)return false;this.selected=undefined;this.message='';this.render();return true;}
+ resolve(item:InventoryItem,accepted:boolean){if(!this.wait.matches(this.mode,item.makeIndex))return false;this.wait.clear();if(accepted){this.items=this.items.filter(value=>value.makeIndex!==item.makeIndex);this.selected=undefined;this.top=Math.min(this.top,Math.max(0,this.items.length-1));}this.message=accepted?(this.mode==='store'?'已存入':'已取回'):'操作失败，请重试';this.render();return true;}
+ debugState(){return {npcId:this.npcId,mode:this.mode,selectedItem:this.selected?{...this.selected}:undefined,top:this.top,pending:this.wait.current?{...this.wait.current}:undefined,items:this.items.map(item=>({...item})),message:this.message};}
+ private confirm(){const item=this.selected;if(!item||this.wait.current||this.npcId===undefined)return;this.message='';this.wait.start({kind:this.mode,makeIndex:item.makeIndex},()=>this.mode==='store'?this.actions.store(this.npcId!,item.makeIndex):this.actions.take(this.npcId!,item.makeIndex));}
+ private render(){this.element.hidden=this.npcId===undefined;if(this.npcId===undefined)return;this.element.dataset.serviceMode=this.mode;this.assets.skin(this.element);this.element.replaceChildren();serviceHeading(this.element,this.mode==='store'?'存入仓库':'仓库物品',()=>{this.actions.close?.();this.clear();},focusWasWithinWindow=>this.actions.afterClose?.(focusWasWithinWindow));
+  const pending=Boolean(this.wait.current);
+  if(this.mode==='store'){const slot=serviceSlot(this.element,this.selected,this.assets,pending,()=>this.cancelSelection());slot.classList.add(`storage-list--${this.mode}`);if(this.selected)attachItemTooltip(slot,this.selected);const title=document.createElement('div');title.className='service-price';title.textContent='存放物品';this.element.append(title,serviceButton('确认存入','confirm',pending||!this.selected,()=>this.confirm()));serviceStatus(this.element,pending?'等待服务端…':this.message||'从背包放入物品');return;}
+  serviceMenuHeaders(this.element,['仓库物品','持久','']);const list=document.createElement('div');list.className=`service-menu-list storage-list--${this.mode}`;list.setAttribute('role','listbox');list.setAttribute('aria-label','仓库物品');
+  for(const item of this.items.slice(this.top,this.top+SERVICE_UI.menu.list.visible)){const row=serviceMenuRow([item.name,`${Math.floor(item.durability/1000)}/${Math.floor(item.maxDurability/1000)}`,''],this.selected?.makeIndex===item.makeIndex,pending,()=>{this.selected=item;this.message='';this.render();});row.dataset.storageItem=String(item.makeIndex);attachItemTooltip(row,item);list.append(row);}this.element.append(list);
+  this.element.append(serviceButton('上一页','previous',pending||this.top===0,()=>{this.top=Math.max(0,this.top-SERVICE_UI.menu.localPageStep);this.render();}),serviceButton('下一页','next',pending||this.top+SERVICE_UI.menu.list.visible>=this.items.length,()=>{this.top+=SERVICE_UI.menu.localPageStep;this.render();}),serviceButton('确认取回','confirm',pending||!this.selected,()=>this.confirm()));serviceStatus(this.element,pending?'等待服务端…':this.message||(!this.items.length?'仓库为空':'请选择物品'));}
 }

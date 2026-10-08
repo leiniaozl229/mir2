@@ -1,23 +1,30 @@
 export type Frame={file:string;width:number;height:number;offsetX:number;offsetY:number};
-type Library={frames:Record<string,Frame>};
+export type Library={frames:Record<string,Frame>;schemaVersion?:number;format?:string;profile?:string;source?:string;sourceSha256?:string;index?:string;indexSha256?:string;sourceFrameCount?:number;empty?:number[];missing?:number[]};
 import nationalProfile from '../../../content/classic-176/national-ui-profile.json';
 import uiInteractions from '../../../content/classic-176/ui-interactions.json';
 import uiLayout from '../../../content/classic-176/ui-layout.json';
 const cache=new Map<string,Promise<Library>>();
 const nationalCache=new Map<string,Promise<Library>>();
 
+function loadLibrary(name:string,namespace:string,store:Map<string,Promise<Library>>){
+ const existing=store.get(name);if(existing)return existing;
+ const request=Promise.resolve().then(()=>fetch(`${namespace}/${name}/library.json`)).then(async response=>{
+  if(!response.ok)throw new Error('界面素材载入失败');
+  const library=await response.json() as Library;
+  if(!library||typeof library!=='object'||!library.frames||typeof library.frames!=='object'||Array.isArray(library.frames))throw new Error('界面素材载入失败');
+  return library;
+ });
+ store.set(name,request);
+ void request.catch(()=>{if(store.get(name)===request)store.delete(name);});
+ return request;
+}
+
 export function loadUiLibrary(name:string){
- return cache.get(name)??cache.set(name,fetch(`/ui/${name}/library.json`).then(async response=>{
-  if(!response.ok)throw new Error(`缺少界面素材 ${name}`);
-  return response.json() as Promise<Library>;
- })).get(name)!;
+ return loadLibrary(name,'/ui',cache);
 }
 
 export function loadNationalUiLibrary(name:string){
- return nationalCache.get(name)??nationalCache.set(name,fetch(`/ui-national/${name}/library.json`).then(async response=>{
-  if(!response.ok)throw new Error(`缺少国服界面素材 ${name}`);
-  return response.json() as Promise<Library>;
- })).get(name)!;
+ return loadLibrary(name,'/ui-national',nationalCache);
 }
 
 export function uiFrame(library:Library,index:number){
@@ -51,23 +58,30 @@ export type ClassicUiSession={
  missingNational:string[];
 };
 let sessionPromise:Promise<ClassicUiSession>|undefined;
-const SESSION_FALLBACK=['Prguse','Prguse2','Title','ChrSel','MagIcon'];
+let sessionSettled=false;
 const SESSION_NATIONAL=['prguse','prguse2','chrsel','items','stateitem','magic-icons'];
 
 /** Shared, settled resource session used by login, HUD and item/equipment views. */
 export function loadClassicUiSession(){
  if(sessionPromise)return sessionPromise;
- sessionPromise=Promise.all([
-  Promise.allSettled(SESSION_FALLBACK.map(loadUiLibrary)),
-  Promise.allSettled(SESSION_NATIONAL.map(loadNationalUiLibrary))
- ]).then(([fallbackResults,nationalResults])=>{
+ sessionSettled=false;
+ const request=Promise.allSettled(SESSION_NATIONAL.map(loadNationalUiLibrary)).then(nationalResults=>{
   const fallback=new Map<string,Library>(),national=new Map<string,Library>();
   const missingFallback:string[]=[],missingNational:string[]=[];
-  SESSION_FALLBACK.forEach((name,index)=>{const result=fallbackResults[index];if(result.status==='fulfilled')fallback.set(name,result.value);else missingFallback.push(name);});
   SESSION_NATIONAL.forEach((name,index)=>{const result=nationalResults[index];if(result.status==='fulfilled')national.set(name,result.value);else missingNational.push(name);});
+  // Production and calibration use one original-client profile. Missing national
+  // resources stay missing and retryable; never silently switch to Crystal art.
   return {profile:nationalProfile,interactions:uiInteractions,layout:uiLayout,fallback,national,missingFallback,missingNational};
- });
+ }).finally(()=>{if(sessionPromise===request)sessionSettled=true;});
+ sessionPromise=request;
  return sessionPromise;
+}
+
+/** Retry failed libraries explicitly; successful manifests and in-flight work stay shared. */
+export function retryClassicUiSession(){
+ if(sessionPromise&&!sessionSettled)return sessionPromise;
+ sessionPromise=undefined;
+ return loadClassicUiSession();
 }
 
 export function classicUiProfile(){return nationalProfile;}

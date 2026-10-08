@@ -3,7 +3,19 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "scripts": {"dev": "vite --config apps/web/vite.config.ts", "build": "tsc --noEmit && vite build --config apps/web/vite.config.ts", "catalog:build": "python3 tools/resource_catalog.py build", "catalog:validate": "python3 tools/resource_catalog.py validate", "test:resources": "node tools/resource_manager_smoke.mjs", "test:web": "node tests/frontend_regression.mjs"},
-  "dependencies": {"pixi.js": "8.13.2"},
-  "devDependencies": {"typescript": "5.9.3", "vite": "7.1.5"}
+  "scripts": {
+    "dev": "vite --config apps/web/vite.config.ts",
+    "build": "tsc --noEmit && vite build --config apps/web/vite.config.ts",
+    "catalog:build": "python3 tools/resource_catalog.py build",
+    "catalog:validate": "python3 tools/resource_catalog.py validate",
+    "test:resources": "node tools/resource_manager_smoke.mjs",
+    "test:web": "node tests/frontend_regression.mjs && node tests/movement_collision_regression.mjs && node tests/world_events_regression.mjs && node tests/classic_input_regression.mjs && node tests/equipment_pending_regression.mjs && node tests/npc_session_regression.mjs && node tests/skill_keys_regression.mjs && node tests/actor_status_regression.mjs && node tests/actor_label_layout_regression.mjs && node tests/npc_play_regression.mjs && node tests/npc_probe_session_regression.mjs && node tests/inventory_service_regression.mjs && node tests/service_windows_regression.mjs && node tests/actor_palette_regression.mjs && node tests/mining_controller_regression.mjs && node tests/mining_play_regression.mjs && node tests/mining_effects_regression.mjs && node tests/chat_input_regression.mjs && node tests/chat_play_regression.mjs && node tests/chat_colors_regression.mjs && node tests/auth_play_regression.mjs && node tests/melee_visual_regression.mjs && node tests/melee_play_regression.mjs && node tests/audio_playback_regression.mjs && node tests/combat_lifecycle_regression.mjs && node tests/classic_resources_regression.mjs && node tests/resource_diagnostics_regression.mjs && node tests/icon_frames_regression.mjs && node tests/skill_icons_regression.mjs && node tests/item_icon_consumers_regression.mjs && node tests/map_loading_regression.mjs && node tests/map_assets_regression.mjs && node tests/map_sources_regression.mjs && node tests/map_sentinel_regression.mjs && node tests/system_dialog_regression.mjs && node tests/gold_drop_regression.mjs && node tests/password_change_regression.mjs && node tests/auth_actions_regression.mjs && node tests/native_ui_font_regression.mjs && node tests/native_entry_scenes_regression.mjs && node tests/logout_settings_regression.mjs && node tests/logout_play_regression.mjs && node tests/native_selection_portrait_regression.mjs && node tests/native_hud_labels_regression.mjs && node tests/hud_level_regression.mjs && node tests/hud_state_regression.mjs && node tests/hud_play_regression.mjs && node tests/hud_preview_regression.mjs && node tests/native_frame_button_regression.mjs && node tests/window_drag_regression.mjs && node tests/native_social_windows_regression.mjs && node tests/group_actions_regression.mjs && node tests/attack_mode_regression.mjs && node tests/world_tone_regression.mjs && node tests/scene_lighting_regression.mjs && node tests/character_delete_regression.mjs && node tests/live_assets_regression.mjs && node tests/character_window_regression.mjs && node tests/skill_key_dialog_regression.mjs && node tests/native_skill_art_regression.mjs && node tests/native_selection_labels_regression.mjs"
+  },
+  "dependencies": {
+    "pixi.js": "8.13.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vite": "7.1.5"
+  }
 }

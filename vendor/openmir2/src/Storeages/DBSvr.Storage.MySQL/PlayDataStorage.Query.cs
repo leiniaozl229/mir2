@@ -604,6 +604,7 @@ namespace DBSrv.Storage.MySQL
 
         public bool GetQryChar(int nIndex, ref QueryChr queryChrRcd)
         {
+            queryChrRcd = null;
             const string sSql = "SELECT * FROM characters WHERE ID=@Id";
             if (nIndex < 0)
             {
@@ -622,15 +623,16 @@ namespace DBSrv.Storage.MySQL
                 command.CommandText = sSql;
                 command.Parameters.AddWithValue("@Id", nIndex);
                 using MySqlConnector.MySqlDataReader dr = command.ExecuteReader();
-                if (dr.Read())
+                if (!dr.Read())
                 {
-                    queryChrRcd = new QueryChr();
-                    queryChrRcd.Name = dr.GetString("ChrName");
-                    queryChrRcd.Job = dr.GetByte("Job");
-                    queryChrRcd.Hair = dr.GetByte("Hair");
-                    queryChrRcd.Sex = dr.GetByte("Sex");
-                    queryChrRcd.Level = dr.GetUInt16("Level");
+                    return false;
                 }
+                queryChrRcd = new QueryChr();
+                queryChrRcd.Name = dr.GetString("ChrName");
+                queryChrRcd.Job = dr.GetByte("Job");
+                queryChrRcd.Hair = dr.GetByte("Hair");
+                queryChrRcd.Sex = dr.GetByte("Sex");
+                queryChrRcd.Level = dr.GetUInt16("Level");
                 dr.Close();
                 dr.Dispose();
             }

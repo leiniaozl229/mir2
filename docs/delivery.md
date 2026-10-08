@@ -14,14 +14,20 @@ npm ci
 python3 scripts/install-check.py
 bash scripts/build-server.sh
 bash scripts/build-gateway.sh
+python3 scripts/import-native-map-sources.py --client-map-dir /path/to/reference-client/Map
 python3 scripts/prepare-runtime.py --refresh-classic-route
-python3 scripts/import-map-assets.py
+python3 scripts/import-map-assets.py --maps-only
+python3 scripts/import-national-map-assets.py --data-dir /path/to/reference-client/Data --apply
+python3 scripts/import-national-game-assets.py --client-dir /path/to/reference-client
+python3 tools/import-national-ui.py --data-dir /path/to/reference-client/Data --export-root assets/web/ui-national
 bash scripts/compose.sh up -d
 python3 scripts/wait-ready.py
 npm run dev
 ```
 
 打开 `http://127.0.0.1:5173/play.html` 进入联机页，`http://127.0.0.1:5173/ui-calibration.html` 进入 800×600 国服 UI 校准页。旧协议服务端端口由 Compose 保持在本机回环地址，WebSocket 网关入口为 `127.0.0.1:18800/ws`。
+
+生产主流程现要求网关声明`connected.features.entryScenes=true`，登录时提交`interactiveLogin:true`以展示原服服务器列表和入图公告。更新这组前端时须同时发布当前网关；旧网关将显示主流程能力缺失并返回登录。具体协议与网页适配见[选服和入图公告](entry-scenes-implementation-2026-10-07.md)。
 
 `assets/raw/` 和 `assets/web/` 属于可重建产物并被 Git 忽略。`content/classic-176/asset-sources.json` 锁定下载地址、文件大小和 SHA-256；导入器缺少源文件时会自动下载，哈希变化会停止导入。国服 UI 原始帧需要用户准备 2003 客户端解出的 `Data` 目录，再执行：
 
@@ -32,15 +38,19 @@ python3 tools/validate-national-ui.py --data-dir /path/to/Data \
   --export-root assets/web/ui-national --json .runtime/reports/national-ui-validation.json
 ```
 
-没有国服 `Data` 时，页面会显示缺项并使用 Crystal 候选帧，地图和游戏逻辑仍可运行。安装包只用于资源、视觉和协议取证，浏览器运行链路由自有 OpenMir2 服务端与 WebSocket 网关提供。
+生产页面使用国服资源会话；缺少所需库时显示缺项并提供重试。地图单元来自`map-sources.json`共同来源契约，六张不同的原图必须先导入；现有运行目录更新流程见[原地图来源说明](original-map-sources-2026-10-07.md)。安装包用于资源、视觉和协议取证，浏览器运行链路由自有OpenMir2服务端与WebSocket网关提供。
 
 ## 运行模式
+
+安装预检现在显式选择环境：`python3 scripts/install-check.py --mode compose` 保持容器交付要求，检查 Docker CLI、Compose、Bash 和 Node/npm；`python scripts/install-check.py --mode native-windows` 检查本机 Windows、MySQL 客户端、Node/npm、.NET 8 服务端运行时及项目默认 .NET 10 网关 SDK/运行时。可用 `--dotnet`、`--node`、`--npm`、`--mysql` 指定绝对工具路径。预检只读，不初始化数据库、不构建、不启动服务，`ok` 仅代表安装依赖存在，不能作为联机就绪证明。
+
+本机模式报告的 `deliveryComplete` 仍为 false：MySQL 初始化、网关启动配置、本机备份/恢复尚未形成仓库内完整自动交付链。`backup.py create/restore` 和 `wait-ready.py` 使用 Compose，本机模式不会输出这些命令冒充适用操作。本机六服务可用 `scripts/run-server-native.py start/stop/status --dotnet <path>` 管理；发布文件或刷新配置前，先正常保存停服并验证本机备份。2026-10-01 的 .NET 8 网关兼容测试构建与项目默认 net10 构建分别登记。
 
 - `python3 scripts/prepare-runtime.py --refresh-p0` 生成最小 P0 世界，适合确定性战斗、技能和掉落回归；P0 任务审计会报告跳过 Q001。
 - `python3 scripts/prepare-runtime.py --refresh-classic-route` 生成 570 张地图的经典路线目录，并保留账号与角色存档；当前目录包含 Q001 地图任务。
 - 切换运行模式后重启 `engine` 和 `web-gateway`。修改运行配置前先创建备份。
 
-## 停服与备份
+## Compose模式停服与备份
 
 正常停服会先停止网关、请求在线角色保存并等待数据库确认，再停止引擎和数据库：
 

@@ -23,6 +23,13 @@ namespace M2Server.Player
 
         protected void AttackDir(IActor targetObject, short wHitMode, byte nDir)
         {
+            if (nDir > Direction.UpLeft)
+            {
+                return;
+            }
+            // ObjBase.pas sets direction before GetPoseCreate and snapshots
+            // the attack flags before _Attack consumes power/fire charges.
+            Dir = nDir;
             IActor attackTarget = targetObject ?? GetPoseCreate();
             if (UseItems[ItemLocation.Weapon] != null && (UseItems[ItemLocation.Weapon].Index > 0) && UseItems[ItemLocation.Weapon].Desc[ItemAttr.WeaponUpgrade] > 0)
             {
@@ -69,11 +76,30 @@ namespace M2Server.Player
                     break;
             }
 
+            int attackMessage = GetHitMode(wHitMode);
             bool canHit = false;
             int nPower = GetAttackPowerHit(wHitMode, GetBaseAttackPoewr(), attackTarget, ref canHit);
             SkillAttackDamage(wHitMode, nPower);
             AttackDir(attackTarget, nPower, nDir);
-            SendAttackMsg(GetHitMode(wHitMode), Dir, CurrX, CurrY);
+            SendAttackMsg(attackMessage, Dir, CurrX, CurrY);
+            // The classic client ignores these SMs for its own actor. The
+            // browser needs the engine's actual mode, including downgrades,
+            // rather than deriving sword light from its request or GOOD ACK.
+            int selfMessage = attackMessage switch
+            {
+                Messages.RM_HIT => Messages.SM_HIT,
+                Messages.RM_HEAVYHIT => Messages.SM_HEAVYHIT,
+                Messages.RM_BIGHIT => Messages.SM_BIGHIT,
+                Messages.RM_SPELL2 => Messages.SM_POWERHIT,
+                Messages.RM_LONGHIT => Messages.SM_LONGHIT,
+                Messages.RM_WIDEHIT => Messages.SM_WIDEHIT,
+                Messages.RM_FIREHIT => Messages.SM_FIREHIT,
+                _ => 0
+            };
+            if (selfMessage != 0)
+            {
+                SendSocket(Messages.MakeMessage(selfMessage, ActorId, CurrX, CurrY, Dir));
+            }
             AttackSuccess(wHitMode, nPower, canHit, attackTarget);
         }
 
@@ -829,7 +855,7 @@ namespace M2Server.Player
             delayTime = 0;
             try
             {
-                if (!IsCanHit)
+                if (nDir > Direction.UpLeft || !IsCanHit)
                 {
                     return false;
                 }
@@ -1441,7 +1467,7 @@ namespace M2Server.Player
             }
             ushort nDura = UseItems[ItemLocation.Weapon].Dura;
             int nDuraPoint = HUtil32.Round(nDura / 1.03);
-            nDura -= nWeaponDamage;
+            nDura = ReduceDurability(nDura, nWeaponDamage);
             if (nDura <= 0)
             {
                 nDura = 0;

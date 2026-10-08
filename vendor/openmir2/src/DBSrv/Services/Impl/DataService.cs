@@ -1,6 +1,7 @@
 ﻿using DBSrv.Conf;
 using DBSrv.Storage;
 using OpenMir2.DataHandlingAdapters;
+using System.Collections.Concurrent;
 
 namespace DBSrv.Services.Impl
 {
@@ -15,6 +16,10 @@ namespace DBSrv.Services.Impl
         private readonly TcpService _serverSocket;
         private readonly ClientSession _loginService;
         private readonly SettingsModel _setting;
+        private readonly object _cacheSync = new object();
+        private readonly HashSet<string> _uncachedCharacters = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, object> _characterSync = new ConcurrentDictionary<string, object>(StringComparer.OrdinalIgnoreCase);
+        private readonly ConcurrentDictionary<string, object> _accountSync = new ConcurrentDictionary<string, object>(StringComparer.Ordinal);
 
         public DataService(SettingsModel conf, ClientSession loginService, IPlayDataStorage playDataStorage, ICacheStorage cacheStorage)
         {
@@ -150,43 +155,24 @@ namespace DBSrv.Services.Impl
 
         private void LoadHumanRcd(int queryId, byte[] data, string connectionId)
         {
-            LoadCharacterData loadHumanPacket = SerializerUtil.Deserialize<LoadCharacterData>(data);
-            if (loadHumanPacket.SessionID <= 0)
-            {
-                return;
-            }
+            LoadCharacterData loadHumanPacket = default;
             CharacterDataInfo humanRcd = null;
-            bool boFoundSession = false;
             int nCheckCode = -1;
-            if ((!string.IsNullOrEmpty(loadHumanPacket.Account)) && (!string.IsNullOrEmpty(loadHumanPacket.ChrName)))
+            try
             {
-                nCheckCode = _loginService.CheckSessionLoadRcd(loadHumanPacket.Account, loadHumanPacket.UserAddr, loadHumanPacket.SessionID, ref boFoundSession);
-                if ((nCheckCode < 0) || !boFoundSession)
+                loadHumanPacket = SerializerUtil.Deserialize<LoadCharacterData>(data);
+                if (loadHumanPacket.SessionID > 0 && !string.IsNullOrEmpty(loadHumanPacket.Account) && !string.IsNullOrEmpty(loadHumanPacket.ChrName))
                 {
-                    LogService.Warn("[非法请求] " + "帐号: " + loadHumanPacket.Account + " IP: " + loadHumanPacket.UserAddr + " 标识: " + loadHumanPacket.SessionID);
+                    humanRcd = ReadSessionRecord(loadHumanPacket, ref nCheckCode);
                 }
             }
-            if ((nCheckCode == 1) || boFoundSession)
+            catch (Exception e)
             {
-                int nIndex = _playDataStorage.Index(loadHumanPacket.ChrName);
-                if (nIndex >= 0)
-                {
-                    humanRcd = _cacheStorage.Get(loadHumanPacket.ChrName, out bool isExist);
-                    if (!isExist)
-                    {
-                        if (!_playDataStorage.Get(loadHumanPacket.ChrName, ref humanRcd))
-                        {
-                            nCheckCode = -2;
-                        }
-                    }
-                }
-                else
-                {
-                    nCheckCode = -3;
-                }
+                nCheckCode = -2;
+                LogService.Error("读取玩家数据失败: " + e.GetType().Name);
             }
             ServerRequestData responsePack = new ServerRequestData();
-            if ((nCheckCode == 1) || boFoundSession)
+            if (nCheckCode == 1)
             {
                 LoadPlayerDataPacket loadHumData = new LoadPlayerDataPacket();
                 loadHumData.ChrName = EDCode.EncodeString(loadHumanPacket.ChrName);
@@ -194,7 +180,6 @@ namespace DBSrv.Services.Impl
                 ServerRequestMessage messagePacket = new ServerRequestMessage(Messages.DBR_LOADHUMANRCD, 1, 0, 0, 1);
                 responsePack.Message = EDCode.EncodeBuffer(SerializerUtil.Serialize(messagePacket));
                 SendRequest(connectionId, queryId, responsePack, loadHumData);
-                LogService.Debug($"获取玩家[{loadHumanPacket.ChrName}]数据成功");
             }
             else
             {
@@ -204,66 +189,177 @@ namespace DBSrv.Services.Impl
             }
         }
 
+        private CharacterDataInfo ReadSessionRecord(LoadCharacterData packet, ref int checkCode)
+        {
+            // This read-only hint rejects a duplicate without waiting behind the
+            // owning load. Only acquisition inside the character gate is authoritative.
+            if (_loginService.IsSessionRecordLoaded(packet.Account, packet.SessionID))
+            {
+                return null;
+            }
+            // Account ordering also covers selecting a different character with
+            // the same native session. Always acquire account before character.
+            lock (_accountSync.GetOrAdd(packet.Account, _ => new object()))
+            lock (_characterSync.GetOrAdd(packet.ChrName, _ => new object()))
+            {
+                bool foundSession = false;
+                checkCode = _loginService.CheckSessionLoadRcd(packet.Account, packet.UserAddr, packet.SessionID, ref foundSession);
+                if (checkCode != 1)
+                {
+                    return null;
+                }
+                try
+                {
+                    if (_playDataStorage.Index(packet.ChrName) < 0)
+                    {
+                        checkCode = -3;
+                        return null;
+                    }
+                    CharacterDataInfo record = null;
+                    lock (_cacheSync)
+                    {
+                        if (!_uncachedCharacters.Contains(packet.ChrName))
+                        {
+                            try
+                            {
+                                record = _cacheStorage.Get(packet.ChrName, out bool exists);
+                                if (!exists || record?.Header == null || record.Data == null)
+                                {
+                                    record = null;
+                                    if (exists) InvalidateCachedCharacter(packet.ChrName);
+                                }
+                            }
+                            catch (Exception)
+                            {
+                                InvalidateCachedCharacter(packet.ChrName);
+                            }
+                        }
+                    }
+                    if (record == null && !_playDataStorage.Get(packet.ChrName, ref record))
+                    {
+                        checkCode = -2;
+                    }
+                    if (record?.Header == null || record.Data == null)
+                    {
+                        checkCode = -2;
+                    }
+                    return checkCode == 1 ? record : null;
+                }
+                catch (Exception e)
+                {
+                    checkCode = -2;
+                    LogService.Error("读取玩家数据失败: " + e.GetType().Name);
+                    return null;
+                }
+                finally
+                {
+                    // Acquire and failed-load release belong to the same ordered
+                    // operation. A preceding save cannot release a newer load claim.
+                    if (checkCode != 1)
+                    {
+                        try
+                        {
+                            _loginService.SetSessionSaveRcd(packet.Account, packet.SessionID);
+                        }
+                        catch (Exception e)
+                        {
+                            LogService.Error("释放失败读取请求异常: " + e.GetType().Name);
+                        }
+                    }
+                }
+            }
+        }
+
         private void SaveHumanRcd(int queryId, int nRecog, byte[] sMsg, string connectionId)
         {
+            bool committed = false;
             try
             {
                 SaveCharacterData saveHumDataPacket = SerializerUtil.Deserialize<SaveCharacterData>(sMsg);
-                if (saveHumDataPacket == null)
+                CharacterDataInfo humanRcd = saveHumDataPacket?.CharacterData;
+                if (humanRcd?.Header != null && humanRcd.Data != null && !string.IsNullOrEmpty(saveHumDataPacket.Account) && !string.IsNullOrEmpty(saveHumDataPacket.ChrName))
                 {
-                    LogService.Error("保存玩家数据出错.");
-                    return;
-                }
-                string sUserId = saveHumDataPacket.Account;
-                string sChrName = saveHumDataPacket.ChrName;
-                CharacterDataInfo humanRcd = saveHumDataPacket.CharacterData;
-                bool bo21 = humanRcd == null;
-                if (!bo21)
-                {
-                    bo21 = true;
-                    humanRcd.Header.SetName(sChrName);
-                    int nIndex = _playDataStorage.Index(sChrName);
-                    if (nIndex < 0)
-                    {
-                        _playDataStorage.Add(humanRcd);
-                        nIndex = _playDataStorage.Index(sChrName);
-                    }
-                    if (nIndex >= 0)
-                    {
-                        _cacheStorage.Add(sChrName, humanRcd);
-                        _playDataStorage.Update(sChrName, humanRcd);
-                        bo21 = false;
-                    }
-                    _loginService.SetSessionSaveRcd(sUserId);
-                }
-                ServerRequestData responsePack = new ServerRequestData();
-                if (!bo21)
-                {
-                    ServerRequestMessage messagePacket = new ServerRequestMessage(Messages.DBR_SAVEHUMANRCD, 1, 0, 0, 0);
-                    responsePack.Message = EDCode.EncodeBuffer(SerializerUtil.Serialize(messagePacket));
-                    SendRequest(connectionId, queryId, responsePack);
-                }
-                else
-                {
-                    ServerRequestMessage messagePacket = new ServerRequestMessage(Messages.DBR_LOADHUMANRCD, 0, 0, 0, 0);
-                    responsePack.Message = EDCode.EncodeBuffer(SerializerUtil.Serialize(messagePacket));
-                    SendRequest(connectionId, queryId, responsePack);
+                    committed = SaveAndPublish(saveHumDataPacket.Account, saveHumDataPacket.ChrName, nRecog, humanRcd);
                 }
             }
             catch (Exception e)
             {
-                LogService.Error(e);
+                LogService.Error("保存玩家数据失败: " + e.GetType().Name);
+            }
+            ServerRequestData responsePack = new ServerRequestData();
+            ServerRequestMessage messagePacket = new ServerRequestMessage(committed ? Messages.DBR_SAVEHUMANRCD : Messages.DBR_LOADHUMANRCD, committed ? 1 : 0, 0, 0, 0);
+            responsePack.Message = EDCode.EncodeBuffer(SerializerUtil.Serialize(messagePacket));
+            SendRequest(connectionId, queryId, responsePack);
+        }
+
+        private bool SaveAndPublish(string account, string chrName, int sessionId, CharacterDataInfo humanRcd)
+        {
+            lock (_accountSync.GetOrAdd(account, _ => new object()))
+            lock (_characterSync.GetOrAdd(chrName, _ => new object()))
+            {
+                bool committed = false;
+                try
+                {
+                    humanRcd.Header.SetName(chrName);
+                    int nIndex = _playDataStorage.Index(chrName);
+                    // The legacy Add fallback and Update are separate storage transactions.
+                    bool recordAvailable = nIndex >= 0 || (_playDataStorage.Add(humanRcd) && _playDataStorage.Index(chrName) >= 0);
+                    committed = recordAvailable && _playDataStorage.Update(chrName, humanRcd);
+                }
+                catch (Exception e)
+                {
+                    LogService.Error("保存玩家数据失败: " + e.GetType().Name);
+                }
+                lock (_cacheSync)
+                {
+                    if (!committed)
+                    {
+                        // A false/exception outcome can occur after a database commit.
+                        // Keep the session claim and bypass any earlier cached snapshot.
+                        InvalidateCachedCharacter(chrName);
+                        return false;
+                    }
+                    _uncachedCharacters.Add(chrName);
+                    try
+                    {
+                        _cacheStorage.Add(chrName, humanRcd);
+                        _uncachedCharacters.Remove(chrName);
+                    }
+                    catch (Exception e)
+                    {
+                        InvalidateCachedCharacter(chrName);
+                        LogService.Error("保存已提交，缓存刷新失败: " + e.GetType().Name);
+                    }
+                }
+                try
+                {
+                    _loginService.SetSessionSaveRcd(account, sessionId);
+                }
+                catch (Exception e)
+                {
+                    // Cleanup cannot undo an acknowledged storage commit.
+                    LogService.Error("保存已提交，会话更新失败: " + e.GetType().Name);
+                }
+                return true;
+            }
+        }
+
+        private void InvalidateCachedCharacter(string chrName)
+        {
+            // Keep a bypass marker even if the cache backend also fails to delete.
+            _uncachedCharacters.Add(chrName);
+            try
+            {
+                _cacheStorage.Delete(chrName);
+            }
+            catch (Exception)
+            {
+                LogService.Error("缓存失效操作失败；后续读取绕过缓存.");
             }
         }
 
         private void SaveHumanRcdEx(int nQueryId, byte[] sMsg, int nRecog, string connectionId)
         {
-            SaveCharacterData saveHumDataPacket = SerializerUtil.Deserialize<SaveCharacterData>(sMsg);
-            if (saveHumDataPacket == null)
-            {
-                LogService.Error("保存玩家数据出错.");
-                return;
-            }
             SaveHumanRcd(nQueryId, nRecog, sMsg, connectionId);
         }
 
@@ -311,7 +407,7 @@ namespace DBSrv.Services.Impl
             };
             byte[] dataBuff = SerializerUtil.Serialize(serverMessage);
             byte[] data = new byte[ServerDataPacket.FixedHeaderLen + sendBuffer.Length];
-            MemoryCopy.BlockCopy(dataBuff, 0, data, 0, data.Length);
+            MemoryCopy.BlockCopy(dataBuff, 0, data, 0, dataBuff.Length);
             MemoryCopy.BlockCopy(sendBuffer, 0, data, dataBuff.Length, sendBuffer.Length);
             _serverSocket.Send(connectionId, data);
         }

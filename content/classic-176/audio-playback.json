@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "basis": {
+    "reference": "Pinned Delphi SoundUtil.PlayBGM/SilenceSound, IntroScn Login/Select and Actor.RunActSound; target binary timing remains unverified",
+    "nativeSoundList": "2003 national Wav/sound.lst is authoritative for sound number to filename",
+    "nativeMix": "TSoundEngine creates independent effects and frees ended buffers; no arbitrary voice cap",
+    "browserAdaptation": "One existing sound toggle covers music/effects; trusted gesture retry applies only to current BGM, never expired one-shots. Blur/hidden pauses current BGM and clears effects.",
+    "gaps": [
+      "Target executable mix/focus/volume confirmation",
+      "Target gameplay map music and game-over2 trigger (constant alone is not a trigger)",
+      "Original separate music/effect option UI"
+    ]
+  },
+  "music": {
+    "login": "log-in-long2.wav",
+    "select": "sellect-loop2.wav"
+  },
+  "effects": {
+    "movement": "1.wav",
+    "swing": "50.wav",
+    "struck": "60.wav",
+    "miningStone": "91.wav",
+    "skeletonAttack": "400-2.wav",
+    "weaponShort": "50.wav",
+    "weaponWooden": "51.wav",
+    "weaponSword": "52.wav",
+    "weaponDo": "53.wav",
+    "weaponAxe": "54.wav",
+    "weaponClub": "55.wav",
+    "weaponLong": "56.wav",
+    "weaponFist": "57.wav",
+    "powerMale": "m7-1.wav",
+    "powerFemale": "m7-2.wav",
+    "thrusting": "m12-1.wav",
+    "halfMoon": "m25-1.wav",
+    "fire": "m26-3.wav"
+  },
+  "defaultVolume": 1,
+  "meleeImpact": {
+    "zeroBasedFrame": 2,
+    "weaponShapeDivisor": 2,
+    "weaponGroups": {
+      "weaponShort": [
+        6,
+        20
+      ],
+      "weaponWooden": [
+        1
+      ],
+      "weaponSword": [
+        2,
+        13,
+        9,
+        5,
+        14,
+        22
+      ],
+      "weaponDo": [
+        4,
+        17,
+        10,
+        15,
+        16,
+        23
+      ],
+      "weaponAxe": [
+        3,
+        7,
+        11
+      ],
+      "weaponClub": [
+        24
+      ],
+      "weaponLong": [
+        8,
+        12,
+        18,
+        21
+      ]
+    },
+    "defaultWeapon": "weaponFist"
+  }
+}

@@ -22,12 +22,14 @@ namespace M2Server.Monster.Monsters
             _mSlaveObjectList = new List<IActor>();
         }
 
-        private void MeltStone()
+        private void MeltStone(IActor trigger)
         {
-            CharStatusEx = 0;
+            StoneMode = false;
+            CharStatusEx &= ~PoisonState.STONEMODE;
             CharStatus = GetCharStatus();
             SendRefMsg(Messages.RM_DIGUP, Dir, CurrX, CurrY, 0, "");
-            StoneMode = false;
+            UpdateVisibleGay(trigger);
+            SetTargetCreat(trigger);
             MapEvent stoneEvent = new MapEvent(Envir, CurrX, CurrY, 6, 5 * 60 * 1000, true);
             SystemShare.EventMgr.AddEvent(stoneEvent);
         }
@@ -68,20 +70,10 @@ namespace M2Server.Monster.Monsters
                     for (int i = 0; i < VisibleActors.Count; i++)
                     {
                         baseObject = VisibleActors[i].BaseObject;
-                        if (baseObject.Death)
+                        if (IsCombatTarget(baseObject, 2))
                         {
-                            continue;
-                        }
-                        if (IsProperTarget(baseObject))
-                        {
-                            if (!baseObject.HideMode || CoolEye)
-                            {
-                                if (Math.Abs(CurrX - baseObject.CurrX) <= 2 && Math.Abs(CurrY - baseObject.CurrY) <= 2)
-                                {
-                                    MeltStone();
-                                    break;
-                                }
-                            }
+                            MeltStone(baseObject);
+                            break;
                         }
                     }
                 }
@@ -91,7 +83,9 @@ namespace M2Server.Monster.Monsters
                     {
                         SearchEnemyTick = HUtil32.GetTickCount();
                         SearchTarget();
-                        if (_mNDangerLevel > WAbil.HP / WAbil.MaxHP * 5 && _mNDangerLevel > 0)
+                        // Cross-multiply: integer division otherwise turns any damage into zero.
+                        if (_mNDangerLevel > 1 && WAbil.HP > 0 && WAbil.MaxHP > 0 &&
+                            (long)WAbil.HP * 5 <= (long)WAbil.MaxHP * (_mNDangerLevel - 1))
                         {
                             _mNDangerLevel -= 1;
                             CallSlave();

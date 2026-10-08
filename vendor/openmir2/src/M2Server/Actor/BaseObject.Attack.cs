@@ -24,7 +24,9 @@ namespace M2Server.Actor
         /// <returns></returns>
         internal int GetBaseAttackPoewr()
         {
-            return GetAttackPower(HUtil32.LoByte(WAbil.DC), (sbyte)(HUtil32.HiByte(WAbil.DC) - HUtil32.LoByte(WAbil.DC)));
+            // Equipment can widen the range beyond 127; a signed byte would
+            // wrap negative and make GetAttackPower discard the entire bonus.
+            return GetAttackPower(HUtil32.LoByte(WAbil.DC), HUtil32.HiByte(WAbil.DC) - HUtil32.LoByte(WAbil.DC));
         }
 
         internal bool _Attack(int nPower, IActor targetObject)

@@ -68,7 +68,10 @@ class ActorAssetProfileTests(unittest.TestCase):
         spec.loader.exec_module(module)
         profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text(encoding='utf-8'))
         self.assertEqual(set(profile['p0Baseline']['maps']), set(module._source_map_paths()))
-        self.assertEqual(len(module._source_map_paths()), 570)
+        self.assertEqual(len(module._source_map_paths()), 572)
+        extensions = json.loads((ROOT / 'content/classic-176/map-server-extensions.json').read_text(encoding='utf-8'))
+        self.assertEqual({entry['id'] for entry in extensions['maps']}, {'D718', 'D719'})
+        self.assertEqual(len(set(profile['p0Baseline']['maps']) - {'D718', 'D719'}), 570)
 
     def test_client_installer_chain_is_hash_locked(self):
         profile = json.loads((ROOT / 'content/classic-176/asset-sources.json').read_text())
@@ -133,7 +136,7 @@ class ActorAssetProfileTests(unittest.TestCase):
             'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text())
+        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text(encoding='utf-8'))
         routes = profile['p0Baseline']['maps']
         lines = module._classic_mon_gen(routes).splitlines()
         spawn_maps = {line.split()[0] for line in lines if line.strip()}
@@ -175,18 +178,45 @@ class ActorAssetProfileTests(unittest.TestCase):
                 name,
             )
 
+    def test_classic_spawn_filter_does_not_leak_unselected_fallback_maps(self):
+        spec = importlib.util.spec_from_file_location(
+            'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        for routes, expected in (([], set()), (['D001'], set()),
+                                 (['D718'], {'D718'}),
+                                 (['D718', 'D719'], {'D718', 'D719'}),
+                                 (['0', 'D401'], {'0', 'D401'}),
+                                 (['d718'], {'d718'})):
+            with self.subTest(routes=routes):
+                lines = [line for line in module._classic_mon_gen(routes).splitlines() if line.strip()]
+                self.assertEqual({line.split()[0] for line in lines}, expected)
+                self.assertTrue(all(line.split()[0] in routes for line in lines))
+        fallback = module._classic_mon_gen(['D718']).splitlines()
+        self.assertEqual(len(fallback), 1)
+        self.assertEqual(fallback[0].split()[:3], ['D718', '51', '50'])
+        self.assertEqual(module._classic_mon_gen(['0']).splitlines()[:2],
+                         ['0 292 623 鸡 3 4 1', '0 300 626 鹿 4 3 1'])
+
     def test_viper_valley_guide_does_not_overlap_source_merchants(self):
         spec = importlib.util.spec_from_file_location(
             'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        helper = (ROOT / 'scripts/prepare-runtime.py').read_text(encoding='utf-8')
-        match = re.search(r'测试/世界向导 2 (\d+) (\d+) 世界向导', helper)
-        self.assertIsNotNone(match)
-        guide = tuple(map(int, match.groups()))
+        definitions = [line.split() for line in module.city_services.service_definitions({'2'})]
+        travelers = [fields for fields in definitions
+                     if fields[0] == module.city_services.TRAVEL_SCRIPT]
+        self.assertEqual(len(travelers), 1)
+        guide = tuple(map(int, travelers[0][2:4]))
+        self.assertEqual(guide, (507, 468))
         source_merchants = module._filtered_route_definitions(
             ROOT / 'vendor/mirserver-data/Mir200/Envir/Merchant.txt', 1, {'2'})
+        source_merchants = [line for raw in source_merchants
+                            if (line := module.city_services.normalize_merchant(raw)) is not None]
         occupied = {(int(line.split()[2]), int(line.split()[3])) for line in source_merchants}
+        occupied.update(tuple(map(int, fields[2:4])) for fields in definitions
+                        if fields[0] != module.city_services.TRAVEL_SCRIPT)
+        occupied.add((506, 484))  # Actual playtest supply NPC added by prepare-runtime.
         self.assertNotIn(guide, occupied)
         self.assertGreaterEqual(min(max(abs(guide[0] - x), abs(guide[1] - y)) for x, y in occupied), 5)
         world = module.ClassicMap(module._source_map_paths()['2'].read_bytes())
@@ -219,12 +249,12 @@ class ActorAssetProfileTests(unittest.TestCase):
         self.assertIn('if (CastleList.Count > 0)', text)
 
     def test_profile_maps_have_exported_chunks(self):
-        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text())
-        self.assertEqual(len(profile['p0Baseline']['maps']), 570)
+        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text(encoding='utf-8'))
+        self.assertEqual(len(profile['p0Baseline']['maps']), 572)
         for map_id in profile['p0Baseline']['maps']:
             manifest_path = ROOT / 'assets/web/maps' / map_id / 'map.json'
             self.assertTrue(manifest_path.is_file(), map_id)
-            manifest = json.loads(manifest_path.read_text())
+            manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
             self.assertEqual(manifest['id'], map_id)
             self.assertGreater(manifest['width'], 1)
             self.assertGreater(manifest['height'], 1)
@@ -338,7 +368,7 @@ class ActorAssetProfileTests(unittest.TestCase):
             'prepare_runtime', ROOT / 'scripts/prepare-runtime.py')
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text())
+        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text(encoding='utf-8'))
         source_paths = module._source_map_paths()
         self.assertEqual(set(profile['p0Baseline']['maps']), set(source_paths))
         for map_id in profile['p0Baseline']['maps']:
@@ -348,22 +378,45 @@ class ActorAssetProfileTests(unittest.TestCase):
             self.assertGreaterEqual(y, 0, map_id)
             self.assertFalse(world.blocked(x, y), map_id)
 
-    def test_cave_route_dependencies_have_exported_frames(self):
-        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text())
+    def test_cave_route_current_render_dependencies_preserve_national_gap(self):
+        from map_asset_bindings import audit_bindings, resolve_bound_frame
+        profile = json.loads((ROOT / 'content/classic-176/version-profile.json').read_text(encoding='utf-8'))
+        contract = json.loads((ROOT / 'content/classic-176/map-asset-bindings.json').read_text(encoding='utf-8'))
+        bindings = audit_bindings(contract)
+        self.assertTrue(bindings['technicalOk'], bindings['failures'])
         libraries = {
-            name: json.loads((ROOT / 'assets/web/libraries' / name / 'library.json').read_text())
+            name: json.loads((ROOT / 'assets/web/libraries' / name / 'library.json').read_text(encoding='utf-8'))
             for name in ('Tiles', 'SmTiles', 'Objects')
         }
+        national_missing = {}
+        layers = {'Tiles': 'background', 'SmTiles': 'middle', 'Objects': 'objects'}
         for map_id in profile['p0Baseline']['maps']:
             if map_id in {'0', '1', '2', '3'}:
                 continue
-            manifest = json.loads((ROOT / 'assets/web/maps' / map_id / 'map.json').read_text())
+            manifest = json.loads((ROOT / 'assets/web/maps' / map_id / 'map.json').read_text(encoding='utf-8'))
             for name, library in libraries.items():
                 for index in manifest['dependencies'][name]:
-                    self.assertTrue(
-                        str(index) in library['frames'] or index in library['empty'],
-                        f'{map_id} references missing {name}:{index}',
-                    )
+                    if str(index) in library['frames'] or index in library['empty']:
+                        continue
+                    national_missing.setdefault((map_id, name), set()).add(index)
+                    selected = resolve_bound_frame(bindings, map_id=map_id,
+                        map_source_sha256=manifest['sourceSha256'], layer=layers[name], library=name, index=index)
+                    self.assertIsNotNone(selected, f'{map_id} references unresolved render {name}:{index}')
+                    self.assertEqual(selected['index'], index)
+                    self.assertEqual(selected['namespace'], '/libraries/reference-ga0/Tiles')
+                    self.assertEqual(selected['provenance'], 'reference_source')
+                    self.assertFalse(selected['pairingVerified'])
+        # Closing a current render gap cannot erase original national fidelity.
+        self.assertEqual(set(national_missing), {('GA0', 'Tiles')})
+        self.assertEqual(national_missing[('GA0', 'Tiles')], set(contract['bindings'][0]['indices']))
+        self.assertEqual(len(national_missing[('GA0', 'Tiles')]), 408)
+        entry = bindings['entries'][0]
+        self.assertEqual(len(entry['preserveNativeIndices']), 125)
+        self.assertEqual(entry['protectedNativeIndices'], [9, 14])
+        self.assertEqual(entry['checkedPngFrames'], 408)
+        self.assertFalse(entry['mapVersionPairingVerified'])
+        self.assertTrue(bindings['historicalFailures'])
+        self.assertFalse(bindings['complete'])
 
     def test_starter_armour_libraries_are_hash_locked(self):
         profile = json.loads((ROOT / 'content/classic-176/asset-sources.json').read_text())
@@ -378,27 +431,30 @@ class ActorAssetProfileTests(unittest.TestCase):
             self.assertRegex(entry['sha256'], r'^[0-9a-f]{64}$')
             self.assertIn(f'/CArmour/{index:02d}.Lib', entry['url'])
 
-    def test_exported_starter_armour_preserves_full_action_table(self):
-        for index in range(14):
-            library_path = ROOT / 'assets/web/actors' / f'CArmour{index:02d}' / 'library.json'
-            self.assertTrue(library_path.is_file(), library_path)
-            library = json.loads(library_path.read_text())
-            self.assertEqual(library['sourceFrameCount'], 1616)
-            self.assertEqual(len(library['frames']), 1616)
-            self.assertEqual(library['empty'], [])
-            self.assertEqual(library['missing'], [])
+    def test_exported_national_armour_preserves_both_genders_and_all_actions(self):
+        profile = json.loads((ROOT / 'content/classic-176/national-gameplay.json').read_text())
+        library = json.loads((ROOT / 'assets/web/actors/NHum/library.json').read_text())
+        expected = profile['sourceFamilies']['NHum']
+        self.assertEqual(library['sourceSha256'], expected['sourceSha256'])
+        self.assertEqual(library['indexSha256'], expected['indexSha256'])
+        self.assertEqual(library['sourceFrameCount'], 10800)
+        self.assertEqual(library['missing'], [])
+        for dress in range(profile['player']['bodyShapes'] * 2):
+            for action in profile['player']['actions'].values():
+                for direction in range(8):
+                    first = dress * 600 + action['start'] + direction * (action['count'] + action['skip'])
+                    last = first + action['count'] - 1
+                    self.assertIn(str(first), library['frames'])
+                    self.assertIn(str(last), library['frames'])
 
-    def test_zuma_monster_libraries_are_complete(self):
-        expected = {'Monster047': 224, 'Monster061': 352, 'Monster062': 38}
-        profile = json.loads((ROOT / 'content/classic-176/asset-sources.json').read_text())
-        actors = {entry['file']: entry for entry in profile['actorFiles']}
-        for name, frame_count in expected.items():
-            entry = actors[f'{name}.Lib']
-            self.assertRegex(entry['sha256'], r'^[0-9a-f]{64}$')
+    def test_national_zuma_source_libraries_are_complete(self):
+        profile = json.loads((ROOT / 'content/classic-176/national-gameplay.json').read_text())
+        for name in ('Mon5', 'Mon7'):
             library = json.loads((ROOT / 'assets/web/actors' / name / 'library.json').read_text())
-            self.assertEqual(library['sourceFrameCount'], frame_count)
-            self.assertEqual(len(library['frames']), frame_count)
-            self.assertEqual(library['empty'], [])
+            expected = profile['sourceFamilies'][name]
+            self.assertEqual(library['sourceSha256'], expected['sourceSha256'])
+            self.assertEqual(library['sourceFrameCount'], expected['frameCount'])
+            self.assertEqual(len(library['frames']), expected['frameCount'])
             self.assertEqual(library['missing'], [])
 
     def test_p0_monster_visual_catalog_covers_every_baseline_name(self):
@@ -409,16 +465,16 @@ class ActorAssetProfileTests(unittest.TestCase):
         self.assertEqual(report['missing'], [])
         self.assertGreaterEqual(report['candidateCount'], 1)
 
-    def test_new_classic_monster_assets_are_hash_locked_and_exported(self):
-        profile = json.loads((ROOT / 'content/classic-176/asset-sources.json').read_text())
-        actors = {entry['file']: entry for entry in profile['actorFiles']}
-        for name, frame_count in {'Monster006': 224, 'Monster019': 224, 'Monster103': 225, 'Monster112': 224}.items():
-            entry = actors[f'{name}.Lib']
-            self.assertRegex(entry['sha256'], r'^[0-9a-f]{64}$')
+    def test_national_monster_libraries_are_hash_locked_and_exported(self):
+        profile = json.loads((ROOT / 'content/classic-176/national-gameplay.json').read_text())
+        for index in range(1, 19):
+            name = f'Mon{index}'
+            expected = profile['sourceFamilies'][name]
             library = json.loads((ROOT / 'assets/web/actors' / name / 'library.json').read_text())
-            self.assertEqual(library['sourceFrameCount'], frame_count)
-            self.assertEqual(len(library['frames']), frame_count)
-            self.assertEqual(library['empty'], [])
+            self.assertEqual(library['profile'], profile['id'])
+            self.assertEqual(library['sourceSha256'], expected['sourceSha256'])
+            self.assertEqual(library['indexSha256'], expected['indexSha256'])
+            self.assertEqual(library['sourceFrameCount'], expected['frameCount'])
             self.assertEqual(library['missing'], [])
 
     def test_classic_ui_libraries_are_hash_locked(self):
@@ -447,20 +503,19 @@ class ActorAssetProfileTests(unittest.TestCase):
             self.assertEqual(manifest['discardedTrailingOffsets'], discarded, name)
             self.assertEqual(manifest['sourceFrameCount'] + len(discarded), raw_count, name)
 
-    def test_exported_classic_ui_covers_required_hud_frames(self):
+    def test_exported_national_ui_covers_production_hud_and_window_frames(self):
         layout = json.loads((ROOT / 'content/classic-176/ui-layout.json').read_text())
         self.assertEqual(layout['canvas'], {'width': 800, 'height': 600})
-        self.assertEqual(layout['mainDialog']['index'], 0)
-        self.assertEqual(layout['mainDialog']['y'], 448)
-        for library, indices in layout['requiredFrames'].items():
-            path = ROOT / 'assets/web/ui' / library / 'library.json'
-            self.assertTrue(path.is_file(), library)
-            manifest = json.loads(path.read_text())
+        self.assertEqual(layout['nationalHud']['mainDialog']['index'], 1)
+        self.assertEqual(layout['nationalHud']['mainDialog']['y'], 349)
+        required = {'prguse': [1, 3, 4, 7, 73, 371, 380, 402],
+                    'chrsel': [40, 80, 120, 160, 200, 240]}
+        for name, indices in required.items():
+            library = json.loads((ROOT / 'assets/web/ui-national' / name / 'library.json').read_text())
             for index in indices:
-                self.assertIn(str(index), manifest['frames'], f'{library}:{index}')
-                frame = manifest['frames'][str(index)]
-                self.assertGreater(frame['width'], 0, f'{library}:{index}')
-                self.assertGreater(frame['height'], 0, f'{library}:{index}')
+                frame = library['frames'][str(index)]
+                self.assertGreater(frame['width'], 4, f'{name}#{index}')
+                self.assertGreater(frame['height'], 1, f'{name}#{index}')
 
     def test_classic_login_and_select_layout_matches_crystal(self):
         layout = json.loads((ROOT / 'content/classic-176/ui-layout.json').read_text())
@@ -473,8 +528,10 @@ class ActorAssetProfileTests(unittest.TestCase):
         self.assertEqual(layout['select']['slot']['count'], 4)
         self.assertEqual(layout['newCharacter']['index'], 73)
         source = (ROOT / 'apps/web/src/classic-auth.ts').read_text()
-        self.assertIn("index:1084", source)
-        self.assertIn("uiFrame(fallbackPrguse, 65)", source)
+        self.assertNotIn("uiFrame(fallbackPrguse, 65)", source)
+        auth_actions = json.loads((ROOT / 'content/classic-176/auth-actions.json').read_text())
+        self.assertEqual(auth_actions['login']['backgroundFrame'], 60)
+        self.assertIn("uiFrame(prguse,65)", source)
         markup = (ROOT / 'apps/web/play.html').read_text()
         self.assertIn('data-auth-login', markup)
         self.assertIn('data-auth-select', markup)
@@ -487,11 +544,14 @@ class ActorAssetProfileTests(unittest.TestCase):
                                 'originX': 9, 'originY': 37, 'gapX': 1, 'gapY': 1})
         self.assertEqual(layout['characterPage'], {'library': 'Prguse', 'index': 340, 'x': 8, 'y': 90})
         self.assertEqual(layout['paperdollActor'], {'x': 70, 'y': 150, 'direction': 4})
-        self.assertEqual(layout['nationalCharacterPage'], {'library': 'prguse', 'index': 378, 'x': 44, 'y': 72})
-        self.assertEqual(layout['nationalPaperdollActor'], {'x': 128, 'y': 184, 'direction': 4, 'scale': 1})
+        self.assertEqual({k:layout['nationalCharacterPage'][k] for k in ['library','index','x','y']}, {'library': 'prguse', 'index': 378, 'x': 38, 'y': 52})
+        self.assertEqual({k:layout['nationalPaperdollActor'][k] for k in ['x','y','direction','scale']}, {'x': 38, 'y': 52, 'direction': 4, 'scale': 1})
         self.assertEqual(layout['nationalHud']['mainDialog']['y'], 349)
         self.assertEqual(layout['nationalInventoryWindow']['width'], 336)
-        self.assertEqual(layout['nationalCharacterWindow']['width'], 256)
+        self.assertEqual(layout['nationalCharacterWindow']['width'], 232)
+        self.assertEqual((layout['nationalCharacterWindow']['index'],layout['nationalCharacterWindow']['x'],layout['nationalCharacterWindow']['y']), (370,568,0))
+        self.assertEqual(layout['nationalCharacterWindow']['statePage']['index'],382)
+        self.assertEqual(layout['nationalCharacterWindow']['skillsPage']['index'],383)
         self.assertEqual(layout['nationalInventoryGrid']['gold'], {'x': 65, 'y': 190, 'width': 136, 'height': 16})
         self.assertEqual(layout['windows']['inventory']['index'], 196)
         self.assertEqual(layout['windows']['character']['index'], 504)
@@ -502,12 +562,12 @@ class ActorAssetProfileTests(unittest.TestCase):
         self.assertEqual(slots[9], (8, 242))
         self.assertEqual(len(layout['equipmentCells']), 13)
         national_slots = {cell['slot']: (cell['x'], cell['y']) for cell in layout['nationalEquipmentCells']}
-        self.assertEqual(national_slots, {3: (131, 36), 2: (131, 72), 5: (4, 125),
-                                          6: (131, 125), 7: (4, 161), 8: (131, 161)})
+        self.assertEqual(national_slots, {3: (131, 36), 2: (131, 72), 5: (131, 125),
+                                          6: (4, 125), 7: (4, 161), 8: (131, 161)})
         self.assertEqual([cell['slot'] for cell in layout['nationalEquipmentAppearance']], [0, 1, 4])
         paperdoll = (ROOT / 'apps/web/src/paperdoll.ts').read_text()
         self.assertIn("playerLayers", paperdoll)
-        self.assertIn("SOUTH=4", paperdoll)
+        self.assertIn("377:376", paperdoll)
         self.assertIn('id="paperdoll-actor"', (ROOT / 'apps/web/play.html').read_text())
         drops = (ROOT / 'apps/web/src/ground-items.ts').read_text()
         self.assertIn("fontFamily:'SimSun, Songti SC, serif'", drops)

@@ -13,17 +13,25 @@ namespace M2Server.Actor
         /// <summary>
         /// 消息列表
         /// </summary>
-        protected readonly PriorityQueue<SendMessage, byte> MsgQueue;
+        protected readonly PriorityQueue<SendMessage, (byte Priority, long Order)> MsgQueue;
+        private long messageOrder;
 
         public ActorEntity()
         {
             ActorId = SystemShare.ActorMgr.GetNextIdentity();
-            MsgQueue = new PriorityQueue<SendMessage, byte>();
+            MsgQueue = new PriorityQueue<SendMessage, (byte Priority, long Order)>();
         }
 
         public void AddMessage(SendMessage sendMessage)
         {
-            MsgQueue.Enqueue(sendMessage, (byte)MessagePriority.Normal);
+            EnqueueMessage(sendMessage, (byte)MessagePriority.Normal);
+        }
+
+        protected void EnqueueMessage(SendMessage message, byte priority)
+        {
+            // PriorityQueue does not preserve order for equal priorities.
+            // Position/event messages must reach observers in creation order.
+            MsgQueue.Enqueue(message, (priority, ++messageOrder));
         }
 
         /// <summary>

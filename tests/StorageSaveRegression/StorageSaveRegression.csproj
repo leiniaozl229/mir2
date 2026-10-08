@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../vendor/openmir2/src/Storeages/DBSvr.Storage.MySQL/DBSvr.Storage.MySQL.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,134 @@
+{
+  "schemaVersion": 1,
+  "id": "national-2003-scene-lighting",
+  "evidence": {
+    "assets": "native_pixels: six unchanged original lig0*.dat masks plus npal.idx; exact package locks",
+    "rules": "reference_source: PlayScn/cliUtil/MShare and pinned native server message fields",
+    "targetFogEnabled": "unverified: supplied reference PlayScn1398 explicitly forces g_boViewFog=false (免蜡); presence of original masks does not prove original executable activation",
+    "runtime": "Original executable/browser/GPU and final indexed framebuffer quantization pending"
+  },
+  "references": [
+    {
+      "file": "PlayScn.pas",
+      "sha256": "0dcc555bf7fbd10fbd1ac240250bdc0bc28dead21ad188f664030c1af7426120"
+    },
+    {
+      "file": "cliUtil.pas",
+      "sha256": "e17f0604633636fb54c06503a285aa0f1837731f762e0a9daa73ed316ebb018d"
+    },
+    {
+      "file": "Actor.pas",
+      "sha256": "78f2ee21cc3a0230074064f80062eb1ad5f0352221e7c06925b247f2cc6a05e3"
+    },
+    {
+      "file": "ClMain.pas",
+      "sha256": "08c79ace18755ca96882079ed0c5a5ff71c91bd8bb2de6ab539d90272355c74e"
+    },
+    {
+      "file": "MShare.pas",
+      "sha256": "b0b27f8e7802171caae5098b861f4e82b400ccab9a1eee5c3ba9ece5a846d2a2"
+    },
+    {
+      "file": "Grobal2.pas",
+      "sha256": "12216ae60afe64b7e6fb9143e9286552559f2a445d1fff56d62a158e938e3ed2"
+    }
+  ],
+  "masks": [
+    {
+      "level": 0,
+      "file": "lig0a.dat",
+      "sha256": "84145ee99f244d48cef025d2eb8609a5fcbc4437736cacc0933fec2b4f3d5435",
+      "width": 196,
+      "height": 176,
+      "payloadOffset": 8,
+      "payloadBytes": 34496,
+      "trailingBytes": 904
+    },
+    {
+      "level": 1,
+      "file": "lig0b.dat",
+      "sha256": "de8655f35f68fdd4740353a5dccb4a385777765df21ff8bd2a9e9f2db6902b9f",
+      "width": 448,
+      "height": 360,
+      "payloadOffset": 8,
+      "payloadBytes": 161280,
+      "trailingBytes": 0
+    },
+    {
+      "level": 2,
+      "file": "lig0c.dat",
+      "sha256": "049dc4764cb3e24bb690d6a50be2d8ddf200533e7658671ee365ac1a9efc7d81",
+      "width": 620,
+      "height": 528,
+      "payloadOffset": 8,
+      "payloadBytes": 327360,
+      "trailingBytes": 0
+    },
+    {
+      "level": 3,
+      "file": "lig0d.dat",
+      "sha256": "d0ab644b5b50316119675fe833d43529c8a53258a4d9dc6ae86c67f9c9d57ea5",
+      "width": 688,
+      "height": 590,
+      "payloadOffset": 8,
+      "payloadBytes": 405920,
+      "trailingBytes": 0
+    },
+    {
+      "level": 4,
+      "file": "lig0e.dat",
+      "sha256": "f96581a8bae004dad05ddd086745ad602de45e54edfbc6534f95c55964cb5264",
+      "width": 808,
+      "height": 672,
+      "payloadOffset": 8,
+      "payloadBytes": 542976,
+      "trailingBytes": 0
+    },
+    {
+      "level": 5,
+      "file": "lig0f.dat",
+      "sha256": "8148cfdf5b336317984577738441ad7e49a57f547cf9b77d0d1f826f17991279",
+      "width": 928,
+      "height": 769,
+      "payloadOffset": 8,
+      "payloadBytes": 713632,
+      "trailingBytes": 0
+    }
+  ],
+  "nearestIndex": {
+    "file": "npal.idx",
+    "sha256": "977c3a3f712e8845d7d6e0cd21634e89133270952ebd25981b622aedd36c2421",
+    "headerBytes": 48,
+    "title": "WEMADE Entertainment Inc.",
+    "indexCountOffset": 32,
+    "indexCount": 65536,
+    "tableOrder": [
+      "mix",
+      "anti",
+      "heavy",
+      "light",
+      "dungeon"
+    ],
+    "darkLevelTable": {
+      "1": "heavy",
+      "2": "light",
+      "3": "dungeon"
+    },
+    "indexFormula": "headerBytes + tableIndex*65536 + fogByte*256 + sourcePaletteIndex"
+  },
+  "fogCopyReference": {
+    "pixelOperation": "MMX paddd per two little-endian32-bit words, four-byte carries/wrap; not saturating byte add/max",
+    "rowOperation": "clipped full8-byte blocks; trailing1..7 pixels untouched; maxfog unused in active assembly",
+    "targetExecutableMatch": "unverified; do not replace with a generic radial gradient or claim this bug matches target"
+  },
+  "death": {
+    "defaultEffect": "gray",
+    "scope": "Completed world canvas; DOM HUD/windows unaffected",
+    "source": "MShare425 defaultceGrayScale; PlayScn1404..1405 DrawEffect on worldsurface",
+    "configurableEffects": "Server/client death-color configuration remains unprojected"
+  },
+  "rendering": {
+    "productionFogApplied": false,
+    "reason": "Target fog activation and framebuffer quantization remain unresolved; authority/masks/table are retained separately."
+  }
+}

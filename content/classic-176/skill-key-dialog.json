@@ -1,0 +1,330 @@
+{
+  "schemaVersion": 1,
+  "family": "prguse",
+  "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+  "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+  "dialog": {
+    "x": 212,
+    "y": 210,
+    "width": 376,
+    "height": 179,
+    "frame": 229
+  },
+  "icon": {
+    "x": 51,
+    "y": 30,
+    "width": 32,
+    "height": 30
+  },
+  "title": {
+    "x": 95,
+    "y": 38,
+    "width": 270,
+    "height": 20,
+    "suffix": "快捷键盘设置为."
+  },
+  "typography": {
+    "fontFamily": "KaiTi,serif",
+    "fontSize": 12,
+    "lineHeight": 14,
+    "color": "#c0c0c0"
+  },
+  "choices": [
+    {
+      "key": 49,
+      "label": "F1",
+      "x": 33,
+      "y": 82,
+      "width": 32,
+      "height": 30,
+      "normalFrame": 232,
+      "activeFrame": 233
+    },
+    {
+      "key": 50,
+      "label": "F2",
+      "x": 65,
+      "y": 82,
+      "width": 32,
+      "height": 30,
+      "normalFrame": 234,
+      "activeFrame": 235
+    },
+    {
+      "key": 51,
+      "label": "F3",
+      "x": 97,
+      "y": 82,
+      "width": 32,
+      "height": 30,
+      "normalFrame": 236,
+      "activeFrame": 237
+    },
+    {
+      "key": 52,
+      "label": "F4",
+      "x": 129,
+      "y": 82,
+      "width": 32,
+      "height": 30,
+      "normalFrame": 238,
+      "activeFrame": 239
+    },
+    {
+      "key": 53,
+      "label": "F5",
+      "x": 170,
+      "y": 82,
+      "width": 32,
+      "height": 30,
+      "normalFrame": 240,
+      "activeFrame": 241
+    },
+    {
+      "key": 54,
+      "label": "F6",
+      "x": 202,
+      "y": 82,
+      "width": 32,
+      "height": 30,
+      "normalFrame": 242,
+      "activeFrame": 243
+    },
+    {
+      "key": 55,
+      "label": "F7",
+      "x": 234,
+      "y": 82,
+      "width": 32,
+      "height": 30,
+      "normalFrame": 244,
+      "activeFrame": 245
+    },
+    {
+      "key": 56,
+      "label": "F8",
+      "x": 266,
+      "y": 82,
+      "width": 32,
+      "height": 30,
+      "normalFrame": 246,
+      "activeFrame": 247
+    },
+    {
+      "key": 0,
+      "label": "None",
+      "x": 298,
+      "y": 82,
+      "width": 40,
+      "height": 30,
+      "normalFrame": 231,
+      "activeFrame": 230
+    }
+  ],
+  "selectedOffset": {
+    "x": 1,
+    "y": 1
+  },
+  "ok": {
+    "x": 221,
+    "y": 130,
+    "width": 76,
+    "height": 32
+  },
+  "frames": {
+    "229": {
+      "index": 229,
+      "width": 376,
+      "height": 179,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "229.e85b4d6159e5d9d3.png",
+      "sha256": "e85b4d6159e5d9d3494b21bce8c7047a8a99e3dfcc0e4805e3cedf1d45300f06"
+    },
+    "230": {
+      "index": 230,
+      "width": 40,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "230.ec885b6da29de3bf.png",
+      "sha256": "ec885b6da29de3bf2e0c6b45e2b6d1554dbe86078dcd8082aa7b091d168d0e8d"
+    },
+    "231": {
+      "index": 231,
+      "width": 40,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "231.b6e217532daa0038.png",
+      "sha256": "b6e217532daa003830383c150c856de9131df2342553614c500b48b56bf83cf3"
+    },
+    "232": {
+      "index": 232,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "232.fff1a54d6f6d86f2.png",
+      "sha256": "fff1a54d6f6d86f2645871b40483a923e3b597eee830902595a0a1d5630c8ca6"
+    },
+    "233": {
+      "index": 233,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "233.ce9c476f17fdc509.png",
+      "sha256": "ce9c476f17fdc5098117cf572d21f46a920e8f4593abf3f4f39a7df0e2fbe6a7"
+    },
+    "234": {
+      "index": 234,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "234.7cf89c9eb69e117c.png",
+      "sha256": "7cf89c9eb69e117c19e12cb8791412b85e00d631e5ea2ea2a17e0556dcbf09a7"
+    },
+    "235": {
+      "index": 235,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "235.31331b5780bb0d99.png",
+      "sha256": "31331b5780bb0d99a69fc25bb839d9c9ab01e53cc2927af15e6bb571dda5b4bc"
+    },
+    "236": {
+      "index": 236,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "236.30db7a74267014e2.png",
+      "sha256": "30db7a74267014e2ad3fca737a30d4d434e3fce0fd091a9e75f393a8429288d4"
+    },
+    "237": {
+      "index": 237,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "237.9a71663c0e773a01.png",
+      "sha256": "9a71663c0e773a011fefe96dec7c9d3858d11459b78bd86d69f9c01cf4353f26"
+    },
+    "238": {
+      "index": 238,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "238.63fdc6edf0b53fd2.png",
+      "sha256": "63fdc6edf0b53fd27aa048d8cf722eda58f7cebc400aeaa0928846e7619fcc02"
+    },
+    "239": {
+      "index": 239,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "239.1faeb95a107f31c8.png",
+      "sha256": "1faeb95a107f31c8b5917265e03469eba3964be97ffbbe9ae47fcd5c06797de6"
+    },
+    "240": {
+      "index": 240,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "240.b77693114b8af06d.png",
+      "sha256": "b77693114b8af06d5d7b2eae9156c07b0d713fd434e4bec842612c44b2233ce3"
+    },
+    "241": {
+      "index": 241,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "241.72f890bbaa3e9f6e.png",
+      "sha256": "72f890bbaa3e9f6e991b01f4f89f049f5757854701bb993031c09edb0975a9ff"
+    },
+    "242": {
+      "index": 242,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "242.fd930c1e1612cac8.png",
+      "sha256": "fd930c1e1612cac8d23174129e76e80f9f8018190236e5bd6685baf17ae00927"
+    },
+    "243": {
+      "index": 243,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "243.7066a1ba9da081ec.png",
+      "sha256": "7066a1ba9da081ec83c950b761990cddf6ebe3d8f70dff9a5475d6acefc41dfb"
+    },
+    "244": {
+      "index": 244,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "244.cd23318a2f3e7dcb.png",
+      "sha256": "cd23318a2f3e7dcbe08af795a4423d0df75b235d4ba3d3d7594eeceb7bdc5d23"
+    },
+    "245": {
+      "index": 245,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "245.575deea80707fdbf.png",
+      "sha256": "575deea80707fdbfa6cfcb563d71badb50e255008d8d14188312c3631b837a55"
+    },
+    "246": {
+      "index": 246,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "246.67a69eb6daf9a568.png",
+      "sha256": "67a69eb6daf9a5681a97697ae0edbca84fd65304b53031208c9564134784d2ec"
+    },
+    "247": {
+      "index": 247,
+      "width": 32,
+      "height": 30,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "247.c58b1dc72b80f2a6.png",
+      "sha256": "c58b1dc72b80f2a6e006a24dc8c1fb9e8d2e079664a51c1641a8cec2611a906f"
+    }
+  },
+  "behavior": {
+    "escape": "ignore",
+    "enter": "ignore",
+    "outside": "block-world-input",
+    "selection": "local-draft",
+    "confirm": "return-draft-to-server-authoritative-binding-controller",
+    "nonePersistentHighlight": false,
+    "hover": "retain-normal",
+    "okPressed": "retain-embedded-normal-pending-native-capture",
+    "interruption": "discard-draft"
+  },
+  "evidence": {
+    "nativeExecutableSha256": "db71634bcfd46a7ed682612eee9c6da88e5881524ac2cc6f894890a02b18a3a5",
+    "runtime": "native-baselines/64..74 and skill-key-actions.json",
+    "geometry": "outputs/技能快捷键窗口定位.json",
+    "frameOrigin": "measured-native",
+    "f2Selected": "235 candidate measured at local(66,83), cursor excluded in capture70",
+    "coordinates": "bitmap-derived buttons; center clicks verified, edge hot zones pending",
+    "typography": "mir.ini KaiTi and runtime layout; full glyph raster pending",
+    "keyboard": "Escape/Return ignored in runtime67/68",
+    "tabFocus": "browser accessibility extension",
+    "complete": false
+  }
+}

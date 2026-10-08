@@ -6,6 +6,78 @@ namespace GameSrv.Word.Threads
     {
 
         private readonly object UserCriticalSection = new object();
+        private readonly object _processingGate = new object();
+        private WorldServer _shutdownWorld;
+        private readonly object _finalizeGate = new object();
+        private Task<bool> _finalizeTask;
+        private ShutdownDrainState _lastDrainState;
+
+        public void EnterShutdownMode(WorldServer world)
+        {
+            lock (_processingGate)
+            {
+                if (!world.IsShutdownFrozen) throw new InvalidOperationException("World is not frozen.");
+                _shutdownWorld = world;
+            }
+        }
+
+        public bool TryFinalizeShutdownSnapshots()
+        {
+            if (!Monitor.TryEnter(_processingGate)) return false;
+            try
+            {
+                if (_shutdownWorld == null) return false;
+                FrontEngine front = (FrontEngine)M2Share.FrontEngine;
+                if (front.PendingLoadCount != 0 || front.PendingGoldCount != 0 ||
+                    PlayerDataService.PendingLoadCount != 0 || _shutdownWorld.LoadPlayCount != 0 ||
+                    _shutdownWorld.PendingShutdownWorkCount != 0) return false;
+                _shutdownWorld.FinalizeShutdownSnapshots();
+                return true;
+            }
+            finally { Monitor.Exit(_processingGate); }
+        }
+
+        public Task<bool> TryFinalizeShutdownSnapshotsAsync()
+        {
+            lock (_finalizeGate)
+            {
+                if (_finalizeTask == null || _finalizeTask.IsCompleted)
+                    _finalizeTask = Task.Run(TryFinalizeShutdownSnapshots);
+                return _finalizeTask;
+            }
+        }
+
+        public ShutdownDrainState ObserveShutdownDrain()
+        {
+            if (!Monitor.TryEnter(_processingGate))
+            {
+                // A running load/finalization has not been drained. Counts are the last
+                // sampled values, explicitly marked processing, rather than blocking a
+                // console deadline or treating an unobserved queue as empty.
+                ShutdownDrainState previous = Volatile.Read(ref _lastDrainState) ??
+                    new ShutdownDrainState(0, 0, 0, 0, 0, 0, 0, 0, false, false);
+                return previous with { Processing = true, RuntimeWork = Math.Max(1, previous.RuntimeWork),
+                    Frozen = _shutdownWorld?.IsShutdownFrozen == true, FinalSnapshotsComplete = false };
+            }
+            try
+            {
+                FrontEngine front = (FrontEngine)M2Share.FrontEngine;
+                var state = new ShutdownDrainState(front.SaveListCount(), PlayerDataService.PendingSaveCount,
+                    PlayerDataService.UnknownSaveCount, front.PendingLoadCount, PlayerDataService.PendingLoadCount,
+                    _shutdownWorld?.LoadPlayCount ?? (SystemShare.WorldEngine as WorldServer)?.LoadPlayCount ?? 0,
+                    front.PendingGoldCount + ((_shutdownWorld ?? SystemShare.WorldEngine as WorldServer)?.PendingShutdownGoldCount ?? 0),
+                    (_shutdownWorld ?? SystemShare.WorldEngine as WorldServer)?.PendingShutdownWorkCount ?? 0,
+                    _shutdownWorld?.IsShutdownFrozen == true, _shutdownWorld?.ShutdownFinalSnapshotsComplete == true);
+                Volatile.Write(ref _lastDrainState, state);
+                return state;
+            }
+            finally { Monitor.Exit(_processingGate); }
+        }
+
+        public bool ConfirmShutdownDrained()
+        {
+            lock (_processingGate) return ObserveShutdownDrain().Drained;
+        }
 
         public CharacterDataProcessor() : base(TimeSpan.FromMilliseconds(500), "StorageProcessor")
         {
@@ -29,41 +101,31 @@ namespace GameSrv.Word.Threads
 
         protected override Task ExecuteInternal(CancellationToken stoppingToken)
         {
-            const string sExceptionMsg = "[Exception] StorageProcessor::ExecuteInternal";
-            try
+            lock (_processingGate)
             {
-                M2Share.FrontEngine.ProcessGameDate();
-                IList<SavePlayerRcd> saveRcdList = M2Share.FrontEngine.GetSaveRcdList();
-                if (!GameShare.DataServer.IsConnected && saveRcdList.Count > 0)
+                const string sExceptionMsg = "[Exception] StorageProcessor::ExecuteInternal";
+                try
                 {
-                    LogService.Error("DBServer 断开链接，保存玩家数据失败.");
-                    HUtil32.EnterCriticalSection(UserCriticalSection);
-                    try
-                    {
-                        M2Share.FrontEngine.ClearSaveList();
-                    }
-                    finally
-                    {
-                        HUtil32.LeaveCriticalSection(UserCriticalSection);
-                    }
-                }
-                else
-                {
-                    ProcessReadStorage();
+                    M2Share.FrontEngine.ProcessGameDate();
+                    // A disconnected DB does not discard snapshots or release the reload barrier.
+                    // Pending replies are still processed; other characters can progress independently.
                     ProcessSaveStorage();
+                    ProcessReadStorage();
+                    _shutdownWorld?.ProcessShutdownLoads();
                 }
+                catch (Exception ex)
+                {
+                    LogService.Error(sExceptionMsg);
+                    LogService.Error(ex.StackTrace);
+                }
+                return Task.CompletedTask;
             }
-            catch (Exception ex)
-            {
-                LogService.Error(sExceptionMsg);
-                LogService.Error(ex.StackTrace);
-            }
-            return Task.CompletedTask;
         }
 
         private static void ProcessSaveStorage()
         {
             IList<SavePlayerRcd> saveRcdTempList = M2Share.FrontEngine.GetTempSaveRcdList();
+            HashSet<string> characters = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             for (int i = 0; i < saveRcdTempList.Count; i++)
             {
                 SavePlayerRcd saveRcd = saveRcdTempList[i];
@@ -71,15 +133,13 @@ namespace GameSrv.Word.Threads
                 {
                     continue;
                 }
-                if (saveRcd.IsSaveing)
+                // Only the oldest snapshot for a character may be sent. A failed or unknown
+                // outcome must not let a newer snapshot overtake it.
+                if (!characters.Add(saveRcd.ChrName) || saveRcd.IsSaveing)
                 {
                     continue;
                 }
-                saveRcd.IsSaveing = true;
-                if (!PlayerDataService.SaveCharacterData(saveRcd, ref saveRcd.QueryId) || saveRcd.ReTryCount > 50)
-                {
-                    saveRcd.ReTryCount++;
-                }
+                PlayerDataService.SaveCharacterData(saveRcd, ref saveRcd.QueryId);
             }
             M2Share.FrontEngine.ClearSaveRcdTempList();
             PlayerDataService.ProcessSaveQueue();
@@ -108,7 +168,7 @@ namespace GameSrv.Word.Threads
                         HUtil32.EnterCriticalSection(UserCriticalSection);
                         try
                         {
-                            M2Share.FrontEngine.AddToLoadRcdList(loadDbInfo);
+                            ((FrontEngine)M2Share.FrontEngine).RequeueExistingLoad(loadDbInfo);
                         }
                         finally
                         {

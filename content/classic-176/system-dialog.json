@@ -1,0 +1,654 @@
+{
+  "schemaVersion": 1,
+  "family": "prguse",
+  "canvas": {
+    "width": 800,
+    "height": 600,
+    "coordinateOrigin": "top-left"
+  },
+  "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+  "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+  "namespace": "/ui-national/prguse",
+  "source": {
+    "sourceId": "national:ui:prguse",
+    "provenance": "native_pixels",
+    "sourceContract": "content/classic-176/active-asset-sources.json",
+    "root": "nationalData",
+    "data": {
+      "path": "Prguse.wil",
+      "bytes": 4313717,
+      "sha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2"
+    },
+    "index": {
+      "path": "Prguse.WIX",
+      "bytes": 2088,
+      "sha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531"
+    },
+    "sourceFrameCount": 510,
+    "manifest": "assets/web/ui-national/prguse/library.json",
+    "manifestSha256": "f7b57c6ef18d71132655acd8502b26672fca0ee323cdbd3f6477a698bda2f363",
+    "pixelByteOrder": "RGBA",
+    "offsetPolicy": "Record source offsets; UI ClientRect is placed at panel/control coordinates without actor offsets."
+  },
+  "nativeSameVersion": "unknown",
+  "historicalLayoutVerified": false,
+  "browserVisualComparisonVerified": false,
+  "complete": false,
+  "domain": "system-dialog",
+  "frames": {
+    "360": {
+      "index": 360,
+      "width": 452,
+      "height": 179,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "360.b75cc9c27aa3329c.png",
+      "sha256": "b75cc9c27aa3329c63b4e43a21399ec30350370fec507acbcbb9bc1b158c38b8",
+      "pixelSha256": "9d81e84ac43d49cf780a74be13a8b1ccfaf716172376a37d8054bd30923ee704",
+      "bgraSha256": "18823a51622a1ff5b6d6a81cb02d7c8c6fca8b24c761d098504b017dab91993a",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 358,
+        "opaque": 80550,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          450,
+          179
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "361": {
+      "index": 361,
+      "width": 80,
+      "height": 34,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "361.418e002b8222f085.png",
+      "sha256": "418e002b8222f085ab408f7051533f2ef9d66e973c7aab30481223d3d4692487",
+      "pixelSha256": "3615238f90ef7b38f4e698e6728f486a0362e9df42c3bc48e3ae920e0b7cdf27",
+      "bgraSha256": "27583f57ecbe025e5baf20e32f62ded39df29eed326d0fe03ebf989203e3c934",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 2720,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          80,
+          34
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "362": {
+      "index": 362,
+      "width": 80,
+      "height": 34,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "362.afa04ed614dbae63.png",
+      "sha256": "afa04ed614dbae6374ff2438f7389f0781381349bf59a7adb72ba47e66864d5e",
+      "pixelSha256": "909800e4dbe2a3b9b97a301a9edfc4141d28433590893f7925d9a0bcd7b064a4",
+      "bgraSha256": "21f766acd8d7948ab8028565fcd642301e78e8716dc991f70b9fdd6f04fda76c",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 2720,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          80,
+          34
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "363": {
+      "index": 363,
+      "width": 80,
+      "height": 34,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "363.8d989d1ea98e093c.png",
+      "sha256": "8d989d1ea98e093c7a1edb2d97ccf8f47eb5f995763f14174e03e42540c6aa28",
+      "pixelSha256": "da8199f18c93ed0b4958eb02be101b2ea02a3c4e9a9483b3aeff9e3e2615da91",
+      "bgraSha256": "3ee8b25d77494faee214b19389f6bdb5f5cedabf0c9f26a1715f78ee3c1e9a68",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 2720,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          80,
+          34
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "364": {
+      "index": 364,
+      "width": 80,
+      "height": 34,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "364.7070c98551faaf4f.png",
+      "sha256": "7070c98551faaf4ff197a32a102d2fff5e01715c4eb424ee6a441e9efe2e46b9",
+      "pixelSha256": "8d7f6f3dd3bc225dd253f9f4ea7acbfa17fe2ee32338f7d00362550679645f68",
+      "bgraSha256": "b8d1109f28dd0de36964e6796defaca892414485858764aba1be0b9aa0944eca",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 2720,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          80,
+          34
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "365": {
+      "index": 365,
+      "width": 80,
+      "height": 34,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "365.7fccaace4c80cc14.png",
+      "sha256": "7fccaace4c80cc148fe2104c437ca85ac3fb0efee207af93087002b32fa51a5d",
+      "pixelSha256": "14f4b765e782e2dccdde3643a86e3976d8c0536f30f30ba5019f78f7262dcca9",
+      "bgraSha256": "507cc2e995719c4f4cda61039d85d7ad946d6881d437036821b3749bf8ab4ae3",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 2720,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          80,
+          34
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "366": {
+      "index": 366,
+      "width": 80,
+      "height": 34,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "366.3bfe07a3ef219fbd.png",
+      "sha256": "3bfe07a3ef219fbddd152eedb490bb5447bf1fdfde2a04dcf7c4d6874ae17c94",
+      "pixelSha256": "39edf978bbc8e4f1aacbf9a4461785c8e3fd059950837480c7ff596053df143d",
+      "bgraSha256": "a22091abb1413f7755770fb0f4da0a2fdc0f4641134b1a695097e8ee37773cb5",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 2720,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          80,
+          34
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "367": {
+      "index": 367,
+      "width": 80,
+      "height": 34,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "367.7fccaace4c80cc14.png",
+      "sha256": "7fccaace4c80cc148fe2104c437ca85ac3fb0efee207af93087002b32fa51a5d",
+      "pixelSha256": "14f4b765e782e2dccdde3643a86e3976d8c0536f30f30ba5019f78f7262dcca9",
+      "bgraSha256": "507cc2e995719c4f4cda61039d85d7ad946d6881d437036821b3749bf8ab4ae3",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 2720,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          80,
+          34
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "368": {
+      "index": 368,
+      "width": 80,
+      "height": 34,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "368.3bfe07a3ef219fbd.png",
+      "sha256": "3bfe07a3ef219fbddd152eedb490bb5447bf1fdfde2a04dcf7c4d6874ae17c94",
+      "pixelSha256": "39edf978bbc8e4f1aacbf9a4461785c8e3fd059950837480c7ff596053df143d",
+      "bgraSha256": "a22091abb1413f7755770fb0f4da0a2fdc0f4641134b1a695097e8ee37773cb5",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 2720,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          80,
+          34
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "380": {
+      "index": 380,
+      "width": 256,
+      "height": 359,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "380.875ffd8d5c7be804.png",
+      "sha256": "875ffd8d5c7be80409e555199cf5592d45d8f0aa4f8b52e1c3670981c8807a9c",
+      "pixelSha256": "f28d7621270863a842aea3f443663616187bb9f57f6a37e9dda66fa32fee6129",
+      "bgraSha256": "fe8a99bddedf4cf20d4bff6390f2d2559caa0e8c8be97ea40e17177a2a01c7cb",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 0,
+        "opaque": 91904,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          256,
+          359
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    },
+    "381": {
+      "index": 381,
+      "width": 188,
+      "height": 105,
+      "offsetX": 7,
+      "offsetY": -44,
+      "file": "381.ad50385c8cac6081.png",
+      "sha256": "ad50385c8cac60815643a1cc853e0517a472b4043c270b2764bc8b4d07901ab0",
+      "pixelSha256": "79906481da0b2b3e7f7ce94480ca4b013c450dffc964f061cfc4734aa6a70d63",
+      "bgraSha256": "f849d4e60315a16541f103760f2f710e2bf24e4453673044d7aa2324b03edc83",
+      "rebuiltPngByteEqual": true,
+      "decodedPngPixelEqual": true,
+      "alpha": {
+        "transparent": 210,
+        "opaque": 19530,
+        "partial": 0,
+        "bbox": [
+          0,
+          0,
+          186,
+          105
+        ]
+      },
+      "sourceSha256": "88a12492138bc85ba0429dce3cbd857efcea5b7659cdd8d85a4f2f4db68d5ef2",
+      "indexSha256": "e3c60272e6493fb8c409a8bc90834f01b61f37647152865c9125827e82514531",
+      "provenance": "native_pixels"
+    }
+  },
+  "variants": {
+    "horizontal": {
+      "frame": 360,
+      "width": 452,
+      "height": 179,
+      "text": {
+        "left": 39,
+        "top": 38,
+        "width": 374,
+        "height": 74
+      },
+      "input": {
+        "left": 85,
+        "top": 68,
+        "width": 282,
+        "height": 22,
+        "evidence": "reference_source EdDlgEdit width=dialog width-170 and screen-centered; top is centered with an unavailable native edit height and remains proposed"
+      },
+      "buttonBase": {
+        "left": 324,
+        "top": 126
+      },
+      "buttonSpacing": 110,
+      "buttonPositionsByCount": {
+        "1": [
+          {
+            "left": 324,
+            "top": 126
+          }
+        ],
+        "2": [
+          {
+            "left": 324,
+            "top": 126
+          },
+          {
+            "left": 214,
+            "top": 126
+          }
+        ],
+        "3": [
+          {
+            "left": 324,
+            "top": 126
+          },
+          {
+            "left": 214,
+            "top": 126
+          },
+          {
+            "left": 104,
+            "top": 126
+          }
+        ],
+        "4": [
+          {
+            "left": 336,
+            "top": 126
+          },
+          {
+            "left": 236,
+            "top": 126
+          },
+          {
+            "left": 136,
+            "top": 126
+          },
+          {
+            "left": 36,
+            "top": 126
+          }
+        ]
+      },
+      "maxButtons": 4,
+      "layoutEvidence": {
+        "oneToThree": "reference_source local coordinates; same-version target behavior unknown",
+        "four": "proposed fit: original fourth button would start at -6",
+        "textExtent": "proposed clipping area; reference proves origin and 14-pixel line advance only"
+      }
+    },
+    "vertical": {
+      "frame": 380,
+      "width": 256,
+      "height": 359,
+      "text": {
+        "left": 23,
+        "top": 20,
+        "width": 210,
+        "height": 233
+      },
+      "buttonBase": {
+        "left": 105,
+        "top": 305
+      },
+      "buttonSpacing": 110,
+      "buttonPositionsByCount": {
+        "1": [
+          {
+            "left": 105,
+            "top": 305
+          }
+        ],
+        "2": [
+          {
+            "left": 144,
+            "top": 305
+          },
+          {
+            "left": 44,
+            "top": 305
+          }
+        ],
+        "3": [
+          {
+            "left": 144,
+            "top": 267
+          },
+          {
+            "left": 44,
+            "top": 267
+          },
+          {
+            "left": 144,
+            "top": 307
+          }
+        ],
+        "4": [
+          {
+            "left": 144,
+            "top": 267
+          },
+          {
+            "left": 44,
+            "top": 267
+          },
+          {
+            "left": 144,
+            "top": 307
+          },
+          {
+            "left": 44,
+            "top": 307
+          }
+        ]
+      },
+      "maxButtons": 4,
+      "layoutEvidence": {
+        "one": "reference_source local coordinate",
+        "multiple": "proposed two-column fit: original second button would start at -5",
+        "textExtent": "proposed clipping area"
+      }
+    },
+    "small": {
+      "frame": 381,
+      "width": 188,
+      "height": 105,
+      "text": {
+        "left": 12,
+        "top": 12,
+        "width": 164,
+        "height": 37
+      },
+      "buttonBase": {
+        "left": 54,
+        "top": 61
+      },
+      "buttonSpacing": 110,
+      "buttonPositionsByCount": {
+        "1": [
+          {
+            "left": 54,
+            "top": 61
+          }
+        ]
+      },
+      "maxButtons": 1,
+      "fallbackSizeForOverflow": "horizontal",
+      "layoutEvidence": {
+        "one": "proposed fit: source origin (39,38) overlaps source button at (90,36)",
+        "multiple": "proposed horizontal fallback",
+        "textExtent": "proposed clipping area"
+      }
+    }
+  },
+  "buttons": {
+    "ok": {
+      "normalFrame": 361,
+      "pressedFrame": 362,
+      "width": 80,
+      "height": 34,
+      "pixelLabel": "确定",
+      "stateEvidence": "reference_source FaceIndex/DownedFaceIndex + 1; native pixels independently decoded",
+      "hoverFrame": 361,
+      "hoverPolicy": "reuse_normal_no_independent_hover_evidence"
+    },
+    "yes": {
+      "normalFrame": 363,
+      "pressedFrame": 364,
+      "width": 80,
+      "height": 34,
+      "pixelLabel": "确定",
+      "stateEvidence": "reference_source FaceIndex/DownedFaceIndex + 1; native pixels independently decoded",
+      "hoverFrame": 363,
+      "hoverPolicy": "reuse_normal_no_independent_hover_evidence"
+    },
+    "cancel": {
+      "normalFrame": 365,
+      "pressedFrame": 366,
+      "width": 80,
+      "height": 34,
+      "pixelLabel": "取消",
+      "stateEvidence": "reference_source FaceIndex/DownedFaceIndex + 1; native pixels independently decoded",
+      "hoverFrame": 365,
+      "hoverPolicy": "reuse_normal_no_independent_hover_evidence"
+    },
+    "no": {
+      "normalFrame": 367,
+      "pressedFrame": 368,
+      "width": 80,
+      "height": 34,
+      "pixelLabel": "取消",
+      "stateEvidence": "reference_source FaceIndex/DownedFaceIndex + 1; native pixels independently decoded",
+      "hoverFrame": 367,
+      "hoverPolicy": "reuse_normal_no_independent_hover_evidence"
+    }
+  },
+  "buttonOrder": [
+    "cancel",
+    "no",
+    "yes",
+    "ok"
+  ],
+  "positionArrayOrder": "right-to-left; filter buttonOrder to visible requested results",
+  "center": {
+    "rule": "integer-div",
+    "formula": "left=(800-width) div 2; top=(600-height) div 2",
+    "provenance": "reference_source"
+  },
+  "inputProfiles": {
+    "gold": {
+      "input": {"left":35,"top":69,"width":382,"height":22,"background":"#000000","color":"#ffffff","border":"0","padding":"0","fontFamily":"KaiTi, '楷体', serif","fontSize":12,"lineHeight":22},
+      "typography": {"familyCandidates":["KaiTi","楷体"],"fallback":"serif","cssPixelSize":12,"lineHeight":14,"color":"#ffffff","shadow":"#000000"},
+      "buttons": ["ok"],
+      "text": "你想放下多少金币?",
+      "evidence": "native-runtime-2026-10-07 screenshots 55,56,57,60: coin then world, one OK, black edit, Escape stays open, zero + Enter closes without balance change",
+      "fontEvidence": "current mir.ini FontName=楷体; browser/GDI raster and exact baseline still require comparison",
+      "complete": false
+    }
+  },
+  "typography": {
+    "familyCandidates": [
+      "SimSun",
+      "宋体",
+      "Songti SC",
+      "STSong"
+    ],
+    "fallback": "serif",
+    "cssPixelSize": 12,
+    "lineHeight": 14,
+    "color": "#ffffff",
+    "shadow": "#000000",
+    "provenance": "proposed",
+    "reference": {
+      "kind": "reference_source",
+      "lineAdvance": 14,
+      "lineDelimiter": "\\",
+      "drawing": "BoldTextOut(clWhite, clBlack); no direct native target font proof"
+    },
+    "nativeFontVerified": false
+  },
+  "referenceLayout": {
+    "kind": "reference_source",
+    "path": "C:/Users/122/Documents/Codex/2026-09-27/codex-threads-01a0ddc4-8265-75b0-82f2/work/mir2-client-reference/GameOfMir/Client/FState.pas",
+    "sha256": "f685ca03af5a999858d5826e924ace25b404b2703107831027b59f6f2491e6b8",
+    "scopes": [
+      "DMessageDlg XBase=324; frames 360/380/381; integer div center; cancel/no/yes/ok, decrement 110",
+      "DMsgDlgDirectPaint draws ClientRect without WIL anchor offset; backslash lines advance 14",
+      "Enter only single OK/Yes; Escape requires Cancel; hover frame unproven"
+    ],
+    "variants": {
+      "horizontal": {
+        "message": [
+          39,
+          38
+        ],
+        "buttonBase": [
+          324,
+          126
+        ]
+      },
+      "vertical": {
+        "message": [
+          23,
+          20
+        ],
+        "buttonBase": [
+          105,
+          305
+        ]
+      },
+      "small": {
+        "message": [
+          39,
+          38
+        ],
+        "buttonBase": [
+          90,
+          36
+        ]
+      }
+    }
+  },
+  "gaps": [
+    "Reference source WMainImages namespace/version has not been paired to this national Prguse installation.",
+    "Proposed safe fitting layouts, drag behavior, fonts and interactive hotzones need target native-client and browser comparison.",
+    "No independent hover or disabled native frame evidence."
+  ]
+}

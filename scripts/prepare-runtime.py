@@ -13,7 +13,9 @@ import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from map_tool import ClassicMap, UnsupportedMap
+from map_sources import resolve_maps, refresh_runtime_maps
 import city_services
+import boss_rooms
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "vendor/mirserver-data"
@@ -163,19 +165,8 @@ def _map_info_flags():
 
 
 def _source_map_paths():
-    """Return supported source maps under stable, case-insensitive ids."""
-    result = {}
-    for path in sorted((SOURCE / "Mir200/Map").glob("*.map")):
-        try:
-            ClassicMap(path.read_bytes())
-        except UnsupportedMap:
-            continue
-        stem = path.stem
-        # The original pack mixes lower-case dungeon filenames with upper-case
-        # references. Browser URLs and runtime map names use a stable form.
-        canonical = stem.upper() if any(char.isalpha() for char in stem) else stem
-        result[canonical] = path
-    return result
+    """Use the same locked map bytes as the browser exporter."""
+    return resolve_maps(ROOT)
 
 
 def _walkable_point(world):
@@ -326,14 +317,16 @@ def _classic_mon_gen(route_maps):
         rest = line.split(None, 1)[1] if len(fields) > 1 else ""
         source_lines.append(f"{canonical} {rest}".rstrip())
         seen.add(canonical)
-    lines = ["0 292 623 鸡 3 4 1", "0 300 626 鹿 4 3 1"]
+    lines = (["0 292 623 鸡 3 4 1", "0 300 626 鹿 4 3 1"]
+             if "0" in allowed else [])
     lines.extend(source_lines)
     # D001 is driven by the cave-guide scripts so browser tests can choose a
     # controlled encounter. Keep the map free of background spawns here.
     for map_id, meta in CLASSIC_EXTRA_ROUTES.items():
-        if map_id in {"0", "D001"} or map_id in seen:
+        canonical = allowed.get(map_id.casefold())
+        if canonical is None or canonical in {"0", "D001"} or canonical in seen:
             continue
-        lines.append(f"{map_id} {meta['npc'][0]} {meta['npc'][1]} {meta['monster']} 3 2 30")
+        lines.append(f"{canonical} {meta['npc'][0]} {meta['npc'][1]} {meta['monster']} 3 2 30")
     return "\n".join(lines) + "\n"
 
 
@@ -565,6 +558,10 @@ _expand_classic_routes(CLASSIC_EXTRA_ROUTES)
 
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--refresh-playtest-skills", action="store_true",
+                        help="Update only the isolated skill trainer scripts; back up saves and stop the engine first")
+    parser.add_argument("--refresh-client-maps", action="store_true",
+                        help="Update only the six locked original maps; back up saves and stop the engine first")
     parser.add_argument("--refresh-p0", action="store_true",
                         help="Regenerate only the explicitly isolated P0 world fixtures")
     parser.add_argument("--refresh-classic-route", action="store_true",
@@ -581,6 +578,23 @@ def main():
     parser.add_argument("--client-game-port", type=int,
                         help="Port sent to clients for gameplay (default: game-port)")
     args = parser.parse_args()
+    if args.refresh_client_maps:
+        if args.refresh_p0 or args.refresh_classic_route or args.refresh_playtest_skills or args.native_windows:
+            parser.error("--refresh-client-maps is a standalone map-only operation")
+        rows = refresh_runtime_maps(ROOT, SERVER / "Mir200/Map")
+        print(json.dumps({"maps": rows, "worldDefinitionsChanged": False,
+                          "accountsOrSavesChanged": False}, ensure_ascii=False, indent=2))
+        return
+    if args.refresh_playtest_skills:
+        targets = [SERVER / "Mir200/Envir/Market_Def/测试/技能导师-0.txt",
+                   SERVER / "Mir200/Envir/Market_Def/测试/试玩补给员-2.txt"]
+        if any(not target.is_file() for target in targets):
+            parser.error("Initialize the playtest runtime before refreshing its skill trainers")
+        text = read_text(ROOT / "content/classic-176/p0/skill-trainer.txt")
+        for target in targets:
+            target.write_text(text, encoding="gb18030")
+        print("Updated only the two isolated skill trainer scripts")
+        return
     native_ports = (args.database_port, args.login_port, args.selection_port, args.game_port)
     redirect_ports = tuple(port for port in (args.client_selection_port, args.client_game_port)
                            if port is not None)
@@ -589,6 +603,13 @@ def main():
     if args.native_windows and (len(set(native_ports)) != 4 or
             set(native_ports) & {3000, 5000, 5100, 5500, 5600, 5700, 6000}):
         parser.error("Native ports must be distinct and cannot overlap internal service ports")
+    # Preflight sources and existing maps before changing any configuration.
+    # Existing differing originals require an explicit, stopped map refresh.
+    source_maps = _source_map_paths()
+    for map_id, source in source_maps.items():
+        target = SERVER / "Mir200/Map" / (map_id + ".map")
+        if target.is_file() and target.read_bytes() != source.read_bytes():
+            parser.error(f"Runtime map {map_id} differs from the shared source. Back up saves, stop the engine normally, and run --refresh-client-maps before preparing the world.")
     RUNTIME.mkdir(exist_ok=True)
     env = RUNTIME / "db.env"
     write_new(env, "MYSQL_ROOT_PASSWORD=" + secrets.token_hex(24) + "\n", "utf-8")
@@ -604,7 +625,12 @@ def main():
                   f"CREATE DATABASE IF NOT EXISTS {name};\nUSE {name};\n{text}", "utf-8")
     # Keep all source maps available. The default runtime loads the isolated
     # P0 pair; --refresh-classic-route selects every supported classic map.
-    for directory in ["Map", "Envir", "Notice"]:
+    for map_id, source in source_maps.items():
+        target = SERVER / "Mir200/Map" / (map_id + ".map")
+        if not target.exists():
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(source, target)
+    for directory in ["Envir", "Notice"]:
         src = SOURCE / "Mir200" / directory
         if src.exists():
             for source in src.rglob("*"):
@@ -618,15 +644,6 @@ def main():
                     target.parent.mkdir(parents=True, exist_ok=True)
                     if not target.exists():
                         shutil.copyfile(source, target)
-                    if source.suffix.lower() == ".map":
-                        # Some historical packs store dungeon maps in lower
-                        # case while MapInfo uses upper-case ids. Keep a
-                        # canonical filename beside the original so the same
-                        # runtime works on case-sensitive hosts.
-                        canonical = source.stem.upper() if any(c.isalpha() for c in source.stem) else source.stem
-                        canonical_target = target.with_name(canonical + source.suffix.lower())
-                        if not canonical_target.exists():
-                            shutil.copyfile(source, canonical_target)
     for name in ["Exps.conf", "String.conf", "Command.conf", "Global.conf"]:
         source = SOURCE / "Mir200" / name
         text = read_text(source)
@@ -915,6 +932,7 @@ def main():
             city_shop.parent.mkdir(parents=True, exist_ok=True)
             city_shop.write_text(city_shop_text, encoding="gb18030")
             city_travel.write_text(city_travel_text, encoding="gb18030")
+        boss_rooms.install_runtime(SERVER / "Mir200", set(route_maps))
         for script_name, map_id in city_services.QUEST_ONLY_SHOPS:
             if map_id not in route_maps:
                 continue

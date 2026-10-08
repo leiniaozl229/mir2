@@ -2,6 +2,7 @@ import importlib.util
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 SPEC = importlib.util.spec_from_file_location(
@@ -23,7 +24,8 @@ class BackupTests(unittest.TestCase):
         )
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        report = module.check()
+        with patch.object(module, "have", return_value=True), patch.object(module, "node_supported", return_value=True):
+            report = module.check("compose")
         self.assertTrue(report["ok"], report["failures"])
         self.assertIn("bash scripts/compose.sh up -d", report["commands"]["install"])
         self.assertIn("python3 scripts/backup.py create", report["commands"]["backup"][0])

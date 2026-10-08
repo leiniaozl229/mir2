@@ -8,6 +8,12 @@ namespace GameSrv.Services
     public class DataQueryServer
     {
         private readonly TcpClient _tcpClient;
+        private readonly SemaphoreSlim _connectGate = new SemaphoreSlim(1, 1);
+        private readonly object _lifetimeGate = new object();
+        private readonly object _receiveGate = new object();
+        private CancellationTokenSource _connectCancellation = new CancellationTokenSource();
+        private volatile bool _stopped = true;
+        private long _connectionEpoch;
         private byte[] ReceiveBuffer { get; set; }
         private int BuffLen { get; set; }
         private bool SocketWorking { get; set; }
@@ -29,32 +35,72 @@ namespace GameSrv.Services
             .ConfigureContainer(a =>
             {
                 a.AddConsoleLogger();
+            })
+            .ConfigurePlugins(plugins =>
+            {
+                plugins.UseReconnection<TcpClient>()
+                    .SetTick(TimeSpan.FromSeconds(1))
+                    .SetActionForCheck((client, _) => _stopped ? (bool?)null : client.Online)
+                    .SetConnectAction(async client => await TryConnect())
+                    .UsePolling();
             }));
         }
 
         public async Task Start()
         {
+            lock (_lifetimeGate)
+            {
+                if (_stopped)
+                {
+                    _connectCancellation.Dispose();
+                    _connectCancellation = new CancellationTokenSource();
+                    _stopped = false;
+                }
+            }
+            await TryConnect();
+        }
+
+        private async Task<bool> TryConnect()
+        {
+            CancellationToken cancellation;
+            lock (_lifetimeGate)
+                cancellation = _connectCancellation.Token;
+            bool acquired = false;
             try
             {
-                if (_tcpClient.Online)
-                {
-                    return;
-                }
-                await _tcpClient.ConnectAsync();
+                await _connectGate.WaitAsync(cancellation);
+                acquired = true;
+                if (_stopped || _tcpClient.Online)
+                    return true;
+                await _tcpClient.ConnectAsync(1000, cancellation);
+                if (_stopped)
+                    _tcpClient.Close();
+                return _stopped || _tcpClient.Online;
             }
-            catch (TimeoutException)
+            catch (OperationCanceledException)
             {
-                LogService.Error($"链接数据库服务器[{SystemShare.Config.sDBAddr}:{SystemShare.Config.nDBPort}]超时...");
+                return true;
             }
             catch (Exception)
             {
-                LogService.Error($"链接数据库服务器[{SystemShare.Config.sDBAddr}:{SystemShare.Config.nDBPort}]失败...");
+                return _stopped;
+            }
+            finally
+            {
+                if (acquired)
+                    _connectGate.Release();
             }
         }
 
         public void Stop()
         {
+            lock (_lifetimeGate)
+            {
+                _stopped = true;
+                _connectCancellation.Cancel();
+            }
             _tcpClient.Close();
+            ResetReceiveState();
         }
 
         public bool IsConnected => _tcpClient.Online;
@@ -91,27 +137,49 @@ namespace GameSrv.Services
 
         private Task DataSocketDisconnected(ITcpClientBase sender, DisconnectEventArgs e)
         {
+            ResetReceiveState();
             LogService.Error("数据库服务器[" + sender.GetIPPort() + "]断开连接...");
             return Task.CompletedTask;
         }
 
         private Task DataSocketConnected(ITcpClient client, ConnectedEventArgs e)
         {
+            ResetReceiveState();
+            if (_stopped)
+            {
+                client.Close();
+                return Task.CompletedTask;
+            }
             LogService.Info("数据库服务器[" + client.RemoteIPHost + "]连接成功...");
             return Task.CompletedTask;
         }
 
+        private void ResetReceiveState()
+        {
+            lock (_receiveGate)
+            {
+                _connectionEpoch++;
+                BuffLen = 0;
+                SocketWorking = false;
+            }
+        }
+
         private Task DataSocketRead(TcpClient sender, ReceivedDataEventArgs e)
         {
-            HUtil32.EnterCriticalSection(M2Share.UserDBCriticalSection);
+            long epoch = Interlocked.Read(ref _connectionEpoch);
+            HUtil32.EnterCriticalSection(_receiveGate);
             try
             {
+                if (_stopped || !sender.Online || epoch != _connectionEpoch)
+                    return Task.CompletedTask;
                 int nMsgLen = e.ByteBlock.Len;
-                byte[] packetData = e.ByteBlock.Buffer;
+                ReadOnlySpan<byte> packetData = e.ByteBlock.Buffer.AsSpan(0, nMsgLen);
                 if (BuffLen > 0)
                 {
-                    MemoryCopy.BlockCopy(packetData, 0, ReceiveBuffer, BuffLen, packetData.Length);
-                    ProcessServerPacket(ReceiveBuffer, BuffLen + nMsgLen);
+                    byte[] combined = new byte[BuffLen + nMsgLen];
+                    ReceiveBuffer.AsSpan(0, BuffLen).CopyTo(combined);
+                    packetData.CopyTo(combined.AsSpan(BuffLen));
+                    ProcessServerPacket(combined, combined.Length);
                 }
                 else
                 {
@@ -124,60 +192,48 @@ namespace GameSrv.Services
             }
             finally
             {
-                HUtil32.LeaveCriticalSection(M2Share.UserDBCriticalSection);
+                HUtil32.LeaveCriticalSection(_receiveGate);
             }
             return Task.CompletedTask;
         }
 
-        private void ProcessServerPacket(Span<byte> buff, int buffLen)
+        private void ProcessServerPacket(ReadOnlySpan<byte> buff, int buffLen)
         {
             try
             {
-                int srcOffset = 0;
-                int nLen = buffLen;
-                Span<byte> dataBuff = buff;
-                while (nLen >= ServerDataPacket.FixedHeaderLen)
+                int offset = 0;
+                while (buffLen - offset >= ServerDataPacket.FixedHeaderLen)
                 {
-                    Span<byte> packetHead = dataBuff[..ServerDataPacket.FixedHeaderLen];
-                    ServerDataPacket message = SerializerUtil.Deserialize<ServerDataPacket>(packetHead);
+                    ReadOnlySpan<byte> packetHead = buff.Slice(offset, ServerDataPacket.FixedHeaderLen);
+                    ServerDataPacket message = SerializerUtil.Deserialize<ServerDataPacket>(packetHead.ToArray());
                     if (message.PacketCode != Grobal2.PacketCode)
                     {
-                        srcOffset++;
-                        dataBuff = dataBuff.Slice(srcOffset, ServerDataPacket.FixedHeaderLen);
-                        nLen -= 1;
-                        LogService.Debug($"解析封包出现异常封包，PacketLen:[{dataBuff.Length}] Offset:[{srcOffset}].");
+                        offset++;
                         continue;
                     }
-                    int nCheckMsgLen = Math.Abs(message.PacketLen + ServerDataPacket.FixedHeaderLen);
-                    if (nCheckMsgLen > nLen)
+                    int nCheckMsgLen = message.PacketLen + ServerDataPacket.FixedHeaderLen;
+                    if (nCheckMsgLen > buffLen - offset)
                     {
                         break;
                     }
-                    SocketWorking = true;
-                    ServerRequestData messageData = SerializerUtil.Deserialize<ServerRequestData>(dataBuff[ServerDataPacket.FixedHeaderLen..]);
-                    ProcessServerData(messageData);
-                    nLen -= nCheckMsgLen;
-                    if (nLen <= 0)
+                    try
                     {
-                        break;
+                        SocketWorking = true;
+                        ServerRequestData messageData = SerializerUtil.Deserialize<ServerRequestData>(
+                            buff.Slice(offset + ServerDataPacket.FixedHeaderLen, message.PacketLen).ToArray());
+                        ProcessServerData(messageData);
                     }
-                    dataBuff = dataBuff.Slice(nCheckMsgLen, nLen);
-                    BuffLen = nLen;
-                    srcOffset = 0;
-                    if (nLen < ServerDataPacket.FixedHeaderLen)
+                    catch (Exception)
                     {
-                        break;
+                        LogService.Warn("DBSrv外层回复格式无效.");
                     }
+                    finally { SocketWorking = false; }
+                    offset += nCheckMsgLen;
                 }
-                if (nLen > 0)//有部分数据被处理,需要把剩下的数据拷贝到接收缓冲的头部
-                {
-                    MemoryCopy.BlockCopy(dataBuff, 0, ReceiveBuffer, 0, nLen);
-                    BuffLen = nLen;
-                }
-                else
-                {
-                    BuffLen = 0;
-                }
+                BuffLen = buffLen - offset;
+                if (BuffLen > ReceiveBuffer.Length)
+                    ReceiveBuffer = new byte[BuffLen];
+                buff.Slice(offset, BuffLen).CopyTo(ReceiveBuffer);
             }
             catch (Exception ex)
             {

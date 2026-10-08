@@ -1,7 +1,9 @@
 // Live WebSocket check of the pinned 15-skill combat list and summon follow/attack.
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { NpcProbeSession, readNativeNpcClickInterval } from './npc_probe_session.mjs';
 
 const root = new URL('..', import.meta.url);
+const npcClickInterval = await readNativeNpcClickInterval(root);
 const gatewayUrl = process.env.MIR2_GATEWAY_URL ?? 'ws://127.0.0.1:18800/ws';
 const combat = JSON.parse(await readFile(new URL('content/classic-176/skill-combat.json', root), 'utf8'));
 const rules = JSON.parse(await readFile(new URL('content/classic-176/skill-rules.json', root), 'utf8')).skills;
@@ -38,8 +40,10 @@ class Client {
     this.selfId = null;
     this.mp = null;
     this.hp = null;
+    this.npcSession = new NpcProbeSession(npcClickInterval);
     this.socket.addEventListener('message', event => {
       const envelope = JSON.parse(event.data);
+      this.npcSession.observe(envelope);
       if (!Number.isInteger(envelope.sequence) || envelope.sequence <= this.sequence)
         throw new Error(`${this.label}: gateway sequence is not monotonic`);
       this.sequence = envelope.sequence;
@@ -227,11 +231,13 @@ async function talk(client, command, npcPattern = /导师/, maxDistance = 20) {
   if (distance > maxDistance) throw new Error(`${client.label}: nearest NPC ${trainer.name} is ${distance} cells away at ${trainer.x},${trainer.y}`);
   if (distance > 1 && !await walkTo(client, trainer.x, trainer.y, Math.max(12, maxDistance)))
     throw new Error(`${client.label}: could not reach ${trainer.name} at ${trainer.x},${trainer.y} from ${client.position}`);
-  client.send({ type: 'npc', targetId: trainer.id });
-  const dialogue = await client.waitFor('npcDialogue');
+  const stamp = await client.npcSession.begin(trainer.id);
+  client.send({ type: 'npc', targetId: trainer.id, ...stamp });
+  let dialogue;
+  do { dialogue = await client.waitFor('npcDialogue'); } while (!client.npcSession.matches(dialogue));
   const option = (dialogue.options ?? []).find(entry => entry.command === command);
   if (!option) throw new Error(`${client.label}: missing ${command} in ${JSON.stringify(dialogue.options)}`);
-  client.send({ type: 'dialogueSelect', npcId: trainer.id, command });
+  client.send({ type: 'dialogueSelect', ...client.npcSession.fields(trainer.id), command });
   if (command === '@orcgrave' || command === '@boss') {
     await client.waitFor('map', 45000);
     const deadline = Date.now() + 15000;

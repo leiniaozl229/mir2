@@ -13,7 +13,7 @@
 #ACT
 GIVE 回城石 3
 #SAY
-已领取3枚一次性回城石，双击使用可返回角色的回城点。\
+已领取3枚一次性回城石，双击使用可直接返回比奇城。\
 <返回/@main>
 
 [@skills]
@@ -22,6 +22,36 @@ GIVE 回城石 3
 <领取基本剑术秘籍/@fencingbook>\
 <战士技能测试/@warriorset> <法师技能测试/@wizardset>\
 <道士技能测试/@taoistset>\
+<火墙与冲撞验证/@advancedskills>\
+<返回/@main>
+
+[@advancedskills]
+持续地图效果与强制位移专项测试。\
+<法师火墙测试/@firewallset> <战士野蛮冲撞测试/@rushset>\
+<返回/@skills>
+
+[@firewallset]
+#IF
+CHECKJOB Wizard
+#ACT
+CHANGELEVEL = 35
+HUMANHP = 999
+HUMANMP = 999
+ADDSKILL 火墙 3
+#SAY
+已准备三级火墙。请选择地面施放，火墙伤害和消失时间由服务端决定。此入口只属于隔离验证世界。\
+<返回/@main>
+
+[@rushset]
+#IF
+CHECKJOB Warrior
+#ACT
+CHANGELEVEL = 35
+HUMANHP = 999
+HUMANMP = 999
+ADDSKILL 野蛮冲撞 3
+#SAY
+已准备三级野蛮冲撞。请选择冲撞方向，冲撞后的位置由服务端确认。此入口只属于隔离验证世界。\
 <返回/@main>
 
 [@more]

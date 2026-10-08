@@ -105,6 +105,8 @@ const getParent = new NativeFunction(user32.getExportByName('GetParent'), 'point
 const heldItemCall = game.base.add(CURSOR_CALL);
 const doubleClickCall = game.base.add(DOUBLE_CLICK_CALL);
 const bonusData = BONUS_BASELINES;
+ITEM_TOOLTIP_HELPERS
+const mouseHintItem = game.base.add(0xf9194);
 const drawTextCall = game.base.add(0x1813e);
 const setTextColor = new NativeFunction(Module.findGlobalExportByName('SetTextColor'), 'uint', ['pointer', 'uint']);
 const setBkMode = new NativeFunction(Module.findGlobalExportByName('SetBkMode'), 'int', ['pointer', 'int']);
@@ -345,6 +347,46 @@ for (const entry of ['DispatchMessageA', 'DispatchMessageW']) {
 function toHex(bytes) {
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
+function tipBytes(hex, suffix = '') {
+  const bytes = hex.match(/../g)?.map(value => parseInt(value, 16)) || [];
+  return [...bytes, ...Array.from(suffix, value => value.charCodeAt(0))];
+}
+function tipText(hdc, x, y, bytes, color) {
+  const text = Memory.alloc(bytes.length);
+  text.writeByteArray(bytes);
+  const size = Memory.alloc(8);
+  measureText(hdc, text, bytes.length, size);
+  setTextColor(hdc, color);
+  drawNativeText(hdc, x, y, 0, ptr(0), text, bytes.length, ptr(0));
+  return size.readS32();
+}
+function drawExtraItemTip(hdc, x, y, tip) {
+  const lines = [tip.stats.filter(value => ['ac', 'mac'].includes(value.field)),
+                 tip.stats.filter(value => !['ac', 'mac'].includes(value.field))].filter(line => line.length);
+  const footer = tipBytes('b3d6bec3', ` ${Math.round(tip.durability / 1000)}/${Math.round(tip.maxDurability / 1000)}`);
+  if (tip.requiredLevel !== null) footer.push(...tipBytes('20d0e8d2aab5c8bcb6', ` ${tip.requiredLevel}`));
+  const oldColor = setTextColor(hdc, 0x00ffffff), oldMode = setBkMode(hdc, 1);
+  const width = 228, top = y + 11, bottom = top + (lines.length + 1) * 12 + 1;
+  const rect = Memory.alloc(16);
+  rect.writeS32(x - 2); rect.add(4).writeS32(top);
+  rect.add(8).writeS32(x + width); rect.add(12).writeS32(bottom);
+  fillRect(hdc, rect, blackBrush);
+  try {
+    let row = top;
+    for (const line of lines) {
+      let col = x;
+      for (const stat of line) {
+        col += tipText(hdc, col, row, tipBytes(stat.labelHex, `${stat.min}-${stat.max}`), 0x00ffffff);
+        if (stat.bonus) col += tipText(hdc, col, row, tipBytes('', `(+${stat.bonus})`), 0x004adc4e);
+        col += 6;
+      }
+      row += 12;
+    }
+    tipText(hdc, x, row, footer, 0x00ffffff);
+  } finally {
+    setTextColor(hdc, oldColor); setBkMode(hdc, oldMode);
+  }
+}
 Interceptor.attach(extTextOut, {
   onEnter(args) {
     if (!drawingNativeLabels && this.returnAddress.equals(drawTextCall)) {
@@ -372,15 +414,24 @@ Interceptor.attach(extTextOut, {
     const item = bonusData.items[itemName];
     const x = args[1].toInt32(), y = args[2].toInt32();
     if (item) {
-      currentTip = {item, hdc: args[0], x, y};
+      currentTip = {item, hdc: args[0], x, y, tick: Date.now()};
+      try {
+        const tip = nativeExtraItemTip(new Uint8Array(mouseHintItem.readByteArray(52)), bonusData);
+        if (tip && tip.nameHex === itemName) this.extraItemTip = {hdc: args[0], x, y, tip};
+      } catch (_) { /* Ignore an unavailable legacy mouse record. */ }
       return;
     }
     if (!currentTip || !args[0].equals(currentTip.hdc) ||
-        Math.abs(x - currentTip.x) > 2 || y <= currentTip.y || y > currentTip.y + 84) return;
+        Date.now() - currentTip.tick > 150 ||
+        Math.abs(x - currentTip.x) > 16 || y <= currentTip.y) return;
+    // Armour and helmets can draw five combat lines below durability and
+    // requirements. The previous 84px cutoff missed their lower lines.
+    const maxTipHeight = [10, 11, 15, 16].includes(currentTip.item.mode) ? 180 : 120;
+    if (y > currentTip.y + maxTipHeight) return;
     for (const [label, field] of Object.entries(bonusData.labels)) {
       if (!hex.startsWith(label)) continue;
       const value = String.fromCharCode(...bytes.slice(label.length / 2)).trim();
-      const match = /^(\d+)-(\d+)$/.exec(value);
+      const match = /(\d+)\s*-\s*(\d+)\s*$/.exec(value);
       if (!match) return;
       const base = currentTip.item[field];
       if (!base) return;
@@ -398,6 +449,10 @@ Interceptor.attach(extTextOut, {
   },
   onLeave(_) {
     if (this.hdc) setTextColor(this.hdc, this.oldColor);
+    if (this.extraItemTip) {
+      const value = this.extraItemTip;
+      drawExtraItemTip(value.hdc, value.x, value.y, value.tip);
+    }
   }
 });
 Interceptor.attach(user32.getExportByName('GetCursorPos'), {
@@ -430,7 +485,9 @@ send({ ready: true, processId: Process.id,
        heldItemCall: heldItemCall.toString(), doubleClickCall: doubleClickCall.toString() });
 """.replace("CURSOR_CALL", str(HELD_ITEM_CURSOR_CALL)).replace(
         "DOUBLE_CLICK_CALL", str(DOUBLE_CLICK_CURSOR_CALL)
-    ).replace("BONUS_BASELINES", json.dumps(baselines, separators=(",", ":")))
+    ).replace("BONUS_BASELINES", json.dumps(baselines, separators=(",", ":"))).replace(
+        "ITEM_TOOLTIP_HELPERS", Path(__file__).with_name("item-tooltip.cjs").read_text(encoding="utf-8")
+    )
 
     detached = threading.Event()
 

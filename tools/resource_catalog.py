@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import importlib.util
 import json
 import re
 from collections import defaultdict
@@ -24,6 +25,64 @@ MAPINFO = ROOT / "vendor/mirserver-data/Mir200/Envir/MapInfo.txt"
 MINIMAP = ROOT / "vendor/mirserver-data/Mir200/Envir/MiniMap.txt"
 WEB = ROOT / "assets/web"
 OUTPUT = ROOT / "content/classic-176/resource-catalog.json"
+ACTIVE_SOURCES = ROOT / "content/classic-176/active-asset-sources.json"
+ICON_USAGE = ROOT / "content/classic-176/icon-usage.json"
+MAP_BINDINGS = ROOT / "content/classic-176/map-asset-bindings.json"
+
+
+def map_selection_records(relative: str, data: dict[str, Any], contract: dict[str, Any]) -> list[dict[str, Any]]:
+    """Current declared selections, gated by export/map manifest locks.
+
+    The library's mapBindingActive is an immutable export-time snapshot. Full
+    raw-source/pixel verification remains content_audit's responsibility.
+    """
+    records = []
+    for binding in contract.get("bindings", []):
+        if binding.get("namespace") != "/" + relative:
+            continue
+        valid = contract.get("schemaVersion") == 1 and contract.get("domain") == "map-asset-bindings"
+        # This contract selects reference pixels only. A metadata flag cannot
+        # upgrade the independently unverified historical pairing.
+        valid = valid and binding.get("mapVersionPairingVerified") is False
+        indices = binding.get("indices", [])
+        preserve = binding.get("preserveNativeIndices", [])
+        protected = binding.get("protectedNativeIndices", [])
+        valid = valid and bool(indices) and all(type(index) is int and index >= 0 for index in indices)
+        valid = valid and len(indices) == len(set(indices)) and not set(indices).intersection(preserve)
+        valid = valid and set(protected).issubset(preserve)
+        valid = valid and set(map(str, indices)) == set(data.get("frames", {}))
+        valid = valid and binding.get("sourceSha256") == data.get("sourceSha256")
+        valid = valid and binding.get("sourceFrameCount") == data.get("sourceFrameCount")
+        valid = valid and binding.get("sourceFormat") == data.get("format")
+        valid = valid and binding.get("sourceId") == data.get("candidateId")
+        valid = valid and binding.get("layer") == "background" and binding.get("library") == "Tiles"
+        valid = valid and binding.get("selectionPolicy") == "exact-missing-original-indices-only"
+        map_data = {}
+        for key in ("candidateManifest", "candidateRegistry", "mapManifest"):
+            spec = binding.get(key, {})
+            path = (ROOT / spec.get("path", "")).resolve()
+            if not path.is_relative_to(ROOT.resolve()) or not path.is_file():
+                valid = False
+                continue
+            valid = valid and path.stat().st_size == spec.get("bytes") and _source_module.sha256(path) == spec.get("sha256")
+            if key == "mapManifest":
+                map_data = json.loads(path.read_text(encoding="utf-8"))
+        valid = valid and map_data.get("sourceSha256") == binding.get("mapSourceSha256")
+        valid = valid and binding.get("mapManifest", {}).get("path") == f"assets/web/maps/{binding.get('mapId')}/map.json"
+        selected = binding.get("status") == "enabled" and valid
+        records.append({"id":binding.get("id"), "mapId":binding.get("mapId"), "layer":binding.get("layer"),
+                        "library":binding.get("library"), "indexCount":len(indices), "status":binding.get("status"),
+                        "selected":bool(selected), "manifestLocksMatch":bool(valid),
+                        "sourceIntegrityScope":"manifest_locks_only; raw_source_and_pixels_in_content_audit",
+                        "selectionEvidence":binding.get("selectionEvidence"),
+                        "historicalPairingDeclared":binding.get("mapVersionPairingVerified"),
+                        "historicalPairingVerified":False})
+    return records
+
+_source_spec = importlib.util.spec_from_file_location("resource_sources", Path(__file__).with_name("resource_sources.py"))
+assert _source_spec is not None and _source_spec.loader is not None
+_source_module = importlib.util.module_from_spec(_source_spec)
+_source_spec.loader.exec_module(_source_module)
 
 ITEM_COLUMNS = ["id", "name", "stdMode", "shape", "weight", "aniCount", "source", "reserved", "imgIndex", "duraMax", "ac", "acMax", "mac", "macMax", "dc", "dcMax", "mc", "mcMax", "sc", "scMax", "need", "needLevel", "price", "stock", "attackSpeed", "agility", "accuracy", "magicAvoid", "strong", "undead", "hpAdd", "mpAdd", "expAdd", "effectType1", "effectRate1", "effectValue1", "effectType2", "effectRate2", "effectValue2", "slowDown", "tox", "toxAvoid", "uniqueItem", "overlapItem", "light", "itemType", "itemSet", "reference"]
 SKILL_COLUMNS = ["idx", "magicId", "name", "effectType", "effect", "spell", "power", "maxPower", "defSpell", "defPower", "defMaxPower", "job", "needLevel1", "train1", "needLevel2", "train2", "needLevel3", "train3", "delay", "description"]
@@ -158,6 +217,32 @@ def parse_drops(name: str) -> tuple[str | None, list[dict[str, Any]]]:
     return str(path.relative_to(ROOT)), rows
 
 
+def resolve_icon(sources: Any, namespaces: tuple[str, ...], index: int, category: str) -> dict[str, Any]:
+    attempts = [sources.resolve(namespace, index) for namespace in namespaces]
+    active = [value for value in attempts if value["sourceRole"] == "active_required"]
+    chosen = next((value for value in active if value["available"]), active[0] if active else attempts[0])
+    result = dict(chosen)
+    if not active or not chosen["available"]:
+        result["url"] = None
+        result["available"] = False
+        if chosen["missingReason"] is None:
+            result["missingReason"] = "extension_mapping_unconfirmed"
+    result["attempts"] = attempts
+    result["candidates"] = sources.candidates(category, "Items" if category == "item" else "MagIcon")
+    return result
+
+
+def missing_icon_reasons(items: list[dict[str, Any]], skills: list[dict[str, Any]]) -> dict[str, Any]:
+    result = {}
+    for section, rows in (("items", items), ("skills", skills)):
+        groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+        for row in rows:
+            if not row["iconUrl"]:
+                groups[row["missingReason"] or "unknown_source"].append({"id": row.get("id", row.get("idx")), "name": row["name"], "iconIndex": row["iconIndex"]})
+        result[section] = {reason: {"count": len(values), "resources": values} for reason, values in sorted(groups.items())}
+    return result
+
+
 def build() -> dict[str, Any]:
     profile = json.loads(PROFILE.read_text(encoding="utf-8"))
     baseline_items = set(profile["p0Baseline"]["items"])
@@ -170,40 +255,43 @@ def build() -> dict[str, Any]:
     item_assets = item_asset_config["iconIndexByName"]
     item_fallbacks = item_asset_config["fallbackIconIndexBySourceIndex"]
     skill_assets = json.loads(SKILL_ASSETS.read_text(encoding="utf-8"))["iconIndexByName"]
-    national_item_icons = library("ui-national/items") or {"frames":{}}
-    fallback_item_icons = library("items/Items") or {"frames":{}}
-    state_icons = library("ui-national/stateitem") or {"frames":{}}
-    national_skill_icons = library("ui-national/magic-icons") or {"frames":{}}
-    fallback_skill_icons = library("ui/MagIcon") or {"frames":{}}
+    icon_usage = json.loads(ICON_USAGE.read_text(encoding="utf-8"))
+    if icon_usage.get("schemaVersion") != 1 or icon_usage["items"]["field"] != "server_looks" or icon_usage["skills"]["field"] != "server_effect":
+        raise ValueError("unsupported icon source usage contract")
+    active_sources = json.loads(ACTIVE_SOURCES.read_text(encoding="utf-8")) if ACTIVE_SOURCES.is_file() else {}
+    sources = _source_module.ResourceSources(ROOT, WEB, active_sources)
     visuals = parse_visual_rules()
+    national_gameplay = json.loads((ROOT / 'content/classic-176/national-gameplay.json').read_text(encoding='utf-8'))
 
     items = sql_rows("stditems", ITEM_COLUMNS)
     for item in items:
         item["category"] = ITEM_TYPES.get(item["stdMode"], f"StdMode {item['stdMode']}")
         item["baseline"] = item["name"] in baseline_items
-        icon_index = item_assets.get(item["name"], item_fallbacks.get(str(item["imgIndex"]), item["imgIndex"]))
-        national_frame = national_item_icons.get("frames", {}).get(str(icon_index))
-        fallback_frame = fallback_item_icons.get("frames", {}).get(str(icon_index))
-        national_frame = national_frame if usable_frame(national_frame) else None
-        fallback_frame = fallback_frame if usable_frame(fallback_frame) else None
-        frame = national_frame or fallback_frame
-        state = state_icons.get("frames", {}).get(str(icon_index))
-        state = state if usable_frame(state) else None
-        item["iconUrl"] = f"/{'ui-national/items' if national_frame else 'items/Items'}/{frame['file']}" if frame else None
+        icon_index = item["imgIndex"]
+        proposed_index = item_assets.get(item["name"], item_fallbacks.get(str(item["imgIndex"])))
+        resolution = resolve_icon(sources, ("ui-national/items", "items/Items"), icon_index, "item")
+        state = sources.resolve("ui-national/stateitem", icon_index)
+        item["iconUrl"] = resolution["url"]
         item["iconIndex"] = icon_index
-        item["iconSource"] = "国服 Items.wil" if national_frame else "扩展 Items.Lib" if fallback_frame else None
-        item["stateIconUrl"] = f"/ui-national/stateitem/{state['file']}" if state else None
+        item["iconSource"] = "国服 Items.wil" if resolution["url"] else None
+        item["iconResolution"] = resolution
+        item["missingReason"] = resolution["missingReason"]
+        item["contentVersion"] = "unknown"
+        item["iconMapping"] = {"kind": "server_looks",
+                               "sourceIndex": item["imgIndex"], "selectedIndex": icon_index,
+                               "proposedIndex": proposed_index, "proposedSelected": False,
+                               "basis": str(ICON_USAGE.relative_to(ROOT)),
+                               "extensionStatus": "unresolved" if resolution["missingReason"] == "frame_out_of_range" else "unknown"}
+        item["stateIconUrl"] = state["url"] if state["available"] and state["sourceRole"] == "active_required" else None
 
     skills = sql_rows("magics", SKILL_COLUMNS)
     for skill in skills:
         rule = skill_rules.get(skill["name"], {})
         behavior = combat.get(skill["name"], {})
-        icon_index = skill_assets.get(skill["name"], skill["magicId"])
-        national_icon = national_skill_icons.get("frames", {}).get(str(icon_index))
-        fallback_icon = fallback_skill_icons.get("frames", {}).get(str(icon_index))
-        national_icon = national_icon if usable_frame(national_icon) else None
-        fallback_icon = fallback_icon if usable_frame(fallback_icon) else None
-        icon = national_icon or fallback_icon
+        icon_index = skill["effect"] * icon_usage["skills"]["normalMultiplier"]
+        resolution = resolve_icon(sources, ("ui-national/magic-icons", "ui/MagIcon"), icon_index, "ui")
+        pressed_index = icon_index + icon_usage["skills"]["pressedOffset"]
+        pressed_resolution = resolve_icon(sources, ("ui-national/magic-icons", "ui/MagIcon"), pressed_index, "ui")
         skill.update({
             "jobName": JOBS.get(skill["job"], f"职业 {skill['job']}"),
             "needLevels":[skill.pop("needLevel1"), skill.pop("needLevel2"), skill.pop("needLevel3")],
@@ -213,8 +301,15 @@ def build() -> dict[str, Any]:
             "reagent":behavior.get("reagent"), "status":behavior.get("status"), "statusBit":behavior.get("statusBit"), "summon":behavior.get("summon", False),
             "rulePinned":bool(rule),
             "iconIndex":icon_index,
-            "iconUrl":f"/{'ui-national/magic-icons' if national_icon else 'ui/MagIcon'}/{icon['file']}" if icon else None,
-            "iconSource":"国服 MagIcon.wil" if national_icon else "扩展 MagIcon.Lib" if fallback_icon else None,
+            "pressedIconIndex":pressed_index,
+            "pressedIconUrl":pressed_resolution["url"], "pressedIconResolution":pressed_resolution,
+            "iconUrl":resolution["url"], "iconResolution":resolution, "missingReason":resolution["missingReason"],
+            "contentVersion":"unknown",
+            "iconMapping":{"kind":"server_effect_pair", "sourceIndex":skill["effect"], "selectedIndex":icon_index,
+                           "proposedIndex":skill_assets.get(skill["name"]), "proposedSelected":False,
+                           "basis":str(ICON_USAGE.relative_to(ROOT)),
+                           "extensionStatus":"unresolved" if resolution["missingReason"] == "frame_out_of_range" else "unknown"},
+            "iconSource":"国服 MagIcon.wil" if resolution["url"] else None,
         })
 
     map_names = parse_map_names()
@@ -234,6 +329,14 @@ def build() -> dict[str, Any]:
         for drop in drops:
             item_sources[drop["item"]].add(monster["name"])
         visual = visuals.get((monster["raceImg"], monster["appr"]))
+        group, shape = divmod(monster['appr'], 10)
+        if 0 <= group < national_gameplay['monster']['libraryCount']:
+            visual = dict(visual or {})
+            visual.update({'library': f'Mon{group + 1}',
+                           'offset': national_gameplay['monster']['offsetOverrides'].get(str(monster['appr']), shape * national_gameplay['monster']['strides'][group]),
+                           'action': national_gameplay['monster']['raceActions'].get(str(monster['raceImg']), national_gameplay['monster']['defaultAction']),
+                           'actionEvidence': 'reference-implementation-awaiting-runtime',
+                           'quality': visual.get('quality', 'native-source-candidate')})
         monster.update({
             "baseline":monster["name"] in baseline_monsters or re.sub(r"\d+$", "", monster["name"]) in baseline_monsters,
             "spawnIds":spawns_by_monster.get(monster["name"], spawns_by_monster.get(re.sub(r"\d+$", "", monster["name"]), [])),
@@ -253,38 +356,50 @@ def build() -> dict[str, Any]:
         maps.append({"id":map_id,"name":map_names.get(map_id, f"地图 {map_id}"),"width":manifest.get("width"),"height":manifest.get("height"),"chunks":len(manifest.get("chunks", [])),"minimapFrame":frame_index,"minimapUrl":f"/ui-national/mmap/{frame['file']}" if frame else None,"spawnIds":spawns_by_map.get(map_id, [])})
 
     assets = []
+    map_bindings = json.loads(MAP_BINDINGS.read_text(encoding="utf-8")) if MAP_BINDINGS.is_file() else {}
     for path in sorted(WEB.glob("**/library.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
         relative = path.parent.relative_to(WEB).as_posix()
-        assets.append({"id":relative,"source":data.get("source"),"format":data.get("format"),"frames":len(data.get("frames", {})),"sourceFrames":data.get("sourceFrameCount"),"missing":len(data.get("missing", [])),"empty":len(data.get("empty", [])),"sourceSha256":data.get("sourceSha256")})
+        registered = sources.registered(relative)
+        role = registered[0]["role"] if len(registered) == 1 else data.get("role", "unknown")
+        selections = map_selection_records(relative, data, map_bindings)
+        assets.append({"id":relative,"source":data.get("source"),"format":data.get("format"),"frames":len(data.get("frames", {})),"sourceFrames":data.get("sourceFrameCount"),"missing":len(data.get("missing", [])),"empty":len(data.get("empty", [])),"sourceSha256":data.get("sourceSha256"),"sourceRole":role,
+                       "mapBindingActive":any(value["selected"] for value in selections),
+                       "exportSnapshotMapBindingActive":data.get("mapBindingActive"), "mapSourceSelections":selections})
+    for world in maps:
+        world["mapSourceSelections"] = [value for asset in assets for value in asset["mapSourceSelections"] if value["mapId"] == world["id"]]
 
     item_names = {item["name"] for item in items}
-    skills_by_magic_id: dict[int, list[dict[str, Any]]] = defaultdict(list)
+    identity_conflicts, alias_groups = _source_module.magic_identity(skills)
+    conflicting_magic_ids = [value["magicId"] for value in identity_conflicts]
     for skill in skills:
-        skills_by_magic_id[skill["magicId"]].append(skill)
-    alias_groups = []
-    conflicting_magic_ids = []
-    for magic_id, group in sorted(skills_by_magic_id.items()):
-        if len(group) < 2:
-            continue
-        signatures = {(value["effectType"], value["effect"]) for value in group}
-        if len(signatures) == 1:
-            alias_groups.append({"magicId":magic_id,"names":[value["name"] for value in group]})
-            for skill in group:
-                skill["aliases"] = [value["name"] for value in group if value is not skill]
-        else:
-            conflicting_magic_ids.append(magic_id)
+        skill["identityStatus"] = "conflict" if skill["magicId"] in conflicting_magic_ids else "no_effect_conflict_detected"
+        for group in alias_groups:
+            if skill["magicId"] == group["magicId"]:
+                skill["aliases"] = [name for name in group["names"] if name != skill["name"]]
     orphan_spawn_maps = sorted({spawn["mapId"] for spawn in spawns} - baseline_maps)
     monster_names = {monster["name"] for monster in monsters}
     unknown_drop_items = sorted({drop["item"] for monster in monsters for drop in monster["drops"] if drop["item"] != "金币" and drop["item"] not in item_names})
     unknown_spawn_monsters = sorted({spawn["monster"] for spawn in spawns if spawn["monster"] not in monster_names})
     drop_sources = {value["dropSource"] for value in monsters if value["dropSource"]}
     drop_rows = {(monster["dropSource"], drop["sourceLine"]) for monster in monsters for drop in monster["drops"] if monster["dropSource"]}
+    proposed_mappings = [
+        {"kind":"legacy_name", "name":name, "proposedIndex":index, "selected":False,
+         "status":"proposed_unselected", "affectedRows":sum(value["name"] == name for value in items)}
+        for name,index in item_assets.items()
+    ] + [
+        {"kind":"legacy_source_index", "sourceIndex":int(index), "proposedIndex":proposed, "selected":False,
+         "status":"proposed_unselected", "affectedRows":sum(value["imgIndex"] == int(index) for value in items)}
+        for index,proposed in item_fallbacks.items()
+    ]
     return {
         "schemaVersion":1,
-        "source":{"sql":str(SQL.relative_to(ROOT)),"profile":str(PROFILE.relative_to(ROOT)),"itemAssets":str(ITEM_ASSETS.relative_to(ROOT)),"skillRules":str(RULES.relative_to(ROOT)),"skillCombat":str(COMBAT.relative_to(ROOT)),"skillAssets":str(SKILL_ASSETS.relative_to(ROOT)),"monsterVisuals":"apps/web/src/monster-visuals.ts","spawns":str(MONGEN.relative_to(ROOT)),"drops":str(MONITEMS.relative_to(ROOT)),"mapInfo":str(MAPINFO.relative_to(ROOT)),"assets":str(WEB.relative_to(ROOT))},
+        "iconUsage":{"path":str(ICON_USAGE.relative_to(ROOT)),"sha256":_source_module.sha256(ICON_USAGE),"evidenceKind":icon_usage["evidenceKind"],"nativeRuntimeCompared":False},
+        "mapAssetBindings":{"path":str(MAP_BINDINGS.relative_to(ROOT)),"sha256":_source_module.sha256(MAP_BINDINGS) if MAP_BINDINGS.is_file() else None,
+                            "scope":"explicit_current_render_selection; historical_pairing_audited_separately"},
+        "source":{"sql":str(SQL.relative_to(ROOT)),"sqlSha256":_source_module.sha256(SQL),"profile":str(PROFILE.relative_to(ROOT)),"activeAssetSources":str(ACTIVE_SOURCES.relative_to(ROOT)),"activeAssetSourcesSha256":_source_module.sha256(ACTIVE_SOURCES) if ACTIVE_SOURCES.is_file() else None,"itemAssets":str(ITEM_ASSETS.relative_to(ROOT)),"skillRules":str(RULES.relative_to(ROOT)),"skillCombat":str(COMBAT.relative_to(ROOT)),"skillAssets":str(SKILL_ASSETS.relative_to(ROOT)),"monsterVisuals":"apps/web/src/monster-visuals.ts","spawns":str(MONGEN.relative_to(ROOT)),"drops":str(MONITEMS.relative_to(ROOT)),"mapInfo":str(MAPINFO.relative_to(ROOT)),"assets":str(WEB.relative_to(ROOT))},
         "summary":{"items":len(items),"skills":len(skills),"monsters":len(monsters),"maps":len(maps),"spawns":len(spawns),"dropTables":len(drop_sources),"dropRows":len(drop_rows),"assetLibraries":len(assets),"itemIcons":sum(bool(value["iconUrl"]) for value in items),"skillIcons":sum(bool(value["iconUrl"]) for value in skills),"monsterVisuals":sum(bool(value["visual"]) for value in monsters)},
-        "diagnostics":{"duplicateMagicIds":conflicting_magic_ids,"magicIdAliases":alias_groups,"orphanSpawnMaps":orphan_spawn_maps,"unknownSpawnMonsters":unknown_spawn_monsters,"unknownDropItems":unknown_drop_items,"itemsMissingIcons":sum(not value["iconUrl"] for value in items),"skillsMissingIcons":sum(not value["iconUrl"] for value in skills),"monstersMissingVisuals":sum(not value["visual"] for value in monsters)},
+        "diagnostics":{"duplicateMagicIds":conflicting_magic_ids,"magicIdentityConflicts":identity_conflicts,"magicIdAliases":alias_groups,"orphanSpawnMaps":orphan_spawn_maps,"unknownSpawnMonsters":unknown_spawn_monsters,"unknownDropItems":unknown_drop_items,"itemsMissingIcons":sum(not value["iconUrl"] for value in items),"skillsMissingIcons":sum(not value["iconUrl"] for value in skills),"skillsMissingPressedIcons":sum(not value["pressedIconUrl"] for value in skills),"missingIconReasons":missing_icon_reasons(items, skills),"proposedMappings":proposed_mappings,"monstersMissingVisuals":sum(not value["visual"] for value in monsters)},
         "mechanics":mechanics(),"items":items,"skills":skills,"monsters":monsters,"maps":maps,"spawns":spawns,"assets":assets,
         "templates":{"item":dict.fromkeys(ITEM_COLUMNS, 0)|{"id":max(item["id"] for item in items)+1,"name":"新装备","stdMode":5,"weight":1,"duraMax":10000,"need":0,"needLevel":1,"price":100,"stock":1,"reference":None},"skill":dict.fromkeys(SKILL_COLUMNS, 0)|{"idx":max(skill["idx"] for skill in skills)+1,"magicId":max(skill["magicId"] for skill in skills)+1,"name":"新技能","job":0,"needLevel1":1,"train1":200,"needLevel2":3,"train2":300,"needLevel3":5,"train3":500,"description":""}},
     }
@@ -302,6 +417,12 @@ def mechanics() -> dict[str, Any]:
 
 def validate(data: dict[str, Any]) -> list[str]:
     errors = []
+    for asset in data["assets"]:
+        for selection in asset.get("mapSourceSelections", []):
+            if selection.get("status") == "enabled" and not selection.get("manifestLocksMatch"):
+                errors.append(f"map selection has mismatched manifest locks: {selection.get('id')}")
+            if selection.get("status") == "enabled" and not selection.get("historicalPairingVerified"):
+                errors.append(f"reference map historical pairing unverified: {selection.get('mapId')}/{selection.get('layer')}")
     for section, key in (("items", "id"), ("skills", "idx"), ("monsters", "idx"), ("maps", "id")):
         identifiers = [value[key] for value in data[section]]
         if len(identifiers) != len(set(identifiers)):
@@ -313,18 +434,33 @@ def validate(data: dict[str, Any]) -> list[str]:
     spawn_ids = {value["id"] for value in data["spawns"]}
     if any(number not in spawn_ids for value in data["maps"] for number in value["spawnIds"]):
         errors.append("map references an unknown spawn")
+    for section in ("items", "skills"):
+        missing = sum(not value["iconUrl"] for value in data[section])
+        if missing:
+            errors.append(f"{section} missing active-source icons: {missing}/{len(data[section])}")
+        for value in data[section]:
+            expected = value["imgIndex"] if section == "items" else value["effect"] * 2
+            if value["iconIndex"] != expected or value.get("iconMapping", {}).get("proposedSelected"):
+                errors.append(f"{section} icon violates original source rule: {value['name']}")
+            if section == "skills" and value.get("pressedIconIndex") != expected + 1:
+                errors.append(f"skill pressed icon violates original source rule: {value['name']}")
+            resolution = value.get("iconResolution", {})
+            if value["iconUrl"] and (not resolution.get("sourceVerified") or resolution.get("sourceRole") != "active_required"):
+                errors.append(f"{section} icon has no verified active source: {value['name']}")
+    for conflict in data["diagnostics"].get("magicIdentityConflicts", []):
+        errors.append(f"conflicting skill magicId {conflict['magicId']}: " + ", ".join(value["name"] for value in conflict["rows"]))
     item_config = json.loads(ITEM_ASSETS.read_text(encoding="utf-8"))
     items_by_name = {value["name"]: value for value in data["items"]}
     for name, icon_index in item_config["iconIndexByName"].items():
         item = items_by_name.get(name)
         if item is None:
             errors.append(f"item icon override references an unknown item: {name}")
-        elif item["iconIndex"] != icon_index or not item["iconUrl"]:
-            errors.append(f"item icon override is unusable: {name} -> {icon_index}")
+        elif item["iconMapping"].get("proposedIndex") != icon_index or item["iconMapping"].get("proposedSelected"):
+            errors.append(f"item proposed mapping policy mismatch: {name} -> {icon_index}")
     fallback_indices = {int(value) for value in item_config["fallbackIconIndexBySourceIndex"]}
     for source_index in fallback_indices:
-        if not any(value["imgIndex"] == source_index and value["iconUrl"] for value in data["items"]):
-            errors.append(f"item icon fallback is unused or unusable: {source_index}")
+        if not any(value["imgIndex"] == source_index and not value["iconMapping"].get("proposedSelected") for value in data["items"]):
+            errors.append(f"item proposed fallback has no source row: {source_index}")
     return errors
 
 

@@ -1,0 +1,12 @@
+.guild-editor-overlay{position:absolute;inset:0;z-index:2147483646;width:800px;height:600px;pointer-events:auto}
+.guild-editor-overlay[hidden]{display:none}
+.guild-editor{position:absolute;left:96px;top:136px;box-sizing:border-box;width:608px;height:327px;margin:0;padding:0;border:0;overflow:visible;background-color:#21180f;background-repeat:no-repeat;image-rendering:pixelated;color:#e8d6a0;font:12px/16px SimSun,'Songti SC',serif;text-shadow:1px 1px #000}
+.guild-editor-memo{position:absolute;left:16px;top:36px;box-sizing:border-box;width:571px;height:246px;resize:none;overflow:auto;padding:4px;border:1px solid #81765d;border-radius:0;background:#eee9dc;color:#17130e;font:12px/16px SimSun,'Songti SC',serif;text-shadow:none;white-space:pre-wrap}
+.guild-editor-hint{position:absolute;left:18px;top:291px;width:480px;height:22px;margin:0;overflow:hidden;color:#e8d6a0;font:12px/18px SimSun,'Songti SC',serif;text-shadow:1px 1px #000;white-space:nowrap;text-overflow:ellipsis}
+.guild-editor-ok,.guild-editor-close{position:absolute;display:block;box-sizing:border-box;padding:0;border:0;background-color:transparent;background-repeat:no-repeat;color:transparent;font-size:0;line-height:0;image-rendering:pixelated;cursor:pointer}
+.guild-editor-ok{left:514px;top:287px;width:80px;height:34px}
+.guild-editor-close{left:584px;top:6px;width:16px;height:23px}
+.guild-editor-ok:focus-visible,.guild-editor-close:focus-visible,.guild-editor-memo:focus-visible{outline:1px solid #ffe7a0;outline-offset:1px}
+.guild-editor-ok:hover,.guild-editor-close:hover{filter:brightness(1.12)}
+.guild-editor-ok:active,.guild-editor-close:active{filter:brightness(.78)}
+.guild-editor-overlay [data-skinned="true"]{background-color:transparent}

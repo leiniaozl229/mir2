@@ -13,7 +13,7 @@ public static class CharacterProjection
         653 => new { type = "currency", gold = packet.Recog, gameGold = (uint)packet.Param | (uint)packet.Tag << 16 },
         752 => Secondary(packet),
         657 => new { type = "characterStatus", id = packet.Recog,
-            status = (uint)packet.Param | (uint)packet.Tag << 16, hitSpeed = packet.Series },
+            status = (uint)packet.Param | (uint)packet.Tag << 16, hitSpeed = unchecked((sbyte)packet.Series) },
         708 => new { type = "myStatus", status = unchecked((short)packet.Param) },
         _ => null
     };

@@ -164,14 +164,15 @@ ROUTE_GROUPS = OrderedDict((
 ))
 
 
-def build_travel_script():
-    groups = list(ROUTE_GROUPS.items())
-    lines = ["[@main]", "区域传送员：先选地区，再选目的地。\\"]
+def build_travel_script(route_groups=None, introduction="区域传送员：先选地区，再选目的地。"):
+    groups = list((ROUTE_GROUPS if route_groups is None else route_groups).items())
+    lines = ["[@main]", introduction + "\\"]
     for index in range(0, len(groups), 2):
         links = [f"<{name}/@g{number}p0>" for number, (name, _) in
                  list(enumerate(groups))[index:index + 2]]
         lines.append(" ".join(links) + "\\")
     lines.append("<关闭/@exit>")
+    lines.insert(len(lines) - 1, "<重置怪物刷新/@refresh>\\")
     for group_index, (group_name, destinations) in enumerate(groups):
         pages = [destinations[i:i + 6] for i in range(0, len(destinations), 6)]
         for page_index, page in enumerate(pages):
@@ -190,7 +191,34 @@ def build_travel_script():
         for route_index, (_, map_id, x, y) in enumerate(destinations):
             lines.extend(["", f"[@r{group_index}_{route_index}]", "#ACT",
                           f"MAPMOVE {map_id} {x} {y}", "BREAK"])
+    lines.extend(build_refresh_sections(groups))
     return "\n".join(lines) + "\n"
+
+
+def build_refresh_sections(groups):
+    lines = ["", "[@refresh]", "选择地图补怪：存活怪保留，每图间隔30秒。\\",
+             "<刷新当前地图/@refresh_current>\\"]
+    for index in range(0, len(groups), 2):
+        lines.append(" ".join(f"<{name}/@fg{number}p0>" for number, (name, _) in
+                              list(enumerate(groups))[index:index + 2]) + "\\")
+    lines.append("<返回/@main> <关闭/@exit>")
+    lines.extend(["", "[@refresh_current]", "#ACT", "RESETMONSPAWN CURRENT", "BREAK"])
+    for group_index, (group_name, destinations) in enumerate(groups):
+        pages = [destinations[i:i + 6] for i in range(0, len(destinations), 6)]
+        for page_index, page in enumerate(pages):
+            lines.extend(["", f"[@fg{group_index}p{page_index}]", f"刷新{group_name} {page_index + 1}/{len(pages)}：\\"])
+            for offset, (name, _, _, _) in enumerate(page):
+                lines.append(f"<{name}/@fr{group_index}_{page_index * 6 + offset}>\\")
+            navigation = []
+            if page_index:
+                navigation.append(f"<上一页/@fg{group_index}p{page_index - 1}>")
+            if page_index + 1 < len(pages):
+                navigation.append(f"<下一页/@fg{group_index}p{page_index + 1}>")
+            navigation.extend(("<分类/@refresh>", "<关闭/@exit>"))
+            lines.append(" ".join(navigation))
+        for route_index, (_, map_id, _, _) in enumerate(destinations):
+            lines.extend(["", f"[@fr{group_index}_{route_index}]", "#ACT", f"RESETMONSPAWN {map_id}", "BREAK"])
+    return lines
 
 
 def service_definitions(active_maps):
